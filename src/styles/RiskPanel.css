@@ -1,0 +1,72 @@
+.risk-panel {
+  padding: 1.6rem;
+  border-radius: 1.25rem;
+  background: linear-gradient(
+    160deg,
+    rgba(2, 6, 23, 0.95),
+    rgba(15, 23, 42, 0.85)
+  );
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  box-shadow: 0 12px 50px rgba(0, 0, 0, 0.4);
+}
+
+.risk-panel h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1.2rem;
+  color: #e5e7eb;
+  letter-spacing: 0.02em;
+}
+
+.risk-panel ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.risk-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.risk-item:last-child {
+  border-bottom: none;
+}
+
+.risk-item strong {
+  display: block;
+  font-size: 0.9rem;
+  color: #f8fafc;
+}
+
+.risk-item span {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.risk-item .severity {
+  font-size: 0.7rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Severity encoding */
+.risk-item.high .severity {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.risk-item.medium .severity {
+  background: rgba(250, 204, 21, 0.15);
+  color: #facc15;
+}
+
+.risk-item.low .severity {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}

@@ -1,0 +1,144 @@
+/* Header Wrapper */
+.app-header {
+  position: fixed;
+  top: 0;
+  width: inherit;
+  z-index: 50;
+  background-color: rgba(241, 234, 234, 1);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  border-bottom: 1px solid #00d9ff;
+  box-shadow: 0 0 12px #00d9ff;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 95%;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 50px;
+}
+
+/* Logo */
+.header-logo {
+  height: 36px;
+  cursor: pointer;
+  filter: drop-shadow(0 0 3px #00d9ff);
+}
+
+/* App Title */
+.app-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  background: linear-gradient(to right, #a78bfa, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Navigation and Icons */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-menu {
+  position: relative;
+}
+
+.user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 217, 255, 0.15);
+  color: #00d9ff;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  font-size: 3rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.avatar-initials {
+  color: #ffffff;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  background-color: rgba(23, 17, 39, 0.95);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 100;
+}
+
+.nav-link {
+  color: #9ca3af;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: #ffffff;
+}
+
+.logout-btn {
+  background: rgba(220, 38, 38, 0.9);
+  color: #fff;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: rgba(185, 28, 28, 0.9);
+}
+
+/* Mobile */
+.mobile-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  background-color: rgba(8, 202, 236, 0.8);
+  border: none;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .mobile-toggle {
+    display: none;
+  }
+}
+@media (min-width: 768px) {
+  .mobile-toggle {
+    display: none;
+  }
+}
+/* Theme Dark Mode */
+[data-theme='dark'] .app-header {
+  background-color: rgba(0, 0, 0, 0.85);
+  border-bottom-color: #3a00db;
+  box-shadow: 0 0 12px #3a00db;
+}
+
+[data-theme='dark'] .dropdown-menu {
+  background-color: rgba(18, 18, 30, 0.95);
+}
