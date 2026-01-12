@@ -17,7 +17,7 @@
 
 .form-header h2 {
   font-size: 1.75rem;
-  background: linear-gradient(to right, #a78bfa, #ec4899);
+  background: linear-gradient(to right, #0f0235, #18010d);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -112,6 +112,13 @@
 [data-theme="dark"] .login-form {
   background: rgba(15, 15, 30, 0.7);
   box-shadow: 0 0 15px rgba(140, 0, 255, 0.3);
+}
+
+[data-theme="dark"] .form-header h2 {
+  background: linear-gradient(to right, #a78bfa, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 [data-theme="dark"] .input-group input {

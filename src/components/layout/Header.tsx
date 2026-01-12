@@ -18,11 +18,7 @@ const Header: React.FC = () => {
   const location = useLocation();
 
   const navItems = [
-    { path: '/', label: 'Dashboard' },
-    { path: '/employees', label: 'Employees' },
-    { path: '/leave', label: 'Leave' },
-    { path: '/performance', label: 'Performance' },
-    { path: '/settings', label: 'Settings' },
+    { path: '/', label: 'Dashboard' }
   ];
 
   useEffect(() => {
@@ -38,14 +34,14 @@ const Header: React.FC = () => {
   return (
     <header className="app-header">
       <div className="header-container">
-        <div className="header-left">
+
+        <div className="header-center">
+          <div className="left">
           <button className="mobile-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
             {menuOpen ? <FaTimes /> : <FaBars />}
           </button>
-          <img src={Logo} alt="SmartHR" className="header-logo" onClick={() => navigate('/')} />
+          <img src={Logo} alt="SentinelOps" className="header-logo" onClick={() => navigate('/')} />
         </div>
-
-        <div className="header-center">
           <h1 className="app-title">SentinelOps Portal</h1>
         </div>
 

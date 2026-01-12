@@ -16,7 +16,7 @@ export const GlobalStyles = createGlobalStyle`
     --secondary-color: #4d44db;
     --text-color: #0e0d0d;
     --text-light: #300622;
-    --bg-color: red;
+    --bg-color: whitesmoke;
     --card-bg: #ffffff;
     --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     --transition: all 0.3s ease;
@@ -25,13 +25,13 @@ export const GlobalStyles = createGlobalStyle`
     --border: #ff00aa;
     
     /* New Futuristic Variables */
-    --neon-blue: #00ccff;
-    --neon-pink: #ff00aa;
+    --neon-blue: #012a34ff;
+    --neon-pink: #828282d0;
     --neon-purple: #8a2be2;
     --cyber-green: #00ff9d;
     --matrix-green: #00ff41;
-    --hologram-blue: rgba(0, 204, 255, 0.3);
-    --hologram-pink: rgba(255, 0, 170, 0.3);
+    --hologram-blue: rgba(255, 255, 255, 0.3);
+    --hologram-pink: rgba(0, 0, 0, 0.3);
     
     /* Spacing */
     --spacing-xs: 4px;
@@ -193,11 +193,12 @@ export const GlobalStyles = createGlobalStyle`
     position: sticky;
     top: 0;
     z-index: var(--z-index-header);
-    background-color: rgba(10, 15, 30, 0.8);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(242, 244, 248, 0.65);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
     border-bottom: 1px solid var(--neon-blue);
     box-shadow: var(--shadow-neon);
+    height: 56px;
     
     &::before {
       content: '';
@@ -205,11 +206,12 @@ export const GlobalStyles = createGlobalStyle`
       top: 0;
       left: 0;
       right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--neon-purple), var(--neon-blue), var(--neon-pink));
+      height: 1px;
+      background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink));
       background-size: 200% auto;
       animation: gradientFlow 6s linear infinite;
     }
+
     
     .header-left, .header-right {
       display: flex;
@@ -296,6 +298,7 @@ export const GlobalStyles = createGlobalStyle`
         opacity: 1;
         visibility: visible;
         transform: translateY(0);
+        color: whitesmoke;
       }
     }
   }
@@ -639,9 +642,8 @@ export const GlobalStyles = createGlobalStyle`
   /* ============= */
   .footer {
     padding: var(--spacing-xl) 0;
-    background: rgba(10, 15, 30, 0.8);
     backdrop-filter: blur(8px);
-    border-top: 1px solid rgba(0, 204, 255, 0.3);
+    box-shadow: var(--shadow-neon);
     position: relative;
     
     &::before {
@@ -650,8 +652,8 @@ export const GlobalStyles = createGlobalStyle`
       top: 0;
       left: 0;
       width: 100%;
-      height: 2px;
-      background: linear-gradient(90deg, var(--neon-purple), var(--neon-blue), var(--neon-pink));
+      height: 1px;
+      background: linear-gradient(90deg, var(--neon-blue), var(--neon-pink));
       background-size: 200% auto;
       animation: gradientFlow 6s linear infinite;
     }

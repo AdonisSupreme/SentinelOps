@@ -22,17 +22,9 @@ const Footer = () => {
           <div className="footer-social">
           </div>
 
-          <div className="footer-links">
-            <a href="/">Home</a>
-            <a href="/employees">Employees</a>
-            <a href="/performance">Performance</a>
-            <a href="/leave">Leave</a>
-            <a href="/settings">Settings</a>
-          </div>
-
           <div className="footer-copyright">
-            <p>&copy; {currentYear} SmartHR. All rights reserved.</p>
-            <p>Built by Adonis Shumba with React and <span className="heart">❤️</span></p>
+            <p>&copy; {currentYear} SentinelOps. All rights reserved.</p>
+            <p>Built with React and <span className="heart">❤️</span></p>
           </div>
         </div>
       </div>

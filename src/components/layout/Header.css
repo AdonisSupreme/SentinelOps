@@ -1,15 +1,5 @@
 /* Header Wrapper */
-.app-header {
-  position: fixed;
-  top: 0;
-  width: inherit;
-  z-index: 50;
-  background-color: rgba(241, 234, 234, 1);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  border-bottom: 1px solid #00d9ff;
-  box-shadow: 0 0 12px #00d9ff;
-}
+
 
 .header-container {
   display: flex;
@@ -18,24 +8,26 @@
   width: 95%;
   margin: 0 auto;
   padding: 0 24px;
-  height: 50px;
+  height: 30px;
 }
 
 /* Logo */
 .header-logo {
   height: 36px;
   cursor: pointer;
-  filter: drop-shadow(0 0 3px #00d9ff);
+  filter: drop-shadow(0 0 4px #000000);
 }
 
 /* App Title */
 .app-title {
   font-size: 1.25rem;
   font-weight: 600;
-  background: linear-gradient(to right, #a78bfa, #ec4899);
+  background: linear-gradient(to right, #0f0235, #18010d);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  border-bottom: none;
+  padding: 1px;
 }
 
 /* Navigation and Icons */
@@ -67,6 +59,12 @@
   color: #ffffff;
 }
 
+.header-center{
+  display: flex;
+  flex-direction: row;
+  margin-left: 0px;
+}
+
 /* Dropdown Menu */
 .dropdown-menu {
   position: absolute;
@@ -91,8 +89,7 @@
   transition: color 0.3s ease;
 }
 
-.nav-link:hover,
-.nav-link.active {
+.nav-link:hover {
   color: #ffffff;
 }
 
@@ -133,12 +130,22 @@
   }
 }
 /* Theme Dark Mode */
-[data-theme='dark'] .app-header {
+[data-theme='dark'] .app-header, .footer {
   background-color: rgba(0, 0, 0, 0.85);
   border-bottom-color: #3a00db;
   box-shadow: 0 0 12px #3a00db;
 }
 
+[data-theme="dark"] .app-title {
+  background: linear-gradient(to right, #a78bfa, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 [data-theme='dark'] .dropdown-menu {
   background-color: rgba(18, 18, 30, 0.95);
+}
+[data-theme='dark'] .header-logo {
+  filter: drop-shadow(0 0 3px #00d9ff);
 }
