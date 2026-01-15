@@ -10,18 +10,13 @@ interface PrivateRouteProps {
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, roles }) => {
   const { user, isAuthenticated } = useAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  // Handle case where user exists but role is undefined
-  const userRole = user?.role || '';
-  
-  if (roles && !roles.includes(userRole)) {
-    return <Navigate to="/" replace />;
-  }
+  const userRole = user?.role || "";
+  if (roles && !roles.includes(userRole)) return <Navigate to="/" replace />;
 
   return children ? <>{children}</> : <Outlet />;
 };
+
 
 export default PrivateRoute;

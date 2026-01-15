@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api',
+  baseURL: process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000',
 });
 
 // Request interceptor for auth token
@@ -30,7 +30,8 @@ api.interceptors.response.use(
 // Auth Service
 export const authService = {
   login: (email: string, password: string) =>
-    api.post('/auth/login', { email, password }),
+    api.post('/auth/signin', { email, password }),
+
   getProfile: () => api.get('/auth/me'),
 };
 

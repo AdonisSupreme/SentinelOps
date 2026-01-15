@@ -64,16 +64,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [token, api]);
 
   const login = async (email: string, password: string) => {
-    try {
-      const response = await api.post('/auth/login', { email, password });
-      localStorage.setItem('token', response.data.token);
-      setToken(response.data.token);
-      setUser(response.data.user);
-      navigate(location.state?.from?.pathname || '/');
-    } catch (error) {
-      throw error;
-    }
+    const response = await api.post('/auth/signin', { email, password });
+
+    localStorage.setItem('token', response.data.token);
+    setToken(response.data.token);
+    setUser(response.data.user); // unified user returned from backend
+
+    navigate(location.state?.from?.pathname || '/');
   };
+
+
 
   const logout = () => {
     localStorage.removeItem('token');

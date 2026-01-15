@@ -1,7 +1,6 @@
 .sentinel-dashboard {
   padding: 2.5rem;
   min-height: 100vh;
-  background: radial-gradient(circle at top, #020617, #020617 40%, #000);
   color: #e5e7eb;
   font-family: 'Inter', sans-serif;
 }
