@@ -5,11 +5,11 @@ import { useApi } from '../services/api';
 
 // Update inside AuthContext or types.ts
 export interface User {
-  id: number;
-  uuid: string;
+  id: string;
+  username: string;
+  email: string;
   first_name: string;
   last_name: string;
-  email: string;
   department: string;
   position: string;
   role: string;

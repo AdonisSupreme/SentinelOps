@@ -16,6 +16,7 @@ const Header: React.FC = () => {
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  console.log("USER: ", user)
 
   const navItems = [
     { path: '/', label: 'Dashboard' }
