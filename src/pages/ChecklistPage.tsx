@@ -9,11 +9,7 @@ import {
   FaUsers, FaCalendarAlt, FaFlag, FaShareAlt,
   FaChevronDown, FaChevronUp 
 } from 'react-icons/fa';
-import ChecklistTimeline from '../components/checklist/ChecklistTimeline';
-import ChecklistStats from '../components/checklist/ChecklistStats';
-import HandoverNotes from '../components/checklist/HandoverNotes';
-import ItemActions from '../components/checklist/ItemActions';
-import ParticipantList from '../components/checklist/ParticipantList';
+import { ChecklistTimeline, ChecklistStats, HandoverNotes, ItemActions, ParticipantList } from '../components/checklist';
 import './ChecklistPage.css';
 
 const ChecklistPage: React.FC = () => {

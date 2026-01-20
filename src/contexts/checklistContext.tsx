@@ -1,8 +1,4 @@
-// src/contexts/ChecklistContext.tsx
-// Re-export from the canonical file to avoid case-sensitive import issues.
-export * from './ChecklistContext';
-export { default } from './ChecklistContext';
-// src/contexts/ChecklistContext.tsx
+// src/contexts/checklistContext.tsx
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { checklistApi, ChecklistInstance, ChecklistItemInstance } from '../services/checklistApi';
 import { useNotifications } from './NotificationContext';
@@ -117,7 +113,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       await loadTodayInstances();
       
       // Add notification
-      const item = updatedInstance.items.find(item => item.id === itemId);
+      const item = updatedInstance.items.find((item: ChecklistItemInstance) => item.id === itemId);
       if (item) {
         const action = status === 'COMPLETED' ? 'completed' :
                       status === 'SKIPPED' ? 'skipped' :
