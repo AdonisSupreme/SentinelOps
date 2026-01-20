@@ -2,18 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useChecklist } from '../contexts/ChecklistContext';
+import { useChecklist } from '../contexts/checklistContext';
 import { checklistApi } from '../services/checklistApi';
 import { 
-  FaPlay, FaCheckCircle, FaClock, FaExclamationTriangle, 
-  FaFire, FaTrophy, FaChartLine, FaUsers, FaCalendarAlt 
+  FaClock, FaFire, FaTrophy, FaChartLine, FaUsers, FaCalendarAlt 
 } from 'react-icons/fa';
-import DashboardHeader from '../components/dashboard/DashboardHeader';
-import ChecklistCard from '../components/dashboard/ChecklistCard';
-import PerformanceWidget from '../components/dashboard/PerformanceWidget';
-import QuickActions from '../components/dashboard/QuickActions';
-import LiveActivity from '../components/dashboard/LiveActivity';
-import GamificationPanel from '../components/dashboard/GamificationPanel';
+import { DashboardHeader, ChecklistCard, PerformanceWidget, QuickActions, LiveActivity, GamificationPanel } from '../components/dashboard';
 import './DashboardPage.css';
 
 const DashboardPage: React.FC = () => {
@@ -21,8 +15,11 @@ const DashboardPage: React.FC = () => {
   const { todayInstances, loadTodayInstances, loading } = useChecklist();
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [gamificationData, setGamificationData] = useState<any>(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
+    if (hasInitialized) return; // Prevent duplicate initialization
+    
     const loadDashboardData = async () => {
       await loadTodayInstances();
       
@@ -39,18 +36,15 @@ const DashboardPage: React.FC = () => {
     };
 
     loadDashboardData();
-    const interval = setInterval(loadTodayInstances, 30000); // Refresh every 30 seconds
+    setHasInitialized(true);
+    
+    // Set up periodic refresh, but don't call on mount again
+    const interval = setInterval(() => {
+      loadTodayInstances();
+    }, 30000); // Refresh every 30 seconds
+    
     return () => clearInterval(interval);
-  }, [loadTodayInstances]);
-
-  const getShiftTime = (shift: string) => {
-    switch (shift) {
-      case 'MORNING': return '06:00 - 14:00';
-      case 'AFTERNOON': return '14:00 - 22:00';
-      case 'NIGHT': return '22:00 - 06:00';
-      default: return '';
-    }
-  };
+  }, [hasInitialized, loadTodayInstances]);
 
   if (loading && !dashboardData) {
     return (

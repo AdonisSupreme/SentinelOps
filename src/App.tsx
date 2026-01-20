@@ -4,7 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
-import { ChecklistProvider } from './contexts/ChecklistContext';
+import { ChecklistProvider } from './contexts/checklistContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ChecklistPage from './pages/ChecklistPage';

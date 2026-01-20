@@ -3,6 +3,7 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000',
+  timeout: 10000, // 10 second timeout
 });
 
 // Request interceptor for auth token
@@ -18,11 +19,16 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   response => response,
   error => {
+    // Only handle 401 if it's actually an auth error
     if (error.response?.status === 401) {
-      // Clear token on 401 Unauthorized
-      localStorage.removeItem('token');
-      // Optionally trigger a custom event for logout handling in components
-      window.dispatchEvent(new Event('unauthorized'));
+      // Check if not already logging out to avoid infinite loops
+      const token = localStorage.getItem('token');
+      if (token) {
+        // Only clear token if it exists
+        localStorage.removeItem('token');
+        // Trigger logout event for AuthContext to handle
+        window.dispatchEvent(new Event('unauthorized'));
+      }
     }
     return Promise.reject(error);
   }

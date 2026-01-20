@@ -60,8 +60,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    validateToken();
-  }, [token, api]);
+    // Only validate on mount or when token changes, not on api object changes
+    if (token) {
+      validateToken();
+    } else {
+      setLoading(false);
+    }
+  }, [token]); // Removed api from dependencies
+
+  // Handle unauthorized events from API interceptor
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      logout();
+    };
+
+    window.addEventListener('unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('unauthorized', handleUnauthorized);
+  }, []);
 
   const login = async (email: string, password: string) => {
     const response = await api.post('/auth/signin', { email, password });

@@ -1,6 +1,6 @@
 // src/components/checklist/HandoverNotes.tsx
 import React, { useState } from 'react';
-import { useChecklist } from '../../contexts/ChecklistContext';
+import { useChecklist } from '../../contexts/checklistContext';
 import { FaPlus, FaCheck, FaTimes } from 'react-icons/fa';
 
 interface HandoverNotesProps {

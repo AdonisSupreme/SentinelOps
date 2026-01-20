@@ -1,11 +1,11 @@
 // src/pages/ChecklistPage.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useChecklist } from '../contexts/ChecklistContext';
+import { useChecklist } from '../contexts/checklistContext';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   FaArrowLeft, FaPlay, FaCheckCircle, FaClock, 
-  FaExclamationTriangle, FaBan, FaComment, 
+  FaExclamationTriangle, FaBan,
   FaUsers, FaCalendarAlt, FaFlag, FaShareAlt,
   FaChevronDown, FaChevronUp 
 } from 'react-icons/fa';

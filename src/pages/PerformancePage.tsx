@@ -3,13 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { checklistApi } from '../services/checklistApi';
 import { 
-  FaTrophy, FaChartLine, FaFire, FaMedal, FaUsers, 
-  FaCalendarAlt, FaClock, FaCheckCircle, FaExclamationTriangle 
+  FaTrophy, FaChartLine, FaFire, FaUsers, FaCheckCircle
 } from 'react-icons/fa';
-import PerformanceChart from '../components/performance/PerformanceChart';
-import Leaderboard from '../components/performance/Leaderboard';
-import StreakTracker from '../components/performance/StreakTracker';
-import AchievementList from '../components/performance/AchievementList';
+import { PerformanceChart, Leaderboard, StreakTracker, AchievementList } from '../components/performance';
 import './PerformancePage.css';
 
 const PerformancePage: React.FC = () => {
@@ -19,10 +15,6 @@ const PerformancePage: React.FC = () => {
   const [leaderboardData, setLeaderboardData] = useState<any>(null);
   const [userScores, setUserScores] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadPerformanceData();
-  }, [timeframe]);
 
   const loadPerformanceData = async () => {
     setLoading(true);
@@ -48,6 +40,10 @@ const PerformancePage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadPerformanceData();
+  }, [timeframe]);
 
   const getStartDate = (period: string) => {
     const date = new Date();

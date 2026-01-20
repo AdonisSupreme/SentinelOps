@@ -1,6 +1,6 @@
 // src/components/checklist/ItemActions.tsx
 import React, { useState } from 'react';
-import { useChecklist } from '../../contexts/ChecklistContext';
+import { useChecklist } from '../../contexts/checklistContext';
 import { FaCheckCircle, FaPlay, FaBan, FaExclamationTriangle, FaComment } from 'react-icons/fa';
 import './ItemActions.css';
 
