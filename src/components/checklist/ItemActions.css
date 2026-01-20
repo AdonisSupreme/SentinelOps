@@ -1,0 +1,114 @@
+/* src/components/checklist/ItemActions.css */
+.item-actions {
+  padding: 1rem;
+}
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.btn-action {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-action.active {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(124, 9, 128, 0.1));
+  color: var(--primary);
+}
+
+.btn-action:first-child.active {
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.2), rgba(0, 217, 255, 0.1));
+}
+
+.btn-action:nth-child(2).active {
+  background: linear-gradient(135deg, rgba(46, 213, 115, 0.2), rgba(46, 213, 115, 0.1));
+}
+
+.btn-action:nth-child(3).active {
+  background: linear-gradient(135deg, rgba(255, 165, 2, 0.2), rgba(255, 165, 2, 0.1));
+}
+
+.btn-action:nth-child(4).active {
+  background: linear-gradient(135deg, rgba(255, 71, 87, 0.2), rgba(255, 71, 87, 0.1));
+}
+
+.action-form {
+  margin-bottom: 1.5rem;
+}
+
+.action-form textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  resize: vertical;
+  margin-bottom: 0.75rem;
+  transition: border-color var(--transition-fast);
+}
+
+.action-form textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.btn-action.confirm {
+  width: 100%;
+  padding: 0.875rem;
+  background: var(--primary-gradient);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-action.confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glow);
+}
+
+.btn-action.confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.action-tips {
+  padding: 0.75rem;
+  background: rgba(0, 217, 255, 0.05);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary);
+}
+
+.action-tips p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

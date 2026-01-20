@@ -175,3 +175,54 @@ export const GlobalStyles = createGlobalStyle`
     }
   }
 `;
+
+// src/styles/theme.ts
+export const lightTheme = {
+  colors: {
+    primary: '#0072ff',
+    secondary: '#7928ca',
+    accent: '#00ff9d',
+    background: {
+      primary: '#f0f4ff',
+      secondary: '#ffffff',
+      card: '#ffffff',
+      hover: '#f8fafc'
+    },
+    text: {
+      primary: '#1a202c',
+      secondary: '#4a5568',
+      muted: '#718096'
+    },
+    status: {
+      success: '#2ed573',
+      warning: '#ffa502',
+      error: '#ff4757',
+      info: '#00d9ff'
+    }
+  }
+};
+
+export const darkTheme = {
+  colors: {
+    primary: '#00d9ff',
+    secondary: '#7c0980',
+    accent: '#00ff9d',
+    background: {
+      primary: '#0a0e17',
+      secondary: '#13182d',
+      card: '#1a1f36',
+      hover: '#222842'
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: '#a0a8cc',
+      muted: '#6b7280'
+    },
+    status: {
+      success: '#2ed573',
+      warning: '#ffa502',
+      error: '#ff4757',
+      info: '#00d9ff'
+    }
+  }
+};

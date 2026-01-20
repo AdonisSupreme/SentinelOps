@@ -1,0 +1,232 @@
+/* src/components/dashboard/GamificationPanel.css */
+.gamification-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.gamification-panel.loading {
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.loading-spinner.small {
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.user-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  transition: transform var(--transition-fast);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--primary-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.25rem;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.leaderboard-preview {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.preview-header h4 {
+  margin: 0;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.view-leaderboard {
+  font-size: 0.75rem;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.view-leaderboard:hover {
+  text-decoration: underline;
+}
+
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.leaderboard-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-card);
+  border-radius: 8px;
+  position: relative;
+}
+
+.rank {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.entry-info {
+  flex: 1;
+}
+
+.username {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.points {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.crown-icon {
+  color: #ffd700;
+  font-size: 1rem;
+}
+
+.milestones h4 {
+  margin: 0 0 0.75rem 0;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.milestone {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.milestone-info {
+  flex: 1;
+}
+
+.milestone-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.milestone-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.milestone-progress .progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--border-color);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.milestone-progress .progress-fill {
+  height: 100%;
+  background: var(--primary-gradient);
+  border-radius: 2px;
+}
+
+.progress-text {
+  font-size: 0.625rem;
+  color: var(--text-secondary);
+  min-width: 40px;
+}
+
+.milestone-reward {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(0, 217, 255, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}

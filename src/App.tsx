@@ -4,8 +4,11 @@ import { AnimatePresence } from 'framer-motion';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { ChecklistProvider } from './contexts/ChecklistContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import ChecklistPage from './pages/ChecklistPage';
+import PerformancePage from './pages/PerformancePage';
 import NotFoundPage from './pages/NotFoundPage';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -22,27 +25,31 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <NotificationProvider>
-            <GlobalStyles />
+            <ChecklistProvider>
+              <GlobalStyles />
 
-            <main className="main-content">
-              <Header />
-              <AnimatePresence mode="wait">
-                <Routes>
-                  <Route path="/login" element={<LoginPage />} />
-                  
-                  {/* Protected Routes */}
-                  <Route element={<PrivateRoute />}>
-                    <Route path="/" element={<DashboardPage />} />
-                  </Route>
+              <main className="main-content">
+                <Header />
+                <AnimatePresence mode="wait">
+                  <Routes>
+                    <Route path="/login" element={<LoginPage />} />
+                    
+                    {/* Protected Routes */}
+                    <Route element={<PrivateRoute />}>
+                      <Route path="/" element={<DashboardPage />} />
+                      <Route path="/checklist/:id" element={<ChecklistPage />} />
+                      <Route path="/performance" element={<PerformancePage />} />
+                    </Route>
 
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </AnimatePresence>
-              <Footer />
-            </main>
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </AnimatePresence>
+                <Footer />
+              </main>
 
-            <ScrollToTop />
-            <NotificationContainer />
+              <ScrollToTop />
+              <NotificationContainer />
+            </ChecklistProvider>
           </NotificationProvider>
         </AuthProvider>
       </ThemeProvider>

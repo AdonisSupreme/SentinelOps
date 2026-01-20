@@ -1,9 +1,11 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { FaInfoCircle, FaExclamationTriangle, FaCheckCircle, FaBell, FaCalendarAlt } from 'react-icons/fa';
+// src/contexts/NotificationContext.tsx (Updated)
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { FaInfoCircle, FaExclamationTriangle, FaCheckCircle, FaBell, FaCalendarAlt, FaFlag } from 'react-icons/fa';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useAuth } from './AuthContext';
+import { checklistApi } from '../services/checklistApi';
 
-type NotificationType = 'info' | 'warning' | 'success' | 'error' | 'leave' | 'reminder';
+type NotificationType = 'info' | 'warning' | 'success' | 'error' | 'checklist' | 'handover' | 'reminder';
 type Priority = 'low' | 'medium' | 'high';
 
 interface Notification {
@@ -13,6 +15,8 @@ interface Notification {
   priority: Priority;
   read: boolean;
   timestamp: Date;
+  relatedId?: string;
+  relatedType?: string;
 }
 
 interface NotificationContextType {
@@ -22,6 +26,7 @@ interface NotificationContextType {
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   removeNotification: (id: string) => void;
+  loadNotifications: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -29,17 +34,66 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { user } = useAuth();
-  const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:5000';
+  const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws';
   
+  // Load initial notifications from API
+  useEffect(() => {
+    if (user) {
+      loadNotifications();
+    }
+  }, [user]);
+
+  // WebSocket for real-time notifications
   useWebSocket(wsUrl, (data) => {
-    if (data.type === 'notification' && data.userId === user?.id) {
+    if (data.type === 'notification') {
       addNotification({
-        type: data.category,
+        type: mapNotificationType(data.category),
         message: data.message,
-        priority: data.priority
+        priority: data.priority || 'medium',
+        relatedId: data.related_id,
+        relatedType: data.related_type
       });
     }
   });
+
+  const mapNotificationType = (category: string): NotificationType => {
+    switch (category) {
+      case 'CHECKLIST_ASSIGNED':
+      case 'ITEM_DUE':
+        return 'checklist';
+      case 'HANDOVER_NOTE':
+        return 'handover';
+      case 'REMINDER':
+        return 'reminder';
+      case 'SUCCESS':
+        return 'success';
+      case 'WARNING':
+        return 'warning';
+      case 'ERROR':
+        return 'error';
+      default:
+        return 'info';
+    }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const apiNotifications = await checklistApi.getNotifications(true);
+      const mappedNotifications: Notification[] = apiNotifications.map((n: any) => ({
+        id: n.id,
+        type: mapNotificationType(n.related_entity || 'info'),
+        message: n.message,
+        priority: n.priority === 'high' ? 'high' : n.priority === 'low' ? 'low' : 'medium',
+        read: n.is_read,
+        timestamp: new Date(n.created_at),
+        relatedId: n.related_id,
+        relatedType: n.related_entity
+      }));
+      setNotifications(mappedNotifications);
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+    }
+  };
 
   const addNotification = (notification: Omit<Notification, 'id' | 'read' | 'timestamp'>) => {
     const newNotification: Notification = {
@@ -49,17 +103,35 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       timestamp: new Date()
     };
     
-    setNotifications(prev => [newNotification, ...prev]);
+    setNotifications(prev => [newNotification, ...prev.slice(0, 49)]);
+    
+    // Show browser notification if supported
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('SentinelOps', {
+        body: notification.message,
+        icon: '/logo192.png'
+      });
+    }
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
+  const markAsRead = async (id: string) => {
+    try {
+      await checklistApi.markNotificationAsRead(id);
+      setNotifications(prev => 
+        prev.map(n => n.id === id ? { ...n, read: true } : n)
+      );
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    try {
+      await checklistApi.markAllNotificationsAsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
   };
 
   const removeNotification = (id: string) => {
@@ -76,7 +148,8 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         addNotification, 
         markAsRead, 
         markAllAsRead,
-        removeNotification
+        removeNotification,
+        loadNotifications
       }}
     >
       {children}
@@ -84,14 +157,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   );
 };
 
-export const useNotifications = () => {
-  const context = useContext(NotificationContext);
-  if (!context) throw new Error('useNotifications must be used within NotificationProvider');
-  return context;
-};
-
+// Updated NotificationContainer component
 export const NotificationContainer: React.FC = () => {
-  const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotifications();
+  const { notifications, markAsRead, markAllAsRead, unreadCount, loadNotifications } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   
   const getIcon = (type: NotificationType) => {
@@ -99,9 +167,30 @@ export const NotificationContainer: React.FC = () => {
       case 'success': return <FaCheckCircle />;
       case 'warning': 
       case 'error': return <FaExclamationTriangle />;
-      case 'leave': return <FaCalendarAlt />;
-      case 'reminder': return <FaBell />;
+      case 'checklist': return <FaBell />;
+      case 'handover': return <FaFlag />;
+      case 'reminder': return <FaCalendarAlt />;
       default: return <FaInfoCircle />;
+    }
+  };
+
+  const getTypeClass = (type: NotificationType) => {
+    switch (type) {
+      case 'success': return 'success';
+      case 'error': return 'error';
+      case 'warning': return 'warning';
+      case 'checklist': return 'checklist';
+      case 'handover': return 'handover';
+      default: return 'info';
+    }
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    markAsRead(notification.id);
+    
+    // Navigate based on notification type
+    if (notification.relatedType === 'CHECKLIST_INSTANCE' && notification.relatedId) {
+      window.location.href = `/checklist/${notification.relatedId}`;
     }
   };
 
@@ -109,7 +198,12 @@ export const NotificationContainer: React.FC = () => {
     <div className="notification-wrapper">
       <button 
         className="notification-trigger"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          if (!isOpen) {
+            loadNotifications();
+          }
+        }}
         aria-label="Toggle notifications"
       >
         <FaBell />
@@ -119,19 +213,19 @@ export const NotificationContainer: React.FC = () => {
       {isOpen && (
         <div className="notification-container">
           <div className="notification-header">
-            <h4>Notifications</h4>
+            <h4>Operational Notifications</h4>
             <button onClick={markAllAsRead}>Mark all as read</button>
           </div>
           
           <div className="notification-list">
             {notifications.length === 0 ? (
-              <div className="empty-state">No notifications</div>
+              <div className="empty-state">All caught up! No new notifications.</div>
             ) : (
               notifications.map(notification => (
                 <div 
                   key={notification.id} 
-                  className={`notification ${notification.type} ${notification.read ? 'read' : 'unread'}`}
-                  onClick={() => markAsRead(notification.id)}
+                  className={`notification ${getTypeClass(notification.type)} ${notification.read ? 'read' : 'unread'}`}
+                  onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="notification-icon">{getIcon(notification.type)}</div>
                   <div className="notification-content">
@@ -145,8 +239,20 @@ export const NotificationContainer: React.FC = () => {
               ))
             )}
           </div>
+          
+          <div className="notification-footer">
+            <button className="refresh-btn" onClick={loadNotifications}>
+              Refresh
+            </button>
+          </div>
         </div>
       )}
     </div>
   );
+};
+
+export const useNotifications = () => {
+  const context = useContext(NotificationContext);
+  if (!context) throw new Error('useNotifications must be used within NotificationProvider');
+  return context;
 };
