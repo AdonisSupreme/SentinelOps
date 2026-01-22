@@ -101,19 +101,17 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   ) => {
     setLoading(true);
     try {
-      const updatedInstance = await checklistApi.updateItemStatus(instanceId, itemId, {
-        status,
-        comment,
-        reason
+      const updatedItem = await checklistApi.updateItemStatus(instanceId, itemId, {
+        status: status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'NOT_APPLICABLE',
+        notes: comment
       });
-      setCurrentInstance(updatedInstance);
       setError(null);
       
       // Update today instances
       await loadTodayInstances();
       
       // Add notification
-      const item = updatedInstance.items.find((item: ChecklistItemInstance) => item.id === itemId);
+      const item = updatedItem.item;
       if (item) {
         const action = status === 'COMPLETED' ? 'completed' :
                       status === 'SKIPPED' ? 'skipped' :
@@ -121,7 +119,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         addNotification({
           type: status === 'COMPLETED' ? 'success' : 
                 status === 'FAILED' ? 'error' : 'info',
-          message: `${action} "${item.template_item.title}"`,
+          message: `${action} "${item.title}"`,
           priority: 'medium'
         });
       }
@@ -138,9 +136,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       await checklistApi.createHandoverNote({
         content,
-        priority,
-        to_shift: currentInstance?.shift === 'MORNING' ? 'AFTERNOON' :
-                 currentInstance?.shift === 'AFTERNOON' ? 'NIGHT' : 'MORNING'
+        checklist_instance_id: currentInstance?.id || ''
       });
       
       addNotification({

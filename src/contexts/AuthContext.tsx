@@ -1,26 +1,25 @@
 // src/contexts/AuthContext.tsx
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useApi } from '../services/api';
+import { useApi, setAuthToken, clearAuthToken, authService } from '../services/api';
+import { wsService } from '../services/websocket';
+import {
+  SignInRequest,
+  SignInResponse,
+  MeResponse,
+  LogoutResponse,
+  BackendError,
+} from '../contracts/generated/api.types';
 
-// Update inside AuthContext or types.ts
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  department: string;
-  position: string;
-  role: string;
-}
+// Export MeResponse as User for backward compatibility
+export type User = MeResponse;
 
 interface AuthContextType {
-  user: User | null;
+  user: MeResponse | null;
   token: string | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   loading: boolean;
   refreshUser: () => Promise<void>;
 }
@@ -28,18 +27,37 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<MeResponse | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
+  const isLoggingOutRef = useRef(false);
   const api = useApi();
   const navigate = useNavigate();
   const location = useLocation();
 
+  useEffect(() => {
+    if (token) {
+      setAuthToken(token);
+      return;
+    }
+
+    clearAuthToken();
+  }, [token]);
+
+  const forceLogout = () => {
+    localStorage.removeItem('token');
+    clearAuthToken();
+    setToken(null);
+    setUser(null);
+    wsService.disconnect();
+    navigate('/login');
+  };
+
   const fetchUser = async () => {
     try {
       if (token) {
-        const response = await api.get('/auth/me');
-        setUser(response.data); 
+        const response = await authService.getProfile();
+        setUser(response.data);
         return response.data;
       }
     } catch (error) {
@@ -54,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         await fetchUser();
       } catch (error) {
-        logout();
+        forceLogout();
       } finally {
         setLoading(false);
       }
@@ -71,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Handle unauthorized events from API interceptor
   useEffect(() => {
     const handleUnauthorized = () => {
-      logout();
+      forceLogout();
     };
 
     window.addEventListener('unauthorized', handleUnauthorized);
@@ -79,28 +97,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await api.post('/auth/signin', { email, password });
+    const response = await authService.login({ email, password });
+    const newToken = response.data.token;
 
-    localStorage.setItem('token', response.data.token);
-    setToken(response.data.token);
-    setUser(response.data.user); // unified user returned from backend
+    localStorage.setItem('token', newToken);
+    setAuthToken(newToken);
+    setToken(newToken);
+
+    const me = await authService.getProfile();
+    setUser(me.data);
 
     navigate(location.state?.from?.pathname || '/');
   };
 
+  const logout = async () => {
+    if (isLoggingOutRef.current) return;
+    isLoggingOutRef.current = true;
 
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-    navigate('/login');
+    // Best-effort audit call to backend; do not branch on response
+    try {
+      await authService.logout();
+    } catch (error) {
+      // Ignore: logout is idempotent and cleanup must always happen
+      console.error('Logout API call failed (non-critical):', error);
+    } finally {
+      // Always perform full cleanup regardless of API response
+      localStorage.removeItem('token');
+      clearAuthToken();
+      setToken(null);
+      setUser(null);
+      wsService.disconnect();
+      navigate('/login');
+      isLoggingOutRef.current = false;
+    }
   };
+
+  useEffect(() => {
+    const unsubscribe = wsService.subscribe((event) => {
+      if (event.type !== 'auth_error') return;
+      forceLogout();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   const refreshUser = async () => {
     try {
-      const userData = await fetchUser();
-      return userData;
+      await fetchUser();
     } catch (error) {
       console.error('Failed to refresh user data', error);
       throw error;

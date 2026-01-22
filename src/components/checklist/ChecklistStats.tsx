@@ -7,7 +7,7 @@ interface ChecklistStatsProps {
     total_items: number;
     completed_items: number;
     completion_percentage: number;
-    time_remaining_minutes: number;
+    time_remaining_minutes?: number;
   };
 }
 

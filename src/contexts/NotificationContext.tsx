@@ -1,9 +1,13 @@
 // src/contexts/NotificationContext.tsx (Updated)
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { FaInfoCircle, FaExclamationTriangle, FaCheckCircle, FaBell, FaCalendarAlt, FaFlag } from 'react-icons/fa';
-import { useWebSocket } from '../hooks/useWebSocket';
 import { useAuth } from './AuthContext';
 import { checklistApi } from '../services/checklistApi';
+import { wsService } from '../services/websocket';
+import {
+  Notification as BackendNotification,
+  BackendError,
+} from '../contracts/generated/api.types';
 
 type NotificationType = 'info' | 'warning' | 'success' | 'error' | 'checklist' | 'handover' | 'reminder';
 type Priority = 'low' | 'medium' | 'high';
@@ -33,9 +37,8 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const { user } = useAuth();
-  const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws';
-  
+  const { user, token } = useAuth();
+
   // Load initial notifications from API
   useEffect(() => {
     if (user) {
@@ -43,18 +46,41 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   }, [user]);
 
-  // WebSocket for real-time notifications
-  useWebSocket(wsUrl, (data) => {
-    if (data.type === 'notification') {
-      addNotification({
-        type: mapNotificationType(data.category),
-        message: data.message,
-        priority: data.priority || 'medium',
-        relatedId: data.related_id,
-        relatedType: data.related_type
-      });
+  // WebSocket for real-time notifications (single source of truth)
+  useEffect(() => {
+    if (!token) {
+      wsService.disconnect();
+      return;
     }
-  });
+
+    const unsubscribe = wsService.subscribe((event) => {
+      if (event.type !== 'new_notification') return;
+
+      const incoming = event.data as BackendNotification;
+      if (!incoming) return;
+
+      const newNotification: Notification = {
+        id: incoming.id || Math.random().toString(36).substr(2, 9),
+        type: mapNotificationType(incoming.related_entity || incoming.category || 'info'),
+        message: incoming.message,
+        priority: incoming.priority || 'medium',
+        read: Boolean(incoming.is_read),
+        timestamp: new Date(incoming.created_at || 0),
+        relatedId: incoming.related_id,
+        relatedType: incoming.related_entity || incoming.related_type,
+      };
+
+      setNotifications((prev) => [newNotification, ...prev.slice(0, 49)]);
+    });
+
+    wsService.connect().catch((error) => {
+      console.error('WebSocket connection error:', error);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [token]);
 
   const mapNotificationType = (category: string): NotificationType => {
     switch (category) {
@@ -79,7 +105,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const loadNotifications = async () => {
     try {
       const apiNotifications = await checklistApi.getNotifications(true);
-      const mappedNotifications: Notification[] = apiNotifications.map((n: any) => ({
+      const mappedNotifications: Notification[] = apiNotifications.map((n: BackendNotification) => ({
         id: n.id,
         type: mapNotificationType(n.related_entity || 'info'),
         message: n.message,

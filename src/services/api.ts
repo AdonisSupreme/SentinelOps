@@ -1,16 +1,36 @@
 // src/services/api.ts
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
+import {
+  SignInRequest,
+  SignInResponse,
+  MeResponse,
+  LogoutResponse,
+  BackendError,
+} from '../contracts/generated/api.types';
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000',
   timeout: 10000, // 10 second timeout
 });
 
+let unauthorizedDispatched = false;
+
+export const setAuthToken = (token: string) => {
+  api.defaults.headers.common.Authorization = `Bearer ${token}`;
+  unauthorizedDispatched = false;
+};
+
+export const clearAuthToken = () => {
+  delete api.defaults.headers.common.Authorization;
+};
+
 // Request interceptor for auth token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    delete config.headers.Authorization;
   }
   return config;
 });
@@ -23,9 +43,11 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Check if not already logging out to avoid infinite loops
       const token = localStorage.getItem('token');
-      if (token) {
+      if (token && !unauthorizedDispatched) {
+        unauthorizedDispatched = true;
         // Only clear token if it exists
         localStorage.removeItem('token');
+        clearAuthToken();
         // Trigger logout event for AuthContext to handle
         window.dispatchEvent(new Event('unauthorized'));
       }
@@ -36,10 +58,14 @@ api.interceptors.response.use(
 
 // Auth Service
 export const authService = {
-  login: (email: string, password: string) =>
-    api.post('/auth/signin', { email, password }),
+  login: (payload: SignInRequest): Promise<AxiosResponse<SignInResponse>> =>
+    api.post<SignInResponse>('/auth/signin', payload),
 
-  getProfile: () => api.get('/auth/me'),
+  getProfile: (): Promise<AxiosResponse<MeResponse>> =>
+    api.get<MeResponse>('/auth/me'),
+
+  logout: (): Promise<AxiosResponse<LogoutResponse>> =>
+    api.post<LogoutResponse>('/auth/logout'),
 };
 
 export const useApi = () => {

@@ -2,14 +2,33 @@
 // Singleton WebSocket service for real-time notifications
 // Backend: GET /api/v1/notifications/ws?token={JWT}
 
-type ConnectionState = 'CONNECTING' | 'OPEN' | 'CLOSING' | 'CLOSED';
-type EventCallback = (event: WebSocketEvent) => void;
+import { wsRouter } from '../websocket/wsRouter';
+import {
+  WsEnvelope,
+  Notification,
+  BackendError,
+} from '../contracts/generated/api.types';
 
 interface WebSocketEvent {
   type: string;
   data?: any;
 }
 
+// Emitted events after routing through wsRouter
+type EmittedEvent =
+  | { type: 'connected' }
+  | { type: 'disconnected' }
+  | { type: 'reconnecting'; data: { attempt: number; delay: number } }
+  | { type: 'reconnect_failed'; data: { attempts: number } }
+  | { type: 'auth_error'; data: { code: number; reason: string } }
+  | { type: 'error'; data: BackendError }
+  | { type: 'new_notification'; data: Notification }
+  | { type: 'unread_notifications'; data: { count: number; notifications: Notification[] } }
+  | { type: 'notification_updated'; data: { notification_id: string } };
+
+type EventCallback = (event: EmittedEvent) => void;
+
+type ConnectionState = 'CONNECTING' | 'OPEN' | 'CLOSING' | 'CLOSED';
 interface ReconnectConfig {
   maxAttempts: number;
   initialDelay: number; // ms
@@ -35,6 +54,10 @@ class WebSocketService {
 
   constructor() {
     this.url = this.buildUrl();
+    // Expose emit for wsRouter (avoid circular import)
+    if (typeof window !== 'undefined') {
+      (window as any).__wsServiceEmit = this.emit.bind(this);
+    }
   }
 
   private buildUrl(): string {
@@ -47,16 +70,26 @@ class WebSocketService {
    * Connect to WebSocket endpoint
    */
   async connect(): Promise<void> {
-    if (this.state === 'OPEN' || this.state === 'CONNECTING') {
+    const freshToken = localStorage.getItem('token');
+    if (!freshToken) {
+      throw new Error('No authentication token found');
+    }
+
+    if (
+      (this.state === 'OPEN' || this.state === 'CONNECTING') &&
+      this.token &&
+      this.token === freshToken
+    ) {
       console.log('WebSocket already connecting/connected');
       return;
     }
 
-    // Get fresh token
-    this.token = localStorage.getItem('token');
-    if (!this.token) {
-      throw new Error('No authentication token found');
+    if (this.state === 'OPEN' && this.token && this.token !== freshToken) {
+      this.disconnect();
     }
+
+    // Get fresh token
+    this.token = freshToken;
 
     this.setState('CONNECTING');
 
@@ -84,7 +117,7 @@ class WebSocketService {
         this.ws!.onerror = (event) => {
           clearTimeout(timeout);
           console.error('WebSocket error:', event);
-          this.emit({ type: 'error', data: { message: 'Connection error' } });
+          this.emit({ type: 'error', data: { code: 'WS_ERROR', message: 'Connection error' } });
           reject(new Error('WebSocket connection failed'));
         };
         this.ws!.onclose = (event) => {
@@ -115,6 +148,7 @@ class WebSocketService {
     }
 
     this.setState('CLOSED');
+    this.token = null;
     console.log('WebSocket disconnected');
   }
 
@@ -198,7 +232,7 @@ class WebSocketService {
     this.state = state;
   }
 
-  private emit(event: WebSocketEvent): void {
+  private emit(event: EmittedEvent): void {
     this.subscribers.forEach((callback) => {
       try {
         callback(event);
@@ -210,57 +244,50 @@ class WebSocketService {
 
   private handleMessage(event: MessageEvent): void {
     try {
-      const message = JSON.parse(event.data);
-      console.log('WebSocket message:', message.type);
+      const raw = JSON.parse(event.data);
+      console.log('WebSocket message:', raw);
 
-      switch (message.type) {
-        case 'pong':
-          // Heartbeat response - no action needed
-          break;
+      // Route through wsRouter; if ignored, do nothing
+      const routed = wsRouter.route(raw);
+      if (!routed) {
+        return;
+      }
 
-        case 'unread_notifications':
-          this.unreadCount = message.count || 0;
-          this.notifications = message.notifications || [];
-          this.emit({
-            type: 'unread_notifications',
-            data: message,
-          });
-          break;
+      // Legacy: still handle non-envelope messages for compatibility (to be removed)
+      if (typeof raw === 'object' && raw !== null && 'type' in raw) {
+        const legacy = raw as { type: string; data?: any };
+        switch (legacy.type) {
+          case 'pong':
+            // Heartbeat response - no action needed
+            break;
 
-        case 'new_notification':
-          this.notifications.unshift(message.notification);
-          this.unreadCount = (this.unreadCount || 0) + 1;
-          this.emit({
-            type: 'new_notification',
-            data: message.notification,
-          });
-          break;
+          case 'unread_notifications':
+            this.unreadCount = legacy.data?.count || 0;
+            this.notifications = legacy.data?.notifications || [];
+            this.emit({
+              type: 'unread_notifications',
+              data: { count: this.unreadCount, notifications: this.notifications },
+            });
+            break;
 
-        case 'notification_updated':
-          // Find and update notification in cache
-          const idx = this.notifications.findIndex(
-            (n: any) => n.id === message.notification_id
-          );
-          if (idx >= 0) {
-            this.notifications[idx].is_read = true;
-          }
-          this.emit({
-            type: 'notification_updated',
-            data: message,
-          });
-          break;
+          case 'notification_updated':
+            // Find and update notification in cache
+            const idx = this.notifications.findIndex(
+              (n: any) => n.id === legacy.data?.notification_id
+            );
+            if (idx >= 0) {
+              this.notifications[idx].is_read = true;
+            }
+            this.emit({
+              type: 'notification_updated',
+              data: { notification_id: legacy.data?.notification_id },
+            });
+            break;
 
-        case 'error':
-          console.error('Server error:', message.message);
-          this.emit({
-            type: 'server_error',
-            data: message,
-          });
-          break;
-
-        default:
-          // Pass through other message types
-          this.emit(message);
+          default:
+            // Unknown legacy type: ignore
+            break;
+        }
       }
     } catch (error) {
       console.error('Error parsing message:', error);

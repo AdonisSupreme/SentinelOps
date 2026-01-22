@@ -13,6 +13,10 @@ interface ChecklistCardProps {
 }
 
 const ChecklistCard: React.FC<ChecklistCardProps> = ({ instance }) => {
+  const completedItems = instance.items.filter(item => item.status === 'COMPLETED').length;
+  const totalItems = instance.items.length;
+  const completionPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
   const getStatusIcon = () => {
     switch (instance.status) {
       case 'COMPLETED':
@@ -68,13 +72,13 @@ const ChecklistCard: React.FC<ChecklistCardProps> = ({ instance }) => {
             <div className="progress-bar">
               <div 
                 className="progress-fill"
-                style={{ width: `${instance.statistics.completion_percentage}%` }}
+                style={{ width: `${completionPercentage}%` }}
               />
             </div>
             <div className="progress-stats">
-              <span className="percentage">{instance.statistics.completion_percentage}%</span>
+              <span className="percentage">{completionPercentage}%</span>
               <span className="items">
-                {instance.statistics.completed_items}/{instance.statistics.total_items} items
+                {completedItems}/{totalItems} items
               </span>
             </div>
           </div>
@@ -82,11 +86,11 @@ const ChecklistCard: React.FC<ChecklistCardProps> = ({ instance }) => {
           <div className="card-details">
             <div className="detail">
               <FaUsers />
-              <span>{instance.participants.length} operators</span>
+              <span>{instance.participants.length} participants</span>
             </div>
             <div className="detail">
               <FaClock />
-              <span>{instance.statistics.time_remaining_minutes}m remaining</span>
+              <span>Active</span>
             </div>
           </div>
         </div>

@@ -1,74 +1,52 @@
 // src/services/checklistApi.ts
 import api from './api';
+import type { AxiosResponse } from 'axios';
+import {
+  ChecklistTemplate,
+  ChecklistItem,
+  ChecklistInstance,
+  ChecklistItemInstance,
+  CreateChecklistInstanceRequest,
+  UpdateChecklistItemRequest,
+  HandoverNote as BackendHandoverNote,
+  CreateHandoverNoteRequest,
+  Notification,
+  MarkAsReadRequest,
+  MarkAllReadRequest,
+  GamificationDashboard,
+  LeaderboardResponse,
+  UserScoresResponse,
+  PerformanceMetrics as BackendPerformanceMetrics,
+  DashboardSummary,
+  ChecklistStatePolicy,
+  AuthorizationPolicy,
+  BackendEffects,
+  BackendError,
+} from '../contracts/generated/api.types';
 
-export interface ChecklistTemplate {
-  id: string;
-  name: string;
-  description: string;
-  shift: 'MORNING' | 'AFTERNOON' | 'NIGHT';
-  is_active: boolean;
-  version: number;
-  created_at: string;
-}
-
-export interface ChecklistItem {
-  id: string;
-  title: string;
-  description: string;
-  item_type: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
-  is_required: boolean;
-  scheduled_time: string | null;
-  severity: number;
-  sort_order: number;
-}
-
-export interface ChecklistInstance {
-  id: string;
-  template: ChecklistTemplate;
-  checklist_date: string;
-  shift: 'MORNING' | 'AFTERNOON' | 'NIGHT';
-  shift_start: string;
-  shift_end: string;
-  status: 'OPEN' | 'IN_PROGRESS' | 'PENDING_REVIEW' | 'COMPLETED' | 'COMPLETED_WITH_EXCEPTIONS' | 'CLOSED_BY_EXCEPTION';
-  created_by: {
-    id: string;
-    username: string;
-    email: string;
-  } | null;
-  closed_by: {
-    id: string;
-    username: string;
-  } | null;
-  closed_at: string | null;
-  created_at: string;
-  items: ChecklistItemInstance[];
-  participants: {
-    id: string;
-    username: string;
-    email: string;
-    role: string;
-  }[];
-  statistics: {
-    total_items: number;
-    completed_items: number;
-    completion_percentage: number;
-    time_remaining_minutes: number;
-  };
-}
-
-export interface ChecklistItemInstance {
-  id: string;
-  template_item: ChecklistItem;
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'FAILED';
-  completed_by: {
-    id: string;
-    username: string;
-  } | null;
-  completed_at: string | null;
-  skipped_reason: string | null;
-  failure_reason: string | null;
-  activities: ChecklistItemActivity[];
-}
+// Re-export generated types for convenience
+export type {
+  ChecklistTemplate,
+  ChecklistItem,
+  ChecklistInstance,
+  ChecklistItemInstance,
+  CreateChecklistInstanceRequest,
+  UpdateChecklistItemRequest,
+  HandoverNote as BackendHandoverNote,
+  CreateHandoverNoteRequest,
+  Notification,
+  MarkAsReadRequest,
+  MarkAllReadRequest,
+  GamificationDashboard,
+  LeaderboardResponse,
+  UserScoresResponse,
+  PerformanceMetrics as BackendPerformanceMetrics,
+  DashboardSummary,
+  ChecklistStatePolicy,
+  AuthorizationPolicy,
+  BackendEffects,
+  BackendError,
+};
 
 export interface ChecklistItemActivity {
   id: string;
@@ -122,34 +100,34 @@ export interface LeaderboardEntry {
 
 class ChecklistApi {
   // Templates
-  async getTemplates(shift?: string) {
-    const response = await api.get('/api/v1/checklists/templates', { params: { shift } });
+  async getTemplates(shift?: string): Promise<ChecklistTemplate[]> {
+    const response = await api.get<ChecklistTemplate[]>('/api/v1/checklists/templates', { params: { shift } });
     return response.data;
   }
 
   // Instances
-  async createInstance(data: { checklist_date: string; shift: string; template_id?: string }) {
-    const response = await api.post('/api/v1/checklists/instances', data);
+  async createInstance(data: CreateChecklistInstanceRequest): Promise<ChecklistInstance> {
+    const response = await api.post<ChecklistInstance>('/api/v1/checklists/instances', data);
     return response.data;
   }
 
-  async getTodayInstances() {
-    const response = await api.get('/api/v1/checklists/instances/today');
+  async getTodayInstances(): Promise<ChecklistInstance[]> {
+    const response = await api.get<ChecklistInstance[]>('/api/v1/checklists/instances/today');
     return response.data;
   }
 
-  async getInstance(id: string) {
-    const response = await api.get(`/api/v1/checklists/instances/${id}`);
+  async getInstance(id: string): Promise<ChecklistInstance> {
+    const response = await api.get<ChecklistInstance>(`/api/v1/checklists/instances/${id}`);
     return response.data;
   }
 
-  async joinInstance(instanceId: string) {
-    const response = await api.post(`/api/v1/checklists/instances/${instanceId}/join`);
+  async joinInstance(instanceId: string): Promise<ChecklistInstance> {
+    const response = await api.post<ChecklistInstance>(`/api/v1/checklists/instances/${instanceId}/join`);
     return response.data;
   }
 
-  async completeInstance(instanceId: string) {
-    const response = await api.post(`/api/v1/checklists/instances/${instanceId}/complete`);
+  async completeInstance(instanceId: string): Promise<ChecklistInstance> {
+    const response = await api.post<ChecklistInstance>(`/api/v1/checklists/instances/${instanceId}/complete`);
     return response.data;
   }
 
@@ -157,13 +135,9 @@ class ChecklistApi {
   async updateItemStatus(
     instanceId: string,
     itemId: string,
-    data: {
-      status: string;
-      comment?: string;
-      reason?: string;
-    }
-  ) {
-    const response = await api.patch(
+    data: UpdateChecklistItemRequest
+  ): Promise<ChecklistItemInstance> {
+    const response = await api.patch<ChecklistItemInstance>(
       `/api/v1/checklists/instances/${instanceId}/items/${itemId}`,
       data
     );
@@ -171,36 +145,31 @@ class ChecklistApi {
   }
 
   // Handover Notes
-  async createHandoverNote(data: {
-    content: string;
-    priority: number;
-    to_shift?: string;
-    to_date?: string;
-  }) {
-    const response = await api.post('/api/v1/checklists/handover-notes', data);
+  async createHandoverNote(data: CreateHandoverNoteRequest): Promise<BackendHandoverNote> {
+    const response = await api.post<BackendHandoverNote>('/api/v1/checklists/handover-notes', data);
     return response.data;
   }
 
   // Performance
-  async getPerformanceMetrics(startDate?: string, endDate?: string) {
-    const response = await api.get('/api/v1/checklists/performance/metrics', {
+  async getPerformanceMetrics(startDate?: string, endDate?: string): Promise<BackendPerformanceMetrics> {
+    const response = await api.get<BackendPerformanceMetrics>('/api/v1/checklists/performance/metrics', {
       params: { start_date: startDate, end_date: endDate }
     });
     return response.data;
   }
 
-  async getDashboardSummary() {
-    const response = await api.get('/api/v1/checklists/dashboard/summary');
+  async getDashboardSummary(): Promise<DashboardSummary> {
+    const response = await api.get<DashboardSummary>('/api/v1/checklists/dashboard/summary');
     return response.data;
   }
 
   // Gamification
-  async getGamificationDashboard() {
-    const response = await api.get('/api/v1/gamification/dashboard');
+  async getGamificationDashboard(): Promise<GamificationDashboard> {
+    const response = await api.get<GamificationDashboard>('/api/v1/gamification/dashboard');
     return response.data;
   }
 
-  async getLeaderboard(timeframe: string = 'weekly', limit: number = 10) {
+  async getLeaderboard(timeframe: string = 'weekly', limit: number = 10): Promise<LeaderboardResponse> {
     // Accept both short form ('week','month','quarter') and API expected values
     const tfMap: Record<string, string> = {
       week: 'weekly',
@@ -212,34 +181,34 @@ class ChecklistApi {
       quarterly: 'quarterly'
     };
     const apiTimeframe = tfMap[timeframe] || timeframe;
-    const response = await api.get('/api/v1/gamification/leaderboard', {
+    const response = await api.get<LeaderboardResponse>('/api/v1/gamification/leaderboard', {
       params: { timeframe: apiTimeframe, limit }
     });
     return response.data;
   }
 
-  async getUserScores(startDate?: string, endDate?: string) {
-    const response = await api.get('/api/v1/gamification/scores', {
+  async getUserScores(startDate?: string, endDate?: string): Promise<UserScoresResponse> {
+    const response = await api.get<UserScoresResponse>('/api/v1/gamification/scores', {
       params: { start_date: startDate, end_date: endDate }
     });
     return response.data;
   }
 
   // Notifications
-  async getNotifications(unreadOnly: boolean = false) {
-    const response = await api.get('/api/v1/notifications', {
+  async getNotifications(unreadOnly: boolean = false): Promise<Notification[]> {
+    const response = await api.get<Notification[]>('/api/v1/notifications', {
       params: { unread_only: unreadOnly }
     });
     return response.data;
   }
 
-  async markNotificationAsRead(notificationId: string) {
-    const response = await api.patch(`/api/v1/notifications/${notificationId}/read`);
+  async markNotificationAsRead(notificationId: string): Promise<Notification> {
+    const response = await api.patch<Notification>(`/api/v1/notifications/${notificationId}/read`);
     return response.data;
   }
 
-  async markAllNotificationsAsRead() {
-    const response = await api.post('/api/v1/notifications/mark-all-read');
+  async markAllNotificationsAsRead(): Promise<{ updated: number }> {
+    const response = await api.post<{ updated: number }>('/api/v1/notifications/mark-all-read');
     return response.data;
   }
 }

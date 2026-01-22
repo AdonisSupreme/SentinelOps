@@ -83,7 +83,6 @@ const useNotifications = (): UseNotificationsReturn => {
 
         case 'unread_notifications':
           setUnreadCount(event.data?.count || 0);
-          setNotifications(event.data?.notifications || []);
           break;
 
         case 'new_notification':
@@ -98,14 +97,7 @@ const useNotifications = (): UseNotificationsReturn => {
               n.id === event.data?.notification_id ? { ...n, is_read: true } : n
             )
           );
-          if (event.data?.success) {
-            setUnreadCount((prev) => Math.max(0, prev - 1));
-          }
-          break;
-
-        case 'server_error':
-          console.error('Server error:', event.data?.message);
-          setError(`Server error: ${event.data?.message}`);
+          setUnreadCount((prev) => Math.max(0, prev - 1));
           break;
 
         case 'error':

@@ -78,7 +78,7 @@ const Header: React.FC = () => {
                 </div>
                 <div className="user-actions">
                   <Link to="/settings" className="nav-link">Profile Settings</Link>
-                  <button className="logout-btn" onClick={() => { logout(); setMenuOpen(false); }}>
+                  <button className="logout-btn" onClick={() => { void logout(); setMenuOpen(false); }}>
                     Logout
                   </button>
                 </div>

@@ -20,8 +20,6 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({ items, activeItem
         return <FaCheckCircle className="timeline-icon completed" />;
       case 'IN_PROGRESS':
         return <FaPlay className="timeline-icon in-progress" />;
-      case 'FAILED':
-        return <FaExclamationTriangle className="timeline-icon failed" />;
       case 'SKIPPED':
         return <FaBan className="timeline-icon skipped" />;
       default:
@@ -65,7 +63,7 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({ items, activeItem
         
         {items.map((item, index) => {
           const isActive = activeItemId === item.id;
-          const severityColor = getSeverityColor(item.template_item.severity);
+          const severityColor = getSeverityColor(item.item.severity);
           
           return (
             <div 
@@ -84,16 +82,16 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({ items, activeItem
               <div className="timeline-content">
                 <div className="content-header">
                   <div className="item-title">
-                    <h4>{item.template_item.title}</h4>
-                    {getItemTypeIcon(item.template_item.item_type)}
-                    {item.template_item.scheduled_time && (
+                    <h4>{item.item.title}</h4>
+                    {getItemTypeIcon(item.item.item_type)}
+                    {item.item.scheduled_time && (
                       <span className="scheduled-time">
-                        <FaClock /> {formatTime(item.template_item.scheduled_time)}
+                        <FaClock /> {formatTime(item.item.scheduled_time)}
                       </span>
                     )}
                   </div>
                   <div className="item-meta">
-                    {item.template_item.is_required && (
+                    {item.item.is_required && (
                       <span className="badge required">Required</span>
                     )}
                     {item.completed_by && (
@@ -104,25 +102,20 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({ items, activeItem
                   </div>
                 </div>
 
-                {item.template_item.description && (
-                  <p className="item-description">{item.template_item.description}</p>
+                {item.item.description && (
+                  <p className="item-description">{item.item.description}</p>
                 )}
 
-                {(item.skipped_reason || item.failure_reason) && (
+                {item.notes && (
                   <div className="item-reason">
-                    {item.skipped_reason && (
-                      <span className="reason skipped">Skipped: {item.skipped_reason}</span>
-                    )}
-                    {item.failure_reason && (
-                      <span className="reason failed">Failed: {item.failure_reason}</span>
-                    )}
+                    <span className="reason notes">Notes: {item.notes}</span>
                   </div>
                 )}
 
-                {item.activities.length > 0 && (
+                {item.completed_at && (
                   <div className="item-activity">
                     <FaComment />
-                    <span>{item.activities.length} activity log(s)</span>
+                    <span>Completed at {new Date(item.completed_at).toLocaleTimeString()}</span>
                   </div>
                 )}
 

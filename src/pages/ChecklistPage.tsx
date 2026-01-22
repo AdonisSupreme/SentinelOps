@@ -101,7 +101,7 @@ const ChecklistPage: React.FC = () => {
     return null;
   }
 
-  const isUserParticipant = currentInstance.participants.some(p => p.id === user?.id);
+  const isUserParticipant = currentInstance.participants.some((p: { id: string }) => p.id === user?.id);
   const canJoin = !isUserParticipant && currentInstance.status === 'OPEN';
 
   return (
@@ -143,14 +143,26 @@ const ChecklistPage: React.FC = () => {
           <section className="timeline-section">
             <div className="section-header">
               <h2>Operational Timeline</h2>
-              <div className="timeline-stats">
-                <span className="stat">
-                  <FaCheckCircle /> {currentInstance.statistics.completed_items} completed
-                </span>
-                <span className="stat">
-                  <FaClock /> {currentInstance.statistics.total_items - currentInstance.statistics.completed_items} pending
-                </span>
-              </div>
+              {currentInstance.items && (
+                <div>
+                  {(() => {
+                    const completedItems = currentInstance.items.filter(item => item.status === 'COMPLETED').length;
+                    const totalItems = currentInstance.items.length;
+                    const pendingItems = totalItems - completedItems;
+                    
+                    return (
+                      <div className="timeline-stats">
+                        <span className="stat">
+                          <FaCheckCircle /> {completedItems} completed
+                        </span>
+                        <span className="stat">
+                          <FaClock /> {pendingItems} pending
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
             
             <ChecklistTimeline 
@@ -164,7 +176,14 @@ const ChecklistPage: React.FC = () => {
         {/* Right Column - Sidebar */}
         <div className="content-right">
           {/* Stats Card */}
-          <ChecklistStats stats={currentInstance.statistics} />
+          <ChecklistStats stats={{
+            completed_items: currentInstance.items.filter(item => item.status === 'COMPLETED').length,
+            total_items: currentInstance.items.length,
+            completion_percentage: currentInstance.items.length > 0 
+              ? Math.round((currentInstance.items.filter(item => item.status === 'COMPLETED').length / currentInstance.items.length) * 100)
+              : 0,
+            time_remaining_minutes: undefined
+          }} />
 
           {/* Participants */}
           <section className="sidebar-section">

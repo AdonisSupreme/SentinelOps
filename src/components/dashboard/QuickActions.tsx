@@ -23,7 +23,7 @@ const QuickActions: React.FC = () => {
   const [loadingTemplates, setLoadingTemplates] = useState(false);
 
   // Check if user has permission to create checklists
-  const canCreateChecklist = user?.role && ['OPERATOR', 'SUPERVISOR', 'MANAGER', 'ADMIN'].includes(user.role);
+  const canCreateChecklist = user?.role && ['OPERATOR', 'SUPERVISOR', 'manager', 'admin'].includes(user.role);
 
   useEffect(() => {
     if (!showModal) return;
