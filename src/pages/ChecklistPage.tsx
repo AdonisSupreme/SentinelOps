@@ -101,7 +101,7 @@ const ChecklistPage: React.FC = () => {
     return null;
   }
 
-  const isUserParticipant = currentInstance.participants.some((p: { id: string }) => p.id === user?.id);
+  const isUserParticipant = currentInstance.participants?.some((p: { id: string }) => p.id === user?.id) ?? false;
   const canJoin = !isUserParticipant && currentInstance.status === 'OPEN';
 
   return (
@@ -146,8 +146,8 @@ const ChecklistPage: React.FC = () => {
               {currentInstance.items && (
                 <div>
                   {(() => {
-                    const completedItems = currentInstance.items.filter(item => item.status === 'COMPLETED').length;
-                    const totalItems = currentInstance.items.length;
+                    const completedItems = currentInstance.items?.filter(item => item.status === 'COMPLETED').length || 0;
+                    const totalItems = currentInstance.items?.length || 0;
                     const pendingItems = totalItems - completedItems;
                     
                     return (
@@ -166,7 +166,7 @@ const ChecklistPage: React.FC = () => {
             </div>
             
             <ChecklistTimeline 
-              items={currentInstance.items}
+              items={currentInstance.items || []}
               activeItemId={activeItemId}
               onItemClick={handleItemAction}
             />
@@ -177,10 +177,10 @@ const ChecklistPage: React.FC = () => {
         <div className="content-right">
           {/* Stats Card */}
           <ChecklistStats stats={{
-            completed_items: currentInstance.items.filter(item => item.status === 'COMPLETED').length,
-            total_items: currentInstance.items.length,
-            completion_percentage: currentInstance.items.length > 0 
-              ? Math.round((currentInstance.items.filter(item => item.status === 'COMPLETED').length / currentInstance.items.length) * 100)
+            completed_items: currentInstance.items?.filter(item => item.status === 'COMPLETED').length || 0,
+            total_items: currentInstance.items?.length || 0,
+            completion_percentage: (currentInstance.items?.length || 0) > 0 
+              ? Math.round(((currentInstance.items?.filter(item => item.status === 'COMPLETED').length || 0) / (currentInstance.items?.length || 0)) * 100)
               : 0,
             time_remaining_minutes: undefined
           }} />
@@ -191,11 +191,11 @@ const ChecklistPage: React.FC = () => {
               className="section-header collapsible"
               onClick={() => setShowParticipants(!showParticipants)}
             >
-              <h3><FaUsers /> Team Members ({currentInstance.participants.length})</h3>
+              <h3><FaUsers /> Team Members ({currentInstance.participants?.length || 0})</h3>
               {showParticipants ? <FaChevronUp /> : <FaChevronDown />}
             </div>
             {showParticipants && (
-              <ParticipantList participants={currentInstance.participants} />
+              <ParticipantList participants={currentInstance.participants || []} />
             )}
           </section>
 

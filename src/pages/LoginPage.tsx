@@ -17,12 +17,39 @@ const LoginForm: React.FC = () => {
     setIsLoading(true);
     setError('');
 
+    console.log('🔐 [LOGIN_PAGE] Form submission started');
+    console.log('📧 [LOGIN_PAGE] Email:', email);
+    console.log('🔑 [LOGIN_PAGE] Password length:', password.length);
+    console.log('🌐 [LOGIN_PAGE] Current URL:', window.location.href);
+
     try {
+      console.log('🚀 [LOGIN_PAGE] Calling login function...');
       await login(email, password);
-    } catch (err) {
-      setError('Invalid email or password');
+      console.log('✅ [LOGIN_PAGE] Login successful!');
+    } catch (err: any) {
+      console.error('❌ [LOGIN_PAGE] Login error:', {
+        message: err.message,
+        stack: err.stack,
+        response: err.response,
+        status: err.response?.status,
+        data: err.response?.data
+      });
+      
+      // More specific error handling
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.response?.status === 401) {
+        setError('Invalid email or password');
+      } else if (err.response?.status >= 500) {
+        setError('Server error. Please try again later.');
+      } else if (err.code === 'NETWORK_ERROR' || err.message?.includes('Network Error')) {
+        setError('Cannot connect to server. Please check your connection.');
+      } else {
+        setError(`Login failed: ${err.message || 'Unknown error'}`);
+      }
     } finally {
       setIsLoading(false);
+      console.log('🏁 [LOGIN_PAGE] Form submission completed');
     }
   };
 

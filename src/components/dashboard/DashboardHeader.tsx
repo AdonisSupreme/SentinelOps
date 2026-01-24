@@ -22,34 +22,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
         <h1>
           <span className="greeting">{getGreeting()},</span>
           <span className="username">{user?.first_name || 'Operator'}</span>
+          <p className="subtitle">Welcome to SentinelOps Command Center</p>
         </h1>
-        <p className="subtitle">Welcome to SentinelOps Command Center</p>
-        
-        <div className="status-indicators">
-          <div className="status-item">
-            <FaShieldAlt className="status-icon shield" />
-            <div>
-              <div className="status-label">System Security</div>
-              <div className="status-value active">Operational</div>
-            </div>
-          </div>
-          
-          <div className="status-item">
-            <FaBolt className="status-icon bolt" />
-            <div>
-              <div className="status-label">Response Time</div>
-              <div className="status-value">42ms</div>
-            </div>
-          </div>
-          
-          <div className="status-item">
-            <FaBell className="status-icon bell" />
-            <div>
-              <div className="status-label">Active Alerts</div>
-              <div className="status-value">2</div>
-            </div>
-          </div>
-        </div>
       </div>
       
       <div className="header-right">

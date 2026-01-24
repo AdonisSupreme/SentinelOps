@@ -10,6 +10,16 @@ export interface SignInRequest {
 
 export interface SignInResponse {
   token: string;
+  user: {
+    id: string;
+    username: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    department: string;
+    position: string;
+    role: string;
+  };
 }
 
 export interface MeResponse {

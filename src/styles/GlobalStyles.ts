@@ -189,7 +189,7 @@ export const GlobalStyles = createGlobalStyle`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: 0 var(--spacing-lg);
     position: sticky;
     top: 0;
     z-index: var(--z-index-header);
@@ -872,7 +872,7 @@ export const GlobalStyles = createGlobalStyle`
   @media (max-width: 768px) {
     .app-header {
       flex-direction: column;
-      padding: var(--spacing-md);
+      padding: 0 var(--spacing-md);
       gap: var(--spacing-md);
       
       .header-center {

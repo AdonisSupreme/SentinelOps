@@ -82,7 +82,7 @@
 }
 
 [data-theme="light"] {
-  /* Light Theme - Cyberpunk */
+  /* Light Theme - Clean White */
   --primary-gradient: linear-gradient(135deg, #00d9ff 0%, #0072ff 100%);
   --secondary-gradient: linear-gradient(135deg, #7928ca 0%, #ff0080 100%);
   
@@ -92,7 +92,7 @@
   --accent: #00ff9d;
   
   /* Backgrounds */
-  --bg-primary: #f0f4ff;
+  --bg-primary: #ffffff;
   --bg-secondary: #ffffff;
   --bg-card: #ffffff;
   --bg-hover: #f8fafc;
@@ -111,17 +111,45 @@
 }
 
 [data-theme="dark"] {
-  --color-primary: #4895ef;
-  --color-secondary: #4361ee;
-  --color-accent: #3f37c9;
-  --color-background: #121212;
-  --color-surface: #1e1e1e;
-  --color-text: #f8f9fa;
-  --color-text-secondary: #adb5bd;
-  --color-border: #343a40;
+  /* Dark Theme - Futuristic Dark */
+  --primary-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  --secondary-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  
+  /* Colors */
+  --primary: #8b5cf6;
+  --secondary: #ec4899;
+  --accent: #f59e0b;
+  
+  /* Backgrounds */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+  --bg-hover: #334155;
+  
+  /* Text */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  
+  /* Borders & Shadows */
+  --border-color: #334155;
+  --shadow-sm: 0 4px 6px -1px rgba(139, 92, 246, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 10px 15px -3px rgba(139, 92, 246, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(139, 92, 246, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --glow: 0 0 20px rgba(139, 92, 246, 0.3);
+  
+  /* Legacy Variables */
+  --color-primary: #8b5cf6;
+  --color-secondary: #ec4899;
+  --color-accent: #f59e0b;
+  --color-background: #0f172a;
+  --color-surface: #1e293b;
+  --color-text: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-border: #334155;
   --color-primary-lightest: #1e293b;
   --color-success-light: #064e3b;
   --color-warning-light: #78350f;
   --color-error-light: #7f1d1d;
-  --pleasant: #bc42c0ff;
+  --pleasant: #8b5cf6;
 }

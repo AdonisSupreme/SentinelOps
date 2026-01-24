@@ -10,7 +10,6 @@ import {
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000',
-  timeout: 10000, // 10 second timeout
 });
 
 let unauthorizedDispatched = false;
@@ -26,19 +25,44 @@ export const clearAuthToken = () => {
 
 // Request interceptor for auth token
 api.interceptors.request.use((config) => {
+  console.log(' [API] Request:', {
+    method: config.method?.toUpperCase(),
+    url: config.url,
+    hasAuth: !!config.headers.Authorization,
+    baseURL: config.baseURL
+  });
+  
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   } else {
     delete config.headers.Authorization;
   }
+  
+  console.log(' [API] Request headers:', {
+    hasAuthorization: !!config.headers.Authorization,
+    authHeader: config.headers.Authorization ? 'Bearer ***' : 'none'
+  });
+  
   return config;
 });
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  response => response,
+  response => {
+    console.log(' [API] Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      data: response.data
+    });
+    return response;
+  },
   error => {
+    console.error(' [API] Error:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data
+    });
     // Only handle 401 if it's actually an auth error
     if (error.response?.status === 401) {
       // Check if not already logging out to avoid infinite loops

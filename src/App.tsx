@@ -27,25 +27,29 @@ function App() {
           <NotificationProvider>
             <ChecklistProvider>
               <GlobalStyles />
-
-              <main className="main-content">
+              
+              <div className="app-layout">
                 <Header />
-                <AnimatePresence mode="wait">
-                  <Routes>
-                    <Route path="/login" element={<LoginPage />} />
-                    
-                    {/* Protected Routes */}
-                    <Route element={<PrivateRoute />}>
-                      <Route path="/" element={<DashboardPage />} />
-                      <Route path="/checklist/:id" element={<ChecklistPage />} />
-                      <Route path="/performance" element={<PerformancePage />} />
-                    </Route>
+                
+                <main className="main-content">
+                  <AnimatePresence mode="wait">
+                    <Routes>
+                      <Route path="/login" element={<LoginPage />} />
+                      
+                      {/* Protected Routes */}
+                      <Route element={<PrivateRoute />}>
+                        <Route path="/" element={<DashboardPage />} />
+                        <Route path="/checklist/:id" element={<ChecklistPage />} />
+                        <Route path="/performance" element={<PerformancePage />} />
+                      </Route>
 
-                    <Route path="*" element={<NotFoundPage />} />
-                  </Routes>
-                </AnimatePresence>
+                      <Route path="*" element={<NotFoundPage />} />
+                    </Routes>
+                  </AnimatePresence>
+                </main>
+                
                 <Footer />
-              </main>
+              </div>
 
               <ScrollToTop />
               <NotificationContainer />

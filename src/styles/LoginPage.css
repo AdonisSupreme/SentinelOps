@@ -1,5 +1,5 @@
 .login-form {
-  max-width: 400px;
+  max-width: fit-content;
   margin: 80px auto;
   padding: 32px;
   background: rgba(0, 0, 0, 0.55);
@@ -68,6 +68,7 @@
   color: #ffffff;
   font-size: 1rem;
   transition: background 0.3s ease, box-shadow 0.3s ease;
+  min-width: 400px;
 }
 
 .input-group input::placeholder {

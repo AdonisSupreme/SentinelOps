@@ -3,15 +3,17 @@
   flex-direction: column;
   height: 100%;
   gap: 0;
+  background: transparent; /* No page background - uses app background */
 }
 
 .checklist-header {
   padding: 1.5rem;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-card);
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  backdrop-filter: blur(10px);
 }
 
 .back-btn {
@@ -20,18 +22,18 @@
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   cursor: pointer;
-  color: var(--color-text);
+  color: var(--text-primary);
   font-size: 0.9rem;
   white-space: nowrap;
   transition: all 0.2s;
 }
 
 .back-btn:hover {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-primary);
+  background: var(--bg-hover);
+  border-color: var(--primary);
 }
 
 .header-content {
@@ -45,7 +47,7 @@
 .checklist-title h1 {
   font-size: 1.75rem;
   margin: 0 0 0.5rem 0;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .checklist-meta {
@@ -53,7 +55,7 @@
   align-items: center;
   gap: 1rem;
   font-size: 0.9rem;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
 }
 
 .status-badge {
@@ -78,7 +80,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 1.2rem;
-  background: var(--color-primary);
+  background: var(--primary);
   color: white;
   border: none;
   border-radius: 6px;
@@ -88,16 +90,17 @@
 }
 
 .btn-share {
-  background: var(--color-bg-tertiary);
-  color: var(--color-text);
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .btn-join:hover {
-  background: var(--color-primary-dark);
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .btn-share:hover {
-  background: var(--color-border);
+  background: var(--border-color);
 }
 
 .checklist-content {
@@ -122,10 +125,17 @@
 }
 
 .timeline-section {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.timeline-section:hover {
+  border-color: var(--primary);
+  box-shadow: var(--glow);
 }
 
 .section-header {
@@ -138,7 +148,7 @@
 .section-header h2 {
   font-size: 1.1rem;
   margin: 0;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .timeline-stats {
@@ -151,15 +161,22 @@
   align-items: center;
   gap: 0.4rem;
   font-size: 0.9rem;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
 }
 
 .sidebar-section {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 1.5rem;
   overflow: hidden;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.sidebar-section:hover {
+  border-color: var(--primary);
+  box-shadow: var(--glow);
 }
 
 .section-header.collapsible {
@@ -169,13 +186,13 @@
 }
 
 .section-header.collapsible:hover h3 {
-  color: var(--color-primary);
+  color: var(--primary);
 }
 
 .section-header h3 {
   font-size: 1rem;
   margin: 0;
-  color: var(--color-text);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -190,11 +207,11 @@
   justify-content: center;
   height: 100%;
   gap: 1rem;
-  color: var(--color-text-secondary);
+  color: var(--text-muted);
 }
 
 .checklist-error h3 {
-  color: var(--color-text);
+  color: var(--text-primary);
   margin: 0.5rem 0;
 }
 

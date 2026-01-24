@@ -1,7 +1,28 @@
+/* App Layout */
 .App {
   text-align: center;
 }
 
+/* Main App Layout Structure */
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0; /* Removed margin to eliminate gap */
+  min-height: calc(100vh - 70px); /* Full height minus header */
+  background: transparent; /* No background - uses app background */
+}
+
+/* Legacy App Components */
 .App-logo {
   height: 40vmin;
   pointer-events: none;

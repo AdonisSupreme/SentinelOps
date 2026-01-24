@@ -59,10 +59,14 @@ const QuickActions: React.FC = () => {
         return;
       }
 
+      // Ensure shift is defined and valid
+      const templateShift = selectedTemplate.shift || 'MORNING';
+      console.log('Creating instance with shift:', templateShift);
+
       // Check for existing instance for this shift today
       const todayInstances = await checklistApi.getTodayInstances();
       const existingInstance = todayInstances.find(
-        (inst: any) => inst.template.id === selectedTemplateId && inst.shift === selectedTemplate.shift
+        (inst: any) => inst.template.id === selectedTemplateId && inst.shift === templateShift
       );
 
       if (existingInstance) {
@@ -77,10 +81,11 @@ const QuickActions: React.FC = () => {
       const now = new Date();
       const payload: any = {
         checklist_date: now.toISOString().split('T')[0],
-        shift: selectedTemplate.shift,
+        shift: templateShift,
         template_id: selectedTemplateId
       };
 
+      console.log('Creating instance with payload:', payload);
       const instance = await checklistApi.createInstance(payload);
       loadTodayInstances();
       addNotification({ type: 'success', message: 'Checklist started', priority: 'medium' });
@@ -175,7 +180,7 @@ const QuickActions: React.FC = () => {
 
               <div className="templates-list">
                 {loadingTemplates ? (
-                  <div className="loading-spinner small">Loading templates...</div>
+                  <div className="loading-spinner small">.</div>
                 ) : templates.length === 0 ? (
                   <div className="empty-state">No templates available</div>
                 ) : (

@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApi, setAuthToken, clearAuthToken, authService } from '../services/api';
-import { wsService } from '../services/websocket';
 import {
   SignInRequest,
   SignInResponse,
@@ -49,7 +48,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     clearAuthToken();
     setToken(null);
     setUser(null);
-    wsService.disconnect();
     navigate('/login');
   };
 
@@ -97,17 +95,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await authService.login({ email, password });
-    const newToken = response.data.token;
+    console.log(' [AuthContext] Login attempt started', { email, passwordLength: password.length });
+    
+    try {
+      console.log(' [AuthContext] Calling authService.login...');
+      const response = await authService.login({ email, password });
+      console.log(' [AuthContext] Login response received:', { 
+        status: response.status, 
+        hasToken: !!response.data.token,
+        hasUser: !!response.data.user,
+        userKeys: response.data.user ? Object.keys(response.data.user) : null
+      });
+      
+      const newToken = response.data.token;
+      const userData = response.data.user;
 
-    localStorage.setItem('token', newToken);
-    setAuthToken(newToken);
-    setToken(newToken);
+      console.log(' [AuthContext] Storing token and user data...');
+      localStorage.setItem('token', newToken);
+      setAuthToken(newToken);
+      setToken(newToken);
 
-    const me = await authService.getProfile();
-    setUser(me.data);
+      // Use user data from signin response instead of separate API call
+      console.log(' [AuthContext] Setting user data:', userData);
+      setUser(userData);
 
-    navigate(location.state?.from?.pathname || '/');
+      console.log(' [AuthContext] Navigating to:', location.state?.from?.pathname || '/');
+      navigate(location.state?.from?.pathname || '/');
+      
+      console.log(' [AuthContext] Login completed successfully');
+    } catch (error: any) {
+      console.error(' [AuthContext] Login failed:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
+        }
+      });
+      throw error;
+    }
   };
 
   const logout = async () => {
@@ -126,22 +155,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       clearAuthToken();
       setToken(null);
       setUser(null);
-      wsService.disconnect();
       navigate('/login');
       isLoggingOutRef.current = false;
     }
   };
-
-  useEffect(() => {
-    const unsubscribe = wsService.subscribe((event) => {
-      if (event.type !== 'auth_error') return;
-      forceLogout();
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
 
   const refreshUser = async () => {
     try {
