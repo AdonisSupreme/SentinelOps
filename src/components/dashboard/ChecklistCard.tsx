@@ -44,9 +44,9 @@ const ChecklistCard: React.FC<ChecklistCardProps> = ({ instance }) => {
 
   const getShiftTime = (shift: string) => {
     switch (shift) {
-      case 'MORNING': return '06:00 - 14:00';
-      case 'AFTERNOON': return '14:00 - 22:00';
-      case 'NIGHT': return '22:00 - 06:00';
+      case 'MORNING': return '07:00 - 15:00';
+      case 'AFTERNOON': return '15:00 - 23:00';
+      case 'NIGHT': return '23:00 - 07:00';
       default: return '';
     }
   };

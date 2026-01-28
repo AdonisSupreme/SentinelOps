@@ -117,6 +117,9 @@ class ChecklistApi {
   }
 
   async getInstance(id: string): Promise<ChecklistInstance> {
+    if (!id || id === 'undefined') {
+      throw new Error(`Invalid instance ID: ${id}`);
+    }
     const response = await api.get<ChecklistInstance>(`/api/v1/checklists/instances/${id}`);
     return response.data;
   }

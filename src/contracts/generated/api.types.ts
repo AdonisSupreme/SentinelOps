@@ -61,7 +61,7 @@ export interface ChecklistItem {
 
 export interface ChecklistItemInstance {
   id: string;
-  item: ChecklistItem;
+  template_item: ChecklistItem;
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'NOT_APPLICABLE';
   completed_at: string | null;
   completed_by: {
@@ -72,6 +72,9 @@ export interface ChecklistItemInstance {
   attachments: string[];
   created_at: string;
   updated_at: string;
+  skipped_reason: null;
+  failure_reason: null;
+  activities: any[];
 }
 
 export interface ChecklistInstance {

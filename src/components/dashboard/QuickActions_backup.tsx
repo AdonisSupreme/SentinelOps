@@ -96,7 +96,6 @@ const QuickActions: React.FC = () => {
       
       // Validate instance has an ID before navigation
       if (!instance || !instance.id) {
-        console.error('Invalid instance response:', instance);
         addNotification({ type: 'error', message: 'Failed to create checklist: Invalid response', priority: 'high' });
         return;
       }
@@ -171,43 +170,10 @@ const QuickActions: React.FC = () => {
             <div className="info-title">Shift Reminder</div>
             <div className="info-desc">
               {(() => {
-                const now = new Date();
-                const hour = now.getHours();
-                const minute = now.getMinutes();
-                const currentTimeInMinutes = hour * 60 + minute;
-                
-                let timeString = '';
-                if (hour >= 7 && hour < 15) {
-                  const remaining = (15 * 60) - currentTimeInMinutes;
-                  if (remaining < 60) timeString = `Morning shift - ${remaining}m left`;
-                  else {
-                    const h = Math.floor(remaining / 60);
-                    const m = remaining % 60;
-                    timeString = `Morning shift - ${h}h ${m}m left`;
-                  }
-                } else if (hour >= 15 && hour < 23) {
-                  const remaining = (23 * 60) - currentTimeInMinutes;
-                  if (remaining < 60) timeString = `Afternoon shift - ${remaining}m left`;
-                  else {
-                    const h = Math.floor(remaining / 60);
-                    const m = remaining % 60;
-                    timeString = `Afternoon shift - ${h}h ${m}m left`;
-                  }
-                } else {
-                  let remaining;
-                  if (hour >= 23) {
-                    remaining = ((24 * 60) + (7 * 60)) - currentTimeInMinutes;
-                  } else {
-                    remaining = (7 * 60) - currentTimeInMinutes;
-                  }
-                  if (remaining < 60) timeString = `Night shift - ${remaining}m left`;
-                  else {
-                    const h = Math.floor(remaining / 60);
-                    const m = remaining % 60;
-                    timeString = `Night shift - ${h}h ${m}m left`;
-                  }
-                }
-                return timeString;
+                const hour = new Date().getHours();
+                if (hour >= 7 && hour < 15) return 'Morning shift - 2h 30m left';
+                else if (hour >= 15 && hour < 23) return 'Afternoon shift - 4h 15m left';
+                else return 'Night shift - 6h 45m left';
               })()}
             </div>
           </div>

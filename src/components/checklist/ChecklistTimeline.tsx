@@ -3,7 +3,7 @@ import React from 'react';
 import { ChecklistItemInstance } from '../../services/checklistApi';
 import { 
   FaCheckCircle, FaPlay, FaClock, FaExclamationTriangle, 
-  FaBan, FaComment, FaFlag, FaBell 
+  FaBan, FaComment, FaFlag, FaBell, FaUser
 } from 'react-icons/fa';
 import './ChecklistTimeline.css';
 
@@ -11,9 +11,28 @@ interface ChecklistTimelineProps {
   items: ChecklistItemInstance[];
   activeItemId: string | null;
   onItemClick: (itemId: string) => void;
+  currentTime?: Date;
 }
 
-const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({ items, activeItemId, onItemClick }) => {
+const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({ 
+  items, 
+  onItemClick, 
+  activeItemId,
+  currentTime = new Date()
+}) => {
+  // Debug logging to understand data structure
+  console.log('🔍 ChecklistTimeline Debug - Items received:', {
+    itemsCount: items?.length || 0,
+    firstItem: items?.[0],
+    firstItemTitle: items?.[0]?.template_item?.title,
+    firstItemStructure: items?.[0] ? Object.keys(items[0]) : [],
+    firstItemItemStructure: items?.[0]?.template_item ? Object.keys(items[0].template_item) : [],
+    hasItemProperty: !!(items?.[0]?.template_item),
+    sampleData: items?.slice(0, 2)
+  });
+
+  console.log("INSTANCE ITEM: ", items);
+
   const getItemIcon = (item: ChecklistItemInstance) => {
     switch (item.status) {
       case 'COMPLETED':
@@ -56,6 +75,24 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({ items, activeItem
     }
   };
 
+  const checkDeadlineWarning = (scheduledTime: string | null | undefined, status: string) => {
+    if (!scheduledTime || status === 'COMPLETED') return false;
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const scheduledDateTime = new Date(today.toDateString() + ' ' + scheduledTime);
+    
+    // Check if current time is past the scheduled time
+    return now > scheduledDateTime;
+  };
+
+  const getDeadlineWarningClass = (scheduledTime: string | null | undefined, status: string) => {
+    if (checkDeadlineWarning(scheduledTime, status)) {
+      return 'deadline-warning';
+    }
+    return '';
+  };
+
   return (
     <div className="checklist-timeline">
       <div className="timeline-track">
@@ -63,9 +100,10 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({ items, activeItem
         
         {items.map((item, index) => {
           const isActive = activeItemId === item.id;
-          // Use template_item severity if available, otherwise fallback to item.severity or default
-          const severity = (item as any).template_item?.severity ?? (item as any).severity ?? 3; 
+          // Use item.template_item severity if available, otherwise fallback to default
+          const severity = item.template_item?.severity ?? 3; 
           const severityColor = getSeverityColor(severity);
+          const scheduledTime = item.template_item?.scheduled_time;
           
           // Determine status class
           const getStatusClass = (status: string) => {
@@ -73,17 +111,18 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({ items, activeItem
               case 'COMPLETED': return 'completed';
               case 'IN_PROGRESS': return 'in-progress';
               case 'SKIPPED': return 'skipped';
-              case 'FAILED': return 'failed';
               default: return '';
             }
           };
           
           const statusClass = getStatusClass(item.status);
+          const deadlineWarningClass = getDeadlineWarningClass(scheduledTime, item.status);
+          const isOverdue = checkDeadlineWarning(scheduledTime, item.status);
           
           return (
             <div 
               key={item.id}
-              className={`timeline-item ${isActive ? 'active' : ''} ${statusClass}`}
+              className={`timeline-item ${isActive ? 'active' : ''} ${statusClass} ${deadlineWarningClass}`}
               onClick={() => onItemClick(item.id)}
             >
               <div className="timeline-point" style={{ borderColor: severityColor }}>
@@ -92,33 +131,47 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({ items, activeItem
                   style={{ backgroundColor: severityColor }}
                 />
                 {getItemIcon(item)}
+                {isOverdue && (
+                  <div className="deadline-warning-icon">
+                    <FaExclamationTriangle />
+                  </div>
+                )}
               </div>
 
               <div className="timeline-content">
                 <div className="content-header">
                   <div className="item-title">
-                    <h4>{(item as any).template_item?.title || (item as any).item?.title || 'Untitled Item'}</h4>
-                    {getItemTypeIcon((item as any).template_item?.item_type || (item as any).item?.item_type || '')}
-                    {(item as any).template_item?.scheduled_time && (
-                      <span className="scheduled-time">
-                        <FaClock /> {formatTime((item as any).template_item.scheduled_time)}
+                    <h4>{item.template_item?.title || 'Untitled Item'}</h4>
+                    {getItemTypeIcon(item.template_item?.item_type || '')}
+                    {item.template_item?.scheduled_time && (
+                      <span className={`scheduled-time ${isOverdue ? 'overdue' : ''}`}>
+                        <FaClock /> {formatTime(item.template_item.scheduled_time)}
+                        {isOverdue && <span className="overdue-badge">OVERDUE</span>}
                       </span>
                     )}
                   </div>
                   <div className="item-meta">
-                    {(item as any).template_item?.is_required && (
+                    {item.template_item?.is_required && (
                       <span className="badge required">Required</span>
                     )}
                     {item.completed_by && (
-                      <span className="completed-by">
-                        by {item.completed_by.username}
+                      <span className={`completed-by ${item.completed_by.username === 'ashumba' ? 'ashumba' : ''}`}>
+                        <FaUser /> {item.completed_by.username || 'Unknown User'}
+                      </span>
+                    )}
+                    {item.completed_at && (
+                      <span className={`completed-time ${item.completed_by?.username === 'ashumba' ? 'ashumba' : ''}`}>
+                        <FaClock /> {new Date(item.completed_at).toLocaleTimeString([], { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {(item as any).template_item?.description && (
-                  <p className="item-description">{(item as any).template_item.description}</p>
+                {item.template_item?.description && (
+                  <p className="item-description">{item.template_item.description}</p>
                 )}
 
                 {item.notes && (
@@ -127,10 +180,25 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({ items, activeItem
                   </div>
                 )}
 
-                {item.completed_at && (
+                {item.completed_at && item.completed_by && (
                   <div className="item-activity">
-                    <FaComment />
-                    <span>Completed at {new Date(item.completed_at).toLocaleTimeString()}</span>
+                    <FaCheckCircle className="completion-icon" />
+                    <span>
+                      Completed by <strong>{item.completed_by.username}</strong> at {new Date(item.completed_at).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                      {item.completed_by.username === 'ashumba' && (
+                        <span style={{ 
+                          marginLeft: '0.5rem', 
+                          color: '#00d9ff', 
+                          fontWeight: '600',
+                          fontSize: '0.7rem'
+                        }}>
+                          ⚡ Senior Operator
+                        </span>
+                      )}
+                    </span>
                   </div>
                 )}
 

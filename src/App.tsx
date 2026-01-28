@@ -8,6 +8,7 @@ import { ChecklistProvider } from './contexts/checklistContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import ChecklistPage from './pages/ChecklistPage';
+import ChecklistsPage from './pages/ChecklistsPage';
 import PerformancePage from './pages/PerformancePage';
 import NotFoundPage from './pages/NotFoundPage';
 import Header from './components/layout/Header';
@@ -39,6 +40,7 @@ function App() {
                       {/* Protected Routes */}
                       <Route element={<PrivateRoute />}>
                         <Route path="/" element={<DashboardPage />} />
+                        <Route path="/checklists" element={<ChecklistsPage />} />
                         <Route path="/checklist/:id" element={<ChecklistPage />} />
                         <Route path="/performance" element={<PerformancePage />} />
                       </Route>

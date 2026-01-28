@@ -29,19 +29,60 @@ const ChecklistPage: React.FC = () => {
   const [showParticipants, setShowParticipants] = useState(true);
 
   useEffect(() => {
-    if (id) {
+    if (id && id !== 'undefined') {
+      console.log('Loading checklist instance with ID:', id);
       loadInstance(id);
+    } else {
+      console.warn('Invalid checklist ID provided:', id);
     }
   }, [id, loadInstance]);
 
+  useEffect(() => {
+    if (currentInstance) {
+      console.log('🔍 ChecklistPage Debug - CurrentInstance updated:', {
+        id: currentInstance.id,
+        template: currentInstance.template,
+        templateName: currentInstance.template?.name,
+        participants: currentInstance.participants,
+        participantsCount: currentInstance.participants?.length,
+        itemsCount: currentInstance.items?.length || 0,
+        firstItem: currentInstance.items?.[0],
+        firstItemTitle: currentInstance.items?.[0]?.template_item?.title,
+        firstItemStructure: currentInstance.items?.[0] ? Object.keys(currentInstance.items[0]) : [],
+        firstItemItemStructure: currentInstance.items?.[0]?.template_item ? Object.keys(currentInstance.items[0].template_item) : [],
+        hasItemProperty: !!(currentInstance.items?.[0]?.template_item),
+        allItemTitles: currentInstance.items?.map(item => item.template_item?.title || 'NO TITLE')
+      });
+      
+    }
+  }, [currentInstance]);
+
   const handleJoin = async () => {
     if (currentInstance) {
+      console.log('Joining checklist:', currentInstance.id);
       await joinInstance(currentInstance.id);
+      // After joining, reload the instance to get complete data including template
+      if (id) {
+        console.log('Reloading instance after join to get complete data');
+        await loadInstance(id);
+      }
     }
   };
 
   const handleItemAction = (itemId: string) => {
     setActiveItemId(activeItemId === itemId ? null : itemId);
+  };
+
+  const handleItemComplete = async () => {
+    // Close the item actions panel
+    setActiveItemId(null);
+    
+    // Refresh the current instance to show updated item status
+    if (id) {
+      console.log('🔄 Refreshing instance after item action...');
+      await loadInstance(id);
+      console.log('✅ Instance refreshed successfully');
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -68,11 +109,47 @@ const ChecklistPage: React.FC = () => {
 
   const getShiftTime = (shift: string) => {
     switch (shift) {
-      case 'MORNING': return '06:00 - 14:00';
-      case 'AFTERNOON': return '14:00 - 22:00';
-      case 'NIGHT': return '22:00 - 06:00';
+      case 'MORNING': return '07:00 - 15:00';
+      case 'AFTERNOON': return '15:00 - 23:00';
+      case 'NIGHT': return '23:00 - 07:00';
       default: return '';
     }
+  };
+
+  const calculateTimeRemaining = (instance: any) => {
+    if (!instance) return 0;
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    // Get shift end time based on shift type
+    let shiftEndTime;
+    switch (instance.shift) {
+      case 'MORNING':
+        shiftEndTime = '15:00';
+        break;
+      case 'AFTERNOON':
+        shiftEndTime = '23:00';
+        break;
+      case 'NIGHT':
+        // For night shift, if it's before midnight, end time is today, else tomorrow
+        if (now.getHours() >= 23) {
+          shiftEndTime = '07:00';
+          // Add one day to target date
+          today.setDate(today.getDate() + 1);
+        } else {
+          shiftEndTime = '07:00';
+        }
+        break;
+      default:
+        shiftEndTime = '23:00';
+    }
+    
+    const shiftEndDateTime = new Date(today.toDateString() + ' ' + shiftEndTime);
+    const timeDiff = shiftEndDateTime.getTime() - now.getTime();
+    const minutesRemaining = Math.floor(timeDiff / (1000 * 60));
+    
+    return minutesRemaining;
   };
 
   if (loading && !currentInstance) {
@@ -88,11 +165,25 @@ const ChecklistPage: React.FC = () => {
     return (
       <div className="checklist-error">
         <FaExclamationTriangle size={48} />
-        <h3>Checklist Not Found</h3>
-        <p>{error}</p>
-        <button onClick={() => navigate('/')} className="btn-primary">
-          <FaArrowLeft /> Return to Dashboard
-        </button>
+        <h3>Connection Error</h3>
+        <p>
+          {error.includes('Failed to load') 
+            ? 'Unable to connect to the server. Please check your connection and try again.'
+            : error}
+        </p>
+        <div className="error-actions">
+          <button onClick={() => navigate('/')} className="btn-primary">
+            <FaArrowLeft /> Return to Dashboard
+          </button>
+          <button onClick={() => window.location.reload()} className="btn-secondary">
+            Refresh Page
+          </button>
+          {id && (
+            <button onClick={() => loadInstance(id)} className="btn-secondary">
+              Retry Loading
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -114,13 +205,13 @@ const ChecklistPage: React.FC = () => {
         
         <div className="header-content">
           <div className="checklist-title">
-            <h1>{currentInstance.template.name}</h1>
+            <h1>{currentInstance?.template?.name || 'Untitled Checklist'}</h1>
             <div className="checklist-meta">
-              <span><FaCalendarAlt /> {currentInstance.checklist_date}</span>
+              <span><FaCalendarAlt /> {currentInstance?.checklist_date || 'Unknown Date'}</span>
               <span>•</span>
-              <span>{currentInstance.shift} Shift ({getShiftTime(currentInstance.shift)})</span>
+              <span>{currentInstance?.shift || 'UNKNOWN'} Shift ({getShiftTime(currentInstance?.shift || '')})</span>
               <span>•</span>
-              {getStatusBadge(currentInstance.status)}
+              {getStatusBadge(currentInstance?.status || 'OPEN')}
             </div>
           </div>
 
@@ -182,7 +273,7 @@ const ChecklistPage: React.FC = () => {
             completion_percentage: (currentInstance.items?.length || 0) > 0 
               ? Math.round(((currentInstance.items?.filter(item => item.status === 'COMPLETED').length || 0) / (currentInstance.items?.length || 0)) * 100)
               : 0,
-            time_remaining_minutes: undefined
+            time_remaining_minutes: calculateTimeRemaining(currentInstance)
           }} />
 
           {/* Participants */}
@@ -222,7 +313,7 @@ const ChecklistPage: React.FC = () => {
               <ItemActions 
                 instanceId={currentInstance.id}
                 itemId={activeItemId}
-                onComplete={() => setActiveItemId(null)}
+                onComplete={handleItemComplete}
               />
             </section>
           )}

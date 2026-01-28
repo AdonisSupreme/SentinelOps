@@ -2,11 +2,31 @@
 .dashboard-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 1rem;
   padding: 1.5rem;
   border-bottom: 1px solid var(--border-color);
   margin-left: 3px;
+  gap: 2rem;
+}
+
+.header-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.header-center {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-right {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .header-left h1 {
@@ -87,17 +107,17 @@
   color: #00ff9d;
 }
 
-.header-right {
-  text-align: right;
-}
-
 .mission-clock {
   background: var(--bg-card);
   border-radius: 16px;
   padding: 1rem 1.5rem;
   border: 1px solid var(--border-color);
   min-width: 180px;
-  margin-left: auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .clock-label {
@@ -106,6 +126,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 0.25rem;
+  text-align: center;
 }
 
 .clock-value {
@@ -114,9 +135,133 @@
   color: var(--primary);
   font-family: 'JetBrains Mono', monospace;
   margin-bottom: 0.25rem;
+  text-align: center;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 10px rgba(0, 217, 255, 0.3);
+  transition: color 0.3s ease;
+  position: relative;
+}
+
+.clock-value:hover {
+  color: #00d9ff;
+  text-shadow: 0 0 15px rgba(0, 217, 255, 0.5);
+}
+
+.clock-value::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -8px;
+  width: 4px;
+  height: 4px;
+  background: #00d9ff;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  animation: pulse 2s infinite;
+  box-shadow: 0 0 8px rgba(0, 217, 255, 0.8);
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: translateY(-50%) scale(1);
+  }
+  50% { 
+    opacity: 0.6; 
+    transform: translateY(-50%) scale(1.2);
+  }
 }
 
 .clock-date {
   font-size: 0.875rem;
   color: var(--text-secondary);
+}
+
+/* Responsive design for dashboard header */
+@media (max-width: 1024px) {
+  .dashboard-header {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .header-left {
+    flex: 1 1 100%;
+    order: 1;
+  }
+  
+  .header-center {
+    flex: 1 1 auto;
+    order: 3;
+  }
+  
+  .header-right {
+    flex: 0 0 auto;
+    order: 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-header {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+  
+  .header-left h1 {
+    font-size: 2rem;
+  }
+  
+  .greeting {
+    font-size: 1.25rem;
+  }
+  
+  .subtitle {
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+  
+  .mission-clock {
+    min-width: 160px;
+    padding: 0.75rem 1rem;
+  }
+  
+  .clock-value {
+    font-size: 1.5rem;
+  }
+  
+  .clock-label {
+    font-size: 0.625rem;
+  }
+  
+  .clock-date {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .header-left,
+  .header-center,
+  .header-right {
+    flex: 1;
+    order: unset;
+  }
+  
+  .header-center {
+    order: 2;
+    margin: 1rem 0;
+  }
+  
+  .header-right {
+    order: 3;
+  }
+  
+  .mission-clock {
+    min-width: auto;
+    width: 100%;
+  }
 }

@@ -1,7 +1,8 @@
 // src/components/dashboard/DashboardHeader.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { User } from '../../contexts/AuthContext';
 import { FaBell, FaBolt, FaShieldAlt } from 'react-icons/fa';
+import ShiftReminder from './ShiftReminder';
 import './DashboardHeader.css';
 
 interface DashboardHeaderProps {
@@ -9,8 +10,18 @@ interface DashboardHeaderProps {
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000); // Update every second
+
+    return () => clearInterval(timer);
+  }, []);
+
   const getGreeting = () => {
-    const hour = new Date().getHours();
+    const hour = currentTime.getHours();
     if (hour < 12) return 'Good morning';
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
@@ -26,14 +37,18 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
         </h1>
       </div>
       
+      <div className="header-center">
+        <ShiftReminder />
+      </div>
+      
       <div className="header-right">
         <div className="mission-clock">
           <div className="clock-label">Mission Time</div>
           <div className="clock-value">
-            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </div>
           <div className="clock-date">
-            {new Date().toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+            {currentTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
           </div>
         </div>
       </div>
