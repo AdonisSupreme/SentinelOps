@@ -59,6 +59,24 @@ export interface ChecklistItem {
   sort_order: number;
 }
 
+export interface ItemActivity {
+  id: string;
+  action: 'STARTED' | 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'ESCALATED' | 'UPDATED';
+  actor: {
+    id: string;
+    username: string;
+    email?: string;
+  };
+  timestamp: string;
+  notes?: string;
+  metadata?: {
+    previous_status?: string;
+    new_status?: string;
+    reason?: string;
+    duration_ms?: number;
+  };
+}
+
 export interface ChecklistItemInstance {
   id: string;
   template_item: ChecklistItem;
@@ -72,9 +90,9 @@ export interface ChecklistItemInstance {
   attachments: string[];
   created_at: string;
   updated_at: string;
-  skipped_reason: null;
-  failure_reason: null;
-  activities: any[];
+  skipped_reason: string | null;
+  failure_reason: string | null;
+  activities: ItemActivity[];
 }
 
 export interface ChecklistInstance {
@@ -119,6 +137,13 @@ export interface UpdateChecklistItemRequest {
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'NOT_APPLICABLE';
   notes?: string;
   attachments?: string[];
+  action_type?: 'STARTED' | 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'ESCALATED' | 'UPDATED';
+  reason?: string;
+  metadata?: {
+    previous_status?: string;
+    duration_ms?: number;
+    [key: string]: any;
+  };
 }
 
 // === State Policy ===

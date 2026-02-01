@@ -20,6 +20,7 @@ const Header: React.FC = () => {
 
   const navItems = [
     { path: '/', label: 'Dashboard' },
+    { path: '/database-stats', label: 'DB Stats' },
     { path: '/checklists', label: 'Checklists' },
     { path: '/performance', label: 'Performance' }
   ];
@@ -43,7 +44,7 @@ const Header: React.FC = () => {
             {menuOpen ? <FaTimes /> : <FaBars />}
           </button>
           <img src={Logo} alt="SentinelOps" className="header-logo" onClick={() => navigate('/')} />
-          <h1 className="app-title">SentinelOps Portal</h1>
+          <span className="app-title">SENTINELOPS PORTAL</span>
         </div>
 
         {/* Navigation Tabs - Hidden on small screens, visible on wider screens */}

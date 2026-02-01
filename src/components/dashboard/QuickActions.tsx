@@ -94,6 +94,11 @@ const QuickActions: React.FC = () => {
       console.log('Creating instance with payload:', payload);
       const instance = await checklistApi.createInstance(payload);
       
+      // Debug: Log the actual response
+      console.log('Instance response received:', instance);
+      console.log('Instance ID:', instance?.id);
+      console.log('Instance ID type:', typeof instance?.id);
+      
       // Validate instance has an ID before navigation
       if (!instance || !instance.id) {
         console.error('Invalid instance response:', instance);

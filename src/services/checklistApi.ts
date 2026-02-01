@@ -6,6 +6,7 @@ import {
   ChecklistItem,
   ChecklistInstance,
   ChecklistItemInstance,
+  ItemActivity,
   CreateChecklistInstanceRequest,
   UpdateChecklistItemRequest,
   HandoverNote as BackendHandoverNote,
@@ -30,6 +31,7 @@ export type {
   ChecklistItem,
   ChecklistInstance,
   ChecklistItemInstance,
+  ItemActivity,
   CreateChecklistInstanceRequest,
   UpdateChecklistItemRequest,
   HandoverNote as BackendHandoverNote,
@@ -107,12 +109,22 @@ class ChecklistApi {
 
   // Instances
   async createInstance(data: CreateChecklistInstanceRequest): Promise<ChecklistInstance> {
-    const response = await api.post<ChecklistInstance>('/api/v1/checklists/instances', data);
-    return response.data;
+    const response = await api.post<{instance: ChecklistInstance, effects: any}>('/api/v1/checklists/instances', data);
+    return response.data.instance; // Extract the instance from the response
   }
 
   async getTodayInstances(): Promise<ChecklistInstance[]> {
     const response = await api.get<ChecklistInstance[]>('/api/v1/checklists/instances/today');
+    return response.data;
+  }
+
+  async getAllInstances(startDate?: string, endDate?: string, shift?: string): Promise<ChecklistInstance[]> {
+    const params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    if (shift) params.append('shift', shift);
+    
+    const response = await api.get<ChecklistInstance[]>(`/api/v1/checklists/instances?${params.toString()}`);
     return response.data;
   }
 
@@ -125,13 +137,14 @@ class ChecklistApi {
   }
 
   async joinInstance(instanceId: string): Promise<ChecklistInstance> {
-    const response = await api.post<ChecklistInstance>(`/api/v1/checklists/instances/${instanceId}/join`);
-    return response.data;
+    const response = await api.post<{instance: ChecklistInstance, effects: any}>(`/api/v1/checklists/instances/${instanceId}/join`);
+    return response.data.instance; // Extract the instance from the response
   }
 
-  async completeInstance(instanceId: string): Promise<ChecklistInstance> {
-    const response = await api.post<ChecklistInstance>(`/api/v1/checklists/instances/${instanceId}/complete`);
-    return response.data;
+  async completeInstance(instanceId: string, withExceptions: boolean = false): Promise<ChecklistInstance> {
+    const params = withExceptions ? '?with_exceptions=true' : '';
+    const response = await api.post<{instance: ChecklistInstance, effects: any}>(`/api/v1/checklists/instances/${instanceId}/complete${params}`);
+    return response.data.instance; // Extract the instance from the response
   }
 
   // Items
@@ -140,11 +153,13 @@ class ChecklistApi {
     itemId: string,
     data: UpdateChecklistItemRequest
   ): Promise<ChecklistItemInstance> {
-    const response = await api.patch<ChecklistItemInstance>(
+    const response = await api.patch<{instance: ChecklistInstance, effects: any}>(
       `/api/v1/checklists/instances/${instanceId}/items/${itemId}`,
       data
     );
-    return response.data;
+    // Find the updated item in the instance
+    const updatedItem = response.data.instance.items.find(item => item.id === itemId);
+    return updatedItem || response.data.instance.items[0]; // Fallback to first item
   }
 
   // Handover Notes

@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { FaInfoCircle, FaExclamationTriangle, FaCheckCircle, FaBell, FaCalendarAlt, FaFlag } from 'react-icons/fa';
 import { useAuth } from './AuthContext';
 import { checklistApi } from '../services/checklistApi';
-import { wsService } from '../services/websocket';
 import {
   Notification as BackendNotification,
   BackendError,
@@ -37,7 +36,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const { user, token } = useAuth();
+  const { user } = useAuth();
 
   // Load initial notifications from API
   useEffect(() => {
@@ -46,41 +45,22 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   }, [user]);
 
-  // WebSocket for real-time notifications (single source of truth)
+  // Poll for notifications every 30 seconds (instead of WebSocket)
   useEffect(() => {
-    if (!token) {
-      wsService.disconnect();
-      return;
-    }
+    if (!user) return;
 
-    const unsubscribe = wsService.subscribe((event) => {
-      if (event.type !== 'new_notification') return;
+    // Initial load
+    loadNotifications();
 
-      const incoming = event.data as BackendNotification;
-      if (!incoming) return;
-
-      const newNotification: Notification = {
-        id: incoming.id || Math.random().toString(36).substr(2, 9),
-        type: mapNotificationType(incoming.related_entity || incoming.category || 'info'),
-        message: incoming.message,
-        priority: incoming.priority || 'medium',
-        read: Boolean(incoming.is_read),
-        timestamp: new Date(incoming.created_at || 0),
-        relatedId: incoming.related_id,
-        relatedType: incoming.related_entity || incoming.related_type,
-      };
-
-      setNotifications((prev) => [newNotification, ...prev.slice(0, 49)]);
-    });
-
-    wsService.connect().catch((error) => {
-      console.error('WebSocket connection error:', error);
-    });
+    // Set up polling interval
+    const intervalId = setInterval(() => {
+      loadNotifications();
+    }, 30000); // Poll every 30 seconds
 
     return () => {
-      unsubscribe();
+      clearInterval(intervalId);
     };
-  }, [token]);
+  }, [user]);
 
   const mapNotificationType = (category: string): NotificationType => {
     switch (category) {

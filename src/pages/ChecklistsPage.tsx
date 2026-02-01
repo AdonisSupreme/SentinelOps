@@ -32,14 +32,21 @@ const ChecklistsPage: React.FC<ChecklistsPageProps> = () => {
   const loadInstances = async () => {
     try {
       setLoading(true);
-      // For now, we'll get today's instances. In a real implementation, 
-      // we'd need an API endpoint to get instances for a date range
-      const todayInstances = await checklistApi.getTodayInstances();
       
-      // Generate instances for the past 7 days and next 7 days for demo
-      const generatedInstances = generateInstanceRange(todayInstances, currentDate);
+      // Calculate date range: 7 days before and after current date
+      const startDate = new Date(currentDate);
+      startDate.setDate(startDate.getDate() - 7);
+      const endDate = new Date(currentDate);
+      endDate.setDate(endDate.getDate() + 7);
       
-      setInstances(generatedInstances);
+      // Fetch real instances from backend with date range
+      const realInstances = await checklistApi.getAllInstances(
+        startDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0],
+        undefined // No shift filter initially
+      );
+      
+      setInstances(realInstances);
       setError(null);
     } catch (err) {
       console.error('Failed to load instances:', err);
@@ -49,110 +56,6 @@ const ChecklistsPage: React.FC<ChecklistsPageProps> = () => {
     }
   };
 
-  const generateInstanceRange = (todayInstances: ChecklistInstance[], baseDate: Date): ChecklistInstance[] => {
-    const instances: ChecklistInstance[] = [];
-    const shifts = ['MORNING', 'AFTERNOON', 'NIGHT'];
-    
-    // Generate instances for 7 days before and after current date
-    for (let i = -7; i <= 7; i++) {
-      const date = new Date(baseDate);
-      date.setDate(date.getDate() + i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      shifts.forEach(shift => {
-        // Check if we have a template for this shift
-        const templateId = `${shift.toLowerCase()}-template`;
-        const dateForInstance = new Date(dateStr);
-        
-        const template = {
-          id: templateId,
-          name: `${shift.charAt(0) + shift.slice(1).toLowerCase()} Operations Checklist`,
-          description: `${shift.charAt(0) + shift.slice(1).toLowerCase()} shift checklist for daily operations`,
-          shift: shift as 'MORNING' | 'AFTERNOON' | 'NIGHT',
-          version: 1,
-          is_active: true,
-          created_at: dateForInstance.toISOString()
-        };
-        
-        // Calculate status based on current time and shift schedule
-        const now = new Date();
-        const status = calculateInstanceStatus(shift, dateForInstance, now);
-        
-        const startTime = calculateShiftStartTime(shift, dateForInstance);
-        const endTime = calculateShiftEndTime(shift, dateForInstance);
-        
-        const instance: ChecklistInstance = {
-          id: `${dateStr}-${shift.toLowerCase()}`,
-          template: template,
-          checklist_date: dateStr,
-          shift: shift as 'MORNING' | 'AFTERNOON' | 'NIGHT',
-          shift_start: startTime.toISOString(),
-          shift_end: endTime.toISOString(),
-          status: status as 'OPEN' | 'IN_PROGRESS' | 'PENDING_REVIEW' | 'COMPLETED' | 'COMPLETED_WITH_EXCEPTIONS' | 'CLOSED_BY_EXCEPTION',
-          created_by: null,
-          closed_by: null,
-          closed_at: status === 'COMPLETED' ? endTime.toISOString() : null,
-          created_at: dateForInstance.toISOString(),
-          items: [],
-          participants: [],
-          notes: [],
-          attachments: [],
-          exceptions: [],
-          handover_notes: []
-        };
-        
-        instances.push(instance);
-      });
-    }
-    
-    return instances.sort((a, b) => new Date(b.checklist_date).getTime() - new Date(a.checklist_date).getTime());
-  };
-
-  const calculateInstanceStatus = (shift: string, instanceDate: Date, now: Date): string => {
-    const startTime = calculateShiftStartTime(shift, instanceDate);
-    const endTime = calculateShiftEndTime(shift, instanceDate);
-    
-    if (now >= endTime) {
-      return 'COMPLETED';
-    } else if (now >= startTime) {
-      return 'IN_PROGRESS';
-    } else {
-      return 'OPEN';
-    }
-  };
-
-  const calculateShiftStartTime = (shift: string, date: Date): Date => {
-    const startTime = new Date(date);
-    switch (shift) {
-      case 'MORNING':
-        startTime.setHours(7, 0, 0, 0);
-        break;
-      case 'AFTERNOON':
-        startTime.setHours(15, 0, 0, 0);
-        break;
-      case 'NIGHT':
-        startTime.setHours(23, 0, 0, 0);
-        break;
-    }
-    return startTime;
-  };
-
-  const calculateShiftEndTime = (shift: string, date: Date): Date => {
-    const endTime = new Date(date);
-    switch (shift) {
-      case 'MORNING':
-        endTime.setHours(15, 0, 0, 0);
-        break;
-      case 'AFTERNOON':
-        endTime.setHours(23, 0, 0, 0);
-        break;
-      case 'NIGHT':
-        endTime.setDate(endTime.getDate() + 1);
-        endTime.setHours(7, 0, 0, 0);
-        break;
-    }
-    return endTime;
-  };
 
   const filterInstances = () => {
     let filtered = [...instances];
@@ -180,7 +83,11 @@ const ChecklistsPage: React.FC<ChecklistsPageProps> = () => {
   };
 
   const handleInstanceClick = (instance: ChecklistInstance) => {
-    navigate(`/checklist/${instance.id}`);
+    if (instance?.id) {
+      navigate(`/checklist/${instance.id}`);
+    } else {
+      console.error('Instance ID is missing:', instance);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -263,10 +170,19 @@ const ChecklistsPage: React.FC<ChecklistsPageProps> = () => {
     setCurrentDate(newDate);
   };
 
+  // Group instances by date, sorted by date descending
   const groupInstancesByDate = () => {
     const grouped: { [date: string]: ChecklistInstance[] } = {};
     
-    filteredInstances.forEach(instance => {
+    // Sort instances by date descending, then by shift order
+    const shiftOrder = { 'MORNING': 0, 'AFTERNOON': 1, 'NIGHT': 2 };
+    const sortedInstances = [...filteredInstances].sort((a, b) => {
+      const dateCompare = new Date(b.checklist_date).getTime() - new Date(a.checklist_date).getTime();
+      if (dateCompare !== 0) return dateCompare;
+      return (shiftOrder[a.shift] || 0) - (shiftOrder[b.shift] || 0);
+    });
+    
+    sortedInstances.forEach(instance => {
       if (!grouped[instance.checklist_date]) {
         grouped[instance.checklist_date] = [];
       }

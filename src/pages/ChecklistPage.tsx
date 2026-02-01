@@ -20,6 +20,7 @@ const ChecklistPage: React.FC = () => {
     currentInstance, 
     loadInstance, 
     joinInstance, 
+    completeInstance,
     loading, 
     error 
   } = useChecklist();
@@ -27,6 +28,9 @@ const ChecklistPage: React.FC = () => {
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [showHandover, setShowHandover] = useState(false);
   const [showParticipants, setShowParticipants] = useState(true);
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+  const [completeWithExceptions, setCompleteWithExceptions] = useState(false);
+  const [showShareFeedback, setShowShareFeedback] = useState(false);
 
   useEffect(() => {
     if (id && id !== 'undefined') {
@@ -84,6 +88,41 @@ const ChecklistPage: React.FC = () => {
       console.log('✅ Instance refreshed successfully');
     }
   };
+
+  const handleCompleteChecklist = async () => {
+    if (!currentInstance || !id) return;
+    
+    try {
+      await completeInstance(id, completeWithExceptions);
+      setShowCompleteDialog(false);
+      setCompleteWithExceptions(false);
+    } catch (err) {
+      console.error('Failed to complete checklist:', err);
+    }
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      setShowShareFeedback(true);
+      setTimeout(() => setShowShareFeedback(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy URL:', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setShowShareFeedback(true);
+      setTimeout(() => setShowShareFeedback(false), 2000);
+    }
+  };
+
+  const canCompleteChecklist = user?.role === 'SUPERVISOR' || user?.role === 'MANAGER' || user?.role === 'admin';
+  const isChecklistOpen = currentInstance?.status === 'OPEN' || currentInstance?.status === 'IN_PROGRESS';
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -221,9 +260,20 @@ const ChecklistPage: React.FC = () => {
                 <FaUsers /> Join Checklist
               </button>
             )}
-            <button className="btn-share">
+            {canCompleteChecklist && isChecklistOpen && (
+              <button 
+                onClick={() => setShowCompleteDialog(true)} 
+                className="btn-complete"
+              >
+                <FaCheckCircle /> Complete Checklist
+              </button>
+            )}
+            <button className="btn-share" onClick={handleShare}>
               <FaShareAlt /> Share
             </button>
+            {showShareFeedback && (
+              <span className="share-feedback">Link copied!</span>
+            )}
           </div>
         </div>
       </header>
@@ -313,8 +363,52 @@ const ChecklistPage: React.FC = () => {
               <ItemActions 
                 instanceId={currentInstance.id}
                 itemId={activeItemId}
+                currentStatus={currentInstance.items?.find(item => item.id === activeItemId)?.status}
                 onComplete={handleItemComplete}
               />
+            </section>
+          )}
+
+          {/* Complete Checklist Dialog */}
+          {showCompleteDialog && (
+            <section className="sidebar-section complete-dialog">
+              <div className="section-header">
+                <h3><FaCheckCircle /> Complete Checklist</h3>
+              </div>
+              <div className="complete-dialog-content">
+                <p>Are you sure you want to complete this checklist?</p>
+                <div className="completion-stats">
+                  <span>
+                    {currentInstance.items?.filter(item => item.status === 'COMPLETED').length || 0} / {currentInstance.items?.length || 0} items completed
+                  </span>
+                </div>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={completeWithExceptions}
+                    onChange={(e) => setCompleteWithExceptions(e.target.checked)}
+                  />
+                  Complete with exceptions (allow skipped/failed items)
+                </label>
+                <div className="dialog-actions">
+                  <button 
+                    onClick={handleCompleteChecklist}
+                    className="btn-action confirm"
+                    disabled={loading}
+                  >
+                    {loading ? 'Completing...' : 'Confirm Complete'}
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowCompleteDialog(false);
+                      setCompleteWithExceptions(false);
+                    }}
+                    className="btn-action cancel"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </section>
           )}
         </div>

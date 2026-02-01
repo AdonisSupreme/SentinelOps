@@ -1,0 +1,295 @@
+/* src/components/checklist/ActivityTimeline.css */
+.activity-timeline {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.activity-timeline.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.timeline-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.activity-count {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+}
+
+.timeline-items {
+  position: relative;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 40px;
+  width: 2px;
+  height: calc(100% + 0.5rem);
+  background: var(--border-color);
+  opacity: 0.3;
+}
+
+.timeline-marker {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  position: relative;
+  z-index: 1;
+}
+
+.activity-icon {
+  font-size: 1rem;
+}
+
+.activity-icon.started {
+  color: var(--primary);
+}
+
+.activity-icon.completed {
+  color: #00ff9d;
+}
+
+.activity-icon.skipped {
+  color: #ffa502;
+}
+
+.activity-icon.failed {
+  color: #ff6b6b;
+}
+
+.activity-icon.escalated {
+  color: #ff4757;
+}
+
+.activity-icon.updated {
+  color: #74b9ff;
+}
+
+.activity-icon.default {
+  color: var(--text-muted);
+}
+
+.timeline-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  gap: 1rem;
+}
+
+.action-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.action-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.status-change {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.activity-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.timestamp {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.duration {
+  font-size: 0.75rem;
+  color: var(--primary);
+  background: rgba(0, 217, 255, 0.1);
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.activity-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.actor-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.actor-icon {
+  font-size: 0.75rem;
+  color: var(--primary);
+}
+
+.actor-name {
+  font-weight: 500;
+}
+
+.activity-notes {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary);
+}
+
+.notes-icon {
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.activity-notes p {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.activity-reason {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  padding: 0.5rem;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 6px;
+  border-left: 3px solid #ff6b6b;
+}
+
+.activity-reason strong {
+  color: #ff6b6b;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .activity-timeline {
+    padding: 1rem;
+  }
+  
+  .activity-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .activity-meta {
+    align-items: flex-start;
+  }
+  
+  .timeline-item:not(:last-child)::after {
+    left: 15px;
+  }
+  
+  .timeline-marker {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .activity-icon {
+    font-size: 0.875rem;
+  }
+}
+
+/* Animation for new activities */
+.timeline-item {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Hover effects */
+.timeline-item:hover .timeline-marker {
+  border-color: var(--primary);
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
+.timeline-item:hover .activity-label {
+  color: var(--primary);
+  transition: color 0.2s ease;
+}

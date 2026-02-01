@@ -7,6 +7,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { ChecklistProvider } from './contexts/checklistContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import DatabaseStatsPage from './pages/DatabaseStatsPage';
 import ChecklistPage from './pages/ChecklistPage';
 import ChecklistsPage from './pages/ChecklistsPage';
 import PerformancePage from './pages/PerformancePage';
@@ -40,6 +41,7 @@ function App() {
                       {/* Protected Routes */}
                       <Route element={<PrivateRoute />}>
                         <Route path="/" element={<DashboardPage />} />
+                        <Route path="/database-stats" element={<DatabaseStatsPage />} />
                         <Route path="/checklists" element={<ChecklistsPage />} />
                         <Route path="/checklist/:id" element={<ChecklistPage />} />
                         <Route path="/performance" element={<PerformancePage />} />

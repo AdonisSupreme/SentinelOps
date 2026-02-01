@@ -1,5 +1,5 @@
 // src/components/auth/PrivateRoute.tsx
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface PrivateRouteProps {
@@ -9,8 +9,11 @@ interface PrivateRouteProps {
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, roles }) => {
   const { user, isAuthenticated } = useAuth();
+  const location = useLocation();
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 
   const userRole = user?.role || "";
   if (roles && !roles.includes(userRole)) return <Navigate to="/" replace />;

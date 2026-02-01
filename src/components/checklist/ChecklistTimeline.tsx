@@ -1,10 +1,12 @@
 // src/components/checklist/ChecklistTimeline.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { ChecklistItemInstance } from '../../services/checklistApi';
 import { 
   FaCheckCircle, FaPlay, FaClock, FaExclamationTriangle, 
-  FaBan, FaComment, FaFlag, FaBell, FaUser
+  FaBan, FaComment, FaFlag, FaBell, FaUser, FaHistory
 } from 'react-icons/fa';
+import ActivityTimeline from './ActivityTimeline';
+import { useAuth } from '../../contexts/AuthContext';
 import './ChecklistTimeline.css';
 
 interface ChecklistTimelineProps {
@@ -20,6 +22,32 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({
   activeItemId,
   currentTime = new Date()
 }) => {
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const { user } = useAuth();
+  
+  const toggleActivityTimeline = (itemId: string) => {
+    const newExpanded = new Set(expandedItems);
+    if (newExpanded.has(itemId)) {
+      newExpanded.delete(itemId);
+    } else {
+      newExpanded.add(itemId);
+    }
+    setExpandedItems(newExpanded);
+  };
+
+  const getActivitySummary = (activities: any[]) => {
+    if (!activities || activities.length === 0) return null;
+    
+    const latestActivity = activities[activities.length - 1];
+    const activityCount = activities.length;
+    
+    return {
+      latest: latestActivity,
+      count: activityCount,
+      hasMultiple: activityCount > 1
+    };
+  };
   // Debug logging to understand data structure
   console.log('🔍 ChecklistTimeline Debug - Items received:', {
     itemsCount: items?.length || 0,
@@ -155,12 +183,12 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({
                       <span className="badge required">Required</span>
                     )}
                     {item.completed_by && (
-                      <span className={`completed-by ${item.completed_by.username === 'ashumba' ? 'ashumba' : ''}`}>
+                      <span className={`completed-by ${item.completed_by.username === user?.username ? 'current-user' : ''}`}>
                         <FaUser /> {item.completed_by.username || 'Unknown User'}
                       </span>
                     )}
                     {item.completed_at && (
-                      <span className={`completed-time ${item.completed_by?.username === 'ashumba' ? 'ashumba' : ''}`}>
+                      <span className={`completed-time ${item.completed_by?.username === user?.username ? 'current-user' : ''}`}>
                         <FaClock /> {new Date(item.completed_at).toLocaleTimeString([], { 
                           hour: '2-digit', 
                           minute: '2-digit' 
@@ -188,14 +216,14 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({
                         hour: '2-digit', 
                         minute: '2-digit' 
                       })}
-                      {item.completed_by.username === 'ashumba' && (
+                      {item.completed_by.username === user?.username && (
                         <span style={{ 
                           marginLeft: '0.5rem', 
                           color: '#00d9ff', 
                           fontWeight: '600',
                           fontSize: '0.7rem'
                         }}>
-                          ⚡ Senior Operator
+                          ⚡ You
                         </span>
                       )}
                     </span>
@@ -208,6 +236,60 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({
                   </div>
                 )}
               </div>
+              
+              {/* Inline Activity Indicator */}
+              {item.activities && item.activities.length > 0 && (
+                <div 
+                  className="activity-indicator"
+                  onMouseEnter={() => setHoveredItem(item.id)}
+                  onMouseLeave={() => setHoveredItem(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleActivityTimeline(item.id);
+                  }}
+                >
+                  <div className="activity-chip">
+                    <FaHistory className="activity-icon" />
+                    <span className="activity-count">{item.activities.length}</span>
+                  </div>
+                  
+                  {hoveredItem === item.id && !expandedItems.has(item.id) && (
+                    <div className="activity-preview">
+                      <div className="preview-header">
+                        <span className="preview-title">Recent Activity</span>
+                        <span className="preview-time">
+                          {new Date(item.activities[item.activities.length - 1].timestamp).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                      <div className="preview-content">
+                        <span className="preview-action">
+                          {item.activities[item.activities.length - 1].action}
+                        </span>
+                        <span className="preview-actor">
+                          by {item.activities[item.activities.length - 1].actor?.username || 'system'}
+                        </span>
+                        {item.activities[item.activities.length - 1].notes && (
+                          <span className="preview-notes">
+                            "{item.activities[item.activities.length - 1].notes}"
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {expandedItems.has(item.id) && (
+                <div className="activity-timeline-wrapper">
+                  <ActivityTimeline 
+                    activities={item.activities || []} 
+                    showItemDetails={false}
+                  />
+                </div>
+              )}
             </div>
           );
         })}
