@@ -194,10 +194,14 @@ const ChecklistsPage: React.FC<ChecklistsPageProps> = () => {
 
   if (loading) {
     return (
-      <div className="checklists-page">
+      <div className="dbstats-page loading">
         <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading checklist instances...</p>
+          <div className="sentinel-loader">
+            <div className="loader-ring"></div>
+            <div className="loader-ring"></div>
+            <div className="loader-ring"></div>
+          </div>
+          <span className="loading-text">Loading Operational Checklists...</span>
         </div>
       </div>
     );

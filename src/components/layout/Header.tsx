@@ -18,12 +18,17 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const navItems = [
+  const baseNavItems = [
     { path: '/', label: 'Dashboard' },
     { path: '/database-stats', label: 'DB Stats' },
     { path: '/checklists', label: 'Checklists' },
     { path: '/performance', label: 'Performance' }
   ];
+
+  const isAdmin = user?.role?.toLowerCase() === 'admin';
+  const navItems = isAdmin
+    ? [...baseNavItems, { path: '/users', label: 'Users' }]
+    : baseNavItems;
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {

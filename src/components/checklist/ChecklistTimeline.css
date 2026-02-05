@@ -29,8 +29,9 @@
   transition: all var(--transition-normal);
   padding: 0.5rem;
   border-radius: 12px;
-  background: linear-gradient(to bottom, var(--primary) 0%, transparent 50%, var(--secondary) 100%) var(--bg-card);
+  background: var(--dbstats-bg-secondary);
   box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
   z-index: 1;
 }
 

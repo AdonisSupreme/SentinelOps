@@ -124,31 +124,10 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         participants: updatedInstance?.participants,
         participantCount: updatedInstance?.participants?.length
       });
-      
+
       // Ensure the instance has all required data
       if (updatedInstance) {
-        // Fix: Override participant data with correct AuthContext user data
-        if (user && updatedInstance.participants) {
-          const currentUserIndex = updatedInstance.participants.findIndex(
-            (p: any) => p.id === user.id
-          );
-          if (currentUserIndex !== -1) {
-            // Replace with correct user data from AuthContext
-            updatedInstance.participants[currentUserIndex] = {
-              id: user.id,
-              username: user.username,
-              email: user.email,
-              role: user.role
-            };
-            console.log('🔄 Updated participant data with AuthContext user:', {
-              id: user.id,
-              username: user.username,
-              email: user.email,
-              role: user.role
-            });
-          }
-        }
-        
+        // Trust backend participant mapping (UserInfo) and use as-is
         setCurrentInstance(updatedInstance);
         setError(null);
         

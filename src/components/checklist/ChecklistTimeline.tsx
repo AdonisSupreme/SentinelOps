@@ -150,9 +150,11 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({
           return (
             <div 
               key={item.id}
-              className={`timeline-item ${isActive ? 'active' : ''} ${statusClass} ${deadlineWarningClass}`}
+              className={`timeline-item ${isActive ? 'active' : ''} ${statusClass} ${deadlineWarningClass} capacity`}
               onClick={() => onItemClick(item.id)}
             >
+              <div className="card-ambient"></div>
+              <div className="card-border"></div>
               <div className="timeline-point" style={{ borderColor: severityColor }}>
                 <div 
                   className="severity-indicator" 

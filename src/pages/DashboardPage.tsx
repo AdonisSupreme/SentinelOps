@@ -48,9 +48,15 @@ const DashboardPage: React.FC = () => {
 
   if (loading && !dashboardData) {
     return (
-      <div className="dashboard-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading SentinelOps Dashboard...</p>
+      <div className="dbstats-page loading">
+        <div className="loading-container">
+          <div className="sentinel-loader">
+            <div className="loader-ring"></div>
+            <div className="loader-ring"></div>
+            <div className="loader-ring"></div>
+          </div>
+          <span className="loading-text">Initializing Sentinel Dashboard...</span>
+        </div>
       </div>
     );
   }

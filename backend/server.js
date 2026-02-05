@@ -111,15 +111,21 @@ function getShiftEndTime(shift) {
   return now;
 }
 
-function getShiftStatus(startTime, endTime) {
+function getShiftStatus(startTime, endTime, currentStatus) {
   const now = new Date();
   
+  // If already completed or completed with exceptions, don't change
+  if (currentStatus === 'COMPLETED' || currentStatus === 'COMPLETED_WITH_EXCEPTIONS') {
+    return currentStatus;
+  }
+  
   if (now >= endTime) {
-    return 'COMPLETED';
+    // Time elapsed - should be pending review, not auto-completed
+    return 'PENDING_REVIEW';
   } else if (now >= startTime) {
     return 'IN_PROGRESS';
   } else {
-    return 'OPEN'; // Changed from 'SCHEDULED' to 'OPEN'
+    return 'OPEN'; // Before shift starts
   }
 }
 
@@ -278,21 +284,19 @@ async function updateInstanceStatuses() {
   for (const [instanceId, instance] of checklistInstances.entries()) {
     const startTime = new Date(instance.shift_start);
     const endTime = new Date(instance.shift_end);
-    const newStatus = getShiftStatus(startTime, endTime);
+    const newStatus = getShiftStatus(startTime, endTime, instance.status);
 
     if (instance.status !== newStatus) {
       const oldStatus = instance.status;
       instance.status = newStatus;
       
-      if (newStatus === 'COMPLETED') {
+      // Only set closed_at when transitioning to PENDING_REVIEW from active states
+      if (newStatus === 'PENDING_REVIEW' && (oldStatus === 'OPEN' || oldStatus === 'IN_PROGRESS')) {
         instance.closed_at = now.toISOString();
-        // Auto-complete all pending items if any exist
-        instance.items.forEach(item => {
-          if (item.status === 'PENDING') {
-            item.status = 'COMPLETED';
-            item.completed_at = now.toISOString();
-            item.notes = 'Auto-completed at shift end';
-          }
+        logger.info('Instance auto-transitioned to PENDING_REVIEW', {
+          instanceId,
+          shift: instance.shift,
+          date: instance.checklist_date
         });
       }
 
@@ -369,6 +373,22 @@ app.get('/api/v1/checklists/instances/today', (req, res) => {
 
   // Check and migrate instances with old data structure
   todayInstances = todayInstances.map(instance => {
+    // Server-side status check based on current time
+    const now = new Date();
+    const startTime = new Date(instance.shift_start);
+    const endTime = new Date(instance.shift_end);
+    const currentStatus = instance.status;
+    
+    if (currentStatus !== 'COMPLETED' && currentStatus !== 'COMPLETED_WITH_EXCEPTIONS') {
+      let newStatus = currentStatus;
+      if (now >= endTime) newStatus = 'PENDING_REVIEW';
+      else if (now >= startTime) newStatus = 'IN_PROGRESS';
+      
+      if (newStatus !== currentStatus) {
+        instance.status = newStatus;
+        instance.updated_at = now.toISOString();
+      }
+    }
     if (instance.items && instance.items.length > 0) {
       const needsMigration = instance.items.some(item => 
         !item.item || 
@@ -515,6 +535,36 @@ app.get('/api/v1/checklists/instances/:id', (req, res) => {
     }
   }
 
+  // Check and update status based on current time
+  const now = new Date();
+  const startTime = new Date(instance.shift_start);
+  const endTime = new Date(instance.shift_end);
+  const currentStatus = instance.status;
+  
+  // Only update if not already in a final state
+  if (currentStatus !== 'COMPLETED' && currentStatus !== 'COMPLETED_WITH_EXCEPTIONS') {
+    let newStatus = currentStatus;
+    
+    if (now >= endTime) {
+      newStatus = 'PENDING_REVIEW';
+    } else if (now >= startTime) {
+      newStatus = 'IN_PROGRESS';
+    }
+    
+    if (newStatus !== currentStatus) {
+      instance.status = newStatus;
+      instance.updated_at = now.toISOString();
+      logger.info('Instance status updated on retrieval', {
+        instanceId: id,
+        oldStatus: currentStatus,
+        newStatus,
+        currentTime: now.toISOString(),
+        shiftStart: startTime.toISOString(),
+        shiftEnd: endTime.toISOString()
+      });
+    }
+  }
+
   res.json(instance);
 });
 
@@ -527,9 +577,9 @@ app.post('/api/v1/checklists/instances/:instanceId/join', (req, res) => {
   }
 
   // Check if instance is still open for joining
-  if (instance.status !== 'OPEN') {
+  if (instance.status !== 'OPEN' && instance.status !== 'IN_PROGRESS') {
     return res.status(400).json({ 
-      error: 'Cannot join checklist instance that is not open',
+      error: 'Cannot join checklist instance that is not open or in progress',
       status: instance.status 
     });
   }
@@ -648,6 +698,16 @@ app.patch('/api/v1/checklists/instances/:instanceId/items/:itemId', (req, res) =
   item.notes = notes || null;
   item.updated_at = new Date().toISOString();
   
+  // If item is being started and instance is OPEN, set instance to IN_PROGRESS
+  if (status === 'IN_PROGRESS' && instance.status === 'OPEN') {
+    instance.status = 'IN_PROGRESS';
+    logger.info('Instance status auto-updated to IN_PROGRESS on item start', { 
+      instanceId, 
+      itemId,
+      user: item.completed_by?.username 
+    });
+  }
+  
   // Set completion details if status is COMPLETED
   if (status === 'COMPLETED') {
     item.completed_at = new Date().toISOString();
@@ -676,6 +736,70 @@ app.patch('/api/v1/checklists/instances/:instanceId/items/:itemId', (req, res) =
   
   // Return the updated item with proper structure
   res.json(item);
+});
+
+// Complete checklist instance endpoint
+app.post('/api/v1/checklists/instances/:instanceId/complete', (req, res) => {
+  const { instanceId } = req.params;
+  const { with_exceptions } = req.query;
+  
+  const instance = checklistInstances.get(instanceId);
+  if (!instance) {
+    return res.status(404).json({ error: 'Instance not found' });
+  }
+  
+  // Check if instance can be completed (must be IN_PROGRESS or PENDING_REVIEW)
+  if (instance.status !== 'IN_PROGRESS' && instance.status !== 'PENDING_REVIEW' && instance.status !== 'OPEN') {
+    return res.status(400).json({ 
+      error: 'Cannot complete checklist instance that is not active',
+      status: instance.status 
+    });
+  }
+  
+  const now = new Date();
+  
+  // Check if all items are completed
+  const allItemsCompleted = instance.items.every(item => item.status === 'COMPLETED');
+  const hasExceptions = instance.items.some(item => item.status !== 'COMPLETED');
+  
+  // Determine final status based on with_exceptions flag and item statuses
+  let finalStatus;
+  if (with_exceptions === 'true' && hasExceptions) {
+    finalStatus = 'COMPLETED_WITH_EXCEPTIONS';
+  } else if (allItemsCompleted) {
+    finalStatus = 'COMPLETED';
+  } else if (with_exceptions === 'true') {
+    finalStatus = 'COMPLETED_WITH_EXCEPTIONS';
+  } else {
+    // If not all items completed and no exceptions flag, reject completion
+    return res.status(400).json({
+      error: 'Cannot complete checklist with incomplete items. Use with_exceptions=true to complete with exceptions.',
+      incompleteItems: instance.items.filter(item => item.status !== 'COMPLETED').length
+    });
+  }
+  
+  // Update instance status
+  instance.status = finalStatus;
+  instance.closed_at = now.toISOString();
+  instance.updated_at = now.toISOString();
+  
+  // Set closed_by (mock user for now)
+  instance.closed_by = {
+    id: '785cfda9-38c7-4b8d-844a-5c8c7672a12b',
+    username: 'ashumba',
+    email: 'ashumba@sentinel.ops'
+  };
+  
+  logger.info('Checklist instance completed', {
+    instanceId,
+    finalStatus,
+    allItemsCompleted,
+    hasExceptions,
+    totalItems: instance.items.length,
+    completedItems: instance.items.filter(item => item.status === 'COMPLETED').length
+  });
+  
+  res.json(instance);
 });
 
 // Health check

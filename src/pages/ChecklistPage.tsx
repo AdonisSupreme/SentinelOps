@@ -30,6 +30,7 @@ const ChecklistPage: React.FC = () => {
   const [showParticipants, setShowParticipants] = useState(true);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [completeWithExceptions, setCompleteWithExceptions] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
   const [showShareFeedback, setShowShareFeedback] = useState(false);
 
   useEffect(() => {
@@ -62,13 +63,18 @@ const ChecklistPage: React.FC = () => {
   }, [currentInstance]);
 
   const handleJoin = async () => {
-    if (currentInstance) {
+    if (currentInstance && !isJoining) {
+      setIsJoining(true);
       console.log('Joining checklist:', currentInstance.id);
-      await joinInstance(currentInstance.id);
-      // After joining, reload the instance to get complete data including template
-      if (id) {
-        console.log('Reloading instance after join to get complete data');
-        await loadInstance(id);
+      try {
+        await joinInstance(currentInstance.id);
+        // After joining, reload the instance to get complete data including template
+        if (id) {
+          console.log('Reloading instance after join to get complete data');
+          await loadInstance(id);
+        }
+      } finally {
+        setIsJoining(false);
       }
     }
   };
@@ -122,7 +128,7 @@ const ChecklistPage: React.FC = () => {
   };
 
   const canCompleteChecklist = user?.role === 'SUPERVISOR' || user?.role === 'MANAGER' || user?.role === 'admin';
-  const isChecklistOpen = currentInstance?.status === 'OPEN' || currentInstance?.status === 'IN_PROGRESS';
+  const isChecklistActive = currentInstance?.status === 'OPEN' || currentInstance?.status === 'IN_PROGRESS' || currentInstance?.status === 'PENDING_REVIEW';
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -193,9 +199,15 @@ const ChecklistPage: React.FC = () => {
 
   if (loading && !currentInstance) {
     return (
-      <div className="checklist-loading">
-        <div className="loading-spinner large"></div>
-        <p>Loading Operational Checklist...</p>
+      <div className="dbstats-page loading">
+        <div className="loading-container">
+          <div className="sentinel-loader">
+            <div className="loader-ring"></div>
+            <div className="loader-ring"></div>
+            <div className="loader-ring"></div>
+          </div>
+          <span className="loading-text">Initializing Operational Checklist...</span>
+        </div>
       </div>
     );
   }
@@ -232,7 +244,7 @@ const ChecklistPage: React.FC = () => {
   }
 
   const isUserParticipant = currentInstance.participants?.some((p: { id: string }) => p.id === user?.id) ?? false;
-  const canJoin = !isUserParticipant && currentInstance.status === 'OPEN';
+  const canJoin = !isUserParticipant && (currentInstance.status === 'OPEN' || currentInstance.status === 'IN_PROGRESS');
 
   return (
     <div className="checklist-page">
@@ -244,23 +256,27 @@ const ChecklistPage: React.FC = () => {
         
         <div className="header-content">
           <div className="checklist-title">
-            <h1>{currentInstance?.template?.name || 'Untitled Checklist'}</h1>
+            <span className='shift-header-title'>{currentInstance?.template?.name || 'Untitled Checklist'}</span>
             <div className="checklist-meta">
               <span><FaCalendarAlt /> {currentInstance?.checklist_date || 'Unknown Date'}</span>
               <span>•</span>
-              <span>{currentInstance?.shift || 'UNKNOWN'} Shift ({getShiftTime(currentInstance?.shift || '')})</span>
+              <span>{currentInstance?.shift || 'UNKNOWN'} SHIFT ({getShiftTime(currentInstance?.shift || '')})</span>
               <span>•</span>
-              {getStatusBadge(currentInstance?.status || 'OPEN')}
+              {getStatusBadge(currentInstance?.status || 'UNKNOWN')}
             </div>
           </div>
 
           <div className="header-actions">
             {canJoin && (
-              <button onClick={handleJoin} className="btn-join">
-                <FaUsers /> Join Checklist
+              <button 
+                onClick={handleJoin} 
+                className="btn-join"
+                disabled={isJoining}
+              >
+                <FaUsers /> {isJoining ? 'Joining...' : 'Join Checklist'}
               </button>
             )}
-            {canCompleteChecklist && isChecklistOpen && (
+            {canCompleteChecklist && isChecklistActive && (
               <button 
                 onClick={() => setShowCompleteDialog(true)} 
                 className="btn-complete"
