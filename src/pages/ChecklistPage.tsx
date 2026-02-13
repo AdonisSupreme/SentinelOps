@@ -52,11 +52,11 @@ const ChecklistPage: React.FC = () => {
         participantsCount: currentInstance.participants?.length,
         itemsCount: currentInstance.items?.length || 0,
         firstItem: currentInstance.items?.[0],
-        firstItemTitle: currentInstance.items?.[0]?.template_item?.title,
+        firstItemTitle: currentInstance.items?.[0]?.title || currentInstance.items?.[0]?.template_item?.title,
         firstItemStructure: currentInstance.items?.[0] ? Object.keys(currentInstance.items[0]) : [],
         firstItemItemStructure: currentInstance.items?.[0]?.template_item ? Object.keys(currentInstance.items[0].template_item) : [],
         hasItemProperty: !!(currentInstance.items?.[0]?.template_item),
-        allItemTitles: currentInstance.items?.map(item => item.template_item?.title || 'NO TITLE')
+        allItemTitles: currentInstance.items?.map(item => item.title || 'NO TITLE')
       });
       
     }
@@ -127,7 +127,7 @@ const ChecklistPage: React.FC = () => {
     }
   };
 
-  const canCompleteChecklist = user?.role === 'SUPERVISOR' || user?.role === 'MANAGER' || user?.role === 'admin';
+  const canCompleteChecklist = user?.role === 'MANAGER' || user?.role === 'admin';
   const isChecklistActive = currentInstance?.status === 'OPEN' || currentInstance?.status === 'IN_PROGRESS' || currentInstance?.status === 'PENDING_REVIEW';
 
   const getStatusBadge = (status: string) => {
@@ -370,20 +370,7 @@ const ChecklistPage: React.FC = () => {
             )}
           </section>
 
-          {/* Active Item Actions */}
-          {activeItemId && (
-            <section className="sidebar-section">
-              <div className="section-header">
-                <h3><FaPlay /> Item Actions</h3>
-              </div>
-              <ItemActions 
-                instanceId={currentInstance.id}
-                itemId={activeItemId}
-                currentStatus={currentInstance.items?.find(item => item.id === activeItemId)?.status}
-                onComplete={handleItemComplete}
-              />
-            </section>
-          )}
+          {/* Removed from sidebar - now appears as modal modal */}
 
           {/* Complete Checklist Dialog */}
           {showCompleteDialog && (
@@ -429,6 +416,30 @@ const ChecklistPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Item Actions Modal */}
+      {activeItemId && (
+        <div className="item-actions-modal-overlay" onClick={() => setActiveItemId(null)}>
+          <div className="item-actions-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3><FaPlay /> Item Actions</h3>
+              <button 
+                className="modal-close"
+                onClick={() => setActiveItemId(null)}
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+            <ItemActions 
+              instanceId={currentInstance.id}
+              itemId={activeItemId}
+              currentStatus={currentInstance.items?.find(item => item.id === activeItemId)?.status}
+              onComplete={handleItemComplete}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

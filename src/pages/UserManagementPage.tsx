@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaUserShield, FaUserEdit, FaUserPlus, FaToggleOn, FaToggleOff } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { userApi, UserListItem, CreateUserRequest, UpdateUserRequest } from '../services/userApi';
+import { orgApi, Department, Section } from '../services/orgApi';
 import { useNotifications } from '../contexts/NotificationContext';
 import './UserManagementPage.css';
 
@@ -29,13 +30,15 @@ const UserManagementPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [showCreatePanel, setShowCreatePanel] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [sections, setSections] = useState<Section[]>([]);
   const [createForm, setCreateForm] = useState<CreateUserRequest>({
     username: '',
     email: '',
     first_name: '',
     last_name: '',
-    department: '',
-    position: '',
+    department_id: undefined,
+    section_id: undefined,
     password: '',
     role: 'user',
   });
@@ -51,8 +54,14 @@ const UserManagementPage: React.FC = () => {
       if (!canManageUsers) return;
       setLoading(true);
       try {
-        const data = await userApi.listUsers();
-        setUsers(data);
+        const [usersData, deptsData] = await Promise.all([
+          userApi.listUsers(),
+          orgApi.listDepartments(),
+        ]);
+        setUsers(usersData);
+        setDepartments(deptsData);
+        const sectionsData = await orgApi.listSections();
+        setSections(sectionsData);
       } catch (err) {
         console.error('Failed to load users', err);
         addNotification({
@@ -67,6 +76,7 @@ const UserManagementPage: React.FC = () => {
     void load();
   }, [canManageUsers, addNotification]);
 
+
   const selectedUser = useMemo(
     () => users.find((u) => u.id === selectedUserId) || null,
     [users, selectedUserId],
@@ -79,8 +89,8 @@ const UserManagementPage: React.FC = () => {
         email: selectedUser.email,
         first_name: selectedUser.first_name,
         last_name: selectedUser.last_name,
-        department: selectedUser.department,
-        position: selectedUser.position,
+        department_id: selectedUser.department_id,
+        section_id: selectedUser.section_id,
         role: mapBackendRoleToOption((selectedUser as any).role),
         is_active: selectedUser.is_active,
       });
@@ -89,18 +99,24 @@ const UserManagementPage: React.FC = () => {
     }
   }, [selectedUser]);
 
-  const handleCreateChange = (field: keyof CreateUserRequest, value: string | RoleOption) => {
+  const handleCreateChange = (field: keyof CreateUserRequest, value: string | RoleOption | number | undefined) => {
     setCreateForm((prev) => ({
       ...prev,
       [field]: value,
     }));
+    if (field === 'department_id') {
+      setCreateForm((prev) => ({ ...prev, section_id: undefined }));
+    }
   };
 
-  const handleEditChange = (field: keyof UpdateUserRequest, value: string | RoleOption | boolean) => {
+  const handleEditChange = (field: keyof UpdateUserRequest, value: string | RoleOption | boolean | number | undefined) => {
     setEditForm((prev) => ({
       ...prev,
       [field]: value,
     }));
+    if (field === 'department_id') {
+      setEditForm((prev) => ({ ...prev, section_id: undefined }));
+    }
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -114,8 +130,8 @@ const UserManagementPage: React.FC = () => {
         email: '',
         first_name: '',
         last_name: '',
-        department: '',
-        position: '',
+        department_id: undefined,
+        section_id: undefined,
         password: '',
         role: 'user',
       });
@@ -221,7 +237,7 @@ const UserManagementPage: React.FC = () => {
               <span>Role</span>
               <span>Status</span>
               <span>Department</span>
-              <span>Position</span>
+              <span>Section</span>
             </div>
             <div className="user-table-body">
               {filteredUsers.map((u) => (
@@ -238,8 +254,8 @@ const UserManagementPage: React.FC = () => {
                   <span className={u.is_active ? 'status-pill active' : 'status-pill inactive'}>
                     {u.is_active ? 'Active' : 'Inactive'}
                   </span>
-                  <span>{u.department || '—'}</span>
-                  <span>{u.position || '—'}</span>
+                  <span>{(u as any).department_name || u.department || '—'}</span>
+                  <span>{(u as any).section_name || '—'}</span>
                 </button>
               ))}
               {!loading && filteredUsers.length === 0 && (
@@ -295,19 +311,27 @@ const UserManagementPage: React.FC = () => {
                 </label>
                 <label>
                   Department
-                  <input
-                    type="text"
-                    value={editForm.department || ''}
-                    onChange={(e) => handleEditChange('department', e.target.value)}
-                  />
+                  <select
+                    value={editForm.department_id ?? ''}
+                    onChange={(e) => handleEditChange('department_id', e.target.value ? parseInt(e.target.value, 10) : undefined)}
+                  >
+                    <option value="">— Select —</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>{d.department_name}</option>
+                    ))}
+                  </select>
                 </label>
                 <label>
-                  Position
-                  <input
-                    type="text"
-                    value={editForm.position || ''}
-                    onChange={(e) => handleEditChange('position', e.target.value)}
-                  />
+                  Section
+                  <select
+                    value={editForm.section_id ?? ''}
+                    onChange={(e) => handleEditChange('section_id', e.target.value || undefined)}
+                  >
+                    <option value="">— Select —</option>
+                    {sections.map((s) => (
+                        <option key={s.id} value={s.id}>{s.section_name}</option>
+                      ))}
+                  </select>
                 </label>
                 <label>
                   Role
@@ -414,19 +438,27 @@ const UserManagementPage: React.FC = () => {
               </label>
               <label>
                 Department
-                <input
-                  type="text"
-                  value={createForm.department}
-                  onChange={(e) => handleCreateChange('department', e.target.value)}
-                />
+                <select
+                  value={createForm.department_id ?? ''}
+                  onChange={(e) => handleCreateChange('department_id', e.target.value ? parseInt(e.target.value, 10) : undefined)}
+                >
+                  <option value="">— Select —</option>
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>{d.department_name}</option>
+                  ))}
+                </select>
               </label>
               <label>
-                Position
-                <input
-                  type="text"
-                  value={createForm.position}
-                  onChange={(e) => handleCreateChange('position', e.target.value)}
-                />
+                Section
+                <select
+                  value={createForm.section_id ?? ''}
+                  onChange={(e) => handleCreateChange('section_id', e.target.value || undefined)}
+                >
+                  <option value="">— Select —</option>
+                  {sections.map((s) => (
+                    <option key={s.id} value={s.id}>{s.section_name}</option>
+                  ))}
+                </select>
               </label>
               <label>
                 Role

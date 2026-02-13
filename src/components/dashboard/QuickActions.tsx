@@ -22,8 +22,15 @@ const QuickActions: React.FC = () => {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
 
-  // Check if user has permission to create checklists
-  const canCreateChecklist = user?.role && ['OPERATOR', 'SUPERVISOR', 'manager', 'admin'].includes(user.role);
+  // Normalize roles and check permissions (admin global, manager scoped to section)
+  const roles: string[] = user ? (
+    Array.isArray((user as any).roles) ? (user as any).roles.map((r: string) => String(r).toLowerCase()) : [String((user as any).role || '').toLowerCase()]
+  ) : [];
+  const isAdmin = roles.includes('admin');
+  const isManager = roles.includes('manager');
+  const canCreateChecklist = isAdmin || isManager || roles.includes('user');
+  // Normalize section id from user (available to whole component)
+  const userSection = (user as any)?.section_id ?? (user as any)?.sectionId ?? (user as any)?.section ?? null;
 
   useEffect(() => {
     if (!showModal) return;
@@ -31,7 +38,9 @@ const QuickActions: React.FC = () => {
     const load = async () => {
       try {
         setLoadingTemplates(true);
-        const data = await checklistApi.getTemplates();
+        // Non-admins should only see templates for their section
+        const params: any = isAdmin ? undefined : { sectionId: userSection };
+        const data = await checklistApi.getTemplates(params);
         if (!mounted) return;
         setTemplates(data || []);
         if (data && data.length > 0) setSelectedTemplateId(data[0].id);
@@ -66,7 +75,7 @@ const QuickActions: React.FC = () => {
       // Check for existing instance for this shift today
       const todayInstances = await checklistApi.getTodayInstances();
       const existingInstance = todayInstances.find(
-        (inst: any) => inst.template.id === selectedTemplateId && inst.shift === templateShift
+        (inst: any) => inst.template_id === selectedTemplateId && inst.shift === templateShift
       );
 
       if (existingInstance) {
@@ -90,6 +99,10 @@ const QuickActions: React.FC = () => {
         shift: templateShift,
         template_id: selectedTemplateId
       };
+
+      // Ensure section scoping on creation: prefer template.section_id, fall back to user's section
+      const tplSection = (selectedTemplate as any)?.section_id ?? (selectedTemplate as any)?.sectionId ?? null;
+      payload.section_id = tplSection || userSection;
 
       console.log('Creating instance with payload:', payload);
       const instance = await checklistApi.createInstance(payload);

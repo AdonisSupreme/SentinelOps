@@ -60,7 +60,7 @@ const LoginForm: React.FC = () => {
         <p className='oap'>Operational Access Portal</p>
       </div>
 
-      {error && <div className="alert error">{error}</div>}
+      {error && <div className="alert error">{typeof error === 'string' ? error : JSON.stringify(error)}</div>}
 
       <form onSubmit={handleSubmit}>
         <div className="input-group">

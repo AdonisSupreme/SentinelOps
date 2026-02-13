@@ -1,10 +1,18 @@
 import api from './api';
 import { MeResponse } from '../contracts/generated/api.types';
 
-export type User = MeResponse & { is_active?: boolean };
+export type User = MeResponse & {
+  is_active?: boolean;
+  department_id?: number;
+  section_id?: string;
+  department_name?: string;
+  section_name?: string;
+};
 
 export interface UserListItem extends User {
   created_at: string;
+  department_name?: string;
+  section_name?: string;
 }
 
 export interface CreateUserRequest {
@@ -12,10 +20,9 @@ export interface CreateUserRequest {
   email: string;
   first_name: string;
   last_name: string;
-  department?: string;
-  position?: string;
+  department_id?: number;
+  section_id?: string;
   password: string;
-  // Business-level role; backend maps admin/manager/user → admin/supervisor/operator
   role: 'admin' | 'manager' | 'user';
 }
 
@@ -24,8 +31,8 @@ export interface UpdateUserRequest {
   email?: string;
   first_name?: string;
   last_name?: string;
-  department?: string;
-  position?: string;
+  department_id?: number;
+  section_id?: string;
   password?: string;
   role?: 'admin' | 'manager' | 'user';
   is_active?: boolean;
@@ -34,6 +41,13 @@ export interface UpdateUserRequest {
 class UserApi {
   async listUsers(): Promise<UserListItem[]> {
     const response = await api.get<UserListItem[]>('/api/v1/users');
+    return response.data;
+  }
+
+  async listUsersBySection(sectionId: string): Promise<UserListItem[]> {
+    const response = await api.get<UserListItem[]>('/api/v1/users/by-section', {
+      params: { section_id: sectionId },
+    });
     return response.data;
   }
 

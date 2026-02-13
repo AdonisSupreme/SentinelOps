@@ -288,7 +288,7 @@ const DatabaseStatsPage: React.FC = () => {
             <FaExclamationTriangle className="error-icon" />
           </div>
           <h2>Connection Disrupted</h2>
-          <p>{error}</p>
+          <p>{typeof error === 'string' ? error : JSON.stringify(error)}</p>
           <button onClick={loadDashboardData} className="retry-btn">
             <FaSync /> Reconnect
           </button>

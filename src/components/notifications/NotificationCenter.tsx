@@ -55,7 +55,7 @@ const NotificationCenter: React.FC = () => {
       return 'Connected';
     }
     if (error) {
-      return `Disconnected: ${error}`;
+      return `Disconnected: ${typeof error === 'string' ? error : JSON.stringify(error)}`;
     }
     return `${connectionState}...`;
   };
@@ -131,7 +131,7 @@ const NotificationCenter: React.FC = () => {
           {error && !isConnected && (
             <div className="error-banner">
               <FaExclamationTriangle />
-              <span>{error}</span>
+              <span>{typeof error === 'string' ? error : JSON.stringify(error)}</span>
             </div>
           )}
 
@@ -207,7 +207,7 @@ const NotificationCenter: React.FC = () => {
                 <p><strong>Is Connected:</strong> {isConnected ? 'Yes' : 'No'}</p>
                 <p><strong>Unread Count:</strong> {unreadCount}</p>
                 <p><strong>Total Cached:</strong> {notifications.length}</p>
-                {error && <p><strong>Error:</strong> {error}</p>}
+                {error && <p><strong>Error:</strong> {typeof error === 'string' ? error : JSON.stringify(error)}</p>}
                 <p><strong>Token:</strong> {localStorage.getItem('token') ? '✓ Present' : '✗ Missing'}</p>
               </div>
             </div>

@@ -73,7 +73,6 @@
 }
 
 .performance-section {
-  background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 1.5rem;
@@ -117,7 +116,7 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background: var(--bg-hover);
+  background: var(--dbstats-bg-secondary);
   border-radius: 6px;
   border-left: 4px solid var(--primary);
   transition: all 0.3s ease;

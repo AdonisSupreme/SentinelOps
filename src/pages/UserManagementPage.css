@@ -38,7 +38,6 @@
   flex-direction: column;
   gap: 1.5rem;
   padding: 1.5rem 2rem;
-  background: var(--user-bg-primary);
   color: var(--user-text-primary);
   font-family: var(--font-family, 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
 }

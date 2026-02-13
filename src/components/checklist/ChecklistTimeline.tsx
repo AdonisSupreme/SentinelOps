@@ -52,7 +52,7 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({
   console.log('🔍 ChecklistTimeline Debug - Items received:', {
     itemsCount: items?.length || 0,
     firstItem: items?.[0],
-    firstItemTitle: items?.[0]?.template_item?.title,
+    firstItemTitle: items?.[0]?.title || items?.[0]?.template_item?.title,
     firstItemStructure: items?.[0] ? Object.keys(items[0]) : [],
     firstItemItemStructure: items?.[0]?.template_item ? Object.keys(items[0].template_item) : [],
     hasItemProperty: !!(items?.[0]?.template_item),
@@ -128,10 +128,10 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({
         
         {items.map((item, index) => {
           const isActive = activeItemId === item.id;
-          // Use item.template_item severity if available, otherwise fallback to default
-          const severity = item.template_item?.severity ?? 3; 
+          // Use item severity if available, otherwise fallback to template_item
+          const severity = item.severity ?? item.template_item?.severity ?? 3; 
           const severityColor = getSeverityColor(severity);
-          const scheduledTime = item.template_item?.scheduled_time;
+          const scheduledTime = item.scheduled_time ?? item.template_item?.scheduled_time;
           
           // Determine status class
           const getStatusClass = (status: string) => {
@@ -171,17 +171,17 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({
               <div className="timeline-content">
                 <div className="content-header">
                   <div className="item-title">
-                    <h4>{item.template_item?.title || 'Untitled Item'}</h4>
-                    {getItemTypeIcon(item.template_item?.item_type || '')}
-                    {item.template_item?.scheduled_time && (
+                    <h4>{item.title || item.template_item?.title || 'Untitled Item'}</h4>
+                    {getItemTypeIcon(item.item_type || item.template_item?.item_type || '')}
+                    {(item.scheduled_time ?? item.template_item?.scheduled_time) && (
                       <span className={`scheduled-time ${isOverdue ? 'overdue' : ''}`}>
-                        <FaClock /> {formatTime(item.template_item.scheduled_time)}
+                        <FaClock /> {formatTime((item.scheduled_time ?? item.template_item?.scheduled_time)!)}
                         {isOverdue && <span className="overdue-badge">OVERDUE</span>}
                       </span>
                     )}
                   </div>
                   <div className="item-meta">
-                    {item.template_item?.is_required && (
+                    {(item.is_required ?? item.template_item?.is_required) && (
                       <span className="badge required">Required</span>
                     )}
                     {item.completed_by && (
@@ -200,8 +200,8 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({
                   </div>
                 </div>
 
-                {item.template_item?.description && (
-                  <p className="item-description">{item.template_item.description}</p>
+                {(item.description ?? item.template_item?.description) && (
+                  <p className="item-description">{item.description || item.template_item?.description}</p>
                 )}
 
                 {item.notes && (

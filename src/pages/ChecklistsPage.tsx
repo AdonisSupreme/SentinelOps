@@ -213,7 +213,7 @@ const ChecklistsPage: React.FC<ChecklistsPageProps> = () => {
         <div className="error-container">
           <FaExclamationTriangle className="error-icon" />
           <h3>Error Loading Checklists</h3>
-          <p>{error}</p>
+          <p>{typeof error === 'string' ? error : JSON.stringify(error)}</p>
           <button onClick={loadInstances} className="retry-btn">
             Try Again
           </button>

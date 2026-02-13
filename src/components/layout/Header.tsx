@@ -1,7 +1,7 @@
 // src/components/layout/Header.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FaBars, FaTimes, FaUserCircle, FaTh } from 'react-icons/fa';
+import { FaBars, FaTimes, FaUserCircle } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../ui/ThemeToggle';
@@ -13,21 +13,25 @@ const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const { resolvedTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showNavTabs, setShowNavTabs] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
   const baseNavItems = [
     { path: '/', label: 'Dashboard' },
-    { path: '/database-stats', label: 'DB Stats' },
+    { path: '/database-stats', label: 'Stats' },
     { path: '/checklists', label: 'Checklists' },
+    { path: '/schedule', label: 'Schedule' },
     { path: '/performance', label: 'Performance' }
   ];
 
   const isAdmin = user?.role?.toLowerCase() === 'admin';
+  const isManager = ['admin', 'manager'].includes((user?.role || '').toLowerCase());
   const navItems = isAdmin
-    ? [...baseNavItems, { path: '/users', label: 'Users' }]
+    ? [...baseNavItems, { path: '/team', label: 'Team' }, { path: '/users', label: 'Users' }]
+    : isManager
+    ? [...baseNavItems, { path: '/team', label: 'Team' }]
     : baseNavItems;
 
   useEffect(() => {
@@ -40,105 +44,143 @@ const Header: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
+  const handleAvatarClick = () => {
+    setMenuOpen(!menuOpen);
+  };
+
   return (
     <header className="app-header">
       <div className="header-container">
-
-        <div className="header-left">
-          <button className="mobile-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
-            {menuOpen ? <FaTimes /> : <FaBars />}
-          </button>
-          <img src={Logo} alt="SentinelOps" className="header-logo" onClick={() => navigate('/')} />
-          <span className="app-title">SENTINELOPS PORTAL</span>
+        
+        {/* Brand Section - Left */}
+        <div className="header-brand">
+          <div className="brand-wrapper" onClick={() => navigate('/')}>
+            <img src={Logo} alt="SentinelOps" className="header-logo" />
+            <div className="brand-text">
+              <span className="brand-primary">SENTINEL</span>
+              <span className="brand-secondary">OPS</span>
+            </div>
+          </div>
         </div>
 
-        {/* Navigation Tabs - Hidden on small screens, visible on wider screens */}
-        <nav className="header-nav">
+        {/* Desktop Navigation - Center */}
+        <nav className="header-nav-desktop">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`nav-tab ${location.pathname === item.path ? 'active' : ''}`}
+              className={`nav-link-desktop ${location.pathname === item.path ? 'active' : ''}`}
             >
-              {item.label}
+              <span>{item.label}</span>
+              {location.pathname === item.path && <span className="nav-indicator" />}
             </Link>
           ))}
         </nav>
 
-        {/* View Tab Buttons Button - Only visible on small screens */}
-        <button 
-          className="view-tabs-btn" 
-          onClick={() => setShowNavTabs(!showNavTabs)}
-          aria-label="View navigation tabs"
-        >
-          <FaTh />
-        </button>
+        {/* Right Controls */}
+        <div className="header-controls">
+          {/* Desktop Only - Notifications and Theme */}
+          <div className="controls-desktop">
+            <NotificationContainer />
+            <ThemeToggle />
+          </div>
 
-        <div className="header-right">
-          <NotificationContainer />
-          <ThemeToggle />
-
+          {/* User Menu */}
           <div className="user-menu" ref={menuRef}>
-            <div className="user-avatar" onClick={() => setMenuOpen(!menuOpen)}>
+            <button
+              className="user-avatar-btn"
+              onClick={handleAvatarClick}
+              aria-label="User menu"
+              title={user?.username || 'User'}
+            >
               {user ? (
                 <div className="avatar-initials">
-                  {user.first_name?.[0] ?? ''}{user.last_name?.[0] ?? ''}
+                  {user.first_name?.[0] ?? 'U'}{user.last_name?.[0] ?? ''}
                 </div>
               ) : (
                 <FaUserCircle />
               )}
-
-            </div>
+            </button>
 
             {menuOpen && (
               <div className="dropdown-menu">
-                <div className="nav-links">
+                <div className="dropdown-header">
+                  <div className="user-info">
+                    <span className="user-name">{user?.username}</span>
+                    <span className="user-role">{user?.role?.toUpperCase()}</span>
+                  </div>
+                </div>
+                <hr className="dropdown-divider" />
+                <nav className="dropdown-nav">
                   {navItems.map((item) => (
                     <Link
                       key={item.path}
                       to={item.path}
-                      className={`nav-link ${location.pathname === item.path ? 'active' : ''}`}
+                      className={`dropdown-link ${location.pathname === item.path ? 'active' : ''}`}
                       onClick={() => setMenuOpen(false)}
                     >
                       {item.label}
                     </Link>
                   ))}
-                </div>
-                <div className="user-actions">
-                  <Link to="/settings" className="nav-link">Profile Settings</Link>
-                  <button className="logout-btn" onClick={() => { void logout(); setMenuOpen(false); }}>
+                </nav>
+                <hr className="dropdown-divider" />
+                <div className="dropdown-actions">
+                  <Link to="/settings" className="dropdown-link settings">
+                    Profile Settings
+                  </Link>
+                  <button
+                    className="logout-btn"
+                    onClick={() => {
+                      void logout();
+                      setMenuOpen(false);
+                    }}
+                  >
                     Logout
                   </button>
                 </div>
               </div>
             )}
           </div>
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="mobile-menu-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle mobile menu"
+          >
+            {mobileMenuOpen ? <FaTimes /> : <FaBars />}
+          </button>
         </div>
       </div>
 
-      {/* Mobile Navigation Overlay - Only shows when view tabs button is clicked on small screens */}
-      {showNavTabs && (
-        <div className="mobile-nav-overlay">
-          <div className="mobile-nav-content">
-            <button 
-              className="close-mobile-nav" 
-              onClick={() => setShowNavTabs(false)}
-              aria-label="Close navigation"
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="mobile-menu-drawer">
+          <nav className="mobile-nav">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`mobile-nav-link ${location.pathname === item.path ? 'active' : ''}`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="mobile-menu-footer">
+            <Link to="/settings" className="mobile-nav-link settings">
+              Profile Settings
+            </Link>
+            <button
+              className="logout-btn"
+              onClick={() => {
+                void logout();
+                setMobileMenuOpen(false);
+              }}
             >
-              <FaTimes />
+              Logout
             </button>
-            <div className="mobile-nav-tabs">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`mobile-nav-tab ${location.pathname === item.path ? 'active' : ''}`}
-                  onClick={() => setShowNavTabs(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
           </div>
         </div>
       )}

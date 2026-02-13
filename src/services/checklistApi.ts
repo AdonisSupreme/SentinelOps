@@ -102,15 +102,42 @@ export interface LeaderboardEntry {
 
 class ChecklistApi {
   // Templates
-  async getTemplates(shift?: string): Promise<ChecklistTemplate[]> {
-    const response = await api.get<ChecklistTemplate[]>('/api/v1/checklists/templates', { params: { shift } });
+  async getTemplates(params?: { shift?: string; sectionId?: string }): Promise<ChecklistTemplate[]> {
+    const response = await api.get<ChecklistTemplate[]>('/api/v1/checklists/templates', { params });
     return response.data;
   }
 
   // Instances
   async createInstance(data: CreateChecklistInstanceRequest): Promise<ChecklistInstance> {
-    const response = await api.post<{instance: ChecklistInstance, effects: any}>('/api/v1/checklists/instances', data);
-    return response.data.instance; // Extract the instance from the response
+    console.log('🚀 Creating checklist instance with payload:', data);
+    console.log('🎯 Target endpoint: POST /api/v1/checklists/instances');
+    
+    const response = await api.post<any>('/api/v1/checklists/instances', data);
+    
+    console.log('📥 Raw API response:', response);
+    console.log('📥 Response data:', response.data);
+    console.log('📥 Response status:', response.status);
+    
+    // Extract instance from response - handle both array and nested object formats
+    let instance: ChecklistInstance;
+    if (Array.isArray(response.data)) {
+      instance = response.data[0];
+    } else if (response.data?.instance) {
+      instance = response.data.instance;
+    } else {
+      instance = response.data as ChecklistInstance;
+    }
+    
+    console.log('✅ Extracted instance:', instance);
+    console.log('✅ Instance ID:', instance?.id);
+    console.log('✅ Instance ID type:', typeof instance?.id);
+    
+    if (!instance || !instance.id) {
+      console.error('❌ Invalid instance response - missing id property');
+      throw new Error('Invalid instance response: missing id');
+    }
+    
+    return instance;
   }
 
   async getTodayInstances(): Promise<ChecklistInstance[]> {
@@ -152,14 +179,13 @@ class ChecklistApi {
     instanceId: string,
     itemId: string,
     data: UpdateChecklistItemRequest
-  ): Promise<ChecklistItemInstance> {
+  ): Promise<ChecklistInstance> {
     const response = await api.patch<{instance: ChecklistInstance, effects: any}>(
       `/api/v1/checklists/instances/${instanceId}/items/${itemId}`,
       data
     );
-    // Find the updated item in the instance
-    const updatedItem = response.data.instance.items.find(item => item.id === itemId);
-    return updatedItem || response.data.instance.items[0]; // Fallback to first item
+    // Return the full instance (source-of-truth) so callers can refresh local state
+    return response.data.instance;
   }
 
   // Handover Notes

@@ -79,7 +79,17 @@ export interface ItemActivity {
 
 export interface ChecklistItemInstance {
   id: string;
-  template_item: ChecklistItem;
+  template_item_id: string;
+  template_item?: ChecklistItem;
+  // Flattened properties from template_item (API returns these at root level)
+  title?: string;
+  description?: string;
+  item_type?: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
+  is_required?: boolean;
+  scheduled_time?: string | null;
+  severity?: number;
+  sort_order?: number;
+  // Instance-specific properties
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'NOT_APPLICABLE';
   completed_at: string | null;
   completed_by: {

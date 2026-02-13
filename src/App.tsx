@@ -13,6 +13,8 @@ import ChecklistsPage from './pages/ChecklistsPage';
 import PerformancePage from './pages/PerformancePage';
 import NotFoundPage from './pages/NotFoundPage';
 import UserManagementPage from './pages/UserManagementPage';
+import AdvancedTeamManagementPage from './pages/AdvancedTeamManagementPage';
+import UserScheduleDashboard from './pages/UserScheduleDashboard';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import ScrollToTop from './components/ui/ScrollToTop';
@@ -47,6 +49,8 @@ function App() {
                         <Route path="/checklist/:id" element={<ChecklistPage />} />
                         <Route path="/performance" element={<PerformancePage />} />
                         <Route path="/users" element={<UserManagementPage />} />
+                        <Route path="/team" element={<AdvancedTeamManagementPage />} />
+                        <Route path="/schedule" element={<UserScheduleDashboard />} />
                       </Route>
 
                       <Route path="*" element={<NotFoundPage />} />

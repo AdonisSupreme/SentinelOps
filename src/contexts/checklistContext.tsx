@@ -75,11 +75,11 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         templateName: instance?.template?.name,
         itemsCount: instance?.items?.length || 0,
         firstItem: instance?.items?.[0],
-        firstItemTitle: instance?.items?.[0]?.template_item?.title,
+        firstItemTitle: instance?.items?.[0]?.title || instance?.items?.[0]?.template_item?.title,
         firstItemStructure: instance?.items?.[0] ? Object.keys(instance.items[0]) : [],
         firstItemItemStructure: instance?.items?.[0]?.template_item ? Object.keys(instance.items[0].template_item) : [],
         hasItemProperty: !!(instance?.items?.[0]?.template_item),
-        allItemTitles: instance?.items?.map(item => item.template_item?.title || 'NO TITLE')
+        allItemTitles: instance?.items?.map(item => item.title || item.template_item?.title || 'NO TITLE')
       });
       
       setCurrentInstance(instance);
@@ -411,8 +411,8 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         console.log('✅ Local state updated optimistically');
       }
 
-      // Make API call with retry logic
-      const updatedItem = await retryWithBackoff(async () => {
+      // Make API call with retry logic - server returns the full instance
+      const updatedInstance = await retryWithBackoff(async () => {
         return await checklistApi.updateItemStatus(instanceId, itemId, {
           status: status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'NOT_APPLICABLE',
           notes: comment || reason || undefined,
@@ -428,19 +428,35 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.log('✅ Item status updated successfully on server:', {
         operationId,
         itemId,
-        newStatus: updatedItem.status,
-        completedBy: updatedItem.completed_by,
-        completedAt: updatedItem.completed_at
+        instanceId: updatedInstance.id,
+        // find updated item for logging
+        updatedItem: updatedInstance.items.find(i => i.id === itemId)
       });
 
       setError(null);
-      
-      // Update today instances to ensure consistency
-      await loadTodayInstances();
-      
-      // Add notification
-      const item = updatedItem.template_item;
-      if (item) {
+
+      // Refresh currentInstance from server-provided instance to ensure source-of-truth
+      setCurrentInstance(updatedInstance);
+
+      // Also update the in-memory `todayInstances` list to replace the instance
+      setTodayInstances(prev => {
+        if (!prev || prev.length === 0) return prev;
+        const idx = prev.findIndex(p => p.id === updatedInstance.id);
+        if (idx === -1) return prev;
+        const copy = [...prev];
+        copy[idx] = updatedInstance;
+        return copy;
+      });
+
+      // Defer refreshing the full today instances list to avoid immediate race
+      // with other components that may trigger instance reloads simultaneously.
+      setTimeout(() => {
+        loadTodayInstances().catch(err => console.error('Deferred loadTodayInstances failed', err));
+      }, 400);
+
+      // Add notification using the updated item (if available)
+      const updatedItem = updatedInstance.items.find(i => i.id === itemId) as any;
+      if (updatedItem) {
         const action = status === 'COMPLETED' ? 'completed' :
                       status === 'SKIPPED' ? 'skipped' :
                       status === 'FAILED' ? 'escalated' : 
@@ -449,7 +465,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           type: status === 'COMPLETED' ? 'success' : 
                 status === 'FAILED' ? 'error' : 
                 status === 'SKIPPED' ? 'warning' : 'info',
-          message: `${action} "${item.title}"`,
+          message: `${action} "${updatedItem.title || updatedItem.template_item?.title || 'Item'}"`,
           priority: 'medium'
         });
       }
