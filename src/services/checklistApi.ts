@@ -1,6 +1,5 @@
 // src/services/checklistApi.ts
 import api from './api';
-import type { AxiosResponse } from 'axios';
 import {
   ChecklistTemplate,
   ChecklistItem,
@@ -23,6 +22,11 @@ import {
   AuthorizationPolicy,
   BackendEffects,
   BackendError,
+  CreateChecklistTemplateRequest,
+  UpdateChecklistTemplateRequest,
+  CreateTemplateItemRequest,
+  CreateTemplateSubitemRequest,
+  TemplateMutationResponse,
 } from '../contracts/generated/api.types';
 
 // Re-export generated types for convenience
@@ -48,7 +52,36 @@ export type {
   AuthorizationPolicy,
   BackendEffects,
   BackendError,
+  CreateChecklistTemplateRequest,
+  UpdateChecklistTemplateRequest,
+  CreateTemplateItemRequest,
+  CreateTemplateSubitemRequest,
+  TemplateMutationResponse,
 };
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+export interface ChecklistInstanceQueryParams {
+  start_date?: string;
+  end_date?: string;
+  shift?: string;
+  status?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+  sort_by?: 'checklist_date' | 'created_at' | 'updated_at';
+  sort_order?: 'asc' | 'desc';
+}
 
 export interface ChecklistItemActivity {
   id: string;
@@ -101,9 +134,50 @@ export interface LeaderboardEntry {
 }
 
 class ChecklistApi {
+    async deleteInstance(instanceId: string): Promise<{ message: string; effects?: any }> {
+      const response = await api.delete<{ message: string; effects?: any }>(`/api/v1/checklists/instances/${instanceId}`);
+      return response.data;
+    }
   // Templates
   async getTemplates(params?: { shift?: string; sectionId?: string }): Promise<ChecklistTemplate[]> {
     const response = await api.get<ChecklistTemplate[]>('/api/v1/checklists/templates', { params });
+    return response.data;
+  }
+
+  async getTemplate(templateId: string): Promise<ChecklistTemplate> {
+    const response = await api.get<ChecklistTemplate>(`/api/v1/checklists/templates/${templateId}`);
+    return response.data;
+  }
+
+  async createTemplate(data: CreateChecklistTemplateRequest): Promise<TemplateMutationResponse> {
+    const response = await api.post<TemplateMutationResponse>('/api/v1/checklists/templates', data);
+    return response.data;
+  }
+
+  async updateTemplate(templateId: string, data: UpdateChecklistTemplateRequest): Promise<TemplateMutationResponse> {
+    const response = await api.put<TemplateMutationResponse>(`/api/v1/checklists/templates/${templateId}`, data);
+    return response.data;
+  }
+
+  async deleteTemplate(templateId: string): Promise<TemplateMutationResponse> {
+    const response = await api.delete<TemplateMutationResponse>(`/api/v1/checklists/templates/${templateId}`);
+    return response.data;
+  }
+
+  async addTemplateItem(templateId: string, data: CreateTemplateItemRequest): Promise<TemplateMutationResponse> {
+    const response = await api.post<TemplateMutationResponse>(`/api/v1/checklists/templates/${templateId}/items`, data);
+    return response.data;
+  }
+
+  async addTemplateSubitem(
+    templateId: string,
+    itemId: string,
+    data: CreateTemplateSubitemRequest
+  ): Promise<TemplateMutationResponse> {
+    const response = await api.post<TemplateMutationResponse>(
+      `/api/v1/checklists/templates/${templateId}/items/${itemId}/subitems`,
+      data
+    );
     return response.data;
   }
 
@@ -155,12 +229,48 @@ class ChecklistApi {
     return response.data;
   }
 
+  async getInstancesPaginated(params: ChecklistInstanceQueryParams): Promise<PaginatedResponse<ChecklistInstance>> {
+    const searchParams = new URLSearchParams();
+    
+    if (params.start_date) searchParams.append('start_date', params.start_date);
+    if (params.end_date) searchParams.append('end_date', params.end_date);
+    if (params.shift) searchParams.append('shift', params.shift);
+    if (params.status) searchParams.append('status', params.status);
+    if (params.search) searchParams.append('search', params.search);
+    if (params.page) searchParams.append('page', params.page.toString());
+    if (params.limit) searchParams.append('limit', params.limit.toString());
+    if (params.sort_by) searchParams.append('sort_by', params.sort_by);
+    if (params.sort_order) searchParams.append('sort_order', params.sort_order);
+    
+    const response = await api.get<PaginatedResponse<ChecklistInstance>>(
+      `/api/v1/checklists/instances/paginated?${searchParams.toString()}`
+    );
+    return response.data;
+  }
+
   async getInstance(id: string): Promise<ChecklistInstance> {
     if (!id || id === 'undefined') {
       throw new Error(`Invalid instance ID: ${id}`);
     }
     const response = await api.get<ChecklistInstance>(`/api/v1/checklists/instances/${id}`);
-    return response.data;
+    const instance = response.data;
+    // Normalize activities for all items
+    if (instance && Array.isArray(instance.items)) {
+      instance.items = instance.items.map(item => ({
+        ...item,
+        activities: Array.isArray(item.activities)
+          ? item.activities.map((activity: any) => ({
+              id: activity.id,
+              action: activity.action,
+              actor: activity.user || activity.actor || { id: 'system', username: 'system' },
+              timestamp: activity.created_at || activity.timestamp,
+              notes: activity.comment || activity.notes || '',
+              metadata: activity.metadata || {},
+            }))
+          : [],
+      }));
+    }
+    return instance;
   }
 
   async joinInstance(instanceId: string): Promise<ChecklistInstance> {
@@ -186,6 +296,27 @@ class ChecklistApi {
     );
     // Return the full instance (source-of-truth) so callers can refresh local state
     return response.data.instance;
+  }
+
+  // Subitems
+  async updateSubitemStatus(
+    instanceId: string,
+    itemId: string,
+    subitemId: string,
+    data: {
+      status: string;
+      reason?: string;
+      comment?: string;
+    }
+  ): Promise<void> {
+    // Make the subitem update call
+    await api.patch(
+      `/api/v1/checklists/instances/${instanceId}/items/${itemId}/subitems/${subitemId}`,
+      data
+    );
+    
+    // Don't fetch instance immediately - let the context handle it
+    // This prevents race conditions and allows the backend to process the update
   }
 
   // Handover Notes

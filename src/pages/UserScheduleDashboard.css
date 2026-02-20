@@ -13,7 +13,7 @@
 
 .header-title h1 {
   font-size: 2rem;
-  color: #ffffff;
+  color: var(--text-primary);
   margin: 0;
   font-weight: 700;
 }
@@ -86,7 +86,7 @@
 .stat-value {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .stat-label {
@@ -125,7 +125,7 @@
 .toggle-btn:hover {
   border-color: rgba(107, 112, 185, 0.4);
   background: rgba(107, 112, 185, 0.2);
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .toggle-btn.active {
@@ -155,12 +155,12 @@
 
 .nav-btn:hover {
   background: rgba(107, 112, 185, 0.2);
-  color: #ffffff;
+  color: var(--text-primary);
   border-color: rgba(107, 112, 185, 0.4);
 }
 
 .current-month {
-  color: #ffffff;
+  color: var(--text-primary);
   font-weight: 600;
   min-width: 150px;
   text-align: center;
@@ -242,18 +242,18 @@
 
 /* Theme: Light mode overrides for clean light background */
 [data-theme="light"] .user-schedule-dashboard {
-  background: linear-gradient(180deg, #f7fafc 0%, #ffffff 100%);
+  background: linear-gradient(180deg, #f7fafc 0%, var(--text-primary) 100%);
   color: #0f172a;
 }
 
 [data-theme="light"] .schedule-content {
-  background: #ffffff;
+  background: var(--text-primary);
   border: 1px solid rgba(2,6,23,0.05);
   box-shadow: 0 8px 30px rgba(2,6,23,0.04);
 }
 
 [data-theme="light"] .calendar-day {
-  background: #ffffff;
+  background: var(--text-primary);
   border: 1px solid rgba(2,6,23,0.04);
   color: #0f172a;
 }
@@ -373,7 +373,7 @@
 
 .empty-state h3 {
   margin: 1rem 0 0.5rem 0;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 1.3rem;
 }
 
@@ -442,7 +442,7 @@
 
 .day-number {
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 0.95rem;
   margin-bottom: 0.5rem;
   width: 100%;
@@ -552,7 +552,7 @@
 }
 
 .week-day-header {
-  color: #ffffff;
+  color: var(--text-primary);
   font-weight: 600;
   margin-bottom: 0.75rem;
 }
@@ -785,3 +785,4 @@
     padding: 0.4rem 0.5rem;
   }
 }
+

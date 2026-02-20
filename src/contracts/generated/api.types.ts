@@ -46,6 +46,36 @@ export interface ChecklistTemplate {
   is_active: boolean;
   version: number;
   created_at: string;
+  created_by?: {
+    id: string;
+    username: string;
+  };
+  updated_at?: string;
+  section_id?: string;
+  items?: ChecklistItem[];
+}
+
+export interface CreateChecklistTemplateRequest {
+  name: string;
+  description: string;
+  shift: 'MORNING' | 'AFTERNOON' | 'NIGHT';
+  is_active: boolean;
+  section_id?: string;
+  items?: CreateTemplateItemRequest[];
+}
+
+export interface UpdateChecklistTemplateRequest {
+  name?: string;
+  description?: string;
+  shift?: 'MORNING' | 'AFTERNOON' | 'NIGHT';
+  is_active?: boolean;
+  section_id?: string;
+}
+
+export interface TemplateMutationResponse {
+  id: string;
+  message: string;
+  template?: ChecklistTemplate;
 }
 
 export interface ChecklistItem {
@@ -55,6 +85,26 @@ export interface ChecklistItem {
   item_type: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
   is_required: boolean;
   scheduled_time: string | null;
+  severity: number;
+  sort_order: number;
+  subitems?: ChecklistItem[];
+}
+
+export interface CreateTemplateItemRequest {
+  title: string;
+  description: string;
+  item_type: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
+  is_required: boolean;
+  severity: number;
+  sort_order: number;
+  subitems?: CreateTemplateSubitemRequest[];
+}
+
+export interface CreateTemplateSubitemRequest {
+  title: string;
+  description: string;
+  item_type: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
+  is_required: boolean;
   severity: number;
   sort_order: number;
 }
@@ -75,6 +125,26 @@ export interface ItemActivity {
     reason?: string;
     duration_ms?: number;
   };
+}
+
+export interface ChecklistInstanceSubitem {
+  id: string;
+  instance_item_id: string;
+  title: string;
+  description: string | null;
+  item_type: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
+  is_required: boolean;
+  severity: number;
+  sort_order: number;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'FAILED';
+  completed_by: {
+    id: string;
+    username: string;
+  } | null;
+  completed_at: string | null;
+  skipped_reason: string | null;
+  failure_reason: string | null;
+  created_at: string;
 }
 
 export interface ChecklistItemInstance {
@@ -103,6 +173,7 @@ export interface ChecklistItemInstance {
   skipped_reason: string | null;
   failure_reason: string | null;
   activities: ItemActivity[];
+  subitems?: ChecklistInstanceSubitem[];
 }
 
 export interface ChecklistInstance {

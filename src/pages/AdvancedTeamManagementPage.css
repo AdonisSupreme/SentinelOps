@@ -24,7 +24,7 @@
 
 .access-guard h2 {
   font-size: 1.8rem;
-  color: #ffffff;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
@@ -54,7 +54,7 @@
 
 .team-mgmt-header h1 {
   font-size: 2rem;
-  color: #ffffff;
+  color: var(--text-primary);
   margin: 0;
   font-weight: 700;
   letter-spacing: -0.5px;
@@ -111,7 +111,7 @@
 
 .btn-secondary:hover:not(:disabled) {
   background: rgba(107, 112, 185, 0.2);
-  color: #ffffff;
+  color: var(--text-primary);
   border-color: rgba(107, 112, 185, 0.4);
 }
 
@@ -130,7 +130,7 @@
 
 .btn-icon:hover {
   background: rgba(59, 130, 246, 0.2);
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .btn-icon.danger {
@@ -178,7 +178,7 @@
 .preset-btn:hover {
   background: rgba(107, 112, 185, 0.2);
   border-color: rgba(107, 112, 185, 0.4);
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .preset-btn.active {
@@ -203,7 +203,7 @@
 .section-select {
   background: rgba(15, 15, 46, 0.8);
   border: 1px solid rgba(107, 112, 185, 0.2);
-  color: #ffffff;
+  color: var(--text-primary);
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
   cursor: pointer;
@@ -236,7 +236,7 @@
   background: linear-gradient(90deg, rgba(107, 112, 185, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%);
   border-bottom: 1px solid rgba(147, 112, 219, 0.15);
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-primary);
   position: sticky;
   top: 0;
 }
@@ -264,7 +264,7 @@
 }
 
 .col-date {
-  color: #ffffff;
+  color: var(--text-primary);
   font-weight: 600;
   font-size: 0.95rem;
   display: flex;
@@ -399,7 +399,7 @@
 
 .modal-header h2 {
   margin: 0;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: -0.3px;
@@ -419,7 +419,7 @@
 }
 
 .btn-close:hover {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 /* Forms */
@@ -444,7 +444,7 @@
 }
 
 .form-group label {
-  color: #ffffff;
+  color: var(--text-primary);
   font-weight: 600;
   font-size: 0.95rem;
 }
@@ -455,7 +455,7 @@
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(147, 112, 219, 0.2);
   border-radius: 6px;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 0.95rem;
   transition: all 0.3s;
 }
@@ -491,7 +491,7 @@
 
 .pattern-preview h4 {
   margin: 0 0 1.5rem 0;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 1.1rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -533,7 +533,7 @@
 
 .pattern-day strong {
   display: block;
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 0.85rem;
   margin: 0;
   font-weight: 600;
@@ -673,7 +673,7 @@
 }
 
 .user-checkbox:hover {
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .form-actions {
@@ -795,7 +795,7 @@
 }
 /* ===== LIGHT THEME OVERRIDES ===== */
 [data-theme="light"] .advanced-team-mgmt-page {
-  background: linear-gradient(180deg, #f7fafc 0%, #ffffff 100%);
+  background: linear-gradient(180deg, #f7fafc 0%, var(--text-primary) 100%);
 }
 
 [data-theme="light"] .team-mgmt-header {

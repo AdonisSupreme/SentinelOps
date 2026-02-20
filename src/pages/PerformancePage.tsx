@@ -6,7 +6,9 @@ import {
   FaTrophy, FaChartLine, FaFire, FaUsers, FaCheckCircle
 } from 'react-icons/fa';
 import { PerformanceChart, Leaderboard, StreakTracker, AchievementList } from '../components/performance';
+import { PerformanceSkeleton } from '../components/dashboard';
 import './PerformancePage.css';
+import '../components/dashboard/PerformanceSkeleton.css';
 
 const PerformancePage: React.FC = () => {
   const { user } = useAuth();
@@ -62,12 +64,7 @@ const PerformancePage: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="performance-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading Performance Analytics...</p>
-      </div>
-    );
+    return <PerformanceSkeleton />;
   }
 
   return (

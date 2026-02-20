@@ -182,7 +182,7 @@
   100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
 }
 
-.status-indicator {
+.p-status-indicator {
   position: absolute;
   bottom: 2px;
   right: 2px;
@@ -192,17 +192,17 @@
   border: 2px solid rgba(10, 14, 39, 0.9);
 }
 
-.status-indicator.online {
+.p-status-indicator.online {
   background: #00ff9d;
   box-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
   animation: pulse 2s infinite;
 }
 
-.status-indicator.offline {
+.p-status-indicator.offline {
   background: #8892b0;
 }
 
-.status-indicator.away {
+.p-status-indicator.away {
   background: #ffa502;
 }
 
@@ -511,7 +511,7 @@
     display: none;
   }
 
-  .status-indicator {
+  .p-status-indicator {
     background: #ccc !important;
   }
 }

@@ -5,11 +5,17 @@ import { useChecklist } from '../contexts/checklistContext';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   FaArrowLeft, FaPlay, FaCheckCircle, FaClock, 
-  FaExclamationTriangle, FaBan,
+  FaExclamationTriangle, FaBan, FaTimes,
   FaUsers, FaCalendarAlt, FaFlag, FaShareAlt,
-  FaChevronDown, FaChevronUp 
+  FaChevronDown, FaChevronUp, FaDownload, FaFilePdf
 } from 'react-icons/fa';
-import { ChecklistTimeline, ChecklistStats, HandoverNotes, ItemActions, ParticipantList } from '../components/checklist';
+import { 
+  ChecklistStats, HandoverNotes, ItemActions, 
+  ParticipantList, EnhancedChecklistItem, SmartSubitemModal
+} from '../components/checklist';
+import { ChecklistPageSkeleton } from '../components/checklist/ChecklistPageSkeleton';
+import { pdfService } from '../services/pdfService';
+import '../components/checklist/ChecklistPageSkeleton.css';
 import './ChecklistPage.css';
 
 const ChecklistPage: React.FC = () => {
@@ -21,17 +27,61 @@ const ChecklistPage: React.FC = () => {
     loadInstance, 
     joinInstance, 
     completeInstance,
+    updateSubitemStatus,
     loading, 
     error 
   } = useChecklist();
   
-  const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [showHandover, setShowHandover] = useState(false);
   const [showParticipants, setShowParticipants] = useState(true);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [completeWithExceptions, setCompleteWithExceptions] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [showShareFeedback, setShowShareFeedback] = useState(false);
+  const [showItemActionsModal, setShowItemActionsModal] = useState(false);
+  const [selectedItemForActions, setSelectedItemForActions] = useState<any>(null);
+  const [showSubitemModal, setShowSubitemModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  // Handler for ItemActions modal
+  const handleItemActionsClick = (item: any) => {
+    setSelectedItemForActions(item);
+    setShowItemActionsModal(true);
+  };
+
+  const handleItemActionsClose = () => {
+    setShowItemActionsModal(false);
+    setSelectedItemForActions(null);
+  };
+
+  // Handler for when ItemActions completes (e.g., starting work)
+  const handleItemActionsComplete = async (action?: string, hasSubitems?: boolean) => {
+    console.log('🔄 handleItemActionsComplete called with:', { action, hasSubitems, selectedItemForActions });
+    
+    // If action is IN_PROGRESS and item has subitems, show SmartSubitemModal immediately
+    if (action === 'IN_PROGRESS' && hasSubitems && selectedItemForActions) {
+      // Refresh instance to get updated status
+      if (id) {
+        await loadInstance(id);
+        // Get the current instance data to ensure we have the latest
+        const updatedItem = currentInstance?.items?.find((item: any) => item.id === selectedItemForActions.id);
+        
+        if (updatedItem) {
+          // Show SmartSubitemModal for items with subitems
+          setSelectedItem(updatedItem);
+          setShowSubitemModal(true);
+          console.log('✅ Showing SmartSubitemModal for item with subitems');
+        }
+      }
+    } else {
+      // For all other actions or items without subitems, just close the modal
+      console.log('✅ Closing ItemActions modal - no subitems or different action');
+    }
+    
+    // Close ItemActions modal
+    handleItemActionsClose();
+  };
 
   useEffect(() => {
     if (id && id !== 'undefined') {
@@ -44,7 +94,7 @@ const ChecklistPage: React.FC = () => {
 
   useEffect(() => {
     if (currentInstance) {
-      console.log('🔍 ChecklistPage Debug - CurrentInstance updated:', {
+      console.log('🔍 Enhanced ChecklistPage - CurrentInstance updated:', {
         id: currentInstance.id,
         template: currentInstance.template,
         templateName: currentInstance.template?.name,
@@ -58,7 +108,6 @@ const ChecklistPage: React.FC = () => {
         hasItemProperty: !!(currentInstance.items?.[0]?.template_item),
         allItemTitles: currentInstance.items?.map(item => item.title || 'NO TITLE')
       });
-      
     }
   }, [currentInstance]);
 
@@ -68,7 +117,7 @@ const ChecklistPage: React.FC = () => {
       console.log('Joining checklist:', currentInstance.id);
       try {
         await joinInstance(currentInstance.id);
-        // After joining, reload the instance to get complete data including template
+        // After joining, reload instance to get complete data including template
         if (id) {
           console.log('Reloading instance after join to get complete data');
           await loadInstance(id);
@@ -79,15 +128,33 @@ const ChecklistPage: React.FC = () => {
     }
   };
 
-  const handleItemAction = (itemId: string) => {
-    setActiveItemId(activeItemId === itemId ? null : itemId);
+  const handleItemClick = (itemId: string, item: any) => {
+    // Check if item has subitems
+    const hasSubitems = item.subitems && item.subitems.length > 0;
+    
+    if (hasSubitems) {
+      // If item has subitems and is in progress, show subitem modal
+      if (item.status === 'IN_PROGRESS') {
+        setSelectedItem(item);
+        setShowSubitemModal(true);
+      } else {
+        // Otherwise, show item actions modal
+        handleItemActionsClick(item);
+      }
+    } else {
+      // No subitems, show item actions modal
+      handleItemActionsClick(item);
+    }
   };
 
   const handleItemComplete = async () => {
-    // Close the item actions panel
-    setActiveItemId(null);
+    // Close subitem modal and item actions modal
+    setShowSubitemModal(false);
+    setShowItemActionsModal(false);
+    setSelectedItem(null);
+    setSelectedItemForActions(null);
     
-    // Refresh the current instance to show updated item status
+    // Refresh current instance to show updated item status
     if (id) {
       console.log('🔄 Refreshing instance after item action...');
       await loadInstance(id);
@@ -95,15 +162,37 @@ const ChecklistPage: React.FC = () => {
     }
   };
 
-  const handleCompleteChecklist = async () => {
-    if (!currentInstance || !id) return;
-    
+  const handleSubitemAction = async (subitemId: string, action: 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'IN_PROGRESS', notes?: string) => {
     try {
-      await completeInstance(id, completeWithExceptions);
-      setShowCompleteDialog(false);
-      setCompleteWithExceptions(false);
-    } catch (err) {
-      console.error('Failed to complete checklist:', err);
+      if (!selectedItem || !id) {
+        throw new Error('No selected item or instance ID');
+      }
+
+      // Call the proper API method from checklist context
+      // The context will handle optimistic updates and instance refresh
+      await updateSubitemStatus(id, selectedItem.id, subitemId, action, notes, notes);
+      
+      console.log(`✅ Subitem action completed: ${action} on ${subitemId}`, notes);
+      
+      // No need to manually refresh instance here - context handles it
+      // This prevents race conditions and ensures consistent state
+    } catch (error) {
+      console.error('Failed to perform subitem action:', error);
+    }
+  };
+
+  const handleCompleteItem = async () => {
+    try {
+      if (selectedItem && id) {
+        await completeInstance(id, completeWithExceptions);
+        setShowSubitemModal(false);
+        setSelectedItem(null);
+        
+        // Refresh instance
+        await loadInstance(id);
+      }
+    } catch (error) {
+      console.error('Failed to complete item:', error);
     }
   };
 
@@ -127,15 +216,41 @@ const ChecklistPage: React.FC = () => {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    if (!id || isGeneratingPDF) return;
+    
+    setIsGeneratingPDF(true);
+    try {
+      await pdfService.generateAndDownloadPDF(id);
+    } catch (error) {
+      console.error('PDF download failed:', error);
+      // Error is handled by the PDF service
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const handleCompleteChecklist = async () => {
+    if (!currentInstance || !id) return;
+    
+    try {
+      await completeInstance(id, completeWithExceptions);
+      setShowCompleteDialog(false);
+      setCompleteWithExceptions(false);
+    } catch (err) {
+      console.error('Failed to complete checklist:', err);
+    }
+  };
+
   const canCompleteChecklist = user?.role === 'MANAGER' || user?.role === 'admin';
   const isChecklistActive = currentInstance?.status === 'OPEN' || currentInstance?.status === 'IN_PROGRESS' || currentInstance?.status === 'PENDING_REVIEW';
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
       'OPEN': { label: 'Open', color: '#6b7280', icon: <FaClock /> },
-      'IN_PROGRESS': { label: 'In Progress', color: '#00d9ff', icon: <FaPlay /> },
+      'IN_PROGRESS': { label: 'In Progress', color: '#023aa3ff', icon: <FaPlay /> },
       'PENDING_REVIEW': { label: 'Pending Review', color: '#ffa502', icon: <FaClock /> },
-      'COMPLETED': { label: 'Completed', color: '#2ed573', icon: <FaCheckCircle /> },
+      'COMPLETED': { label: 'Completed', color: '#005423ff', icon: <FaCheckCircle /> },
       'COMPLETED_WITH_EXCEPTIONS': { label: 'With Exceptions', color: '#ff4757', icon: <FaExclamationTriangle /> },
       'CLOSED_BY_EXCEPTION': { label: 'Closed by Exception', color: '#ff4757', icon: <FaBan /> },
     };
@@ -198,18 +313,7 @@ const ChecklistPage: React.FC = () => {
   };
 
   if (loading && !currentInstance) {
-    return (
-      <div className="dbstats-page loading">
-        <div className="loading-container">
-          <div className="sentinel-loader">
-            <div className="loader-ring"></div>
-            <div className="loader-ring"></div>
-            <div className="loader-ring"></div>
-          </div>
-          <span className="loading-text">Initializing Operational Checklist...</span>
-        </div>
-      </div>
-    );
+    return <ChecklistPageSkeleton />;
   }
 
   if (error) {
@@ -219,7 +323,7 @@ const ChecklistPage: React.FC = () => {
         <h3>Connection Error</h3>
         <p>
           {error.includes('Failed to load') 
-            ? 'Unable to connect to the server. Please check your connection and try again.'
+            ? 'Unable to connect to server. Please check your connection and try again.'
             : error}
         </p>
         <div className="error-actions">
@@ -284,6 +388,15 @@ const ChecklistPage: React.FC = () => {
                 <FaCheckCircle /> Complete Checklist
               </button>
             )}
+            <button 
+              className="btn-download-pdf" 
+              onClick={handleDownloadPDF}
+              disabled={isGeneratingPDF || !id}
+              title="Download SentinelOps Checklist PDF"
+            >
+              <FaFilePdf /> 
+              {isGeneratingPDF ? 'Generating...' : 'Download PDF'}
+            </button>
             <button className="btn-share" onClick={handleShare}>
               <FaShareAlt /> Share
             </button>
@@ -295,49 +408,28 @@ const ChecklistPage: React.FC = () => {
       </header>
 
       <div className="checklist-content">
-        {/* Left Column - Timeline */}
-        <div className="content-left">
-          <section className="timeline-section">
-            <div className="section-header">
-              <h2>Operational Timeline</h2>
-              {currentInstance.items && (
-                <div>
-                  {(() => {
-                    const completedItems = currentInstance.items?.filter(item => item.status === 'COMPLETED').length || 0;
-                    const totalItems = currentInstance.items?.length || 0;
-                    const pendingItems = totalItems - completedItems;
-                    
-                    return (
-                      <div className="timeline-stats">
-                        <span className="stat">
-                          <FaCheckCircle /> {completedItems} completed
-                        </span>
-                        <span className="stat">
-                          <FaClock /> {pendingItems} pending
-                        </span>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-            </div>
-            
-            <ChecklistTimeline 
-              items={currentInstance.items || []}
-              activeItemId={activeItemId}
-              onItemClick={handleItemAction}
+        {/* Items with Enhanced Subitem Display */}
+        <div className="items-section">
+          {currentInstance.items?.map((item: any) => (
+            <EnhancedChecklistItem
+              key={item.id}
+              instanceId={currentInstance.id}
+              item={item}
+              onItemAction={handleItemClick}
+              onItemComplete={handleItemComplete}
+              onItemActionsClick={handleItemActionsClick}
             />
-          </section>
+          ))}
         </div>
 
-        {/* Right Column - Sidebar */}
+        {/* Right Sidebar */}
         <div className="content-right">
           {/* Stats Card */}
           <ChecklistStats stats={{
             completed_items: currentInstance.items?.filter(item => item.status === 'COMPLETED').length || 0,
             total_items: currentInstance.items?.length || 0,
             completion_percentage: (currentInstance.items?.length || 0) > 0 
-              ? Math.round(((currentInstance.items?.filter(item => item.status === 'COMPLETED').length || 0) / (currentInstance.items?.length || 0)) * 100)
+              ? Math.round(((currentInstance.items?.filter(item => ['COMPLETED', 'SKIPPED', 'FAILED'].includes(item.status)).length || 0) / (currentInstance.items?.length || 0)) * 100)
               : 0,
             time_remaining_minutes: calculateTimeRemaining(currentInstance)
           }} />
@@ -369,74 +461,102 @@ const ChecklistPage: React.FC = () => {
               <HandoverNotes instanceId={currentInstance.id} />
             )}
           </section>
-
-          {/* Removed from sidebar - now appears as modal modal */}
-
-          {/* Complete Checklist Dialog */}
-          {showCompleteDialog && (
-            <section className="sidebar-section complete-dialog">
-              <div className="section-header">
-                <h3><FaCheckCircle /> Complete Checklist</h3>
-              </div>
-              <div className="complete-dialog-content">
-                <p>Are you sure you want to complete this checklist?</p>
-                <div className="completion-stats">
-                  <span>
-                    {currentInstance.items?.filter(item => item.status === 'COMPLETED').length || 0} / {currentInstance.items?.length || 0} items completed
-                  </span>
-                </div>
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={completeWithExceptions}
-                    onChange={(e) => setCompleteWithExceptions(e.target.checked)}
-                  />
-                  Complete with exceptions (allow skipped/failed items)
-                </label>
-                <div className="dialog-actions">
-                  <button 
-                    onClick={handleCompleteChecklist}
-                    className="btn-action confirm"
-                    disabled={loading}
-                  >
-                    {loading ? 'Completing...' : 'Confirm Complete'}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setShowCompleteDialog(false);
-                      setCompleteWithExceptions(false);
-                    }}
-                    className="btn-action cancel"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </section>
-          )}
         </div>
       </div>
 
       {/* Item Actions Modal */}
-      {activeItemId && (
-        <div className="item-actions-modal-overlay" onClick={() => setActiveItemId(null)}>
-          <div className="item-actions-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3><FaPlay /> Item Actions</h3>
+      {showItemActionsModal && selectedItemForActions && (
+        <div 
+          className="enhanced-item-actions-modal-overlay" 
+          onClick={handleItemActionsClose}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
+          <div 
+            className="enhanced-item-actions-modal" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="enhanced-modal-header">
+              <h3 id="modal-title"><FaPlay /> Item Actions</h3>
               <button 
-                className="modal-close"
-                onClick={() => setActiveItemId(null)}
+                className="enhanced-modal-close"
+                onClick={handleItemActionsClose}
                 aria-label="Close modal"
+                type="button"
               >
                 ✕
               </button>
             </div>
-            <ItemActions 
+            <ItemActions
               instanceId={currentInstance.id}
-              itemId={activeItemId}
-              currentStatus={currentInstance.items?.find(item => item.id === activeItemId)?.status}
-              onComplete={handleItemComplete}
+              itemId={selectedItemForActions.id}
+              currentStatus={selectedItemForActions.status}
+              onComplete={handleItemActionsComplete}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Smart Subitem Modal */}
+      {showSubitemModal && selectedItem && (
+        <SmartSubitemModal
+          isOpen={showSubitemModal}
+          itemTitle={selectedItem.title || selectedItem.template_item?.title}
+          itemId={selectedItem.id}
+          instanceId={currentInstance.id}
+          subitems={selectedItem.subitems || []}
+          onAction={handleSubitemAction}
+          onCompleteItem={handleCompleteItem}
+          onClose={() => {
+            setShowSubitemModal(false);
+            setSelectedItem(null);
+          }}
+        />
+      )}
+
+      {/* Complete Checklist Dialog */}
+      {showCompleteDialog && (
+        <div className="reason-modal-backdrop">
+          <div className="reason-modal">
+            <div className="reason-modal-header">
+              <h3><FaCheckCircle /> Complete Checklist</h3>
+              <button 
+                onClick={() => {
+                  setShowCompleteDialog(false);
+                  setCompleteWithExceptions(false);
+                }}
+                className="reason-btn cancel"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="reason-modal-content">
+              <p>Are you sure you want to complete this checklist?</p>
+              <div className="completion-stats">
+                <span>
+                  {currentInstance.items?.filter(item => item.status === 'COMPLETED').length || 0} / {currentInstance.items?.length || 0} items completed
+                </span>
+              </div>
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={completeWithExceptions}
+                  onChange={(e) => setCompleteWithExceptions(e.target.checked)}
+                />
+                Complete with exceptions (allow skipped/failed items)
+              </label>
+            </div>
+            <div className="reason-modal-actions">
+              <button 
+                onClick={handleCompleteChecklist}
+                className="reason-btn confirm"
+                disabled={loading}
+              >
+                {loading ? 'Completing...' : 'Confirm Complete'}
+              </button>
+              
+            </div>
           </div>
         </div>
       )}

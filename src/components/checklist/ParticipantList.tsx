@@ -82,7 +82,7 @@ const ParticipantList: React.FC<ParticipantListProps> = ({ participants }) => {
               <div className="avatar-circle" style={{ borderColor: getRoleColor(participant.role) }}>
                 <span className="avatar-text">{getInitials(participant.username)}</span>
               </div>
-              <div className="status-indicator online"></div>
+              <div className="p-status-indicator online"></div>
             </div>
             
             <div className="participant-info">

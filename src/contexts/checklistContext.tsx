@@ -1,8 +1,14 @@
 // src/contexts/checklistContext.tsx
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { checklistApi, ChecklistInstance, ChecklistItemInstance, ItemActivity } from '../services/checklistApi';
+import { ChecklistInstanceSubitem } from '../contracts/generated/api.types';
 import { useNotifications } from './NotificationContext';
 import { useAuth } from './AuthContext';
+
+// Extended interface to include subitems that are returned by API but not in generated types
+interface ExtendedChecklistItemInstance extends ChecklistItemInstance {
+  subitems?: ChecklistInstanceSubitem[];
+}
 
 interface ChecklistContextType {
   currentInstance: ChecklistInstance | null;
@@ -21,7 +27,16 @@ interface ChecklistContextType {
     comment?: string,
     reason?: string
   ) => Promise<void>;
+  updateSubitemStatus: (
+    instanceId: string,
+    itemId: string,
+    subitemId: string,
+    status: string,
+    comment?: string,
+    reason?: string
+  ) => Promise<void>;
   completeInstance: (instanceId: string, withExceptions?: boolean) => Promise<void>;
+  deleteInstance: (instanceId: string) => Promise<void>;
   createHandoverNote: (content: string, priority: number) => Promise<void>;
   refreshInstance: () => Promise<void>;
 }
@@ -190,7 +205,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return allowedTransitions[currentStatus]?.includes(newStatus) || false;
   }, []);
 
-  const getActionType = (newStatus: string): 'STARTED' | 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'ESCALATED' | 'UPDATED' => {
+  const getActionType = useCallback((newStatus: string): 'STARTED' | 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'ESCALATED' | 'UPDATED' => {
     switch (newStatus) {
       case 'IN_PROGRESS': return 'STARTED';
       case 'COMPLETED': return 'COMPLETED';
@@ -198,7 +213,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       case 'FAILED': return 'FAILED';
       default: return 'UPDATED';
     }
-  };
+  }, []);
 
   // Enhanced error logging and reporting
   const logErrorToService = useCallback((error: any, context: any) => {
@@ -433,10 +448,41 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         updatedItem: updatedInstance.items.find(i => i.id === itemId)
       });
 
-      setError(null);
+      // Check if we need to transition instance from OPEN to IN_PROGRESS
+      // This happens when the first item starts working (PENDING → IN_PROGRESS)
+      if (
+        currentInstance.status === 'OPEN' && 
+        status === 'IN_PROGRESS' && 
+        previousStatus === 'PENDING'
+      ) {
+        console.log('🔄 Transitioning checklist instance from OPEN to IN_PROGRESS');
+        
+        // Update the instance status to IN_PROGRESS
+        const instanceWithInProgress: ChecklistInstance = {
+          ...updatedInstance,
+          status: 'IN_PROGRESS' as const
+        };
+        
+        setCurrentInstance(instanceWithInProgress);
+        
+        // Also update todayInstances list if it exists
+        setTodayInstances(prev => {
+          if (!prev || prev.length === 0) return prev;
+          const idx = prev.findIndex(p => p.id === instanceWithInProgress.id);
+          if (idx === -1) return prev;
+          const copy = [...prev];
+          copy[idx] = instanceWithInProgress;
+          return copy;
+        });
+        
+        console.log('✅ Checklist instance status transitioned to IN_PROGRESS');
+      } else {
+        // Normal flow - use server-returned instance
+        setError(null);
 
-      // Refresh currentInstance from server-provided instance to ensure source-of-truth
-      setCurrentInstance(updatedInstance);
+        // Refresh currentInstance from server-provided instance to ensure source-of-truth
+        setCurrentInstance(updatedInstance);
+      }
 
       // Also update the in-memory `todayInstances` list to replace the instance
       setTodayInstances(prev => {
@@ -529,7 +575,169 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } finally {
       setLoading(false);
     }
-  }, [loadTodayInstances, addNotification, currentInstance, loadInstance, validateTransition, getActionType, user, retryWithBackoff, validateUpdateItemStatusInput, logErrorToService]);
+  }, [loadTodayInstances, addNotification, currentInstance, loadInstance, validateTransition, user, retryWithBackoff, validateUpdateItemStatusInput, logErrorToService]);
+
+  const updateSubitemStatus = useCallback(async (
+    instanceId: string,
+    itemId: string,
+    subitemId: string,
+    status: string,
+    comment?: string,
+    reason?: string
+  ) => {
+    setLoading(true);
+    const operationId = `update_subitem_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    try {
+      // Input validation
+      if (!instanceId || !itemId || !subitemId || !status) {
+        throw new Error('Instance ID, Item ID, Subitem ID, and status are required');
+      }
+      
+      // Context validation
+      if (!currentInstance) {
+        throw new Error('No active checklist instance');
+      }
+      
+      console.log('🔄 Updating subitem status:', {
+        operationId,
+        instanceId,
+        itemId,
+        subitemId,
+        status,
+        comment,
+        reason
+      });
+
+      // Find current item and subitem for previous status
+      const currentItem = currentInstance?.items.find(item => item.id === itemId) as ExtendedChecklistItemInstance;
+      const currentSubitem = currentItem?.subitems?.find((subitem: any) => subitem.id === subitemId);
+      const previousStatus = currentSubitem?.status || 'PENDING';
+      
+      // Validate state transition before proceeding
+      if (!validateTransition(previousStatus, status)) {
+        throw new Error(`Invalid state transition from ${previousStatus} to ${status}`);
+      }
+
+      // Optimistic update - update local state immediately
+      if (currentInstance && currentInstance.id === instanceId) {
+        const updatedItems = currentInstance.items.map((item: ChecklistItemInstance) => {
+          if (item.id === itemId) {
+            return {
+              ...item,
+              subitems: item.subitems?.map((subitem: ChecklistInstanceSubitem) => {
+                if (subitem.id === subitemId) {
+                  return {
+                    ...subitem,
+                    status: status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'FAILED',
+                    completed_by: status === 'COMPLETED' && user?.id ? { id: user.id, username: user.username || '' } : null,
+                    completed_at: status === 'COMPLETED' ? new Date().toISOString() : null,
+                    skipped_reason: status === 'SKIPPED' ? (reason || null) : null,
+                    failure_reason: status === 'FAILED' ? (reason || null) : null,
+                  };
+                }
+                return subitem;
+              })
+            };
+          }
+          return item;
+        });
+
+        // Update current instance with optimistic changes
+        const updatedInstance = {
+          ...currentInstance,
+          items: updatedItems,
+          updated_at: new Date().toISOString()
+        };
+
+        setCurrentInstance(updatedInstance);
+        console.log('✅ Local state updated optimistically for subitem');
+      }
+
+      // Make API call using the proper API service
+      await checklistApi.updateSubitemStatus(
+        instanceId,
+        itemId,
+        subitemId,
+        {
+          status: status,
+          reason: reason,
+          comment: comment || reason || undefined
+        }
+      );
+
+      console.log('✅ Subitem status updated successfully on server:', {
+        operationId,
+        subitemId,
+        instanceId
+      });
+
+      setError(null);
+
+      // Fetch the updated instance from server to get latest state
+      const updatedInstance = await checklistApi.getInstance(instanceId);
+      setCurrentInstance(updatedInstance);
+
+      // Update today instances list
+      setTodayInstances(prev => {
+        if (!prev || prev.length === 0) return prev;
+        const idx = prev.findIndex(p => p.id === updatedInstance.id);
+        if (idx === -1) return prev;
+        const copy = [...prev];
+        copy[idx] = updatedInstance;
+        return copy;
+      });
+
+      // Add notification
+      const updatedItem = updatedInstance.items.find(i => i.id === itemId) as ExtendedChecklistItemInstance;
+      const updatedSubitem = updatedItem?.subitems?.find((s: any) => s.id === subitemId);
+      
+      if (updatedSubitem) {
+        const action = status === 'COMPLETED' ? 'completed' :
+                      status === 'SKIPPED' ? 'skipped' :
+                      status === 'FAILED' ? 'escalated' : 
+                      status === 'IN_PROGRESS' ? 'started' : 'updated';
+        addNotification({
+          type: status === 'COMPLETED' ? 'success' : 
+                status === 'FAILED' ? 'error' : 
+                status === 'SKIPPED' ? 'warning' : 'info',
+          message: `Subitem "${updatedSubitem.title || 'Subitem'}" ${action}`,
+          priority: 'medium'
+        });
+      }
+    } catch (err: any) {
+      console.error('❌ Error updating subitem:', {
+        operationId,
+        instanceId,
+        itemId,
+        subitemId,
+        error: err,
+        errorMessage: err.message,
+        errorStatus: err.status
+      });
+      
+      // Intelligent error recovery - only reload if it's a state transition error
+      if (err.message?.includes('Invalid state transition') && currentInstance && currentInstance.id === instanceId) {
+        // Only reload the specific item, not the entire instance
+        await loadInstance(instanceId);
+        console.log('🔄 Reverted optimistic update due to state transition error');
+      } else if (err.status === 404 || err.status === 500) {
+        // Full reload only for critical errors
+        await loadInstance(instanceId);
+        console.log('🔄 Full instance reload due to critical error');
+      }
+      
+      setError(`Failed to update subitem: ${err.message || 'Unknown error'}`);
+      
+      addNotification({
+        type: 'error',
+        message: 'Failed to update subitem. Please try again.',
+        priority: 'high'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [currentInstance, loadInstance, validateTransition, user, addNotification]);
 
   const createHandoverNote = useCallback(async (content: string, priority: number) => {
     setLoading(true);
@@ -552,7 +760,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } finally {
       setLoading(false);
     }
-  }, [currentInstance?.shift, addNotification]);
+  }, [currentInstance?.id, currentInstance?.shift, addNotification]);
 
   const completeInstance = useCallback(async (instanceId: string, withExceptions: boolean = false) => {
     setLoading(true);
@@ -605,6 +813,40 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [loadTodayInstances, addNotification]);
 
+  const deleteInstance = useCallback(async (instanceId: string) => {
+    setLoading(true);
+    try {
+      await checklistApi.deleteInstance(instanceId);
+      
+      // Remove from todayInstances state
+      setTodayInstances(prev => prev.filter(instance => instance.id !== instanceId));
+      
+      // Clear currentInstance if it's the deleted one
+      if (currentInstance?.id === instanceId) {
+        setCurrentInstance(null);
+      }
+      
+      setError(null);
+      
+      addNotification({
+        type: 'success',
+        message: 'Checklist instance deleted successfully',
+        priority: 'medium'
+      });
+    } catch (err: any) {
+      console.error('Error deleting checklist instance:', err);
+      setError('Failed to delete checklist instance');
+      
+      addNotification({
+        type: 'error',
+        message: 'Failed to delete checklist instance. Please try again.',
+        priority: 'high'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [currentInstance, addNotification]);
+
   const refreshInstance = useCallback(async () => {
     if (currentInstance) {
       await loadInstance(currentInstance.id);
@@ -621,7 +863,9 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       loadInstance,
       joinInstance,
       updateItemStatus,
+      updateSubitemStatus,
       completeInstance,
+      deleteInstance,
       createHandoverNote,
       refreshInstance
     }}>

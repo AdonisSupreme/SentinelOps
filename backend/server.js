@@ -738,6 +738,65 @@ app.patch('/api/v1/checklists/instances/:instanceId/items/:itemId', (req, res) =
   res.json(item);
 });
 
+// Patch: Handle subitem status updates for hierarchical checklists
+app.patch('/api/v1/checklists/instances/:instanceId/items/:itemId/subitems/:subitemId', (req, res) => {
+  const { instanceId, itemId, subitemId } = req.params;
+  const { status, notes, reason } = req.body;
+
+  const instance = checklistInstances.get(instanceId);
+  if (!instance) {
+    return res.status(404).json({ error: 'Instance not found' });
+  }
+
+  const item = instance.items.find(i => i.id === itemId);
+  if (!item) {
+    return res.status(404).json({ error: 'Item not found' });
+  }
+
+  // Ensure subitems array exists on the item
+  if (!item.subitems) item.subitems = [];
+
+  const sub = item.subitems.find(s => s.id === subitemId);
+  if (!sub) {
+    return res.status(404).json({ error: 'Subitem not found' });
+  }
+
+  // Log the update attempt
+  console.log('🔄 Updating subitem status:', { instanceId, itemId, subitemId, currentStatus: sub.status, newStatus: status, notes, reason });
+
+  // Update fields based on status
+  sub.status = status;
+  sub.notes = notes || null;
+  sub.updated_at = new Date().toISOString();
+
+  if (status === 'COMPLETED') {
+    sub.completed_at = new Date().toISOString();
+    sub.completed_by = { id: 'mock-user', username: 'local' };
+  }
+
+  if (status === 'SKIPPED') {
+    sub.skipped_reason = reason || null;
+  }
+
+  if (status === 'FAILED') {
+    sub.failure_reason = reason || null;
+  }
+
+  // If starting a subitem and instance is OPEN, promote instance to IN_PROGRESS
+  if (status === 'IN_PROGRESS' && instance.status === 'OPEN') {
+    instance.status = 'IN_PROGRESS';
+    logger.info('Instance status auto-updated to IN_PROGRESS on subitem start', { instanceId, itemId, subitemId });
+  }
+
+  // Update instance updated_at
+  instance.updated_at = new Date().toISOString();
+
+  logger.info('Updated subitem status successfully', { instanceId, itemId, subitemId, status });
+
+  // Return the full updated instance (frontend expects instance in response)
+  res.json({ instance });
+});
+
 // Complete checklist instance endpoint
 app.post('/api/v1/checklists/instances/:instanceId/complete', (req, res) => {
   const { instanceId } = req.params;
@@ -799,7 +858,7 @@ app.post('/api/v1/checklists/instances/:instanceId/complete', (req, res) => {
     completedItems: instance.items.filter(item => item.status === 'COMPLETED').length
   });
   
-  res.json(instance);
+  res.json({ instance });
 });
 
 // Health check

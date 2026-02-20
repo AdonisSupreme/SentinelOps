@@ -14,8 +14,9 @@ interface ChecklistCardProps {
 
 const ChecklistCard: React.FC<ChecklistCardProps> = ({ instance }) => {
   const completedItems = instance.items.filter(item => item.status === 'COMPLETED').length;
+  const actionedItems = instance.items.filter(item => ['COMPLETED', 'SKIPPED', 'FAILED'].includes(item.status)).length;
   const totalItems = instance.items.length;
-  const completionPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+  const completionPercentage = totalItems > 0 ? Math.round((actionedItems / totalItems) * 100) : 0;
 
   const getStatusIcon = () => {
     switch (instance.status) {
@@ -57,7 +58,7 @@ const ChecklistCard: React.FC<ChecklistCardProps> = ({ instance }) => {
     <Link to={`/checklist/${instance.id}`} className="checklist-card-link">
       <div className="checklist-card">
         <div className="card-header">
-          <div className="status-indicator" style={{ backgroundColor: getStatusColor() }} />
+          <div className="dc-status-indicator" style={{ backgroundColor: getStatusColor() }} />
           <div className="shift-info">
             <h3>{instance.shift} SHIFT</h3>
             <div className="shift-time">

@@ -1,0 +1,418 @@
+/* src/components/checklist/ChecklistPageSkeleton.css */
+
+/* Base Skeleton Animation */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* Text Skeletons */
+.skeleton-text {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+  height: 1em;
+  margin-bottom: 0.5em;
+}
+
+.skeleton-text-xs {
+  width: 60px;
+  height: 12px;
+}
+
+.skeleton-text-sm {
+  width: 120px;
+  height: 14px;
+}
+
+.skeleton-text-md {
+  width: 180px;
+  height: 16px;
+}
+
+.skeleton-text-lg {
+  width: 240px;
+  height: 20px;
+}
+
+.skeleton-text-xl {
+  width: 320px;
+  height: 24px;
+}
+
+/* Header Skeleton */
+.checklist-header-skeleton {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(180deg, var(--bg-card) 0%, rgba(var(--bg-card-rgb, 30, 41, 59), 0.95) 100%);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  backdrop-filter: blur(2px);
+  position: relative;
+  overflow: hidden;
+  height: fit-content;
+}
+
+.back-btn-skeleton {
+  width: 120px;
+  height: 32px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.header-content-skeleton {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.checklist-title-skeleton {
+  min-width: 0;
+}
+
+.checklist-meta-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.header-actions-skeleton {
+  display: flex;
+  gap: 0.5rem;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.btn-skeleton {
+  width: 140px;
+  height: 36px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Content Skeleton */
+.checklist-content {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.content-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.content-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Timeline Section Skeleton */
+.timeline-section-skeleton {
+  background: var(--dbstats-bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.section-header-skeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.timeline-stats-skeleton {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.timeline-items-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.timeline-item-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(0, 217, 255, 0.02);
+  border: 1px solid rgba(0, 217, 255, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid rgba(0, 217, 255, 0.3);
+}
+
+.timeline-item-status-skeleton {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.timeline-item-content-skeleton {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Stats Card Skeleton */
+.stats-card-skeleton {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.stats-grid-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stat-item-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+
+.stat-icon-skeleton {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.stat-content-skeleton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Progress Section Skeleton */
+.progress-section-skeleton {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.progress-header-skeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.progress-bar-skeleton {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.progress-track-skeleton {
+  position: relative;
+  width: 100%;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-fill-skeleton {
+  position: relative;
+  height: 100%;
+  width: 65%;
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.3) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.progress-details-skeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.detail-item-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+}
+
+/* Sidebar Section Skeleton */
+.sidebar-section-skeleton {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.chevron-skeleton {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Participants List Skeleton */
+.participants-list-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.participant-item-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+.participant-avatar-skeleton {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.participant-info-skeleton {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Handover Notes Skeleton */
+.handover-notes-skeleton {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(0, 217, 255, 0.02);
+  border: 1px solid rgba(0, 217, 255, 0.1);
+  border-radius: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .checklist-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-content-skeleton {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .header-actions-skeleton {
+    width: 100%;
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+
+  .btn-skeleton {
+    flex: 1;
+  }
+  
+  .checklist-header-skeleton {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+  }
+}

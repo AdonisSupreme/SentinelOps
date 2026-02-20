@@ -2,21 +2,25 @@
 import React, { useState } from 'react';
 import { useChecklist } from '../../contexts/checklistContext';
 import { FaCheckCircle, FaPlay, FaBan, FaExclamationTriangle, FaComment } from 'react-icons/fa';
+import SubitemActions from './SubitemActions';
 import './ItemActions.css';
 
 interface ItemActionsProps {
   instanceId: string;
   itemId: string;
   currentStatus?: string;
-  onComplete: () => void;
+  onComplete: (action?: string, hasSubitems?: boolean) => void;
 }
 
 const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentStatus, onComplete }) => {
-  const { updateItemStatus, loading: contextLoading } = useChecklist();
+  const { currentInstance, updateItemStatus, loading: contextLoading } = useChecklist();
   const [comment, setComment] = useState('');
   const [reason, setReason] = useState('');
   const [action, setAction] = useState<'START' | 'COMPLETE' | 'SKIP' | 'FAIL'>('START');
   const [loadingState, setLoading] = useState(false);
+
+  // Get the current item
+  const currentItem = currentInstance?.items.find(item => item.id === itemId) as any;
 
   const handleAction = async (status: 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'FAILED', notes?: string) => {
     try {
@@ -29,19 +33,20 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
         reason
       });
 
-      // Add immediate user feedback
-      const actionType = status === 'IN_PROGRESS' ? 'started' : 
-                       status === 'COMPLETED' ? 'completed' : 'skipped';
-      
       // Show loading state
       setLoading(true);
       
       await updateItemStatus(instanceId, itemId, status, notes || comment, reason);
       
-      // Clear form and close
+      // Clear form
       setComment('');
       setReason('');
-      onComplete();
+      
+      // Check if item has subitems
+      const hasSubitems = currentItem && currentItem.subitems && currentItem.subitems.length > 0;
+      
+      // Pass action type and subitem info to parent for intelligent modal handling
+      onComplete(status, hasSubitems);
       
       console.log(' Item action completed successfully');
     } catch (error) {
@@ -122,13 +127,15 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
               onChange={(e) => setComment(e.target.value)}
               rows={3}
             />
-            <button
+            {currentStatus === 'PENDING' && (
+              <button
               onClick={() => handleAction('IN_PROGRESS', comment)}
               disabled={loadingState || contextLoading}
               className="btn-action confirm"
             >
               Start Working
             </button>
+            )}
           </div>
         );
       
@@ -139,9 +146,9 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
 
   // Determine available actions based on current status
   const canCompleteFromSkippedOrFailed = currentStatus === 'SKIPPED' || currentStatus === 'FAILED';
-  const isPending = !currentStatus || currentStatus === 'PENDING';
+  const isPending = currentStatus === 'PENDING';
   const isInProgress = currentStatus === 'IN_PROGRESS';
-  const canStart = isPending || isInProgress;
+  const canStart = isPending;
   const canComplete = isPending || isInProgress || canCompleteFromSkippedOrFailed;
   const canSkipOrFail = isPending || isInProgress;
 

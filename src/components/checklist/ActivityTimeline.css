@@ -98,19 +98,19 @@
 }
 
 .activity-icon.completed {
-  color: #00ff9d;
+  color: var(--accent);
 }
 
 .activity-icon.skipped {
-  color: #ffa502;
+  color: var(--warning);
 }
 
 .activity-icon.failed {
-  color: #ff6b6b;
+  color: var(--danger);
 }
 
 .activity-icon.escalated {
-  color: #ff4757;
+  color: var(--danger);
 }
 
 .activity-icon.updated {
@@ -229,11 +229,11 @@
   padding: 0.5rem;
   background: rgba(255, 107, 107, 0.1);
   border-radius: 6px;
-  border-left: 3px solid #ff6b6b;
+  border-left: 3px solid var(--danger);
 }
 
 .activity-reason strong {
-  color: #ff6b6b;
+  color: var(--danger);
 }
 
 /* Responsive Design */
@@ -293,3 +293,4 @@
   color: var(--primary);
   transition: color 0.2s ease;
 }
+

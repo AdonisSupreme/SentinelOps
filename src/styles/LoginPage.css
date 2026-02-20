@@ -55,7 +55,7 @@
 .input-icon {
   position: absolute;
   left: 12px;
-  color: #00d9ff;
+  color: var(--primary);
   pointer-events: none;
 }
 
@@ -65,7 +65,7 @@
   border: none;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.07);
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 1rem;
   transition: background 0.3s ease, box-shadow 0.3s ease;
   min-width: 400px;
@@ -93,7 +93,7 @@
   font-weight: 600;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(to right, #00d9ff, #7c0980);
+  background: linear-gradient(to right, var(--primary), #7c0980);
   color: white;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.3s ease;
@@ -129,3 +129,4 @@
 [data-theme="dark"] .btn-primary {
   background: linear-gradient(to right, #8b5cf6, #d80699);
 }
+

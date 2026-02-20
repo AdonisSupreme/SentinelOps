@@ -33,10 +33,20 @@
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border-color);
   z-index: 1;
+  /* Prevent layout shift during hover */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
+/* Specific item hover fixes */
 .timeline-item:hover {
-  transform: translateX(4px);
+  transform: translateZ(0) scale(1.02);
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
+}
+
+/* Prevent jumping on specific items - using attribute selector */
+.timeline-item[data-timeline-item-id]:hover {
+  transform: translateZ(0) scale(1.02);
   box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
 }
 
@@ -123,26 +133,26 @@
 }
 
 .timeline-item.completed .timeline-point {
-  border-color: #2ed573;
+  border-color: var(--success);
   background: rgba(46, 213, 115, 0.1);
   box-shadow: 0 0 15px rgba(46, 213, 115, 0.3);
 }
 
 .timeline-item.in-progress .timeline-point {
-  border-color: #00d9ff;
+  border-color: var(--primary);
   background: rgba(0, 217, 255, 0.1);
   box-shadow: 0 0 20px rgba(0, 217, 255, 0.4);
   animation: point-pulse 2s infinite;
 }
 
 .timeline-item.skipped .timeline-point {
-  border-color: #ffa502;
+  border-color: var(--warning);
   background: rgba(255, 165, 2, 0.1);
   box-shadow: 0 0 15px rgba(255, 165, 2, 0.3);
 }
 
 .timeline-item.failed .timeline-point {
-  border-color: #ff4757;
+  border-color: var(--danger);
   background: rgba(255, 71, 87, 0.1);
   box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
 }
@@ -168,28 +178,28 @@
 }
 
 .timeline-icon.completed { 
-  color: #2ed573; 
+  color: var(--success); 
   filter: drop-shadow(0 0 8px rgba(46, 213, 115, 0.5));
 }
 
 .timeline-icon.in-progress { 
-  color: #00d9ff; 
+  color: var(--primary); 
   animation: pulse 2s infinite;
   filter: drop-shadow(0 0 10px rgba(0, 217, 255, 0.6));
 }
 
 .timeline-icon.failed { 
-  color: #ff4757; 
+  color: var(--danger); 
   filter: drop-shadow(0 0 8px rgba(255, 71, 87, 0.5));
 }
 
 .timeline-icon.skipped { 
-  color: #ffa502; 
+  color: var(--warning); 
   filter: drop-shadow(0 0 8px rgba(255, 165, 2, 0.5));
 }
 
 .timeline-icon.pending { 
-  color: #6b7280; 
+  color: var(--text-muted); 
   opacity: 0.7;
 }
 
@@ -251,9 +261,9 @@
   opacity: 0.7;
 }
 
-.item-type-icon.timed { color: #ffa502; }
-.item-type-icon.scheduled { color: #00d9ff; }
-.item-type-icon.conditional { color: #2ed573; }
+.item-type-icon.timed { color: var(--warning); }
+.item-type-icon.scheduled { color: var(--primary); }
+.item-type-icon.conditional { color: var(--success); }
 
 .scheduled-time {
   display: flex;
@@ -275,7 +285,7 @@
 .badge.required {
   font-size: 0.625rem;
   padding: 0.125rem 0.375rem;
-  background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
+  background: linear-gradient(135deg, var(--danger) 0%, #ff6b81 100%);
   color: white;
   border-radius: 10px;
   font-weight: 700;
@@ -308,7 +318,7 @@
 .completed-by.ashumba {
   background: linear-gradient(135deg, rgba(0, 217, 255, 0.15) 0%, rgba(121, 40, 202, 0.1) 100%);
   border: 1px solid rgba(0, 217, 255, 0.4);
-  color: #00d9ff;
+  color: var(--primary);
   font-weight: 600;
   box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
   position: relative;
@@ -396,14 +406,14 @@
 
 .reason.skipped {
   background: rgba(255, 165, 2, 0.1);
-  color: #ffa502;
-  border-left: 3px solid #ffa502;
+  color: var(--warning);
+  border-left: 3px solid var(--warning);
 }
 
 .reason.failed {
   background: rgba(255, 71, 87, 0.1);
-  color: #ff4757;
-  border-left: 3px solid #ff4757;
+  color: var(--danger);
+  border-left: 3px solid var(--danger);
 }
 
 .item-activity {
@@ -426,12 +436,12 @@
 }
 
 .item-activity svg {
-  color: #2ed573;
+  color: var(--success);
   font-size: 0.875rem;
 }
 
 .completion-icon {
-  color: #2ed573 !important;
+  color: var(--success) !important;
   filter: drop-shadow(0 0 4px rgba(46, 213, 115, 0.4));
 }
 
@@ -493,7 +503,7 @@
   position: absolute;
   top: -8px;
   right: -8px;
-  background: linear-gradient(135deg, #ff4757, #ff002d);
+  background: linear-gradient(135deg, var(--danger), #ff002d);
   color: white;
   border-radius: 50%;
   width: 20px;
@@ -510,14 +520,14 @@
 }
 
 .scheduled-time.overdue {
-  color: #ff4757;
+  color: var(--danger);
   font-weight: 600;
   text-shadow: 0 0 8px rgba(255, 71, 87, 0.6);
   position: relative;
 }
 
 .overdue-badge {
-  background: linear-gradient(135deg, #ff4757, #ff002d);
+  background: linear-gradient(135deg, var(--danger), #ff002d);
   color: white;
   font-size: 9px;
   font-weight: 700;
@@ -595,7 +605,7 @@
 }
 
 [data-theme="dark"] .deadline-warning-icon {
-  background: linear-gradient(135deg, #ff4757, #ff002d);
+  background: linear-gradient(135deg, var(--danger), #ff002d);
   box-shadow: 
     0 0 15px rgba(255, 71, 87, 0.9),
     0 0 30px rgba(255, 0, 110, 0.5);
@@ -607,7 +617,7 @@
 }
 
 [data-theme="dark"] .overdue-badge {
-  background: linear-gradient(135deg, #ff6b81, #ff4757);
+  background: linear-gradient(135deg, #ff6b81, var(--danger));
   box-shadow: 
     0 0 12px rgba(255, 71, 87, 0.8),
     inset 0 0 6px rgba(255, 255, 255, 0.4);

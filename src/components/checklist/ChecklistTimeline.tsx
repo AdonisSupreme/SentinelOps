@@ -150,7 +150,8 @@ const ChecklistTimeline: React.FC<ChecklistTimelineProps> = ({
           return (
             <div 
               key={item.id}
-              className={`timeline-item ${isActive ? 'active' : ''} ${statusClass} ${deadlineWarningClass} capacity`}
+              data-timeline-item-id={item.id}
+              className={`timeline-item ${isActive ? 'active' : ''} ${statusClass} ${deadlineWarningClass}`}
               onClick={() => onItemClick(item.id)}
             >
               <div className="card-ambient"></div>

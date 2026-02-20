@@ -50,7 +50,7 @@
 }
 
 .stat-icon.overdue {
-  background: linear-gradient(135deg, #ff4757 0%, #ff002d 100%);
+  background: linear-gradient(135deg, var(--danger) 0%, #ff002d 100%);
   animation: pulse 2s infinite;
 }
 
@@ -78,7 +78,7 @@
 }
 
 .stat-value.overdue {
-  color: #ff4757;
+  color: var(--danger);
   font-weight: 800;
   text-shadow: 0 0 8px rgba(255, 71, 87, 0.3);
 }
@@ -276,7 +276,7 @@
 }
 
 .checklist-error svg {
-  color: #ff4757;
+  color: var(--danger);
   margin-bottom: 1rem;
   animation: pulse 2s infinite;
 }
@@ -374,23 +374,25 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.4rem 0.75rem;
-  background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  background: var(--primary);
+  color: var(--text-inverse);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  color: var(--text-secondary);
   font-size: 0.85rem;
+  font-weight: 500;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
 }
 
 .back-btn:hover {
-  background: rgba(0, 217, 255, 0.1);
-  border-color: rgba(0, 217, 255, 0.5);
-  color: var(--text-primary);
-  box-shadow: 0 0 12px rgba(0, 217, 255, 0.2);
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .header-content {
@@ -444,26 +446,27 @@
 
 .btn-complete,
 .btn-join,
-.btn-share {
+.btn-share,
+.btn-download-pdf {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.45rem 0.9rem;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: 500;
-  font-size: 0.85rem;
-  transition: all 0.2s ease;
+  transition: all var(--transition-normal);
   white-space: nowrap;
 }
 
 .btn-share {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
 }
 
 .btn-join:hover {
@@ -475,9 +478,53 @@
 
 .btn-complete:hover,
 .btn-share:hover {
-  background: rgba(0, 217, 255, 0.1);
-  border-color: rgba(0, 217, 255, 0.4);
-  color: var(--text-primary);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--text-inverse);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-download-pdf {
+  background: linear-gradient(135deg, #005423 0%, #06bc80 100%);
+  color: white;
+  border: 1px solid #005423;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-download-pdf::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-download-pdf:hover::before {
+  left: 100%;
+}
+
+.btn-download-pdf:hover {
+  background: linear-gradient(135deg, #06bc80 0%, #005423 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 84, 35, 0.3);
+}
+
+.btn-download-pdf:disabled {
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  border-color: var(--border-primary);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-download-pdf:disabled::before {
+  display: none;
 }
 
 .checklist-content {
@@ -585,12 +632,12 @@
 }
 
 .section-header.collapsible:hover h3 {
-  color: #00d9ff;
+  color: var(--primary);
   text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
 }
 
 .section-header.collapsible:hover svg {
-  color: #00d9ff;
+  color: var(--primary);
   transform: scale(1.1);
 }
 
@@ -606,7 +653,7 @@
 }
 
 .section-header svg {
-  color: #8892b0;
+  color: var(--text-muted);
   transition: all 0.3s ease;
   font-size: 1rem;
 }
@@ -669,7 +716,8 @@
   }
 
   .btn-join,
-  .btn-share {
+  .btn-share,
+  .btn-download-pdf {
     flex: 1;
     justify-content: center;
   }
@@ -686,7 +734,7 @@
   top: calc(100% + 8px);
   right: 0;
   padding: 0.5rem 1rem;
-  background: var(--success, #2ed573);
+  background: var(--success, var(--success));
   color: white;
   border-radius: 6px;
   font-size: 0.85rem;
@@ -715,3 +763,4 @@
     transform: translateY(-10px);
   }
 }
+

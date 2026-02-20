@@ -91,10 +91,6 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
     }
   };
 
-  const sortedActivities = [...activities].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
-
   if (!activities || activities.length === 0) {
     return (
       <div className="activity-timeline empty">
@@ -106,11 +102,26 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
     );
   }
 
+  const sortedActivities = [...activities]
+    .filter(activity => activity && activity.actor) // Filter out activities without actors
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+  if (sortedActivities.length === 0) {
+    return (
+      <div className="activity-timeline empty">
+        <div className="empty-state">
+          <FaClock className="empty-icon" />
+          <p>No valid activities to display</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="activity-timeline">
       <div className="timeline-header">
         <h3>Activity History</h3>
-        <span className="activity-count">{activities.length} action{activities.length > 1 ? 's' : ''}</span>
+        <span className="activity-count">{sortedActivities.length} action{sortedActivities.length > 1 ? 's' : ''}</span>
       </div>
       
       <div className="timeline-items">
@@ -145,7 +156,9 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
               <div className="activity-details">
                 <div className="actor-info">
                   <FaUser className="actor-icon" />
-                  <span className="actor-name">{activity.actor.username}</span>
+                  <span className="actor-name">
+                    {activity.actor?.username || 'Unknown User'}
+                  </span>
                 </div>
                 
                 {activity.notes && (

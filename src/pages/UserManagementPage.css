@@ -9,9 +9,9 @@
   --user-accent-cyan: var(--dbstats-accent-cyan, #00f2ff);
   --user-accent-green: var(--dbstats-accent-green, #00ff88);
   --user-accent-red: var(--dbstats-accent-red, #ff4444);
-  --user-text-primary: var(--dbstats-text-primary, #ffffff);
-  --user-text-secondary: var(--dbstats-text-secondary, #a0c4d0);
-  --user-text-muted: var(--dbstats-text-muted, #5a7a8a);
+  --user-text-primary: var(--dbstats-text-primary, var(--text-primary));
+  --user-text-secondary: var(--dbstats-text-secondary, var(--text-secondary));
+  --user-text-muted: var(--dbstats-text-muted, var(--text-muted));
   --user-border: var(--dbstats-border, rgba(0, 242, 255, 0.12));
   --user-glow: var(--dbstats-glow-cyan, rgba(0, 242, 255, 0.4));
   --user-gradient: var(--dbstats-gradient-primary, linear-gradient(135deg, #00f2ff 0%, #00ff88 50%, #00f2ff 100%));
@@ -20,7 +20,7 @@
 /* Light theme override */
 [data-theme="light"] .user-mgmt-page {
   --user-bg-primary: var(--dbstats-bg-primary, #f8fafc);
-  --user-bg-secondary: var(--dbstats-bg-secondary, #ffffff);
+  --user-bg-secondary: var(--dbstats-bg-secondary, var(--text-primary));
   --user-bg-tertiary: var(--dbstats-bg-tertiary, #f1f5f9);
   --user-accent-cyan: var(--dbstats-accent-cyan, #0891b2);
   --user-accent-green: var(--dbstats-accent-green, #059669);
@@ -397,4 +397,5 @@
     order: -1;
   }
 }
+
 

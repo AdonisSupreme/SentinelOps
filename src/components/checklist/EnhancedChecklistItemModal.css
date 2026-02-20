@@ -1,0 +1,155 @@
+/* Custom modal styles for EnhancedChecklistItem */
+.enhanced-item-actions-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
+  overflow: visible !important;
+  /* Ensure proper event handling */
+  pointer-events: auto;
+}
+
+.enhanced-item-actions-modal {
+  background: linear-gradient(135deg, 
+    rgba(20, 30, 60, 0.95) 0%,
+    rgba(30, 40, 80, 0.95) 100%);
+  border: 1px solid rgba(0, 217, 255, 0.3);
+  border-radius: 16px;
+  box-shadow: 
+    0 0 30px rgba(0, 217, 255, 0.2),
+    0 0 60px rgba(124, 9, 128, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 600px;
+  animation: modalSlideIn 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  /* Ensure proper event handling */
+  pointer-events: auto;
+}
+
+.enhanced-item-actions-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0, 217, 255, 0.5) 25%,
+    rgba(0, 217, 255, 0.8) 50%,
+    rgba(0, 217, 255, 0.5) 75%,
+    transparent 100%
+  );
+  animation: shimmer 3s infinite;
+  z-index: 1;
+}
+
+.enhanced-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(0, 217, 255, 0.2);
+  background: linear-gradient(135deg, 
+    rgba(0, 217, 255, 0.05) 0%,
+    rgba(124, 9, 128, 0.05) 100%);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.enhanced-modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+.enhanced-modal-close {
+  background: transparent;
+  border: 1px solid rgba(0, 217, 255, 0.3);
+  color: var(--primary);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.enhanced-modal-close:hover {
+  background: rgba(0, 217, 255, 0.1);
+  box-shadow: 0 0 15px rgba(0, 217, 255, 0.4);
+  transform: scale(1.1);
+}
+
+.enhanced-modal-close:active {
+  transform: scale(0.95);
+}
+
+/* Custom scrollbar for modal */
+.enhanced-item-actions-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.enhanced-item-actions-modal::-webkit-scrollbar-track {
+  background: rgba(0, 217, 255, 0.05);
+}
+
+.enhanced-item-actions-modal::-webkit-scrollbar-thumb {
+  background: rgba(0, 217, 255, 0.3);
+  border-radius: 4px;
+}
+
+.enhanced-item-actions-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 217, 255, 0.5);
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}

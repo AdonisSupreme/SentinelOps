@@ -7,8 +7,9 @@ import { checklistApi } from '../services/checklistApi';
 import { 
   FaClock, FaFire, FaTrophy, FaChartLine, FaUsers, FaCalendarAlt 
 } from 'react-icons/fa';
-import { DashboardHeader, ChecklistCard, PerformanceWidget, QuickActions, LiveActivity, GamificationPanel } from '../components/dashboard';
+import { DashboardHeader, ChecklistCard, PerformanceWidget, QuickActions, LiveActivity, GamificationPanel, DashboardSkeleton } from '../components/dashboard';
 import './DashboardPage.css';
+import '../components/dashboard/DashboardSkeleton.css';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -47,18 +48,7 @@ const DashboardPage: React.FC = () => {
   }, [hasInitialized, loadTodayInstances]);
 
   if (loading && !dashboardData) {
-    return (
-      <div className="dbstats-page loading">
-        <div className="loading-container">
-          <div className="sentinel-loader">
-            <div className="loader-ring"></div>
-            <div className="loader-ring"></div>
-            <div className="loader-ring"></div>
-          </div>
-          <span className="loading-text">Initializing Sentinel Dashboard...</span>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -99,6 +89,7 @@ const DashboardPage: React.FC = () => {
 
         {/* Right Column */}
         <div className="dashboard-right">
+          <QuickActions />
           <section className="dashboard-section">
             <div className="section-header">
               <h2><FaTrophy /> Operational Performance</h2>
@@ -134,7 +125,6 @@ const DashboardPage: React.FC = () => {
             </div>
           </section>
 
-          <QuickActions />
         </div>
       </div>
     </div>

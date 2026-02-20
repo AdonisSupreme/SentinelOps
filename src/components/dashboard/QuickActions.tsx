@@ -8,6 +8,8 @@ import type { ChecklistTemplate } from '../../services/checklistApi';
 import { checklistApi } from '../../services/checklistApi';
 import { FaPlus, FaFileAlt, FaUsers, FaCog, FaBell } from 'react-icons/fa';
 import './QuickActions.css';
+import TemplateListSkeleton from './TemplateListSkeleton';
+import '../checklist/ChecklistPageSkeleton.css';
 
 const QuickActions: React.FC = () => {
   const navigate = useNavigate();
@@ -137,7 +139,7 @@ const QuickActions: React.FC = () => {
     navigate('/performance');
   };
 
-  const handleTeam = () => addNotification({ type: 'info', message: 'Team management feature coming soon!', priority: 'low' });
+  const handleTeam = () => navigate('/team');
   const handleSettings = () => addNotification({ type: 'info', message: 'Settings feature coming soon!', priority: 'low' });
 
   return (
@@ -156,7 +158,7 @@ const QuickActions: React.FC = () => {
       <div className="actions-grid">
         {canCreateChecklist && (
           <button 
-            className="action-btn primary"
+            className="qa-action-btn qa-primary"
             onClick={() => setShowModal(true)}
             disabled={isLoading}
           >
@@ -165,17 +167,17 @@ const QuickActions: React.FC = () => {
           </button>
         )}
 
-        <button className="action-btn secondary" onClick={handleTemplates}>
+        <button className="qa-action-btn qa-secondary" onClick={handleTemplates}>
           <FaFileAlt />
           <span>Performance</span>
         </button>
 
-        <button className="action-btn secondary" onClick={handleTeam}>
+        <button className="qa-action-btn qa-secondary" onClick={handleTeam}>
           <FaUsers />
           <span>Team</span>
         </button>
 
-        <button className="action-btn secondary" onClick={handleSettings}>
+        <button className="qa-action-btn qa-secondary" onClick={handleSettings}>
           <FaCog />
           <span>Settings</span>
         </button>
@@ -234,24 +236,24 @@ const QuickActions: React.FC = () => {
 
       {/* Modal: template + shift selection */}
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <div className="qa-modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="qa-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="qa-modal-header">
               <h3>Start Checklist</h3>
-              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+              <button className="qa-modal-close" onClick={() => setShowModal(false)}>✕</button>
             </div>
 
-            <div className="modal-body">
-              <p className="modal-description">Select a checklist template to start or resume a shift instance.</p>
+            <div className="qa-modal-body">
+              <p className="qa-modal-description">Select a checklist template to start or resume a shift instance.</p>
 
-              <div className="templates-list">
+              <div className="qa-templates-list">
                 {loadingTemplates ? (
-                  <div className="loading-spinner small">.</div>
+                  <TemplateListSkeleton />
                 ) : templates.length === 0 ? (
-                  <div className="empty-state">No templates available</div>
+                  <div className="qa-empty-state">No templates available</div>
                 ) : (
                   templates.map((t) => (
-                    <label key={t.id} className={`template-option ${selectedTemplateId === t.id ? 'selected' : ''}`}>
+                    <label key={t.id} className={`qa-template-option ${selectedTemplateId === t.id ? 'qa-selected' : ''}`}>
                       <input
                         type="radio"
                         name="template"
@@ -259,9 +261,9 @@ const QuickActions: React.FC = () => {
                         checked={selectedTemplateId === t.id}
                         onChange={() => setSelectedTemplateId(t.id)}
                       />
-                      <div className="template-content">
-                        <div className="template-name">{t.name}</div>
-                        <div className="template-meta">v{t.version} • {t.shift} Shift • {t.is_active ? 'Active' : 'Inactive'}</div>
+                      <div className="qa-template-content">
+                        <div className="qa-template-name">{t.name}</div>
+                        <div className="qa-template-meta">v{t.version} • {t.shift} Shift • {t.is_active ? 'Active' : 'Inactive'}</div>
                       </div>
                     </label>
                   ))
@@ -269,9 +271,9 @@ const QuickActions: React.FC = () => {
               </div>
             </div>
 
-            <div className="modal-footer">
-              <button className="btn-cancel" onClick={() => setShowModal(false)}>Cancel</button>
-              <button className="btn-confirm" onClick={handleCreateFromTemplate} disabled={isLoading}> {isLoading ? 'Starting...' : 'Start Checklist'}</button>
+            <div className="qa-modal-footer">
+              <button className="qa-btn-cancel" onClick={() => setShowModal(false)}>Cancel</button>
+              <button className="qa-btn-confirm" onClick={handleCreateFromTemplate} disabled={isLoading}> {isLoading ? 'Starting...' : 'Start Checklist'}</button>
             </div>
           </div>
         </div>

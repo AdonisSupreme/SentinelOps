@@ -1,0 +1,481 @@
+/* src/components/dashboard/ChecklistsSkeleton.css */
+
+/* Base Skeleton Animation */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+.skeleton-shimmer {
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Text Skeletons */
+.skeleton-text {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+  height: 1em;
+  margin-bottom: 0.5em;
+}
+
+.skeleton-text-xs {
+  width: 60px;
+  height: 12px;
+}
+
+.skeleton-text-sm {
+  width: 120px;
+  height: 14px;
+}
+
+.skeleton-text-md {
+  width: 180px;
+  height: 16px;
+}
+
+.skeleton-text-lg {
+  width: 240px;
+  height: 20px;
+}
+
+.skeleton-text-xl {
+  width: 320px;
+  height: 24px;
+}
+
+/* Header Skeleton */
+.checklists-header-skeleton {
+  background: var(--bg-card);
+  border: 1px solid rgba(0, 217, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.header-content-skeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.header-title-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-icon-skeleton {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.header-controls-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+/* Search Container Skeleton */
+.search-container-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(0, 217, 255, 0.05);
+  border: 1px solid rgba(0, 217, 255, 0.1);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  backdrop-filter: blur(10px);
+}
+
+.search-icon-skeleton {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-input {
+  width: 200px;
+  height: 20px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Filter Container Skeleton */
+.filter-container-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(0, 217, 255, 0.05);
+  border: 1px solid rgba(0, 217, 255, 0.1);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  backdrop-filter: blur(10px);
+}
+
+.filter-icon-skeleton {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-select {
+  width: 120px;
+  height: 20px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Date Navigation Skeleton */
+.date-navigation-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(0, 217, 255, 0.05);
+  border: 1px solid rgba(0, 217, 255, 0.1);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  backdrop-filter: blur(10px);
+}
+
+.nav-btn-skeleton {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Timeline Container Skeleton */
+.timeline-container-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.timeline-day-skeleton {
+  background: var(--bg-card);
+  border: 1px solid rgba(0, 217, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.day-header-skeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 217, 255, 0.1);
+}
+
+.day-stats-skeleton {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Instance Grid Skeleton */
+.instances-grid-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.instance-card-skeleton {
+  background: rgba(0, 217, 255, 0.02);
+  border: 1px solid rgba(0, 217, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border-left: 4px solid rgba(0, 217, 255, 0.3);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.instance-card-skeleton:hover {
+  border-left-color: rgba(0, 217, 255, 0.5);
+  background: rgba(0, 217, 255, 0.05);
+}
+
+.instance-header-skeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.instance-info-skeleton {
+  flex: 1;
+}
+
+.instance-meta-skeleton {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.shift-badge-skeleton {
+  width: 80px;
+  height: 24px;
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 165, 2, 0.1) 0%,
+    rgba(255, 165, 2, 0.2) 50%,
+    rgba(255, 165, 2, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.date-badge-skeleton {
+  width: 100px;
+  height: 20px;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.instance-status-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-icon-skeleton {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Instance Details Skeleton */
+.instance-details-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.time-info-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.time-item-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.time-icon-skeleton {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.completion-info-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.completion-icon-skeleton {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 157, 0.1) 0%,
+    rgba(0, 255, 157, 0.2) 50%,
+    rgba(0, 255, 157, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Instance Footer Skeleton */
+.instance-footer-skeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 217, 255, 0.1);
+}
+
+.click-hint-skeleton {
+  width: 80px;
+  height: 16px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 217, 255, 0.1) 0%,
+    rgba(0, 217, 255, 0.2) 50%,
+    rgba(0, 217, 255, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.delete-btn-skeleton {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 107, 107, 0.1) 0%,
+    rgba(255, 107, 107, 0.2) 50%,
+    rgba(255, 107, 107, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-controls-skeleton {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .search-container-skeleton {
+    order: 1;
+  }
+  
+  .filter-container-skeleton {
+    order: 2;
+  }
+  
+  .date-navigation-skeleton {
+    order: 3;
+    justify-content: center;
+  }
+  
+  .instances-grid-skeleton {
+    grid-template-columns: 1fr;
+  }
+  
+  .day-header-skeleton {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .checklists-header-skeleton {
+    padding: 1.5rem;
+  }
+  
+  .timeline-day-skeleton {
+    padding: 1rem;
+  }
+  
+  .instance-card-skeleton {
+    padding: 1rem;
+  }
+  
+  .instance-header-skeleton {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .instance-meta-skeleton {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

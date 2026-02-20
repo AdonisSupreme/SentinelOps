@@ -1,199 +1,129 @@
-/* src/components/checklist/ItemActions.css */
-/* Modal Overlay */
-.item-actions-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
+/* Item Actions - Content Only (no modal wrapper here) */
+.item-actions {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Modal Content */
-.item-actions-modal {
-  background: linear-gradient(135deg, 
-    rgba(20, 30, 60, 0.95) 0%,
-    rgba(30, 40, 80, 0.95) 100%);
-  border: 1px solid rgba(0, 217, 255, 0.3);
-  border-radius: 16px;
-  padding: 0;
-  max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 
-    0 0 30px rgba(0, 217, 255, 0.2),
-    0 0 60px rgba(124, 9, 128, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-/* Futuristic border glow effect */
-.item-actions-modal::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0, 217, 255, 0.5) 25%,
-    rgba(0, 217, 255, 0.8) 50%,
-    rgba(0, 217, 255, 0.5) 75%,
-    transparent 100%
-  );
-  animation: shimmer 3s infinite;
-}
-
-/*  Modal Header */
-.item-actions-modal .modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 1.5rem;
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(0, 217, 255, 0.2);
-  background: linear-gradient(135deg, 
-    rgba(0, 217, 255, 0.05) 0%,
-    rgba(124, 9, 128, 0.05) 100%);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  background: var(--bg-card);
+  border: none;
+  box-shadow: none;
+  max-width: none;
+  width: 100%;
 }
 
-.item-actions-modal .modal-header h3 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #00d9ff;
+/* Subitem workflow styles */
+.item-actions.subitem-workflow {
+  position: relative;
+}
+
+.subitem-workflow-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.75rem;
-  letter-spacing: 0.5px;
-}
-
-/* Modal Close Button */
-.modal-close {
-  background: transparent;
-  border: 1px solid rgba(0, 217, 255, 0.3);
-  color: #00d9ff;
-  width: 32px;
-  height: 32px;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: rgba(0, 217, 255, 0.05);
+  border: 1px solid rgba(0, 217, 255, 0.1);
   border-radius: 8px;
+}
+
+.back-to-main-btn {
+  padding: 0.5rem 1rem;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.85rem;
   cursor: pointer;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
 }
 
-.modal-close:hover {
+.back-to-main-btn:hover {
   background: rgba(0, 217, 255, 0.1);
-  box-shadow: 0 0 15px rgba(0, 217, 255, 0.4);
-  transform: scale(1.1);
+  border-color: rgba(0, 217, 255, 0.3);
+  color: var(--text-primary);
 }
 
-.modal-close:active {
-  transform: scale(0.95);
+.progress-indicator {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  font-family: monospace;
 }
+/* Note: Modal overlay and container styles are now handled in EnhancedChecklistItemModal.css */
+/* This prevents CSS conflicts and z-index issues */
 
-/* Item Actions Content */
+/* Item Actions Content - Enhanced styling for modal content */
 .item-actions {
   padding: 1.5rem;
 }
 
 .action-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
 }
 
 .btn-action {
+  flex: 1;
+  min-width: 200px;
   padding: 0.875rem;
-  border: 1px solid rgba(0, 217, 255, 0.2);
-  background: linear-gradient(135deg, 
-    rgba(0, 217, 255, 0.05) 0%,
-    rgba(124, 9, 128, 0.05) 100%);
-  color: #a0a0c0;
-  border-radius: 10px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 0.9rem;
+  gap: var(--spacing-sm);
+  transition: all var(--transition-normal);
+  font-size: var(--font-size-sm);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-action:hover {
   transform: translateY(-2px);
-  border-color: rgba(0, 217, 255, 0.5);
-  background: linear-gradient(135deg, 
-    rgba(0, 217, 255, 0.15) 0%,
-    rgba(124, 9, 128, 0.1) 100%);
-  box-shadow: 0 8px 24px rgba(0, 217, 255, 0.15);
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-lg);
 }
 
 .btn-action.active {
-  border-color: rgba(0, 217, 255, 0.8);
-  background: linear-gradient(135deg, 
-    rgba(0, 217, 255, 0.25) 0%,
-    rgba(0, 217, 255, 0.15) 100%);
-  color: #00d9ff;
-  box-shadow: 
-    0 0 20px rgba(0, 217, 255, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-glow);
 }
 
 .btn-action:first-child.active {
-  background: linear-gradient(135deg, 
-    rgba(0, 217, 255, 0.3) 0%,
-    rgba(0, 217, 255, 0.15) 100%);
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 .btn-action:nth-child(2).active {
-  background: linear-gradient(135deg, 
-    rgba(46, 213, 115, 0.3) 0%,
-    rgba(46, 213, 115, 0.15) 100%);
-  border-color: rgba(46, 213, 115, 0.8);
-  color: #2ed573;
-  box-shadow: 
-    0 0 20px rgba(46, 213, 115, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--text-inverse);
 }
 
 .btn-action:nth-child(3).active {
-  background: linear-gradient(135deg, 
-    rgba(255, 165, 2, 0.3) 0%,
-    rgba(255, 165, 2, 0.15) 100%);
-  border-color: rgba(255, 165, 2, 0.8);
-  color: #ffa502;
-  box-shadow: 
-    0 0 20px rgba(255, 165, 2, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: var(--warning);
+  border-color: var(--warning);
+  color: var(--text-inverse);
 }
 
 .btn-action:nth-child(4).active {
-  background: linear-gradient(135deg, 
-    rgba(255, 71, 87, 0.3) 0%,
-    rgba(255, 71, 87, 0.15) 100%);
-  border-color: rgba(255, 71, 87, 0.8);
-  color: #ff4757;
-  box-shadow: 
-    0 0 20px rgba(255, 71, 87, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: var(--error);
+  border-color: var(--error);
+  color: var(--text-inverse);
 }
 
 .action-form {
@@ -202,56 +132,50 @@
 
 .action-form textarea {
   width: 100%;
-  padding: 0.875rem;
-  border: 1px solid rgba(0, 217, 255, 0.2);
-  background: linear-gradient(135deg, 
-    rgba(10, 20, 40, 0.5) 0%,
-    rgba(20, 30, 60, 0.5) 100%);
-  color: #a0a0c0;
-  border-radius: 10px;
-  font-size: 0.875rem;
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-primary);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
   resize: vertical;
-  margin-bottom: 0.75rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: var(--spacing-md);
+  transition: all var(--transition-normal);
   font-family: inherit;
 }
 
 .action-form textarea::placeholder {
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .action-form textarea:hover {
-  border-color: rgba(0, 217, 255, 0.4);
-  background: linear-gradient(135deg, 
-    rgba(10, 20, 40, 0.6) 0%,
-    rgba(20, 30, 60, 0.6) 100%);
+  border-color: var(--primary);
+  background: var(--bg-tertiary);
 }
 
 .action-form textarea:focus {
   outline: none;
-  border-color: rgba(0, 217, 255, 0.8);
-  background: linear-gradient(135deg, 
-    rgba(10, 20, 40, 0.7) 0%,
-    rgba(20, 30, 60, 0.7) 100%);
-  box-shadow: 
-    0 0 20px rgba(0, 217, 255, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-color: var(--primary);
+  background: var(--bg-tertiary);
+  box-shadow: var(--shadow-glow);
+  color: var(--text-primary);
 }
 
 .btn-action.confirm {
   width: 100%;
-  padding: 0.95rem;
-  background: linear-gradient(135deg, #00d9ff 0%, #7c0980 100%);
-  color: white;
+  padding: var(--spacing-md);
+  background: var(--primary-gradient);
+  color: var(--text-inverse);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 0.95rem;
+  transition: all var(--transition-normal);
+  font-size: var(--font-size-base);
   letter-spacing: 0.5px;
   position: relative;
   overflow: hidden;
+  box-shadow: var(--shadow-md);
 }
 
 .btn-action.confirm::before {
@@ -276,9 +200,7 @@
 
 .btn-action.confirm:hover {
   transform: translateY(-3px);
-  box-shadow: 
-    0 12px 32px rgba(0, 217, 255, 0.3),
-    0 0 30px rgba(124, 9, 128, 0.2);
+  box-shadow: var(--shadow-glow);
 }
 
 .btn-action.confirm:active {
@@ -292,22 +214,20 @@
 }
 
 .action-tips {
-  padding: 0.875rem;
-  background: linear-gradient(135deg, 
-    rgba(0, 217, 255, 0.08) 0%,
-    rgba(124, 9, 128, 0.05) 100%);
-  border: 1px solid rgba(0, 217, 255, 0.15);
-  border-radius: 10px;
-  border-left: 3px solid #00d9ff;
+  padding: var(--spacing-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--primary);
 }
 
 .action-tips p {
   margin: 0;
-  font-size: 0.8rem;
-  color: #a0a0c0;
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
   font-weight: 500;
 }
 
@@ -341,20 +261,20 @@
   }
 }
 
-/* Scrollbar styling for the modal */
-.item-actions-modal::-webkit-scrollbar {
+/* Scrollbar styling for the enhanced modal container */
+.enhanced-item-actions-modal::-webkit-scrollbar {
   width: 8px;
 }
 
-.item-actions-modal::-webkit-scrollbar-track {
+.enhanced-item-actions-modal::-webkit-scrollbar-track {
   background: rgba(0, 217, 255, 0.05);
 }
 
-.item-actions-modal::-webkit-scrollbar-thumb {
+.enhanced-item-actions-modal::-webkit-scrollbar-thumb {
   background: rgba(0, 217, 255, 0.3);
   border-radius: 4px;
 }
 
-.item-actions-modal::-webkit-scrollbar-thumb:hover {
+.enhanced-item-actions-modal::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 217, 255, 0.5);
 }

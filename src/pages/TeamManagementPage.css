@@ -7,15 +7,15 @@
   --team-bg-tertiary: #111820;
   --team-accent: #00f2ff;
   --team-accent-dim: rgba(0, 242, 255, 0.6);
-  --team-text: #ffffff;
-  --team-text-secondary: #a0c4d0;
+  --team-text: var(--text-primary);
+  --team-text-secondary: var(--text-secondary);
   --team-border: rgba(0, 242, 255, 0.12);
   --team-glow: rgba(0, 242, 255, 0.3);
 }
 
 [data-theme="light"] .team-mgmt-page {
   --team-bg-primary: #f8fafc;
-  --team-bg-secondary: #ffffff;
+  --team-bg-secondary: var(--text-primary);
   --team-bg-tertiary: #f1f5f9;
   --team-accent: #0066cc;
   --team-accent-dim: rgba(0, 102, 204, 0.7);
@@ -324,3 +324,4 @@
 .btn-secondary:hover {
   background: var(--team-bg-tertiary);
 }
+

@@ -13,7 +13,9 @@ import {
   FaHdd
 } from 'react-icons/fa';
 import { dashboardApi, DashboardSummary } from '../services/dashboardApi';
+import { DatabaseStatsSkeleton } from '../components/dashboard';
 import './DatabaseStatsPage.css';
+import '../components/dashboard/DatabaseStatsSkeleton.css';
 
 const DatabaseStatsPage: React.FC = () => {
   const [data, setData] = useState<DashboardSummary | null>(null);
@@ -266,18 +268,7 @@ const DatabaseStatsPage: React.FC = () => {
   };
 
   if (loading && !data) {
-    return (
-      <div className="dbstats-page loading">
-        <div className="loading-container">
-          <div className="sentinel-loader">
-            <div className="loader-ring"></div>
-            <div className="loader-ring"></div>
-            <div className="loader-ring"></div>
-          </div>
-          <span className="loading-text">Initializing Database Monitor...</span>
-        </div>
-      </div>
-    );
+    return <DatabaseStatsSkeleton />;
   }
 
   if (error && !data) {

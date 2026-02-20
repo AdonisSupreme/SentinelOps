@@ -1,0 +1,515 @@
+/* src/components/dashboard/PerformanceSkeleton.css */
+
+/* Base Skeleton Animation */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 107, 107, 0.1) 0%,
+    rgba(255, 107, 107, 0.2) 50%,
+    rgba(255, 107, 107, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+.skeleton-shimmer {
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Text Skeletons */
+.skeleton-text {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 107, 107, 0.1) 0%,
+    rgba(255, 107, 107, 0.2) 50%,
+    rgba(255, 107, 107, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+  height: 1em;
+  margin-bottom: 0.5em;
+}
+
+.skeleton-text-xs {
+  width: 60px;
+  height: 12px;
+}
+
+.skeleton-text-sm {
+  width: 120px;
+  height: 14px;
+}
+
+.skeleton-text-md {
+  width: 180px;
+  height: 16px;
+}
+
+.skeleton-text-lg {
+  width: 240px;
+  height: 20px;
+}
+
+.skeleton-text-xl {
+  width: 320px;
+  height: 24px;
+}
+
+/* Header Skeleton */
+.performance-header-skeleton {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 107, 107, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(10px);
+}
+
+.header-content-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.timeframe-selector-skeleton {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.timeframe-btn-skeleton {
+  width: 100px;
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 107, 107, 0.1) 0%,
+    rgba(255, 107, 107, 0.2) 50%,
+    rgba(255, 107, 107, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Performance Grid Skeleton */
+.performance-grid-skeleton {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.performance-left-skeleton,
+.performance-right-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Performance Section Skeleton */
+.performance-section-skeleton {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 107, 107, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.section-header-skeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 107, 107, 0.1);
+}
+
+.section-title-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.title-icon-skeleton {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 107, 107, 0.1) 0%,
+    rgba(255, 107, 107, 0.2) 50%,
+    rgba(255, 107, 107, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* User Stats Grid Skeleton */
+.user-stats-grid-skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card-skeleton {
+  background: rgba(255, 107, 107, 0.05);
+  border: 1px solid rgba(255, 107, 107, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  backdrop-filter: blur(10px);
+}
+
+.stat-card-skeleton.large {
+  min-height: 120px;
+}
+
+.stat-icon-skeleton {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 107, 107, 0.1) 0%,
+    rgba(255, 107, 107, 0.2) 50%,
+    rgba(255, 107, 107, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.stat-content-skeleton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Performance Chart Skeleton */
+.performance-chart-skeleton {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 107, 107, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.chart-container-skeleton {
+  height: 300px;
+}
+
+.chart-header-skeleton {
+  margin-bottom: 1rem;
+}
+
+.chart-placeholder-skeleton {
+  height: 250px;
+  position: relative;
+  background: rgba(255, 107, 107, 0.02);
+  border: 1px solid rgba(255, 107, 107, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.chart-lines-skeleton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  padding: 1rem;
+}
+
+.chart-line-skeleton {
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 1px;
+}
+
+.chart-bars-skeleton {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  right: 1rem;
+  height: 150px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-evenly;
+}
+
+.chart-bar-skeleton {
+  width: 30px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 107, 107, 0.2) 0%,
+    rgba(255, 107, 107, 0.3) 50%,
+    rgba(255, 107, 107, 0.2) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px 4px 0 0;
+}
+
+/* Streak Tracker Skeleton */
+.streak-tracker-skeleton {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 107, 107, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.streak-header-skeleton {
+  margin-bottom: 1rem;
+}
+
+.streak-grid-skeleton {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+}
+
+.streak-day-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(255, 107, 107, 0.05);
+  border: 1px solid rgba(255, 107, 107, 0.1);
+  border-radius: 8px;
+}
+
+.day-circle-skeleton {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 107, 107, 0.1) 0%,
+    rgba(255, 107, 107, 0.2) 50%,
+    rgba(255, 107, 107, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Leaderboard Skeleton */
+.leaderboard-skeleton {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 107, 107, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.leaderboard-header-skeleton {
+  margin-bottom: 1.5rem;
+}
+
+.leaderboard-list-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.leaderboard-item-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 107, 107, 0.05);
+  border: 1px solid rgba(255, 107, 107, 0.1);
+  border-radius: 12px;
+}
+
+.rank-skeleton {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 107, 107, 0.1) 0%,
+    rgba(255, 107, 107, 0.2) 50%,
+    rgba(255, 107, 107, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.user-info-skeleton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.user-avatar-skeleton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 107, 107, 0.1) 0%,
+    rgba(255, 107, 107, 0.2) 50%,
+    rgba(255, 107, 107, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.user-details-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.score-skeleton {
+  width: 60px;
+  height: 24px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 107, 107, 0.1) 0%,
+    rgba(255, 107, 107, 0.2) 50%,
+    rgba(255, 107, 107, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Achievement List Skeleton */
+.achievement-list-skeleton {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 107, 107, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.achievement-header-skeleton {
+  margin-bottom: 1.5rem;
+}
+
+.achievements-grid-skeleton {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.achievement-badge-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: rgba(255, 107, 107, 0.05);
+  border: 1px solid rgba(255, 107, 107, 0.1);
+  border-radius: 12px;
+}
+
+.badge-icon-skeleton {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 107, 107, 0.1) 0%,
+    rgba(255, 107, 107, 0.2) 50%,
+    rgba(255, 107, 107, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Team Metrics Skeleton */
+.metrics-grid-skeleton {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.metric-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  background: rgba(255, 107, 107, 0.05);
+  border: 1px solid rgba(255, 107, 107, 0.1);
+  border-radius: 12px;
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .performance-header-skeleton {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .performance-grid-skeleton {
+    grid-template-columns: 1fr;
+  }
+  
+  .user-stats-grid-skeleton {
+    grid-template-columns: 1fr;
+  }
+  
+  .streak-grid-skeleton {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .achievements-grid-skeleton {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .metrics-grid-skeleton {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .performance-header-skeleton {
+    padding: 1.5rem;
+  }
+  
+  .timeframe-selector-skeleton {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .performance-section-skeleton {
+    padding: 1rem;
+  }
+  
+  .streak-grid-skeleton {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .achievements-grid-skeleton {
+    grid-template-columns: 1fr;
+  }
+}

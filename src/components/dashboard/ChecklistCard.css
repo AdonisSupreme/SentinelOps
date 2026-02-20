@@ -4,19 +4,21 @@
 }
 
 .checklist-card {
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
+  background: var(--dbstats-bg-secondary);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
+  box-shadow: 0 0 15px var(--dbstats-glow-cyan);
   flex-direction: column;
   height: 100%;
 }
 
 .checklist-card:hover {
   border-color: var(--color-primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--dbstats-shadow-glow);
   transform: translateY(-2px);
 }
 
@@ -30,7 +32,7 @@
   position: relative;
 }
 
-.status-indicator {
+.dc-status-indicator {
   width: 8px;
   height: 100%;
   position: absolute;
@@ -64,23 +66,23 @@
 }
 
 .status-icon.completed {
-  color: #2ed573;
+  color: var(--success);
 }
 
 .status-icon.in-progress {
-  color: #00d9ff;
+  color: var(--primary);
 }
 
 .status-icon.pending {
-  color: #ffa502;
+  color: var(--warning);
 }
 
 .status-icon.exception {
-  color: #ff4757;
+  color: var(--danger);
 }
 
 .status-icon.open {
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .card-body {
@@ -195,3 +197,4 @@
     padding: 0.75rem;
   }
 }
+

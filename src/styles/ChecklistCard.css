@@ -60,11 +60,11 @@
   font-size: 1.5rem;
 }
 
-.status-icon.completed { color: #2ed573; }
-.status-icon.in-progress { color: #00d9ff; }
-.status-icon.pending { color: #ffa502; }
-.status-icon.exception { color: #ff4757; }
-.status-icon.open { color: #6b7280; }
+.status-icon.completed { color: var(--success); }
+.status-icon.in-progress { color: var(--primary); }
+.status-icon.pending { color: var(--warning); }
+.status-icon.exception { color: var(--danger); }
+.status-icon.open { color: var(--text-muted); }
 
 .card-body {
   flex: 1;
