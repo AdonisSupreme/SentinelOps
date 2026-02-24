@@ -1,9 +1,10 @@
 // src/contexts/checklistContext.tsx
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { checklistApi, ChecklistInstance, ChecklistItemInstance, ItemActivity } from '../services/checklistApi';
 import { ChecklistInstanceSubitem } from '../contracts/generated/api.types';
 import { useNotifications } from './NotificationContext';
 import { useAuth } from './AuthContext';
+import websocketService, { ChecklistUpdateEvent } from '../services/websocketService';
 
 // Extended interface to include subitems that are returned by API but not in generated types
 interface ExtendedChecklistItemInstance extends ChecklistItemInstance {
@@ -58,6 +59,161 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [error, setError] = useState<string | null>(null);
   const { addNotification } = useNotifications();
   const { user } = useAuth();
+
+  // Handle real-time WebSocket updates
+  useEffect(() => {
+    // Set up WebSocket event handlers
+    websocketService.onChecklistUpdateCallback(handleRealtimeUpdate);
+    websocketService.onConnectionChangeCallback(handleConnectionChange);
+    websocketService.onErrorCallback(handleWebSocketError);
+
+    // Connect to WebSocket
+    websocketService.connect().catch((error: any) => {
+      console.error('Failed to connect to WebSocket:', error);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      websocketService.disconnect();
+    };
+  }, []);
+
+  // Subscribe to current instance updates
+  useEffect(() => {
+    if (currentInstance?.id) {
+      console.log('🔔 Force subscribing to instance:', currentInstance.id);
+      websocketService.forceSubscribeToInstance(currentInstance.id);
+      
+      return () => {
+        console.log('🔕 Unsubscribing from instance:', currentInstance.id);
+        websocketService.unsubscribeFromInstance(currentInstance.id);
+      };
+    } else {
+      console.log('📭 No current instance to subscribe to');
+      // For testing, subscribe to a dummy instance to keep connection alive
+      console.log('🧪 Creating test subscription to keep connection alive');
+      websocketService.forceSubscribeToInstance('test-instance-id');
+    }
+  }, [currentInstance?.id]);
+
+  // Also subscribe when WebSocket connects (for cases where instance loads first)
+  useEffect(() => {
+    const handleConnectionChange = (connected: boolean) => {
+      if (connected && currentInstance?.id) {
+        console.log('🔔 WebSocket connected, subscribing to instance:', currentInstance.id);
+        websocketService.subscribeToInstance(currentInstance.id);
+      }
+    };
+
+    websocketService.onConnectionChangeCallback(handleConnectionChange);
+
+    return () => {
+      // Cleanup
+    };
+  }, [currentInstance?.id]);
+
+  // Handle real-time updates from WebSocket
+  const handleRealtimeUpdate = useCallback(async (event: ChecklistUpdateEvent) => {
+    console.log('🔄 Real-time update received:', event);
+    console.log('📋 Current instance ID:', currentInstance?.id);
+    console.log('🎯 Event instance ID:', event.data.instance_id);
+    
+    // Only process updates for the current instance
+    if (!currentInstance || event.data.instance_id !== currentInstance.id) {
+      console.log('❌ Skipping update - not for current instance');
+      return;
+    }
+
+    console.log('✅ Processing update for current instance');
+
+    try {
+      // Fetch the latest instance data from server
+      const updatedInstance = await checklistApi.getInstance(currentInstance.id);
+      console.log('📥 Fetched updated instance:', updatedInstance);
+      
+      // Update local state with server data
+      console.log('🔄 Updating currentInstance state with:', updatedInstance);
+      setCurrentInstance(updatedInstance);
+      
+      // Update today instances list if needed
+      setTodayInstances(prev => {
+        console.log('🔄 Updating todayInstances list');
+        const index = prev.findIndex(instance => instance.id === updatedInstance.id);
+        if (index !== -1) {
+          const newInstances = [...prev];
+          newInstances[index] = updatedInstance;
+          console.log('🔄 Updated todayInstances at index', index, 'with new data');
+          return newInstances;
+        }
+        return prev;
+      });
+
+      // Show notification for the update
+      const updateType = event.type;
+      let message = 'Checklist updated';
+      
+      switch (updateType) {
+        case 'ITEM_UPDATED': {
+          const updatedItem = updatedInstance.items?.find(i => i.id === event.data.item_id);
+          const itemTitle = updatedItem?.title || updatedItem?.template_item?.title || 'Unknown item';
+          const itemStatus = event.data.status || 'updated';
+          message = `Item "${itemTitle}" ${itemStatus.toLowerCase()}`;
+          break;
+        }
+          
+        case 'SUBITEM_UPDATED': {
+          const updatedItem = updatedInstance.items?.find(i => i.id === event.data.item_id);
+          const itemTitle = updatedItem?.title || updatedItem?.template_item?.title || 'Unknown item';
+          const subitem = updatedItem?.subitems?.find(s => s.id === event.data.subitem_id);
+          const subitemTitle = subitem?.title || 'Unknown subitem';
+          const subitemStatus = event.data.status || 'updated';
+          message = `Subitem "${subitemTitle}" ${subitemStatus.toLowerCase()}`;
+          break;
+        }
+          
+        case 'INSTANCE_JOINED': {
+          message = 'New participant joined';
+          break;
+        }
+          
+        case 'INSTANCE_CREATED': {
+          message = 'New checklist created';
+          break;
+        }
+      }
+      // Only show notification if the update wasn't made by the current user
+      if (event.data.user_id !== user?.id) {
+        console.log('🔔 Showing notification for other user:', message);
+        addNotification({
+          type: 'info',
+          message,
+          priority: 'low'
+        });
+      } else {
+        console.log('🤫 Skipping notification - update from current user');
+      }
+      
+    } catch (error) {
+      console.error('Failed to process real-time update:', error);
+      setError('Failed to sync latest changes');
+    }
+  }, [currentInstance, user?.id, addNotification]);
+
+  // Handle WebSocket connection changes
+  const handleConnectionChange = useCallback((connected: boolean) => {
+    console.log('WebSocket connection status:', connected);
+    
+    if (connected && currentInstance) {
+      // Re-subscribe to current instance when reconnected
+      websocketService.subscribeToInstance(currentInstance.id);
+    }
+  }, [currentInstance]);
+
+  // Handle WebSocket errors
+  const handleWebSocketError = useCallback((error: string) => {
+    console.error('WebSocket error:', error);
+    setError('Real-time connection error');
+  }, []);
 
   const loadTodayInstances = useCallback(async () => {
     setLoading(true);
@@ -744,7 +900,8 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       await checklistApi.createHandoverNote({
         content,
-        checklist_instance_id: currentInstance?.id || ''
+        priority,
+        from_instance_id: currentInstance?.id
       });
       
       addNotification({
@@ -754,9 +911,26 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
       
       setError(null);
-    } catch (err) {
-      setError('Failed to create handover note');
+    } catch (err: any) {
+      let errorMessage = 'Failed to create handover note';
+      
+      // Handle specific error cases
+      if (err?.response?.data?.detail) {
+        if (err.response.data.detail.includes('No active checklist found')) {
+          errorMessage = 'No active checklist found. Please start a checklist first before creating handover notes.';
+        } else {
+          errorMessage = err.response.data.detail;
+        }
+      }
+      
+      setError(errorMessage);
       console.error('Error creating handover note:', err);
+      
+      addNotification({
+        type: 'error',
+        message: errorMessage,
+        priority: 'high'
+      });
     } finally {
       setLoading(false);
     }

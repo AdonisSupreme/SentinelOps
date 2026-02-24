@@ -13,6 +13,8 @@ import {
   ChecklistStats, HandoverNotes, ItemActions, 
   ParticipantList, EnhancedChecklistItem, SmartSubitemModal
 } from '../components/checklist';
+import HandoverNoteModal from '../components/checklist/HandoverNoteModal';
+import RealtimeIndicator from '../components/checklist/RealtimeIndicator';
 import { ChecklistPageSkeleton } from '../components/checklist/ChecklistPageSkeleton';
 import { pdfService } from '../services/pdfService';
 import '../components/checklist/ChecklistPageSkeleton.css';
@@ -43,6 +45,7 @@ const ChecklistPage: React.FC = () => {
   const [showSubitemModal, setShowSubitemModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [showHandoverNoteModal, setShowHandoverNoteModal] = useState(false);
 
   // Handler for ItemActions modal
   const handleItemActionsClick = (item: any) => {
@@ -371,6 +374,8 @@ const ChecklistPage: React.FC = () => {
           </div>
 
           <div className="header-actions">
+            <RealtimeIndicator />
+            
             {canJoin && (
               <button 
                 onClick={handleJoin} 
@@ -458,7 +463,10 @@ const ChecklistPage: React.FC = () => {
               {showHandover ? <FaChevronUp /> : <FaChevronDown />}
             </div>
             {showHandover && (
-              <HandoverNotes instanceId={currentInstance.id} />
+              <HandoverNotes 
+                instanceId={currentInstance.id} 
+                onShowModal={() => setShowHandoverNoteModal(true)}
+              />
             )}
           </section>
         </div>
@@ -512,6 +520,15 @@ const ChecklistPage: React.FC = () => {
             setShowSubitemModal(false);
             setSelectedItem(null);
           }}
+        />
+      )}
+
+      {/* Handover Note Modal */}
+      {showHandoverNoteModal && (
+        <HandoverNoteModal
+          isOpen={showHandoverNoteModal}
+          onClose={() => setShowHandoverNoteModal(false)}
+          instanceId={currentInstance.id}
         />
       )}
 

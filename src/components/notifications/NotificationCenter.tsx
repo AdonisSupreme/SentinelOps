@@ -40,6 +40,21 @@ const NotificationCenter: React.FC = () => {
     markAsRead(notificationId);
   };
 
+  const handleCloseNotification = (notificationId: string) => {
+    // Mark as read when closing the notification
+    handleMarkAsRead(notificationId);
+  };
+
+  const handleCloseAllNotifications = () => {
+    // Mark all unread notifications as read when closing the panel
+    notifications.forEach(notification => {
+      if (!notification.is_read) {
+        handleMarkAsRead(notification.id);
+      }
+    });
+    setIsOpen(false);
+  };
+
   const getConnectionStatusIcon = () => {
     if (isConnected) {
       return <FaWifi className="status-icon connected" />;
@@ -114,8 +129,9 @@ const NotificationCenter: React.FC = () => {
             </div>
             <button
               className="close-btn"
-              onClick={() => setIsOpen(false)}
-              aria-label="Close"
+              onClick={handleCloseAllNotifications}
+              aria-label="Close notifications"
+              title="Close and mark all as read"
             >
               <FaTimes />
             </button>
@@ -163,16 +179,26 @@ const NotificationCenter: React.FC = () => {
                       {!notification.is_read && <span className="unread-dot"></span>}
                     </div>
                   </div>
-                  {!notification.is_read && (
+                  <div className="notification-actions">
+                    {!notification.is_read && (
+                      <button
+                        className="mark-read-btn"
+                        onClick={() => handleMarkAsRead(notification.id)}
+                        title="Mark as read"
+                        aria-label="Mark as read"
+                      >
+                        <FaCheckCircle />
+                      </button>
+                    )}
                     <button
-                      className="mark-read-btn"
-                      onClick={() => handleMarkAsRead(notification.id)}
-                      title="Mark as read"
-                      aria-label="Mark as read"
+                      className="close-notification-btn"
+                      onClick={() => handleCloseNotification(notification.id)}
+                      title="Close notification"
+                      aria-label="Close notification"
                     >
-                      <FaCheckCircle />
+                      <FaTimes />
                     </button>
-                  )}
+                  </div>
                 </div>
               ))
             )}

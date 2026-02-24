@@ -345,16 +345,44 @@
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 14px;
-  color: #2196f3;
-  padding: 4px 8px;
+  padding: 4px 6px;
   border-radius: 4px;
+  color: #2196f3;
+  font-size: 14px;
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
 .mark-read-btn:hover {
   background-color: rgba(33, 150, 243, 0.1);
+}
+
+.notification-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.close-notification-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  color: #666;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.close-notification-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.close-notification-btn:active {
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 /* Footer */

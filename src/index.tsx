@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+import './utils/errorHandler'; // Initialize global error handler
+import './utils/websocketTest'; // Import WebSocket test utility
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 

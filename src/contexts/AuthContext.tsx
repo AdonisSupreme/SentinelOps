@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApi, setAuthToken, clearAuthToken, authService } from '../services/api';
+import websocketService from '../services/websocketService';
 import {
   SignInRequest,
   SignInResponse,
@@ -37,10 +38,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (token) {
       setAuthToken(token);
+      // Keep WebSocket auth token in sync with HTTP token
+      websocketService.setAuthToken(token);
       return;
     }
 
     clearAuthToken();
+    // On logout, WebSocket connections are cleaned up by providers/components
   }, [token]);
 
   const forceLogout = () => {

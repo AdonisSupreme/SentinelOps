@@ -213,8 +213,7 @@
 }
 
 .severity-indicator {
-  color: var(--warning);
-  font-size: 12px;
+  font-size: 16px;
   letter-spacing: 1px;
 }
 

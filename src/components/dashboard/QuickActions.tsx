@@ -30,7 +30,7 @@ const QuickActions: React.FC = () => {
   ) : [];
   const isAdmin = roles.includes('admin');
   const isManager = roles.includes('manager');
-  const canCreateChecklist = isAdmin || isManager || roles.includes('user');
+  const canCreateChecklist = isAdmin || isManager;
   // Normalize section id from user (available to whole component)
   const userSection = (user as any)?.section_id ?? (user as any)?.sectionId ?? (user as any)?.section ?? null;
 

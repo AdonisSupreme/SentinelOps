@@ -1,0 +1,524 @@
+/* src/components/checklist/HandoverNoteModal.css */
+
+/* Modal Backdrop */
+.handover-note-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  animation: fadeIn 0.3s ease;
+  padding: var(--spacing-lg);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Modal Container */
+.handover-note-modal.futuristic {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Futuristic Design Elements */
+.handover-note-modal.futuristic::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--primary-gradient);
+  z-index: 1;
+}
+
+.handover-note-modal.futuristic::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--primary-gradient);
+  opacity: 0.03;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Modal Header */
+.handover-note-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  position: relative;
+  z-index: 2;
+}
+
+.handover-note-modal .modal-title {
+  color: var(--text-primary);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.handover-note-modal .modal-title svg {
+  color: var(--primary);
+  font-size: var(--font-size-lg);
+}
+
+.handover-note-modal .modal-close {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--error);
+  font-size: var(--font-size-sm);
+}
+
+.handover-note-modal .modal-close:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.3);
+  transform: scale(1.05);
+}
+
+.handover-note-modal .modal-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modal Body */
+.handover-note-modal .modal-body {
+  padding: var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  position: relative;
+  z-index: 1;
+}
+
+/* Section Labels */
+.handover-note-modal .section-label {
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+  display: block;
+}
+
+/* Priority Section */
+.handover-note-modal .priority-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.handover-note-modal .priority-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.handover-note-modal .priority-option {
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  position: relative;
+  overflow: hidden;
+}
+
+.handover-note-modal .priority-option:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-secondary);
+  transform: translateY(-2px);
+}
+
+.handover-note-modal .priority-option.active {
+  background: var(--primary-gradient);
+  border-color: var(--primary);
+  color: var(--text-inverse);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), var(--shadow-lg);
+  transform: translateY(-4px) scale(1.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.handover-note-modal .priority-option.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.handover-note-modal .priority-option.active .priority-label {
+  color: var(--text-inverse);
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.handover-note-modal .priority-option.active .priority-value {
+  color: var(--text-inverse);
+  opacity: 0.9;
+  font-weight: 600;
+}
+
+.handover-note-modal .priority-option.active .priority-indicator {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.handover-note-modal .priority-option.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.handover-note-modal .priority-icon {
+  font-size: var(--font-size-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.handover-note-modal .priority-info {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.handover-note-modal .priority-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.handover-note-modal .priority-value {
+  font-size: var(--font-size-xs);
+  opacity: 0.7;
+}
+
+.handover-note-modal .priority-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+/* Content Section */
+.handover-note-modal .content-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.handover-note-modal .textarea-wrapper {
+  position: relative;
+}
+
+.handover-note-modal .handover-textarea {
+  width: 100%;
+  padding: var(--spacing-md);
+  border: 2px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 120px;
+  transition: all var(--transition-fast);
+}
+
+.handover-note-modal .handover-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.handover-note-modal .handover-textarea:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.handover-note-modal .textarea-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-xs);
+}
+
+.handover-note-modal .char-count {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Error Message */
+.handover-note-modal .error-message {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  color: var(--error);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Help Text */
+.handover-note-modal .help-text {
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  line-height: 1.4;
+}
+
+.handover-note-modal .help-text svg {
+  color: var(--info);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Modal Footer */
+.handover-note-modal .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-primary);
+  position: relative;
+  z-index: 2;
+}
+
+/* Buttons */
+.handover-note-modal .btn-cancel,
+.handover-note-modal .btn-primary {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.handover-note-modal .btn-cancel {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+.handover-note-modal .btn-cancel:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-secondary);
+  transform: translateY(-1px);
+}
+
+.handover-note-modal .btn-primary {
+  background: var(--primary-gradient);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-md);
+}
+
+.handover-note-modal .btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.handover-note-modal .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Spinner */
+.handover-note-modal .spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Dark Theme Adjustments */
+[data-theme="dark"] .handover-note-modal.futuristic::after {
+  background: var(--primary-gradient);
+  opacity: 0.05;
+}
+
+[data-theme="dark"] .handover-note-modal .priority-option {
+  background: var(--bg-tertiary);
+  border-color: var(--border-secondary);
+}
+
+[data-theme="dark"] .handover-note-modal .priority-option:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-tertiary);
+}
+
+[data-theme="dark"] .handover-note-modal .priority-option.active {
+  background: var(--primary-gradient);
+  border-color: var(--primary);
+  color: var(--text-inverse);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3), var(--shadow-lg);
+  transform: translateY(-4px) scale(1.05);
+}
+
+[data-theme="dark"] .handover-note-modal .priority-option.active::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+}
+
+[data-theme="dark"] .handover-note-modal .priority-option.active .priority-label {
+  color: var(--text-inverse);
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .handover-note-modal .priority-option.active .priority-value {
+  color: var(--text-inverse);
+  opacity: 0.9;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .handover-note-modal .priority-option.active .priority-indicator {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+}
+
+[data-theme="dark"] .handover-note-modal .handover-textarea {
+  background: var(--bg-secondary);
+  border-color: var(--border-secondary);
+}
+
+[data-theme="dark"] .handover-note-modal .handover-textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .handover-note-modal-backdrop {
+    padding: var(--spacing-md);
+  }
+  
+  .handover-note-modal.futuristic {
+    max-width: 100%;
+    margin: var(--spacing-md);
+  }
+  
+  .handover-note-modal .modal-header {
+    padding: var(--spacing-md);
+  }
+  
+  .handover-note-modal .modal-body {
+    padding: var(--spacing-lg);
+  }
+  
+  .handover-note-modal .modal-footer {
+    padding: var(--spacing-md);
+    flex-direction: column;
+  }
+  
+  .handover-note-modal .priority-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .handover-note-modal .btn-cancel,
+  .handover-note-modal .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .handover-note-modal .priority-options {
+    grid-template-columns: 1fr;
+  }
+  
+  .handover-note-modal .handover-textarea {
+    min-height: 100px;
+    font-size: var(--font-size-sm);
+  }
+}

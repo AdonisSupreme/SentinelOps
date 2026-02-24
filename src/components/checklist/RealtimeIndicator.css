@@ -1,0 +1,95 @@
+/* src/components/checklist/RealtimeIndicator.css */
+.realtime-indicator {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.realtime-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.realtime-status:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.realtime-icon {
+  font-size: 1rem;
+  animation: pulse 2s infinite;
+}
+
+.realtime-text {
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0.9;
+}
+
+/* Status-specific styles */
+.realtime-status[style*="#22c55e"] {
+  /* Connected - Green */
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+}
+
+.realtime-status[style*="#f59e0b"] {
+  /* Connecting - Orange */
+  animation: connecting-pulse 1s infinite;
+}
+
+.realtime-status[style*="#ef4444"] {
+  /* Disconnected - Red */
+  opacity: 0.7;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes connecting-pulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .realtime-text {
+    display: none;
+  }
+  
+  .realtime-status {
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .realtime-status {
+    background-color: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .realtime-status:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+}

@@ -21,55 +21,58 @@ import Footer from './components/layout/Footer';
 import ScrollToTop from './components/ui/ScrollToTop';
 import PrivateRoute from './components/auth/PrivateRoute';
 import NotificationContainer from './components/ui/NotificationContainer';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 import { GlobalStyles } from './styles/GlobalStyles';
 import './App.css';
 import './styles/variables.css';
 
 function App() {
   return (
-    <Router>
-      <ThemeProvider>
-        <AuthProvider>
-          <NotificationProvider>
-            <ChecklistProvider>
-              <GlobalStyles />
-              
-              <div className="app-layout">
-                <Header />
+    <ErrorBoundary>
+      <Router>
+        <ThemeProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <ChecklistProvider>
+                <GlobalStyles />
                 
-                <main className="main-content">
-                  <AnimatePresence mode="wait">
-                    <Routes>
-                      <Route path="/login" element={<LoginPage />} />
-                      
-                      {/* Protected Routes */}
-                      <Route element={<PrivateRoute />}>
-                        <Route path="/" element={<DashboardPage />} />
-                        <Route path="/database-stats" element={<DatabaseStatsPage />} />
-                        <Route path="/checklists" element={<ChecklistsPage />} />
-                        <Route path="/checklist/:id" element={<ChecklistPage />} />
-                        <Route path="/templates" element={<TemplateManagerPage />} />
-                        <Route path="/performance" element={<PerformancePage />} />
-                        <Route path="/users" element={<UserManagementPage />} />
-                        <Route path="/team" element={<AdvancedTeamManagementPage />} />
-                        <Route path="/schedule" element={<UserScheduleDashboard />} />
-                      </Route>
+                <div className="app-layout">
+                  <Header />
+                  
+                  <main className="main-content">
+                    <AnimatePresence mode="wait">
+                      <Routes>
+                        <Route path="/login" element={<LoginPage />} />
+                        
+                        {/* Protected Routes */}
+                        <Route element={<PrivateRoute />}>
+                          <Route path="/" element={<DashboardPage />} />
+                          <Route path="/database-stats" element={<DatabaseStatsPage />} />
+                          <Route path="/checklists" element={<ChecklistsPage />} />
+                          <Route path="/checklist/:id" element={<ChecklistPage />} />
+                          <Route path="/templates" element={<TemplateManagerPage />} />
+                          <Route path="/performance" element={<PerformancePage />} />
+                          <Route path="/users" element={<UserManagementPage />} />
+                          <Route path="/team" element={<AdvancedTeamManagementPage />} />
+                          <Route path="/schedule" element={<UserScheduleDashboard />} />
+                        </Route>
 
-                      <Route path="*" element={<NotFoundPage />} />
-                    </Routes>
-                  </AnimatePresence>
-                </main>
-                
-                <Footer />
-              </div>
+                        <Route path="*" element={<NotFoundPage />} />
+                      </Routes>
+                    </AnimatePresence>
+                  </main>
+                  
+                  <Footer />
+                </div>
 
-              <ScrollToTop />
-              <NotificationContainer />
-            </ChecklistProvider>
-          </NotificationProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </Router>
+                <ScrollToTop />
+                <NotificationContainer />
+              </ChecklistProvider>
+            </NotificationProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </Router>
+    </ErrorBoundary>
   );
 }
 

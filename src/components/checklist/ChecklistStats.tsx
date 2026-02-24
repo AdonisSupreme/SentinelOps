@@ -64,7 +64,7 @@ const ChecklistStats: React.FC<ChecklistStatsProps> = ({ stats }) => {
     <section className="sidebar-section stats-card">
       <div className="stats-grid">
         <div className="stat-item">
-          <div className="stat-icon">
+          <div className="cl-stat-icon">
             <FaCheckCircle />
           </div>
           <div className="stat-content">
@@ -74,7 +74,7 @@ const ChecklistStats: React.FC<ChecklistStatsProps> = ({ stats }) => {
         </div>
 
         <div className="stat-item">
-          <div className="stat-icon">
+          <div className="cl-stat-icon">
             <FaPercentage />
           </div>
           <div className="stat-content">
@@ -84,7 +84,7 @@ const ChecklistStats: React.FC<ChecklistStatsProps> = ({ stats }) => {
         </div>
 
         <div className="stat-item">
-          <div className="stat-icon">
+          <div className="cl-stat-icon">
             <FaHourglass className={getTimeIconClass(stats.time_remaining_minutes || 0)} />
           </div>
           <div className="stat-content">

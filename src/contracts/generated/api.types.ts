@@ -386,8 +386,10 @@ export interface HandoverNote {
 }
 
 export interface CreateHandoverNoteRequest {
-  checklist_instance_id: string;
   content: string;
+  priority?: number;
+  to_shift?: 'MORNING' | 'AFTERNOON' | 'NIGHT';
+  from_instance_id?: string;
 }
 
 // === WebSocket Envelope ===
