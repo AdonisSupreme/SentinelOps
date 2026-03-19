@@ -9,6 +9,8 @@ import {
   type CreateTemplateSubitemRequest,
 } from '../../services/checklistApi';
 import './TemplateEditor.css';
+import './CheckboxFix.css';
+import './TextVisibilityFix.css';
 
 interface TemplateEditorProps {
   template: ChecklistTemplate;
@@ -203,6 +205,24 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
         description: description.trim(),
         shift,
         is_active,
+        items: items.map(item => ({
+          id: item.id, // Include ID for existing items, undefined for new items
+          title: item.title.trim(),
+          description: item.description.trim(),
+          item_type: item.item_type,
+          is_required: item.is_required,
+          severity: item.severity,
+          sort_order: item.sort_order,
+          subitems: item.subitems.map(sub => ({
+            id: sub.id, // Include ID for existing subitems, undefined for new subitems
+            title: sub.title.trim(),
+            description: sub.description.trim(),
+            item_type: sub.item_type,
+            is_required: sub.is_required,
+            severity: sub.severity,
+            sort_order: sub.sort_order,
+          })),
+        })),
       };
 
       await checklistApi.updateTemplate(template.id, updateData);
@@ -273,6 +293,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
               <input
                 id="active"
                 type="checkbox"
+                className="sentinel-checkbox-input"
                 checked={is_active}
                 onChange={(e) => setIsActive(e.target.checked)}
               />
@@ -405,6 +426,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
                           <input
                             id={`item_${item.id}_required`}
                             type="checkbox"
+                            className="sentinel-checkbox-input custom-checkbox"
                             checked={item.is_required}
                             onChange={(e) =>
                               handleUpdateItem(item.id, { is_required: e.target.checked })
@@ -489,6 +511,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
                                     <input
                                       id={`subitem_${subitem.id}_required`}
                                       type="checkbox"
+                                      className="sentinel-checkbox-input custom-checkbox"
                                       checked={subitem.is_required}
                                       onChange={(e) =>
                                         handleUpdateSubitem(item.id, subitem.id, {

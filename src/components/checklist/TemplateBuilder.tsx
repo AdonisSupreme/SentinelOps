@@ -8,6 +8,8 @@ import {
   type CreateTemplateSubitemRequest,
 } from '../../services/checklistApi';
 import './TemplateBuilder.css';
+import './CheckboxFix.css';
+import './TextVisibilityFix.css';
 
 interface TemplateBuilderProps {
   onSuccess: () => void;
@@ -241,6 +243,7 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
               <input
                 id="active"
                 type="checkbox"
+                className="sentinel-checkbox-input"
                 checked={is_active}
                 onChange={(e) => setIsActive(e.target.checked)}
               />
@@ -375,6 +378,7 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
                           <input
                             id={`item_${item.id}_required`}
                             type="checkbox"
+                            className="sentinel-checkbox-input custom-checkbox"
                             checked={item.is_required}
                             onChange={(e) =>
                               handleUpdateItem(item.id, { is_required: e.target.checked })
@@ -459,6 +463,7 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
                                     <input
                                       id={`subitem_${subitem.id}_required`}
                                       type="checkbox"
+                                      className="sentinel-checkbox-input custom-checkbox"
                                       checked={subitem.is_required}
                                       onChange={(e) =>
                                         handleUpdateSubitem(item.id, subitem.id, {
@@ -472,6 +477,13 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
                               </div>
                             </div>
                           ))}
+                          <button
+                          type="button"
+                          className="stb-btn-add-subitem"
+                          onClick={() => handleAddSubitem(item.id)}
+                        >
+                          <FaPlus /> Add Subitem
+                        </button>
                         </div>
                       )}
                     </div>
@@ -479,6 +491,14 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
                 )}
               </div>
             ))}
+            <button
+              type="button"
+              className="stb-btn-add-item"
+              onClick={handleAddItem}
+              title="Add new item"
+            >
+              <FaPlus /> Add Item
+            </button>
           </div>
         )}
       </div>

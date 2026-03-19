@@ -70,6 +70,7 @@ export interface UpdateChecklistTemplateRequest {
   shift?: 'MORNING' | 'AFTERNOON' | 'NIGHT';
   is_active?: boolean;
   section_id?: string;
+  items?: CreateTemplateItemRequest[];
 }
 
 export interface TemplateMutationResponse {
@@ -92,21 +93,25 @@ export interface ChecklistItem {
 
 export interface CreateTemplateItemRequest {
   title: string;
-  description: string;
+  description?: string;
   item_type: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
   is_required: boolean;
+  scheduled_time?: string;
+  notify_before_minutes?: number;
   severity: number;
   sort_order: number;
+  id?: string; // Include ID for updates
   subitems?: CreateTemplateSubitemRequest[];
 }
 
 export interface CreateTemplateSubitemRequest {
   title: string;
-  description: string;
+  description?: string;
   item_type: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
   is_required: boolean;
   severity: number;
   sort_order: number;
+  id?: string; // Include ID for updates
 }
 
 export interface ItemActivity {

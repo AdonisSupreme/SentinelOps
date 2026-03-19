@@ -35,7 +35,7 @@ const ChecklistPage: React.FC = () => {
   } = useChecklist();
   
   const [showHandover, setShowHandover] = useState(false);
-  const [showParticipants, setShowParticipants] = useState(true);
+  const [showParticipants, setShowParticipants] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [completeWithExceptions, setCompleteWithExceptions] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
@@ -439,20 +439,6 @@ const ChecklistPage: React.FC = () => {
             time_remaining_minutes: calculateTimeRemaining(currentInstance)
           }} />
 
-          {/* Participants */}
-          <section className="sidebar-section">
-            <div 
-              className="section-header collapsible"
-              onClick={() => setShowParticipants(!showParticipants)}
-            >
-              <h3><FaUsers /> Team Members ({currentInstance.participants?.length || 0})</h3>
-              {showParticipants ? <FaChevronUp /> : <FaChevronDown />}
-            </div>
-            {showParticipants && (
-              <ParticipantList participants={currentInstance.participants || []} />
-            )}
-          </section>
-
           {/* Handover Notes */}
           <section className="sidebar-section">
             <div 
@@ -467,6 +453,20 @@ const ChecklistPage: React.FC = () => {
                 instanceId={currentInstance.id} 
                 onShowModal={() => setShowHandoverNoteModal(true)}
               />
+            )}
+          </section>
+
+          {/* Participants */}
+          <section className="sidebar-section">
+            <div 
+              className="section-header collapsible"
+              onClick={() => setShowParticipants(!showParticipants)}
+            >
+              <h3><FaUsers /> Team Members ({currentInstance.participants?.length || 0})</h3>
+              {showParticipants ? <FaChevronUp /> : <FaChevronDown />}
+            </div>
+            {showParticipants && (
+              <ParticipantList participants={currentInstance.participants || []} />
             )}
           </section>
         </div>

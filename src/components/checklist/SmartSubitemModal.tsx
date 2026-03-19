@@ -344,7 +344,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
             <div className="subitem-actions">
               {currentSubitemWithOptimistic.status === 'PENDING' && (
                 <button
-                  className="action-btn start"
+                  className="sub-action-btn start"
                   onClick={() => handleSubitemAction(currentSubitemWithOptimistic.id, 'IN_PROGRESS')}
                 >
                   <FaPlay /> Start Working
@@ -354,21 +354,21 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
               {currentSubitemWithOptimistic.status === 'IN_PROGRESS' && (
                 <>
                   <button
-                    className="action-btn complete"
+                    className="sub-action-btn complete"
                     onClick={() => handleSubitemAction(currentSubitemWithOptimistic.id, 'COMPLETED')}
                   >
                     <FaCheckCircle /> Mark Complete
                   </button>
                   
                   <button
-                    className="action-btn skip"
+                    className="sub-action-btn skip"
                     onClick={() => handleSubitemAction(currentSubitemWithOptimistic.id, 'SKIPPED')}
                   >
                     <FaTimes /> Skip
                   </button>
                   
                   <button
-                    className="action-btn fail"
+                    className="sub-action-btn fail"
                     onClick={() => handleSubitemAction(currentSubitemWithOptimistic.id, 'FAILED')}
                   >
                     <FaTimes /> Report Issue

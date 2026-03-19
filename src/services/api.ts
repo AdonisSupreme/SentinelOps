@@ -25,44 +25,20 @@ export const clearAuthToken = () => {
 
 // Request interceptor for auth token
 api.interceptors.request.use((config) => {
-  console.log(' [API] Request:', {
-    method: config.method?.toUpperCase(),
-    url: config.url,
-    hasAuth: !!config.headers.Authorization,
-    baseURL: config.baseURL
-  });
-  
+  const debugContext = (config.headers && (config.headers['X-Debug-Context'] || config.headers['x-debug-context'])) || null;
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   } else {
     delete config.headers.Authorization;
   }
-  
-  console.log(' [API] Request headers:', {
-    hasAuthorization: !!config.headers.Authorization,
-    authHeader: config.headers.Authorization ? 'Bearer ***' : 'none'
-  });
-  
   return config;
 });
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  response => {
-    console.log(' [API] Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      data: response.data
-    });
-    return response;
-  },
+  response => response,
   error => {
-    console.error(' [API] Error:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data
-    });
     // Only handle 401 if it's actually an auth error
     if (error.response?.status === 401) {
       // Check if not already logging out to avoid infinite loops

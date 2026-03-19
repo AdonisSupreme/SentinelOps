@@ -44,10 +44,10 @@ class UserApi {
     return response.data;
   }
 
-  async listUsersBySection(sectionId: string): Promise<UserListItem[]> {
-    const response = await api.get<UserListItem[]>('/api/v1/users/by-section', {
-      params: { section_id: sectionId },
-    });
+  async listUsersBySection(sectionId: string, debugContext?: string): Promise<UserListItem[]> {
+    const config: any = { params: { section_id: sectionId } };
+    if (debugContext) config.headers = { 'X-Debug-Context': debugContext };
+    const response = await api.get<UserListItem[]>('/api/v1/users/by-section', config);
     return response.data;
   }
 

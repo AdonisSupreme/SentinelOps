@@ -1,0 +1,195 @@
+/* Text Visibility Fix for Dark Theme - SentinelOps */
+
+/* Force proper text colors in dark theme */
+[data-theme="dark"] {
+  /* Ensure all text elements use dark theme colors */
+  color: var(--text-primary);
+}
+
+/* Common text elements that might have visibility issues */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] p,
+[data-theme="dark"] span,
+[data-theme="dark"] div,
+[data-theme="dark"] label,
+[data-theme="dark"] button,
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .text-primary {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .text-muted {
+  color: var(--text-muted) !important;
+}
+
+/* Specific fixes for template manager components */
+[data-theme="dark"] .sentinel-template-manager-container,
+[data-theme="dark"] .sentinel-template-list-container {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .sentinel-main-title,
+[data-theme="dark"] .sentinel-view-title,
+[data-theme="dark"] .sentinel-list-title,
+[data-theme="dark"] .sentinel-template-name-text,
+[data-theme="dark"] .sentinel-item-title {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .sentinel-header-subtitle-text,
+[data-theme="dark"] .sentinel-view-description,
+[data-theme="dark"] .sentinel-template-description-text,
+[data-theme="dark"] .sentinel-item-description-text {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .sentinel-meta-info-row,
+[data-theme="dark"] .sentinel-subitem-text {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .sentinel-template-meta-wrapper,
+[data-theme="dark"] .sentinel-detail-section-content {
+  color: var(--text-secondary) !important;
+}
+
+/* Form elements text fix */
+[data-theme="dark"] input[type="text"],
+[data-theme="dark"] input[type="number"],
+[data-theme="dark"] input[type="search"],
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Button text fixes */
+[data-theme="dark"] button,
+[data-theme="dark"] .sentinel-action-button,
+[data-theme="dark"] .sentinel-nav-tab-item,
+[data-theme="dark"] .sentinel-create-template-btn {
+  color: var(--text-primary) !important;
+}
+
+/* Active/hover states */
+[data-theme="dark"] .sentinel-tab-active,
+[data-theme="dark"] .sentinel-primary-btn,
+[data-theme="dark"] .sentinel-create-tab-btn {
+  color: var(--text-inverse) !important;
+}
+
+/* Badge and label text */
+[data-theme="dark"] .sentinel-badge,
+[data-theme="dark"] .sentinel-shift-type-badge,
+[data-theme="dark"] .sentinel-status-badge-wrapper {
+  color: var(--primary) !important;
+}
+
+[data-theme="dark"] .sentinel-required-badge {
+  color: var(--error) !important;
+}
+
+[data-theme="dark"] .sentinel-type-badge {
+  color: var(--success) !important;
+}
+
+/* Error and success text */
+[data-theme="dark"] .sentinel-error-message-container,
+[data-theme="dark"] .error-message {
+  color: var(--error) !important;
+}
+
+[data-theme="dark"] .sentinel-empty-state-container p,
+[data-theme="dark"] .empty-state p {
+  color: var(--text-muted) !important;
+}
+
+/* Modal text fixes */
+[data-theme="dark"] .sentinel-delete-modal-content h3,
+[data-theme="dark"] .sentinel-delete-modal-content p {
+  color: var(--text-primary) !important;
+}
+
+/* Breadcrumb text */
+[data-theme="dark"] .sentinel-breadcrumb-link {
+  color: var(--primary) !important;
+}
+
+[data-theme="dark"] .sentinel-breadcrumb-current-text,
+[data-theme="dark"] .sentinel-breadcrumb-active {
+  color: var(--text-muted) !important;
+}
+
+/* High contrast override for better visibility */
+@media (prefers-contrast: high) {
+  [data-theme="dark"] {
+    --text-primary: #ffffff !important;
+    --text-secondary: #e2e8f0 !important;
+    --text-muted: #94a3b8 !important;
+  }
+}
+
+/* Ensure text is visible on all backgrounds */
+[data-theme="dark"] * {
+  text-shadow: none !important;
+}
+
+[data-theme="dark"] .sentinel-template-card,
+[data-theme="dark"] .sentinel-item-card {
+  color: var(--text-primary) !important;
+}
+
+/* Fix any hardcoded colors */
+[data-theme="dark"] [style*="color"] {
+  color: var(--text-primary) !important;
+}
+
+/* Specific component fixes */
+[data-theme="dark"] .stb-template-builder,
+[data-theme="dark"] .template-editor {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .stb-section-title,
+[data-theme="dark"] .section-title {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .stb-form-label,
+[data-theme="dark"] .form-label {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .stb-checkbox-label,
+[data-theme="dark"] .form-group label {
+  color: var(--text-primary) !important;
+}
+
+/* Loading and empty states */
+[data-theme="dark"] .loading-state p,
+[data-theme="dark"] .empty-items p,
+[data-theme="dark"] .empty-subitems p {
+  color: var(--text-secondary) !important;
+}

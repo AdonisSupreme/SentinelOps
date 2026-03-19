@@ -25,10 +25,11 @@
   flex-wrap: wrap;
   align-items: center;
   padding: 1.5rem;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(236, 72, 153, 0.02) 100%);
-  border: 1px solid rgba(139, 92, 246, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
   border-radius: 16px;
   backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-md);
 }
 
 .stl-search-container {
@@ -51,8 +52,8 @@
 .stl-search-input {
   width: 100%;
   padding: 1rem 1rem 1rem 3rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
   border-radius: 12px;
   color: var(--text-primary);
   font-size: 0.95rem;
@@ -64,8 +65,8 @@
 .stl-search-input:focus {
   outline: none;
   border-color: var(--primary);
-  background: rgba(139, 92, 246, 0.08);
-  box-shadow: 0 0 25px rgba(139, 92, 246, 0.2), inset 0 0 15px rgba(139, 92, 246, 0.05);
+  background: var(--bg-tertiary);
+  box-shadow: var(--shadow-glow);
 }
 
 .stl-search-input::placeholder {
@@ -86,8 +87,8 @@
 
 .stl-filter-select {
   padding: 1rem 2.5rem 1rem 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
   border-radius: 12px;
   color: var(--text-primary);
   font-size: 0.95rem;
@@ -104,13 +105,13 @@
 
 .stl-filter-select:hover {
   border-color: var(--primary);
-  background: rgba(139, 92, 246, 0.08);
+  background: var(--bg-tertiary);
 }
 
 .stl-filter-select:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  box-shadow: var(--shadow-glow);
 }
 
 /* Template Grid - FIXED SIZING */
@@ -123,15 +124,15 @@
 
 .stl-template-card {
   position: relative;
-  background: linear-gradient(135deg, rgba(30, 40, 60, 0.8) 0%, rgba(20, 30, 50, 0.6) 100%);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
   border-radius: 20px;
   padding: 2rem;
   overflow: hidden;
   transition: all var(--transition-normal);
   cursor: pointer;
   backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   min-height: 280px;
@@ -144,15 +145,17 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.1), transparent 70%);
+  background: 
+    radial-gradient(circle at 50% 0%, rgba(96, 165, 250, 0.05), transparent 70%),
+    radial-gradient(circle at 100% 100%, rgba(192, 132, 252, 0.03), transparent 70%);
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .stl-template-card:hover {
   transform: translateY(-8px) scale(1.02);
   border-color: var(--primary);
-  box-shadow: 0 20px 60px rgba(139, 92, 246, 0.3);
+  box-shadow: var(--shadow-xl);
 }
 
 .stl-card-header {
@@ -169,7 +172,7 @@
   font-size: 1.3rem;
   font-weight: 800;
   margin: 0;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  background: var(--primary-gradient);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -181,8 +184,8 @@
 .stl-shift-badge {
   display: inline-block;
   padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.1));
-  border: 2px solid;
+  background: var(--primary-50);
+  border: 2px solid var(--primary-200);
   border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 700;
@@ -190,8 +193,13 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+  box-shadow: var(--shadow-sm);
   backdrop-filter: blur(10px);
+}
+
+[data-theme="dark"] .stl-shift-badge {
+  background: var(--primary-100);
+  border-color: var(--primary-500);
 }
 
 .stl-template-description {
@@ -214,12 +222,13 @@
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem;
-  background: rgba(139, 92, 246, 0.05);
+  background: var(--bg-secondary);
   border-radius: 12px;
   border-left: 3px solid var(--primary);
   margin-top: auto;
   position: relative;
   z-index: 2;
+  box-shadow: var(--shadow-sm);
 }
 
 .stl-meta-item {
@@ -250,9 +259,9 @@
   justify-content: center;
   width: 2.8rem;
   height: 2.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-primary);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-secondary);
   color: var(--text-secondary);
   font-size: 1rem;
   cursor: pointer;
@@ -269,7 +278,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.1), transparent);
   transition: left 0.5s ease;
 }
 
@@ -281,27 +290,27 @@
   transform: scale(1.1);
   border-color: var(--primary);
   color: var(--primary);
-  background: rgba(139, 92, 246, 0.1);
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+  background: var(--bg-tertiary);
+  box-shadow: var(--shadow-glow);
 }
 
 .stl-view-btn:hover {
   border-color: var(--primary);
   color: var(--primary);
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+  box-shadow: var(--shadow-glow);
 }
 
 .stl-edit-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
-  box-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
 }
 
 .stl-delete-btn:hover {
-  border-color: var(--danger);
-  color: var(--danger);
-  background: rgba(255, 107, 107, 0.1);
-  box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+  border-color: var(--error);
+  color: var(--error);
+  background: var(--error-bg);
+  box-shadow: 0 0 20px rgba(248, 113, 113, 0.4);
 }
 
 /* Empty State */
@@ -314,10 +323,11 @@
   padding: 4rem 2rem;
   text-align: center;
   color: var(--text-muted);
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(236, 72, 153, 0.02) 100%);
-  border: 1px solid rgba(139, 92, 246, 0.1);
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
   border-radius: 20px;
   backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-md);
 }
 
 .stl-empty-state h3 {
@@ -346,11 +356,11 @@
 .stl-spinner {
   width: 48px;
   height: 48px;
-  border: 3px solid rgba(139, 92, 246, 0.2);
+  border: 3px solid var(--primary-100);
   border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  box-shadow: var(--shadow-glow);
 }
 
 @keyframes spin {
@@ -368,15 +378,16 @@
 /* Error Message */
 .stl-error-message {
   padding: 1.5rem;
-  background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 71, 87, 0.1) 100%);
-  border: 1px solid rgba(255, 107, 107, 0.4);
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
   border-radius: 12px;
-  color: #ff6b6b;
+  color: var(--error);
   text-align: center;
   font-size: 0.95rem;
   margin-bottom: 1.5rem;
   backdrop-filter: blur(10px);
   font-weight: 600;
+  box-shadow: var(--shadow-md);
 }
 
 /* Delete Confirmation Modal */
@@ -405,13 +416,13 @@
 }
 
 .stl-delete-confirm-modal {
-  background: linear-gradient(135deg, rgba(30, 40, 60, 0.95) 0%, rgba(20, 30, 50, 0.95) 100%);
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
   border-radius: 20px;
   padding: 2.5rem;
   max-width: 450px;
   backdrop-filter: blur(20px);
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-2xl);
   animation: slideInDown 0.4s ease-out;
 }
 
@@ -429,7 +440,7 @@
 .stl-delete-confirm-modal h3 {
   margin: 0 0 1rem 0;
   font-size: 1.4rem;
-  color: var(--danger);
+  color: var(--error);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -480,25 +491,25 @@
 }
 
 .stl-btn.stl-btn-cancel {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-secondary);
   color: var(--text-primary);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-primary);
 }
 
 .stl-btn.stl-btn-cancel:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--bg-tertiary);
+  border-color: var(--border-secondary);
   transform: translateY(-2px);
 }
 
 .stl-btn.stl-btn-danger {
-  background: linear-gradient(135deg, var(--danger) 0%, #cc3333 100%);
-  color: white;
-  box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3);
+  background: linear-gradient(135deg, var(--error) 0%, #dc2626 100%);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-lg);
 }
 
 .stl-btn.stl-btn-danger:hover {
-  box-shadow: 0 8px 30px rgba(255, 107, 107, 0.5);
+  box-shadow: var(--shadow-xl);
   transform: translateY(-3px);
 }
 

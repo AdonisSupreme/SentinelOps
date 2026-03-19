@@ -22,9 +22,11 @@ class OrgApi {
     return response.data;
   }
 
-  async listSections(departmentId?: number): Promise<Section[]> {
+  async listSections(departmentId?: number, debugContext?: string): Promise<Section[]> {
     const params = departmentId ? { department_id: departmentId } : {};
-    const response = await api.get<Section[]>('/api/v1/org/sections', { params });
+    const config: any = { params };
+    if (debugContext) config.headers = { 'X-Debug-Context': debugContext };
+    const response = await api.get<Section[]>('/api/v1/org/sections', config);
     return response.data;
   }
 }

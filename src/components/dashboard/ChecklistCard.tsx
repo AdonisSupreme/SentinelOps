@@ -56,12 +56,12 @@ const ChecklistCard: React.FC<ChecklistCardProps> = ({ instance }) => {
 
   return (
     <Link to={`/checklist/${instance.id}`} className="checklist-card-link">
-      <div className="checklist-card">
+      <div className="dsb-checklist-card">
         <div className="card-header">
           <div className="dc-status-indicator" style={{ backgroundColor: getStatusColor() }} />
           <div className="shift-info">
             <h3>{instance.shift} SHIFT</h3>
-            <div className="shift-time">
+            <div className="dsb-shift-time">
               <FaCalendarAlt /> {getShiftTime(instance.shift)}
             </div>
           </div>

@@ -22,7 +22,7 @@
 /* Light Theme */
 [data-theme="light"] .dbstats-page {
   --dbstats-bg-primary: #f8fafc;
-  --dbstats-bg-secondary: var(--text-primary);
+  --dbstats-bg-secondary: #ffffff;
   --dbstats-bg-tertiary: #f1f5f9;
   --dbstats-accent-cyan: #0891b2;
   --dbstats-accent-green: #059669;

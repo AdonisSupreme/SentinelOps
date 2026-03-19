@@ -117,6 +117,8 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+
+  --dsb-card: linear-gradient(135deg, #99fce5, #b2b5b5, #6a6a6a81, #99fce5);
 }
 
 [data-theme="dark"] {
@@ -189,6 +191,9 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
   --shadow-glow: 0 0 30px rgba(96, 165, 250, 0.3);
+
+
+  --dsb-card: linear-gradient(135deg, #3c655b, #b2b5b5, #6a6a6a81, #41504c);
 }
 
 /* Legacy Variable Support */

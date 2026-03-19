@@ -20,7 +20,7 @@
 /* Light theme override */
 [data-theme="light"] .user-mgmt-page {
   --user-bg-primary: var(--dbstats-bg-primary, #f8fafc);
-  --user-bg-secondary: var(--dbstats-bg-secondary, var(--text-primary));
+  --user-bg-secondary: #ffffff;
   --user-bg-tertiary: var(--dbstats-bg-tertiary, #f1f5f9);
   --user-accent-cyan: var(--dbstats-accent-cyan, #0891b2);
   --user-accent-green: var(--dbstats-accent-green, #059669);

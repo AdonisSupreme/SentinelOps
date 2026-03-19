@@ -229,19 +229,20 @@
 }
 
 .stb-items-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(800px, 1fr));
   gap: 1rem;
 }
 
 /* Item Card */
 .stb-item-card {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(236, 72, 153, 0.02) 100%);
+  background: var(--dbstats-bg-secondary);
   border: 1px solid rgba(139, 92, 246, 0.2);
   border-radius: 16px;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
+  position: relative;
 }
 
 .stb-item-card:hover {
@@ -358,6 +359,8 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
   backdrop-filter: blur(10px);
+  max-width: 200px;
+  max-height: 50px;
 }
 
 .stb-btn-add-item:hover,

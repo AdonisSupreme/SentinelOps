@@ -3,10 +3,10 @@
   color: inherit;
 }
 
-.checklist-card {
-  background: var(--dbstats-bg-secondary);
+.dsb-checklist-card {
+  background: var(--dsb-card);
   box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--dbstats-accent-cyan);
   border-radius: 8px;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

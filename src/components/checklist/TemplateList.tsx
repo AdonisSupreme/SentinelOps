@@ -2,7 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaEye, FaFilter, FaSearch, FaPlus } from 'react-icons/fa';
 import { checklistApi, type ChecklistTemplate } from '../../services/checklistApi';
-import './TemplateList.css';
+import TemplateManagerSkeleton from './TemplateManagerSkeleton';
+import './TemplateList-New.css';
+import './TextVisibilityFix.css';
 
 interface TemplateListProps {
   onEdit: (template: ChecklistTemplate) => void;
@@ -95,37 +97,30 @@ const TemplateList: React.FC<TemplateListProps> = ({ onEdit, onDelete, onView })
   };
 
   if (loading) {
-    return (
-      <div className="template-list">
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Loading templates...</p>
-        </div>
-      </div>
-    );
+    return <TemplateManagerSkeleton />;
   }
 
   return (
-    <div className="stl-template-list">
+    <div className="sentinel-template-list-container">
       {/* Header Controls */}
-      <div className="stl-template-controls">
-        <div className="stl-search-container">
-          <FaSearch className="stl-search-icon" />
+      <div className="sentinel-template-controls-wrapper">
+        <div className="sentinel-search-input-wrapper">
+          <FaSearch className="sentinel-search-icon" />
           <input
             type="text"
             placeholder="Search templates..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="stl-search-input"
+            className="sentinel-search-field"
           />
         </div>
 
-        <div className="stl-filter-container">
-          <FaFilter className="stl-filter-icon" />
+        <div className="sentinel-filter-dropdown-wrapper">
+          <FaFilter className="sentinel-filter-icon" />
           <select
             value={shiftFilter}
             onChange={(e) => setShiftFilter(e.target.value)}
-            className="stl-filter-select"
+            className="sentinel-filter-select-field"
           >
             <option value="all">All Shifts</option>
             <option value="MORNING">Morning</option>
@@ -135,55 +130,55 @@ const TemplateList: React.FC<TemplateListProps> = ({ onEdit, onDelete, onView })
         </div>
       </div>
 
-      {error && <div className="stl-error-message">{error}</div>}
+      {error && <div className="sentinel-error-message-container">{error}</div>}
 
       {/* Templates Grid */}
       {filteredTemplates.length === 0 ? (
-        <div className="stl-empty-state">
+        <div className="sentinel-empty-state-container">
           <p>No templates found</p>
         </div>
       ) : (
-        <div className="stl-templates-grid">
+        <div className="sentinel-templates-grid-container">
           {filteredTemplates.map((template) => (
-            <div key={template.id} className="stl-template-card">
-              <div className="stl-card-header">
-                <h3 className="stl-template-name">{template.name}</h3>
-                <div className="stl-shift-badge" style={{ borderColor: getShiftColor(template.shift) }}>
+            <div key={template.id} className="sentinel-template-card">
+              <div className="sentinel-card-header-wrapper">
+                <h3 className="sentinel-template-name-text">{template.name}</h3>
+                <div className="sentinel-shift-type-badge" style={{ borderColor: getShiftColor(template.shift) }}>
                   {template.shift}
                 </div>
               </div>
 
-              <p className="stl-template-description">{template.description || 'No description'}</p>
+              <p className="sentinel-template-description-text">{template.description || 'No description'}</p>
 
-              <div className="stl-template-meta">
-                <span className="stl-meta-item">
+              <div className="sentinel-template-meta-wrapper">
+                <span className="sentinel-meta-info-row">
                   Items: <strong>{template.items?.length || 0}</strong>
                 </span>
-                <span className="stl-meta-item">
+                <span className="sentinel-meta-info-row">
                   Status: <strong>{template.is_active ? 'Active' : 'Inactive'}</strong>
                 </span>
-                <span className="stl-meta-item">
+                <span className="sentinel-meta-info-row">
                   Created: <strong>{formatDate(template.created_at)}</strong>
                 </span>
               </div>
 
-              <div className="stl-card-actions">
+              <div className="sentinel-card-actions-wrapper">
                 <button
-                  className="stl-action-btn stl-view-btn"
+                  className="sentinel-action-button sentinel-view-action-btn"
                   onClick={() => onView(template)}
                   title="View details"
                 >
                   <FaEye />
                 </button>
                 <button
-                  className="stl-action-btn stl-edit-btn"
+                  className="sentinel-action-button sentinel-edit-action-btn"
                   onClick={() => onEdit(template)}
                   title="Edit template"
                 >
                   <FaEdit />
                 </button>
                 <button
-                  className="stl-action-btn stl-delete-btn"
+                  className="sentinel-action-button sentinel-delete-action-btn"
                   onClick={() => {
                     setDeleteId(template.id);
                     setShowDeleteConfirm(true);
@@ -200,13 +195,13 @@ const TemplateList: React.FC<TemplateListProps> = ({ onEdit, onDelete, onView })
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="stl-modal-backdrop" onClick={() => setShowDeleteConfirm(false)}>
-          <div className="stl-delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="sentinel-modal-backdrop-overlay" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="sentinel-delete-modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>Delete Template?</h3>
             <p>This action cannot be undone.</p>
-            <div className="stl-modal-actions">
+            <div className="sentinel-modal-actions-wrapper">
               <button
-                className="stl-btn stl-btn-cancel"
+                className="sentinel-modal-button sentinel-cancel-modal-btn"
                 onClick={() => {
                   setShowDeleteConfirm(false);
                   setDeleteId(null);
@@ -214,7 +209,7 @@ const TemplateList: React.FC<TemplateListProps> = ({ onEdit, onDelete, onView })
               >
                 Cancel
               </button>
-              <button className="stl-btn stl-btn-danger" onClick={handleDelete}>
+              <button className="sentinel-modal-button sentinel-danger-modal-btn" onClick={handleDelete}>
                 Delete
               </button>
             </div>

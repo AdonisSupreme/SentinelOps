@@ -76,13 +76,10 @@ const RealtimeIndicator: React.FC = () => {
         title={getStatusText()}
       >
         {isConnected ? (
-          <FaWifi className="realtime-icon" />
+          <FaWifi className="realtime-icon connected" />
         ) : (
-          <FaTimesCircle className="realtime-icon" />
+          <FaTimesCircle className="realtime-icon disconnected" />
         )}
-        <span className="realtime-text">
-          {getStatusText()}
-        </span>
       </div>
     </div>
   );

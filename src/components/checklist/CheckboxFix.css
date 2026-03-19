@@ -1,0 +1,161 @@
+/* Enhanced Checkbox Styling for Dark/Light Theme Compatibility */
+
+/* Base Checkbox Styling */
+.stb-form-group input[type='checkbox'],
+.form-group input[type='checkbox'],
+.sentinel-checkbox-input {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  position: relative;
+  appearance: none;
+  border: 3px solid var(--border-primary);
+  border-radius: 8px;
+  background: var(--bg-card);
+  transition: all 0.3s ease;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* Checkbox Custom Checkmark - MUCH MORE OBVIOUS */
+.stb-form-group input[type='checkbox']::before,
+.form-group input[type='checkbox']::before,
+.sentinel-checkbox-input::before {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--text-inverse);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.stb-form-group input[type='checkbox']:checked::before,
+.form-group input[type='checkbox']:checked::before,
+.sentinel-checkbox-input:checked::before {
+  transform: translate(-50%, -50%) scale(1.2);
+  opacity: 1;
+}
+
+/* Checkbox Hover and Focus States */
+.stb-form-group input[type='checkbox']:hover,
+.form-group input[type='checkbox']:hover,
+.sentinel-checkbox-input:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.15);
+  transform: scale(1.05);
+}
+
+.stb-form-group input[type='checkbox']:focus,
+.form-group input[type='checkbox']:focus,
+.sentinel-checkbox-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.25);
+}
+
+.stb-form-group input[type='checkbox']:checked,
+.form-group input[type='checkbox']:checked,
+.sentinel-checkbox-input:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3);
+  transform: scale(1.1);
+}
+
+.stb-form-group input[type='checkbox']:checked:hover,
+.form-group input[type='checkbox']:checked:hover,
+.sentinel-checkbox-input:checked:hover {
+  background: var(--primary-600);
+  border-color: var(--primary-600);
+  box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.4);
+  transform: scale(1.15);
+}
+
+/* Dark Theme Specific Adjustments */
+[data-theme="dark"] .stb-form-group input[type='checkbox'],
+[data-theme="dark"] .form-group input[type='checkbox'],
+[data-theme="dark"] .sentinel-checkbox-input {
+  border-color: var(--border-secondary);
+  background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .stb-form-group input[type='checkbox']::before,
+[data-theme="dark"] .form-group input[type='checkbox']::before,
+[data-theme="dark"] .sentinel-checkbox-input::before {
+  color: var(--text-inverse);
+}
+
+[data-theme="dark"] .stb-form-group input[type='checkbox']:hover,
+[data-theme="dark"] .form-group input[type='checkbox']:hover,
+[data-theme="dark"] .sentinel-checkbox-input:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.25);
+}
+
+[data-theme="dark"] .stb-form-group input[type='checkbox']:checked,
+[data-theme="dark"] .form-group input[type='checkbox']:checked,
+[data-theme="dark"] .sentinel-checkbox-input:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.4);
+}
+
+/* Checkbox Labels */
+.stb-checkbox-label,
+.form-group label:has(input[type='checkbox']),
+.sentinel-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+  padding: 0.75rem;
+  border-radius: 10px;
+  margin: 0;
+}
+
+.stb-checkbox-label:hover,
+.form-group label:has(input[type='checkbox']):hover,
+.sentinel-checkbox-label:hover {
+  color: var(--primary);
+  background: var(--bg-tertiary);
+  transform: translateY(-1px);
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .stb-form-group input[type='checkbox'],
+  .form-group input[type='checkbox'],
+  .sentinel-checkbox-input {
+    border-width: 4px;
+  }
+  
+  .stb-form-group input[type='checkbox']::before,
+  .form-group input[type='checkbox']::before,
+  .sentinel-checkbox-input::before {
+    font-size: 18px;
+    font-weight: 900;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .stb-form-group input[type='checkbox']::before,
+  .form-group input[type='checkbox']::before,
+  .sentinel-checkbox-input::before {
+    transition: none;
+  }
+  
+  .stb-form-group input[type='checkbox'],
+  .form-group input[type='checkbox'],
+  .sentinel-checkbox-input {
+    transition: none;
+  }
+}

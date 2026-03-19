@@ -1,27 +1,27 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   FaCalendarAlt,
-  FaUsers,
-  FaPlus,
-  FaTrash,
-  FaChevronLeft,
-  FaChevronRight,
   FaClock,
   FaCheckCircle,
   FaTimesCircle,
   FaQuestion,
-  FaExclamationTriangle,
-  FaUserPlus
+  FaUsers,
+  FaUserPlus,
+  FaUserMinus,
+  FaExclamationTriangle
 } from 'react-icons/fa';
-import { useAuth } from '../contexts/AuthContext';
-import { teamApi, Shift, ScheduledShift } from '../services/teamApi';
-import { userApi, UserListItem } from '../services/userApi';
-import { orgApi, Section } from '../services/orgApi';
-import { useNotifications } from '../contexts/NotificationContext';
-import { format, addDays, addMonths, startOfMonth, endOfMonth, parseISO } from 'date-fns';
-import './UserScheduleDashboard.css';
+import { useAuth } from '../../contexts/AuthContext';
+import { teamApi, Shift, ScheduledShift } from '../../services/teamApi';
+import { userApi, UserListItem } from '../../services/userApi';
+import { orgApi, Section } from '../../services/orgApi';
+import { useNotifications } from '../../contexts/NotificationContext';
+import { format, addDays, parseISO, startOfMonth, endOfMonth } from 'date-fns';
 
-type ViewPreset = 'tomorrow' | 'weekend' | 'this_month' | 'next_month';
+interface TeamScheduleCalendarProps {
+  sectionId?: string;
+  currentDate?: Date;
+  onDateChange?: (date: Date) => void;
+}
 
 interface TeamDayData {
   date: string;
@@ -32,19 +32,23 @@ interface TeamDayData {
   totalAssigned: number;
 }
 
-const TeamManagementPage: React.FC = () => {
+const TeamScheduleCalendar: React.FC<TeamScheduleCalendarProps> = ({
+  sectionId,
+  currentDate: propCurrentDate,
+  onDateChange
+}) => {
   const { user: currentUser } = useAuth();
   const { addNotification } = useNotifications();
+
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [scheduledShifts, setScheduledShifts] = useState<ScheduledShift[]>([]);
-  const [sectionUsers, setSectionUsers] = useState<UserListItem[]>([]);
+  const [users, setUsers] = useState<UserListItem[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
-  const [viewPreset, setViewPreset] = useState<ViewPreset>('this_month');
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [sectionId, setSectionId] = useState<string>('');
+  const [currentMonth, setCurrentMonth] = useState(propCurrentDate || new Date());
+  const [effectiveSectionId, setEffectiveSectionId] = useState(sectionId || '');
 
   const today = new Date();
   const monthStart = startOfMonth(currentMonth);
@@ -53,55 +57,11 @@ const TeamManagementPage: React.FC = () => {
   const displayStart = viewMode === 'month' ? monthStart : today;
   const displayEnd = viewMode === 'month' ? monthEnd : addDays(today, 7);
 
-  const isAdmin = (currentUser?.role || '').toLowerCase() === 'admin';
-  const userSectionId = (currentUser as any)?.section_id || '';
-
-  const effectiveSectionId = useMemo(() => {
-    if (isAdmin && sectionId) return sectionId;
-    return userSectionId;
-  }, [isAdmin, sectionId, userSectionId]);
-
-  const dateRange = useMemo(() => {
-    const today = new Date();
-    switch (viewPreset) {
-      case 'tomorrow':
-        return {
-          start: addDays(today, 1),
-          end: addDays(today, 1),
-        };
-      case 'weekend':
-        const sat = addDays(today, (6 - today.getDay() + 7) % 7);
-        const sun = addDays(sat, 1);
-        return { start: sat, end: sun };
-      case 'this_month':
-        return {
-          start: startOfMonth(today),
-          end: endOfMonth(today),
-        };
-      case 'next_month':
-        const next = addMonths(today, 1);
-        return {
-          start: startOfMonth(next),
-          end: endOfMonth(next),
-        };
-      default:
-        return {
-          start: startOfMonth(today),
-          end: endOfMonth(today),
-        };
-    }
-  }, [viewPreset]);
-
   // Memoize date strings to prevent unnecessary useEffect reruns
   const dateRangeKey = useMemo(
     () => `${format(displayStart, 'yyyy-MM-dd')}_${format(displayEnd, 'yyyy-MM-dd')}_${effectiveSectionId}`,
     [displayStart, displayEnd, effectiveSectionId]
   );
-
-  const canManageTeam = useMemo(() => {
-    const r = (currentUser?.role || '').toLowerCase();
-    return r === 'admin' || r === 'supervisor' || r === 'manager';
-  }, [currentUser]);
 
   // Load initial data
   useEffect(() => {
@@ -115,14 +75,15 @@ const TeamManagementPage: React.FC = () => {
         
         setShifts(shiftsData);
         setSections(sectionsData);
-        setSectionUsers(usersData);
+        setUsers(usersData);
         
         // Set default section if not provided
-        if (!sectionId) {
-          if (isAdmin && sectionsData.length > 0) {
-            setSectionId(sectionsData[0].id);
-          } else if (!isAdmin && userSectionId) {
-            setSectionId(userSectionId);
+        if (!effectiveSectionId && sectionsData.length > 0) {
+          const userSectionId = (currentUser as any)?.section_id;
+          const isAdmin = (currentUser?.role || '').toLowerCase() === 'admin';
+          const targetSection = isAdmin ? sectionsData[0] : sectionsData.find(s => s.id === userSectionId);
+          if (targetSection) {
+            setEffectiveSectionId(targetSection.id);
           }
         }
       } catch (err) {
@@ -195,7 +156,7 @@ const TeamManagementPage: React.FC = () => {
       if (dayData) {
         dayData.shifts.push(scheduledShift);
         
-        const user = sectionUsers.find(u => u.id === scheduledShift.user_id);
+        const user = users.find(u => u.id === scheduledShift.user_id);
         if (user && !dayData.assignedUsers.find(u => u.id === user.id)) {
           dayData.assignedUsers.push(user);
         }
@@ -218,7 +179,7 @@ const TeamManagementPage: React.FC = () => {
     });
     
     return map;
-  }, [scheduledShifts, sectionUsers, displayStart, displayEnd]);
+  }, [scheduledShifts, users, displayStart, displayEnd]);
 
   const stats = useMemo(() => {
     let totalShifts = 0;
@@ -255,7 +216,7 @@ const TeamManagementPage: React.FC = () => {
       );
     }
 
-    // Days of month
+    // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
       const dateStr = format(date, 'yyyy-MM-dd');
@@ -347,20 +308,6 @@ const TeamManagementPage: React.FC = () => {
     return days;
   };
 
-  if (!canManageTeam) {
-    return (
-      <div className="user-schedule-dashboard">
-        <div className="empty-inline">
-          <FaUsers size={32} />
-          <div>
-            <strong>Access Denied</strong>
-            <div>You need manager or admin rights to view team schedules.</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="user-schedule-dashboard">
       <header className="schedule-header">
@@ -439,7 +386,7 @@ const TeamManagementPage: React.FC = () => {
         )}
       </div>
 
-      <div className="usd-schedule-content">
+      <div className="schedule-content">
         {viewMode === 'month' ? (
           <>
             <div className="calendar-weekdays">
@@ -488,4 +435,4 @@ const TeamManagementPage: React.FC = () => {
   );
 };
 
-export default TeamManagementPage;
+export default TeamScheduleCalendar;

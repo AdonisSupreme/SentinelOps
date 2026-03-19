@@ -22,6 +22,7 @@ const Header: React.FC = () => {
     { path: '/', label: 'Dashboard' },
     { path: '/database-stats', label: 'Stats' },
     { path: '/checklists', label: 'Checklists' },
+    { path: '/tasks', label: 'Task Center' },
     { path: '/templates', label: 'Templates' },
     { path: '/schedule', label: 'Schedule' },
     { path: '/performance', label: 'Performance' }
@@ -64,7 +65,7 @@ const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Desktop Navigation - Center */}
+        {/* Desktop Navigation - Center 
         <nav className="header-nav-desktop">
           {navItems.map((item) => (
             <Link
@@ -76,13 +77,15 @@ const Header: React.FC = () => {
               {location.pathname === item.path && <span className="nav-indicator" />}
             </Link>
           ))}
-        </nav>
+        </nav>*/}
 
         {/* Right Controls */}
         <div className="header-controls">
           {/* Desktop Only - Notifications and Theme */}
           <div className="controls-desktop">
-            <NotificationContainer />
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <NotificationContainer />
+            </React.Suspense>
             <ThemeToggle />
           </div>
 
@@ -146,7 +149,7 @@ const Header: React.FC = () => {
           {/* Mobile Menu Toggle */}
           <button
             className="mobile-menu-toggle"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={handleAvatarClick}
             aria-label="Toggle mobile menu"
           >
             {mobileMenuOpen ? <FaTimes /> : <FaBars />}

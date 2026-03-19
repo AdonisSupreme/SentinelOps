@@ -8,7 +8,7 @@
 /* Trigger Button */
 .notification-trigger {
   position: relative;
-  background: none;
+  background: transparent;
   border: none;
   cursor: pointer;
   padding: 8px 12px;

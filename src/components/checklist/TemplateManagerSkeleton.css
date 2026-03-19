@@ -1,0 +1,240 @@
+/* TemplateManagerSkeleton.css - SentinelOps Template Manager Skeleton */
+
+/* Base Skeleton Animation */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-secondary) 0%,
+    var(--bg-tertiary) 50%,
+    var(--bg-secondary) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+}
+
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(96, 165, 250, 0.1) 0%,
+    rgba(96, 165, 250, 0.2) 50%,
+    rgba(96, 165, 250, 0.1) 100%
+  );
+  background-size: 200px 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+}
+
+/* Icon styling for skeleton */
+.skeleton-icon {
+  color: var(--primary);
+  opacity: 0.3;
+}
+
+/* Header Skeleton Elements */
+.skeleton-title {
+  height: 32px;
+  width: 280px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.skeleton-subtitle {
+  height: 16px;
+  width: 400px;
+}
+
+.skeleton-tab {
+  height: 40px;
+  width: 120px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1rem;
+}
+
+.skeleton-create-tab {
+  width: 160px;
+}
+
+.stm-active-tab {
+  background: var(--primary-gradient);
+  color: var(--text-inverse);
+}
+
+/* Breadcrumb Skeleton */
+.skeleton-breadcrumb {
+  height: 20px;
+  width: 150px;
+}
+
+/* List Header Skeleton */
+.skeleton-header-text {
+  height: 28px;
+  width: 200px;
+}
+
+.skeleton-button {
+  height: 36px;
+  width: 160px;
+  border-radius: 6px;
+}
+
+/* Controls Skeleton */
+.skeleton-search-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  flex: 1;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+.skeleton-search-input {
+  height: 32px;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.skeleton-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  width: 150px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+.skeleton-filter-select {
+  height: 32px;
+  width: 100%;
+  border-radius: 4px;
+}
+
+/* Template Card Skeleton */
+.skeleton-template-name {
+  height: 20px;
+  width: 180px;
+  margin-bottom: 8px;
+}
+
+.skeleton-shift-badge {
+  height: 24px;
+  width: 80px;
+  border-radius: 12px;
+}
+
+.skeleton-description {
+  height: 14px;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.skeleton-meta-item {
+  height: 12px;
+  width: 100px;
+  margin-bottom: 4px;
+}
+
+.skeleton-action-btn {
+  height: 32px;
+  width: 32px;
+  border-radius: 4px;
+}
+
+/* Skeleton Layout Classes */
+.stm-skeleton-header {
+  pointer-events: none;
+}
+
+.stm-skeleton-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stm-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.stm-skeleton-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Ensure skeleton elements don't interfere with user interactions */
+.stm-skeleton * {
+  pointer-events: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .stm-skeleton-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stm-skeleton-controls {
+    flex-direction: column;
+  }
+  
+  .skeleton-search-container {
+    width: 100%;
+  }
+  
+  .skeleton-filter-container {
+    width: 100%;
+  }
+  
+  .skeleton-title {
+    width: 200px;
+  }
+  
+  .skeleton-subtitle {
+    width: 280px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stm-skeleton-card {
+    padding: 1rem;
+  }
+  
+  .skeleton-template-name {
+    width: 140px;
+  }
+  
+  .skeleton-description {
+    width: 100%;
+  }
+  
+  .skeleton-tab {
+    width: 100px;
+  }
+  
+  .skeleton-create-tab {
+    width: 120px;
+  }
+}

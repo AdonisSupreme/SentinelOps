@@ -167,9 +167,9 @@
 }
 
 /* Schedule Content */
-.schedule-content {
-  background: rgba(20, 20, 50, 0.6);
-  border: 1px solid rgba(147, 112, 219, 0.15);
+.usd-schedule-content {
+  background: var(--user-bg-secondary);
+  border: 1px solid var(--user-border);
   border-radius: 12px;
   padding: 2rem;
   backdrop-filter: blur(10px);
@@ -252,14 +252,14 @@
   box-shadow: 0 8px 30px rgba(2,6,23,0.04);
 }
 
-[data-theme="light"] .calendar-day {
+[data-theme="dark"] .calendar-day {
   background: var(--text-primary);
   border: 1px solid rgba(2,6,23,0.04);
   color: #0f172a;
 }
 
-[data-theme="light"] .day-number {
-  color: #0f172a;
+[data-theme="dark"] .day-number {
+  color: #f0f0f0;
 }
 
 [data-theme="light"] .shift {
@@ -268,7 +268,7 @@
   border: 1px solid rgba(6,78,59,0.08);
 }
 
-[data-theme="light"] .week-day-row.today {
+[data-theme="dark"] .week-day-row.today {
   background: rgba(2,6,23,0.03);
 }
 
@@ -407,7 +407,6 @@
 
 .calendar-day {
   aspect-ratio: 1;
-  background: rgba(107, 112, 185, 0.05);
   border: 1px solid rgba(147, 112, 219, 0.15);
   border-radius: 8px;
   padding: 0.75rem;
@@ -417,6 +416,7 @@
   justify-content: center;
   position: relative;
   transition: all 0.3s;
+  background: var(--dsb-card);
 }
 
 .calendar-day:hover:not(.empty) {

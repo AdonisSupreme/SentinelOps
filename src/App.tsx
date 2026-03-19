@@ -10,6 +10,7 @@ import DashboardPage from './pages/DashboardPage';
 import DatabaseStatsPage from './pages/DatabaseStatsPage';
 import ChecklistPage from './pages/ChecklistPage';
 import ChecklistsPage from './pages/ChecklistsPage';
+import TaskCenterPage from './pages/TaskCenterPage';
 import PerformancePage from './pages/PerformancePage';
 import NotFoundPage from './pages/NotFoundPage';
 import UserManagementPage from './pages/UserManagementPage';
@@ -20,7 +21,6 @@ import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import ScrollToTop from './components/ui/ScrollToTop';
 import PrivateRoute from './components/auth/PrivateRoute';
-import NotificationContainer from './components/ui/NotificationContainer';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { GlobalStyles } from './styles/GlobalStyles';
 import './App.css';
@@ -50,6 +50,7 @@ function App() {
                           <Route path="/database-stats" element={<DatabaseStatsPage />} />
                           <Route path="/checklists" element={<ChecklistsPage />} />
                           <Route path="/checklist/:id" element={<ChecklistPage />} />
+                          <Route path="/tasks" element={<TaskCenterPage />} />
                           <Route path="/templates" element={<TemplateManagerPage />} />
                           <Route path="/performance" element={<PerformancePage />} />
                           <Route path="/users" element={<UserManagementPage />} />
@@ -66,7 +67,6 @@ function App() {
                 </div>
 
                 <ScrollToTop />
-                <NotificationContainer />
               </ChecklistProvider>
             </NotificationProvider>
           </AuthProvider>

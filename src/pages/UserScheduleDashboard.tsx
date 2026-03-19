@@ -280,7 +280,7 @@ const UserScheduleDashboard: React.FC = () => {
         )}
       </div>
 
-      <div className="schedule-content">
+      <div className="usd-schedule-content">
         {/* Always render calendar structure to avoid flicker; show empty cells if no data */}
         {viewMode === 'month' ? (
           <>
