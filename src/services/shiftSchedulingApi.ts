@@ -12,6 +12,12 @@ export interface ShiftPattern {
   created_at: string;
 }
 
+export interface PatternDayConfig {
+  day_of_week: number;
+  shift_id: number | null;
+  is_off_day: boolean;
+}
+
 export interface PatternSchedule {
   id: string;
   name: string;
@@ -62,6 +68,45 @@ class ShiftSchedulingApi {
     const response = await api.get<PatternSchedule>(
       `/api/v1/checklists/shift-patterns/${patternId}`
     );
+    return response.data;
+  }
+
+  async createShiftPattern(payload: {
+    name: string;
+    description?: string;
+    pattern_type: 'FIXED' | 'ROTATING' | 'CUSTOM';
+    section_id?: string;
+    schedule_days: PatternDayConfig[];
+    metadata?: Record<string, unknown>;
+  }): Promise<{
+    success: boolean;
+    pattern: ShiftPattern;
+    message: string;
+  }> {
+    const response = await api.post('/api/v1/checklists/shift-patterns', payload);
+    return response.data;
+  }
+
+  async updateShiftPattern(patternId: string, payload: {
+    name?: string;
+    description?: string;
+    pattern_type?: 'FIXED' | 'ROTATING' | 'CUSTOM';
+    schedule_days?: PatternDayConfig[];
+    metadata?: Record<string, unknown>;
+  }): Promise<{
+    success: boolean;
+    pattern: ShiftPattern;
+    message: string;
+  }> {
+    const response = await api.put(`/api/v1/checklists/shift-patterns/${patternId}`, payload);
+    return response.data;
+  }
+
+  async deleteShiftPattern(patternId: string): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    const response = await api.delete(`/api/v1/checklists/shift-patterns/${patternId}`);
     return response.data;
   }
 

@@ -60,55 +60,30 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const { addNotification } = useNotifications();
   const { user } = useAuth();
 
-  // Handle real-time WebSocket updates
+  // Register handlers once; keep the connection itself lazy.
   useEffect(() => {
-    // Set up WebSocket event handlers
     websocketService.onChecklistUpdateCallback(handleRealtimeUpdate);
     websocketService.onConnectionChangeCallback(handleConnectionChange);
     websocketService.onErrorCallback(handleWebSocketError);
+  }, []);
 
-    // Connect to WebSocket
+  // Only open the checklist socket when an actual checklist is active.
+  useEffect(() => {
+    if (!currentInstance?.id) {
+      websocketService.disconnect();
+      return;
+    }
+
+    console.log('Subscribing to checklist instance:', currentInstance.id);
+    websocketService.forceSubscribeToInstance(currentInstance.id);
     websocketService.connect().catch((error: any) => {
       console.error('Failed to connect to WebSocket:', error);
     });
 
-    // Cleanup on unmount
     return () => {
+      console.log('Unsubscribing from checklist instance:', currentInstance.id);
+      websocketService.unsubscribeFromInstance(currentInstance.id);
       websocketService.disconnect();
-    };
-  }, []);
-
-  // Subscribe to current instance updates
-  useEffect(() => {
-    if (currentInstance?.id) {
-      console.log('🔔 Force subscribing to instance:', currentInstance.id);
-      websocketService.forceSubscribeToInstance(currentInstance.id);
-      
-      return () => {
-        console.log('🔕 Unsubscribing from instance:', currentInstance.id);
-        websocketService.unsubscribeFromInstance(currentInstance.id);
-      };
-    } else {
-      console.log('📭 No current instance to subscribe to');
-      // For testing, subscribe to a dummy instance to keep connection alive
-      console.log('🧪 Creating test subscription to keep connection alive');
-      websocketService.forceSubscribeToInstance('test-instance-id');
-    }
-  }, [currentInstance?.id]);
-
-  // Also subscribe when WebSocket connects (for cases where instance loads first)
-  useEffect(() => {
-    const handleConnectionChange = (connected: boolean) => {
-      if (connected && currentInstance?.id) {
-        console.log('🔔 WebSocket connected, subscribing to instance:', currentInstance.id);
-        websocketService.subscribeToInstance(currentInstance.id);
-      }
-    };
-
-    websocketService.onConnectionChangeCallback(handleConnectionChange);
-
-    return () => {
-      // Cleanup
     };
   }, [currentInstance?.id]);
 
@@ -178,6 +153,11 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           
         case 'INSTANCE_CREATED': {
           message = 'New checklist created';
+          break;
+        }
+
+        case 'PARTICIPANT_PRESENCE_CHANGED': {
+          message = `Participant is now ${event.data.is_online ? 'online' : 'offline'}`;
           break;
         }
       }
@@ -898,15 +878,23 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const createHandoverNote = useCallback(async (content: string, priority: number) => {
     setLoading(true);
     try {
-      await checklistApi.createHandoverNote({
+      const handoverResult: any = await checklistApi.createHandoverNote({
         content,
         priority,
         from_instance_id: currentInstance?.id
       });
+
+      const summary = handoverResult?.notification_summary;
+      const currentCount = Number(summary?.current_shift_notified || 0);
+      const nextCount = Number(summary?.next_shift_notified || 0);
+      const emailCount = Number(summary?.email_recipients || 0);
+      const detailLine = (currentCount || nextCount || emailCount)
+        ? ` Current shift notified: ${currentCount}, next shift notified: ${nextCount}, email alerts: ${emailCount}.`
+        : '';
       
       addNotification({
         type: 'info',
-        message: 'Handover note created successfully',
+        message: `Handover note created successfully.${detailLine}`,
         priority: 'medium'
       });
       

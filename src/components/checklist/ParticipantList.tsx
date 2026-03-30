@@ -1,6 +1,7 @@
 // src/components/checklist/ParticipantList.tsx
 import React from 'react';
 import { FaUser, FaIdBadge, FaShieldAlt, FaCrown, FaStar, FaUserShield } from 'react-icons/fa';
+import { useAuth } from '../../contexts/AuthContext';
 import './ParticipantList.css';
 
 interface Participant {
@@ -8,6 +9,7 @@ interface Participant {
   username: string;
   email: string;
   role: string;
+  is_online?: boolean;
 }
 
 interface ParticipantListProps {
@@ -15,6 +17,14 @@ interface ParticipantListProps {
 }
 
 const ParticipantList: React.FC<ParticipantListProps> = ({ participants }) => {
+  const { user } = useAuth();
+
+  const isParticipantOnline = (participant: Participant) => (
+    participant.is_online || (user?.id && participant.id === user.id)
+  );
+
+  const onlineCount = participants.filter((participant) => isParticipantOnline(participant)).length;
+
   const getRoleIcon = (role: string) => {
     switch (role?.toLowerCase()) {
       case 'admin':
@@ -57,6 +67,10 @@ const ParticipantList: React.FC<ParticipantListProps> = ({ participants }) => {
       .slice(0, 2);
   };
 
+  const getPresenceLabel = (participant: Participant) => (
+    isParticipantOnline(participant) ? 'Online' : 'Offline'
+  );
+
   if (!participants || participants.length === 0) {
     return (
       <div className="participant-list">
@@ -75,19 +89,28 @@ const ParticipantList: React.FC<ParticipantListProps> = ({ participants }) => {
         {participants.map((participant, index) => (
           <div 
             key={participant.id} 
-            className="participant-card"
+            className={`participant-card ${isParticipantOnline(participant) ? 'is-online' : 'is-offline'}`}
             style={{ animationDelay: `${index * 0.1}s` }}
           >
             <div className="participant-avatar">
               <div className="avatar-circle" style={{ borderColor: getRoleColor(participant.role) }}>
                 <span className="avatar-text">{getInitials(participant.username)}</span>
               </div>
-              <div className="p-status-indicator online"></div>
+              <div
+                className={`p-status-indicator ${isParticipantOnline(participant) ? 'online' : 'offline'}`}
+                aria-label={getPresenceLabel(participant)}
+                title={getPresenceLabel(participant)}
+              ></div>
             </div>
             
             <div className="participant-info">
               <div className="participant-header">
-                <h4 className="participant-name">{participant.username || 'Unknown User'}</h4>
+                <div className="participant-title-group">
+                  <h4 className="participant-name">{participant.username || 'Unknown User'}</h4>
+                  <span className={`participant-presence ${isParticipantOnline(participant) ? 'online' : 'offline'}`}>
+                    {getPresenceLabel(participant)}
+                  </span>
+                </div>
                 <div className="participant-role-badge" style={{ backgroundColor: `${getRoleColor(participant.role)}20`, color: getRoleColor(participant.role) }}>
                   {getRoleIcon(participant.role)}
                   <span>{participant.role || 'Member'}</span>
@@ -125,7 +148,7 @@ const ParticipantList: React.FC<ParticipantListProps> = ({ participants }) => {
         </div>
         <div className="summary-item">
           <span className="summary-label">Online Now</span>
-          <span className="summary-value online">{participants.length}</span>
+          <span className="summary-value online">{onlineCount}</span>
         </div>
       </div>
     </div>

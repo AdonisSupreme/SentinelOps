@@ -2,6 +2,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaHome } from 'react-icons/fa';
+import PageGuide from '../components/ui/PageGuide';
+import { pageGuides } from '../content/pageGuides';
 
 const NotFoundPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,6 +15,7 @@ const NotFoundPage: React.FC = () => {
       <button onClick={() => navigate('/')}>
         <FaHome /> Return to Home
       </button>
+      <PageGuide guide={pageGuides.notFound} />
     </div>
   );
 };

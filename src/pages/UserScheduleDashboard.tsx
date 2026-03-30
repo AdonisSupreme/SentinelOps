@@ -1,51 +1,138 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  FaArrowLeft,
+  FaArrowRight,
   FaCalendarAlt,
-  FaClock,
   FaCheckCircle,
-  FaTimesCircle,
+  FaClock,
+  FaExclamationTriangle,
+  FaMoon,
   FaQuestion,
+  FaSignal,
+  FaStar,
+  FaTasks,
 } from 'react-icons/fa';
+import PageGuide from '../components/ui/PageGuide';
+import {
+  addDays,
+  addMonths,
+  endOfMonth,
+  format,
+  isAfter,
+  isSameDay,
+  parseISO,
+  startOfMonth,
+  subDays,
+} from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
-import { shiftSchedulingApi, UserSchedule, UserScheduleDay } from '../services/shiftSchedulingApi';
+import { pageGuides } from '../content/pageGuides';
 import { useNotifications } from '../contexts/NotificationContext';
-import { format, addDays, parseISO, startOfMonth, endOfMonth } from 'date-fns';
+import { shiftSchedulingApi, UserSchedule, UserScheduleDay } from '../services/shiftSchedulingApi';
+import { taskApi, TaskSummary } from '../services/taskApi';
 import './UserScheduleDashboard.css';
+
+type ViewMode = 'month' | 'week';
+
+const weekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const normalizeTime = (value?: string) => {
+  if (!value) return 'TBD';
+  return value.slice(0, 5);
+};
+
+const formatWindow = (day?: UserScheduleDay) => {
+  if (!day?.start_time || !day?.end_time) return 'Time pending';
+  return `${normalizeTime(day.start_time)} - ${normalizeTime(day.end_time)}`;
+};
+
+const dayStatusLabel = (day?: UserScheduleDay) => {
+  if (!day || day.type === 'UNSCHEDULED') return 'Open';
+  if (day.type === 'OFF_DAY') return 'Recovery';
+  return day.status || 'Assigned';
+};
+
+const toDateKeyFromIso = (value?: string) => {
+  if (!value) return '';
+  try {
+    return format(parseISO(value), 'yyyy-MM-dd');
+  } catch {
+    return value.split('T')[0] || '';
+  }
+};
+
+const formatDeadlineTime = (value?: string) => {
+  if (!value) return 'Time pending';
+  try {
+    return format(parseISO(value), 'HH:mm');
+  } catch {
+    const parts = value.split('T');
+    return parts[1]?.slice(0, 5) || 'Time pending';
+  }
+};
 
 const UserScheduleDashboard: React.FC = () => {
   const { user: currentUser } = useAuth();
   const { addNotification } = useNotifications();
 
   const [schedule, setSchedule] = useState<UserSchedule | null>(null);
+  const [deadlineTasks, setDeadlineTasks] = useState<TaskSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
+  const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const today = new Date();
+  const todayKey = format(today, 'yyyy-MM-dd');
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-
-  const displayStart = viewMode === 'month' ? monthStart : today;
-  const displayEnd = viewMode === 'month' ? monthEnd : addDays(today, 7);
-
-  // Memoize date strings to prevent unnecessary useEffect reruns
-  const dateRangeKey = useMemo(
-    () => `${format(displayStart, 'yyyy-MM-dd')}_${format(displayEnd, 'yyyy-MM-dd')}`,
-    [displayStart, displayEnd]
-  );
+  const weekStart = subDays(today, today.getDay());
+  const weekEnd = addDays(weekStart, 6);
+  const displayStart = viewMode === 'month' ? monthStart : weekStart;
+  const displayEnd = viewMode === 'month' ? monthEnd : weekEnd;
+  const displayStartKey = format(displayStart, 'yyyy-MM-dd');
+  const displayEndKey = format(displayEnd, 'yyyy-MM-dd');
+  const dateRangeKey = `${displayStartKey}_${displayEndKey}`;
+  const [selectedDate, setSelectedDate] = useState(todayKey);
+  const hasSchedule = schedule !== null;
 
   useEffect(() => {
     const loadSchedule = async () => {
-      // Keep large loading only for first load; subsequent reloads are 'refreshing'
-      if (!schedule) setLoading(true);
+      if (!hasSchedule) setLoading(true);
       else setIsRefreshing(true);
+
       try {
-        const scheduleData = await shiftSchedulingApi.getUserSchedule({
-          start_date: format(displayStart, 'yyyy-MM-dd'),
-          end_date: format(displayEnd, 'yyyy-MM-dd'),
-        });
-        setSchedule(scheduleData);
+        const results = await Promise.allSettled([
+          shiftSchedulingApi.getUserSchedule({
+            start_date: displayStartKey,
+            end_date: displayEndKey,
+          }),
+          currentUser?.id
+            ? taskApi.listTasks({
+                assigned_to: currentUser.id,
+                due_after: `${displayStartKey}T00:00:00`,
+                due_before: `${displayEndKey}T23:59:59`,
+                status: ['ACTIVE', 'IN_PROGRESS', 'ON_HOLD', 'DRAFT'],
+                sort: 'due_date',
+                order: 'asc',
+                limit: 100,
+                offset: 0,
+              })
+            : Promise.resolve({ tasks: [], pagination: { total: 0, limit: 0, offset: 0, has_more: false } }),
+        ]);
+
+        const scheduleResult = results[0];
+        if (scheduleResult.status !== 'fulfilled') {
+          throw scheduleResult.reason;
+        }
+        setSchedule(scheduleResult.value);
+
+        const tasksResult = results[1];
+        if (tasksResult.status === 'fulfilled') {
+          setDeadlineTasks((tasksResult.value.tasks || []).filter((task) => Boolean(task.due_date)));
+        } else {
+          console.warn('Task deadline feed failed; continuing schedule render.', tasksResult.reason);
+          setDeadlineTasks([]);
+        }
       } catch (err) {
         console.error('Failed to load schedule', err);
         addNotification({
@@ -58,276 +145,556 @@ const UserScheduleDashboard: React.FC = () => {
         setIsRefreshing(false);
       }
     };
+
     void loadSchedule();
-  }, [dateRangeKey]);
+  }, [addNotification, currentUser?.id, dateRangeKey, displayEndKey, displayStartKey, hasSchedule]);
 
   const scheduleByDate = useMemo(() => {
-    if (!schedule) return new Map();
     const map = new Map<string, UserScheduleDay>();
-    schedule.schedule.forEach((day) => {
+    schedule?.schedule.forEach((day) => {
       map.set(day.date, day);
     });
     return map;
   }, [schedule]);
 
+  const preferredFocusDate = useMemo(() => {
+    const visibleDays = schedule?.schedule ?? [];
+    const upcomingShift = visibleDays.find(
+      (day) => day.type === 'SHIFT' && (day.date === todayKey || isAfter(parseISO(day.date), parseISO(todayKey)))
+    );
+
+    return upcomingShift?.date || visibleDays[0]?.date || todayKey;
+  }, [schedule, todayKey]);
+
+  useEffect(() => {
+    const selectedIsVisible = selectedDate >= format(displayStart, 'yyyy-MM-dd') && selectedDate <= format(displayEnd, 'yyyy-MM-dd');
+    if (!selectedIsVisible || !scheduleByDate.has(selectedDate)) {
+      setSelectedDate(preferredFocusDate);
+    }
+  }, [displayEnd, displayStart, preferredFocusDate, scheduleByDate, selectedDate]);
+
   const stats = useMemo(() => {
-    if (!schedule) return { total_shifts: 0, completed: 0, upcoming: 0, days_off: 0 };
-    const stats = {
-      total_shifts: 0,
+    const base = {
+      totalShifts: 0,
       completed: 0,
       upcoming: 0,
-      days_off: 0,
+      daysOff: 0,
+      unscheduled: 0,
     };
-    schedule.schedule.forEach((day) => {
-      if (day.type === 'OFF_DAY') {
-        stats.days_off++;
-      } else if (day.type === 'SHIFT') {
-        stats.total_shifts++;
-        const dayDate = parseISO(day.date);
-        if (dayDate < today) {
-          stats.completed++;
-        } else {
-          stats.upcoming++;
-        }
+
+    schedule?.schedule.forEach((day) => {
+      if (day.type === 'SHIFT') {
+        base.totalShifts += 1;
+        if (day.date < todayKey) base.completed += 1;
+        else base.upcoming += 1;
+      } else if (day.type === 'OFF_DAY') {
+        base.daysOff += 1;
+      } else {
+        base.unscheduled += 1;
       }
     });
-    return stats;
-  }, [schedule, today]);
 
-  const renderCalendarDays = () => {
-    if (viewMode !== 'month') return null;
+    return base;
+  }, [schedule, todayKey]);
 
-    const days: React.ReactNode[] = [];
-    const firstDay = monthStart.getDay();
+  const nextShift = useMemo(() => {
+    return (
+      schedule?.schedule.find(
+        (day) => day.type === 'SHIFT' && (day.date === todayKey || isAfter(parseISO(day.date), parseISO(todayKey)))
+      ) || null
+    );
+  }, [schedule, todayKey]);
+
+  const upcomingShifts = useMemo(() => {
+    return (schedule?.schedule ?? [])
+      .filter((day) => day.type === 'SHIFT' && (day.date === todayKey || isAfter(parseISO(day.date), parseISO(todayKey))))
+      .sort((left, right) => left.date.localeCompare(right.date))
+      .slice(0, 5);
+  }, [schedule, todayKey]);
+
+  const operationalPulse = useMemo(() => {
+    const scheduledCount = stats.totalShifts + stats.daysOff;
+    const totalDays = schedule?.schedule.length || 0;
+    if (!totalDays) return 0;
+    return Math.round((scheduledCount / totalDays) * 100);
+  }, [schedule, stats.daysOff, stats.totalShifts]);
+
+  const focusedDay = scheduleByDate.get(selectedDate);
+  const deadlineTasksByDate = useMemo(() => {
+    const map = new Map<string, TaskSummary[]>();
+    deadlineTasks.forEach((task) => {
+      const key = toDateKeyFromIso(task.due_date);
+      if (!key) return;
+      const existing = map.get(key) || [];
+      existing.push(task);
+      map.set(key, existing);
+    });
+    map.forEach((items, key) => {
+      map.set(
+        key,
+        items.slice().sort((left, right) => (left.due_date || '').localeCompare(right.due_date || ''))
+      );
+    });
+    return map;
+  }, [deadlineTasks]);
+  const focusedDeadlineTasks = deadlineTasksByDate.get(selectedDate) || [];
+  const focusedDateLabel = format(parseISO(selectedDate), 'EEEE, MMMM d');
+  const userLabel = currentUser?.first_name || currentUser?.username || 'Operator';
+
+  const monthDays = useMemo(() => {
+    const firstDayOffset = monthStart.getDay();
     const daysInMonth = monthEnd.getDate();
+    const cells: Array<{ date: Date | null; key: string }> = [];
 
-    // Empty cells for days before month starts
-    for (let i = 0; i < firstDay; i++) {
-      days.push(
-        <div key={`empty-${i}`} className="calendar-day empty"></div>
-      );
+    for (let i = 0; i < firstDayOffset; i += 1) {
+      cells.push({ date: null, key: `empty-${i}` });
     }
 
-    // Days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(monthStart.getFullYear(), monthStart.getMonth(), day);
-      const dateStr = format(date, 'yyyy-MM-dd');
-      const dayData = scheduleByDate.get(dateStr);
-      const isToday = format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
-      const isPast = date < today;
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      cells.push({
+        date: new Date(monthStart.getFullYear(), monthStart.getMonth(), day),
+        key: `day-${day}`,
+      });
+    }
 
-      let dayClass = 'calendar-day';
-      if (isToday) dayClass += ' today';
-      if (isPast && dayData?.type !== 'OFF_DAY') dayClass += ' past';
+    return cells;
+  }, [monthEnd, monthStart]);
 
-      days.push(
-        <div key={dateStr} className={dayClass}>
-          <div className="day-number">{day}</div>
-          <div className="day-content">
-            {!dayData || dayData.type === 'UNSCHEDULED' ? (
-              <div className="unscheduled">
-                <FaQuestion size={14} />
-              </div>
-            ) : dayData.type === 'OFF_DAY' ? (
-              <div className="off-day" title={dayData.reason || 'Off'}>
-                <FaTimesCircle size={14} />
-              </div>
-            ) : (
-              <div className="shift" title={dayData.shift_name}>
-                <span className="shift-name">{dayData.shift_name?.substring(0, 1)}</span>
-              </div>
-            )}
+  const weekDays = useMemo(() => {
+    return Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
+  }, [weekStart]);
+
+  const renderDayPreview = (dayData?: UserScheduleDay) => {
+    if (!dayData || dayData.type === 'UNSCHEDULED') {
+      return (
+        <>
+          <span className="schedule-day-icon neutral">
+            <FaQuestion />
+          </span>
+          <div className="schedule-day-copy">
+            <strong>Open</strong>
+            <span>No assignment locked</span>
           </div>
-        </div>
+        </>
       );
     }
 
-    return days;
+    if (dayData.type === 'OFF_DAY') {
+      return (
+        <>
+          <span className="schedule-day-icon off">
+            <FaMoon />
+          </span>
+          <div className="schedule-day-copy">
+            <strong>Recovery</strong>
+            <span>{dayData.reason || 'Protected downtime'}</span>
+          </div>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <span className="schedule-day-icon shift">
+          <FaClock />
+        </span>
+        <div className="schedule-day-copy">
+          <strong>{dayData.shift_name || 'Shift Assigned'}</strong>
+          <span>{formatWindow(dayData)}</span>
+        </div>
+      </>
+    );
   };
 
-  const renderWeekView = () => {
-    if (viewMode !== 'week') return null;
-
-    const days: React.ReactNode[] = [];
-    let current = displayStart;
-
-    while (current <= displayEnd) {
-      const dateStr = format(current, 'yyyy-MM-dd');
-      const dayData = scheduleByDate.get(dateStr);
-      const isToday = format(current, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
-      const dayName = format(current, 'EEE, MMM d');
-
-      let rowClass = 'week-day-row';
-      if (isToday) rowClass += ' today';
-
-      days.push(
-        <div key={dateStr} className={rowClass}>
-          <div className="week-day-header">{dayName}</div>
-          <div className="week-day-content">
-            {!dayData || dayData.type === 'UNSCHEDULED' ? (
-              <div className="unscheduled-card">
-                <FaQuestion size={18} />
-                <span>No shift assigned</span>
-              </div>
-            ) : dayData.type === 'OFF_DAY' ? (
-              <div className="off-day-card">
-                <FaTimesCircle size={18} />
-                <span>Day Off</span>
-                {dayData.reason && <small>{dayData.reason}</small>}
-              </div>
-            ) : (
-              <div className="shift-card">
-                <div className="shift-header">
-                  <FaClock size={16} />
-                  <strong>{dayData.shift_name}</strong>
-                </div>
-                <div className="shift-time">
-                  {dayData.start_time} – {dayData.end_time}
-                </div>
-                {dayData.status && (
-                  <div className={`shift-status ${dayData.status.toLowerCase()}`}>
-                    <FaCheckCircle size={12} />
-                    {dayData.status}
-                  </div>
-                )}
-              </div>
-            )}
+  const renderMonthView = () => (
+    <div className="schedule-calendar-shell">
+      <div className="schedule-calendar-weekdays">
+        {weekdayLabels.map((label) => (
+          <div key={label} className="schedule-weekday">
+            {label}
           </div>
-        </div>
-      );
+        ))}
+      </div>
+      <div className="schedule-calendar-grid">
+        {monthDays.map((cell) => {
+          if (!cell.date) {
+            return <div key={cell.key} className="schedule-calendar-cell empty" />;
+          }
 
-      current = addDays(current, 1);
-    }
+          const dateKey = format(cell.date, 'yyyy-MM-dd');
+          const dayData = scheduleByDate.get(dateKey);
+          const deadlineCount = deadlineTasksByDate.get(dateKey)?.length || 0;
+          const isCurrentDay = isSameDay(cell.date, today);
+          const isSelected = selectedDate === dateKey;
+          const isPast = dateKey < todayKey;
 
-    return days;
-  };
+          return (
+            <button
+              key={cell.key}
+              type="button"
+              className={`schedule-calendar-cell ${isCurrentDay ? 'today' : ''} ${isSelected ? 'selected' : ''} ${isPast ? 'past' : ''} ${dayData?.type?.toLowerCase() || 'unscheduled'}`}
+              onClick={() => setSelectedDate(dateKey)}
+            >
+              <div className="schedule-cell-topline">
+                <span className="schedule-cell-date">{format(cell.date, 'd')}</span>
+                <div className="schedule-cell-badge-stack">
+                  {deadlineCount > 0 ? (
+                    <span className="schedule-task-pill">
+                      <FaTasks />
+                      {deadlineCount}
+                    </span>
+                  ) : null}
+                  <span className={`schedule-cell-badge ${dayStatusLabel(dayData).toLowerCase().replace(/\s+/g, '-')}`}>
+                    {isCurrentDay ? 'Today' : dayStatusLabel(dayData)}
+                  </span>
+                </div>
+              </div>
+              <div className="schedule-cell-body">{renderDayPreview(dayData)}</div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderWeekView = () => (
+    <div className="schedule-agenda-grid">
+      {weekDays.map((day) => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        const dayData = scheduleByDate.get(dateKey);
+        const deadlineCount = deadlineTasksByDate.get(dateKey)?.length || 0;
+        const isCurrentDay = isSameDay(day, today);
+        const isSelected = selectedDate === dateKey;
+
+        return (
+          <button
+            key={dateKey}
+            type="button"
+            className={`agenda-card ${isCurrentDay ? 'today' : ''} ${isSelected ? 'selected' : ''} ${dayData?.type?.toLowerCase() || 'unscheduled'}`}
+            onClick={() => setSelectedDate(dateKey)}
+          >
+            <div className="agenda-card-head">
+              <div>
+                <span>{format(day, 'EEE')}</span>
+                <h3>{format(day, 'd MMM')}</h3>
+              </div>
+              <span className="agenda-status">{dayStatusLabel(dayData)}</span>
+            </div>
+            <div className="agenda-card-body">{renderDayPreview(dayData)}</div>
+            {deadlineCount > 0 ? (
+              <div className="agenda-deadline-chip">
+                <FaTasks />
+                <span>{deadlineCount} deadline{deadlineCount === 1 ? '' : 's'}</span>
+              </div>
+            ) : null}
+            {dayData?.type === 'SHIFT' ? (
+              <div className="agenda-card-meta">
+                <span>{dayData.status || 'Assigned'}</span>
+                <span>{formatWindow(dayData)}</span>
+              </div>
+            ) : null}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div className="user-schedule-dashboard">
-      <header className="schedule-header">
-        <div className="header-title">
-          <h1>📅 My Schedule</h1>
-          <p>View your assigned shifts and days off</p>
-        </div>
-      </header>
-
-      <div className="schedule-stats">
-        <div className="stat-card">
-          <div className="stat-icon shifts">
-            <FaClock />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.total_shifts}</div>
-            <div className="stat-label">Total Shifts</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon upcoming">
-            <FaCalendarAlt />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.upcoming}</div>
-            <div className="stat-label">Upcoming</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon completed">
-            <FaCheckCircle />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.completed}</div>
-            <div className="stat-label">Completed</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon days-off">
-            <FaTimesCircle />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.days_off}</div>
-            <div className="stat-label">Days Off</div>
-          </div>
-        </div>
+      <div className="schedule-ambient">
+        <div className="schedule-ambient-orb orb-a" />
+        <div className="schedule-ambient-orb orb-b" />
+        <div className="schedule-ambient-grid" />
       </div>
 
-      <div className="schedule-controls">
-        <div className="view-toggle">
-          <button
-            className={`toggle-btn ${viewMode === 'month' ? 'active' : ''}`}
-            onClick={() => setViewMode('month')}
-          >
-            📆 Month
-          </button>
-          <button
-            className={`toggle-btn ${viewMode === 'week' ? 'active' : ''}`}
-            onClick={() => setViewMode('week')}
-          >
-            📋 Week
-          </button>
+      <section className="schedule-hero-panel">
+        <div className="schedule-hero-copy">
+          <div className="schedule-kicker">
+            <FaSignal />
+            SentinelOS Shift Intelligence
+          </div>
+          <p>Own your rhythm, every watch, every handoff, every recovery window.</p>
+          <p>
+            {userLabel}, this is your live operations canvas for scheduled shifts, recovery days, and upcoming assignments across SentinelOS.
+          </p>
+
+          <div className="schedule-hero-highlights">
+            <div className="hero-chip">
+              <FaCalendarAlt />
+              <span>{format(displayStart, 'MMM d')} to {format(displayEnd, 'MMM d')}</span>
+            </div>
+            <div className="hero-chip">
+              <FaCheckCircle />
+              <span>{stats.upcoming} future assignment{stats.upcoming === 1 ? '' : 's'}</span>
+            </div>
+          </div>
         </div>
-        {viewMode === 'month' && (
-          <div className="month-controls">
-            <button className="nav-btn" onClick={() => setCurrentMonth(addDays(currentMonth, -30))}>
-              ← Prev
-            </button>
-            <span className="current-month">
-              {format(currentMonth, 'MMMM yyyy')}
-            </span>
-            <button className="nav-btn" onClick={() => setCurrentMonth(addDays(currentMonth, 30))}>
-              Next →
-            </button>
-          </div>
-        )}
-      </div>
 
-      <div className="usd-schedule-content">
-        {/* Always render calendar structure to avoid flicker; show empty cells if no data */}
-        {viewMode === 'month' ? (
-          <>
-            <div className="calendar-weekdays">
-              <div className="weekday">Sun</div>
-              <div className="weekday">Mon</div>
-              <div className="weekday">Tue</div>
-              <div className="weekday">Wed</div>
-              <div className="weekday">Thu</div>
-              <div className="weekday">Fri</div>
-              <div className="weekday">Sat</div>
+        <div className="schedule-hero-telemetry">
+          <div className="schedule-pulse-card">
+            <div className="schedule-pulse-ring">
+              <div className="schedule-pulse-core">
+                <strong>{operationalPulse}%</strong>
+                <span>Coverage Pulse</span>
+              </div>
             </div>
-            <div className="calendar-grid">
-              {renderCalendarDays()}
-            </div>
-            <div className="calendar-legend">
-              <div className="legend-item"><span className="shift-dot"></span> Shift</div>
-              <div className="legend-item"><span className="off-dot"></span> Day Off</div>
-              <div className="legend-item"><span className="unscheduled-dot"></span> Unscheduled</div>
-            </div>
-          </>
-        ) : (
-          <div className="week-view">{renderWeekView()}</div>
-        )}
+            <p>How much of this visible window is already defined by active shifts or protected time off.</p>
+          </div>
 
-        {/* If no schedule at all (first load completed with empty), show a gentle empty-state banner inside content */}
-        {!loading && schedule && schedule.schedule.length === 0 && (
-          <div className="empty-inline">
-            <FaCalendarAlt size={28} />
-            <div>
-              <strong>No schedule yet</strong>
-              <div>Your schedule will appear here once assigned by your manager.</div>
+          <div className="schedule-next-card">
+            <div className="next-card-head">
+              <span>Next mission block</span>
+              <FaStar />
+            </div>
+            {nextShift ? (
+              <>
+                <strong>{nextShift.shift_name || 'Assigned Shift'}</strong>
+                <div>{format(parseISO(nextShift.date), 'EEEE, MMM d')}</div>
+                <p>{formatWindow(nextShift)}</p>
+              </>
+            ) : (
+              <>
+                <strong>No shift queued</strong>
+                <div>Enjoy the breathing room</div>
+                <p>Your next assignment will appear here when your manager publishes it.</p>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="schedule-overview-grid">
+        <article className="overview-stat-card">
+          <span>Total shifts</span>
+          <strong>{stats.totalShifts}</strong>
+          <small>Visible in this {viewMode === 'month' ? 'month' : 'week'} window</small>
+        </article>
+        <article className="overview-stat-card emphasis">
+          <span>Upcoming</span>
+          <strong>{stats.upcoming}</strong>
+          <small>Operational commitments ahead</small>
+        </article>
+        <article className="overview-stat-card">
+          <span>Completed</span>
+          <strong>{stats.completed}</strong>
+          <small>Closed successfully</small>
+        </article>
+        <article className="overview-stat-card">
+          <span>Recovery days</span>
+          <strong>{stats.daysOff}</strong>
+          <small>Protected time to reset</small>
+        </article>
+      </section>
+
+      <section className="schedule-workspace">
+        <div className="schedule-command-panel">
+          <div className="schedule-toolbar">
+            <div className="schedule-toggle-group">
+              <button
+                type="button"
+                className={`schedule-toggle ${viewMode === 'month' ? 'active' : ''}`}
+                onClick={() => setViewMode('month')}
+              >
+                Month Grid
+              </button>
+              <button
+                type="button"
+                className={`schedule-toggle ${viewMode === 'week' ? 'active' : ''}`}
+                onClick={() => setViewMode('week')}
+              >
+                Weekly Agenda
+              </button>
+            </div>
+
+            <div className="schedule-toolbar-meta">
+              <button
+                type="button"
+                className="schedule-nav-btn"
+                onClick={() => setCurrentMonth((value) => addMonths(value, -1))}
+                aria-label="Previous month"
+                disabled={viewMode === 'week'}
+              >
+                <FaArrowLeft />
+              </button>
+              <div className="schedule-toolbar-label">
+                <span>Viewing</span>
+                <strong>{viewMode === 'month' ? format(currentMonth, 'MMMM yyyy') : `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`}</strong>
+              </div>
+              <button
+                type="button"
+                className="schedule-nav-btn"
+                onClick={() => setCurrentMonth((value) => addMonths(value, 1))}
+                aria-label="Next month"
+                disabled={viewMode === 'week'}
+              >
+                <FaArrowRight />
+              </button>
             </div>
           </div>
-        )}
 
-        {/* Loading overlays: large for initial load, subtle for refreshes */}
-        {(loading || isRefreshing) && (
-          <div className={`loading-overlay ${loading ? 'initial' : 'refresh'}`}>
-            <div className="futuristic-spinner">
-              <div className="ring"></div>
-              <div className="ring ring--small"></div>
-            </div>
-            <div className="loading-text">{loading ? '⏳ Loading your schedule...' : '⟳ Syncing...'}</div>
+          <div className="schedule-surface">
+            {viewMode === 'month' ? renderMonthView() : renderWeekView()}
+
+            {!loading && schedule && schedule.schedule.length === 0 ? (
+              <div className="schedule-inline-empty">
+                <FaCalendarAlt />
+                <div>
+                  <strong>No schedule published yet</strong>
+                  <span>Your assignment grid will populate here as soon as a manager pushes your next rotation.</span>
+                </div>
+              </div>
+            ) : null}
+
+            {(loading || isRefreshing) ? (
+              <div className={`schedule-loading-overlay ${loading ? 'initial' : 'refresh'}`}>
+                <div className="schedule-spinner">
+                  <div className="spinner-ring" />
+                  <div className="spinner-ring inner" />
+                </div>
+                <div className="schedule-loading-text">
+                  {loading ? 'Loading schedule intelligence...' : 'Refreshing live schedule...'}
+                </div>
+              </div>
+            ) : null}
           </div>
-        )}
-      </div>
+        </div>
+
+        <aside className="schedule-insight-panel">
+          <div className="insight-card feature">
+            <div className="insight-card-head">
+              <span>Focus day</span>
+              <strong>{focusedDateLabel}</strong>
+            </div>
+            <div className={`focus-state ${focusedDay?.type?.toLowerCase() || 'unscheduled'}`}>
+              {focusedDay?.type === 'SHIFT' ? (
+                <>
+                  <div className="focus-title-row">
+                    <FaClock />
+                    <h3>{focusedDay.shift_name || 'Shift Assigned'}</h3>
+                  </div>
+                  <p>{formatWindow(focusedDay)}</p>
+                  <div className="focus-tags">
+                    <span>{focusedDay.status || 'Assigned'}</span>
+                    <span>{focusedDay.reason || 'Mission-ready'}</span>
+                  </div>
+                </>
+              ) : focusedDay?.type === 'OFF_DAY' ? (
+                <>
+                  <div className="focus-title-row">
+                    <FaMoon />
+                    <h3>Recovery Window</h3>
+                  </div>
+                  <p>{focusedDay.reason || 'Protected downtime for reset and readiness.'}</p>
+                  <div className="focus-tags">
+                    <span>Off day</span>
+                    <span>Recovery protected</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="focus-title-row">
+                    <FaQuestion />
+                    <h3>Open day</h3>
+                  </div>
+                  <p>No shift has been pinned to this day yet. Keep an eye on updates from scheduling control.</p>
+                  <div className="focus-tags">
+                    <span>Unscheduled</span>
+                    <span>Awaiting assignment</span>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="focus-deadline-block">
+              <div className="focus-deadline-head">
+                <span>Task deadlines</span>
+                <strong>{focusedDeadlineTasks.length}</strong>
+              </div>
+              {focusedDeadlineTasks.length ? (
+                <div className="focus-deadline-list">
+                  {focusedDeadlineTasks.slice(0, 4).map((task) => {
+                    const overdue = Boolean(task.due_date && parseISO(task.due_date) < new Date());
+                    return (
+                      <div key={task.id} className={`focus-deadline-item ${overdue ? 'overdue' : ''}`}>
+                        <div>
+                          <strong>{task.title}</strong>
+                          <span>{formatDeadlineTime(task.due_date)} · {task.status.replace('_', ' ')}</span>
+                        </div>
+                        <em>{task.priority}</em>
+                      </div>
+                    );
+                  })}
+                  {focusedDeadlineTasks.length > 4 ? (
+                    <div className="focus-deadline-more">+{focusedDeadlineTasks.length - 4} more</div>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="focus-deadline-empty">
+                  <FaExclamationTriangle />
+                  <span>No deadlines set for this day.</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="insight-card">
+            <div className="insight-card-head">
+              <span>Upcoming lineup</span>
+              <strong>{upcomingShifts.length} queued</strong>
+            </div>
+            <div className="upcoming-shift-list">
+              {upcomingShifts.length ? (
+                upcomingShifts.map((day) => (
+                  <button
+                    key={day.date}
+                    type="button"
+                    className={`upcoming-shift-item ${selectedDate === day.date ? 'selected' : ''}`}
+                    onClick={() => setSelectedDate(day.date)}
+                  >
+                    <div>
+                      <strong>{day.shift_name || 'Shift'}</strong>
+                      <span>{format(parseISO(day.date), 'EEE, MMM d')}</span>
+                    </div>
+                    <em>{formatWindow(day)}</em>
+                  </button>
+                ))
+              ) : (
+                <div className="upcoming-empty">No future shifts in this window yet.</div>
+              )}
+            </div>
+          </div>
+
+          <div className="insight-card legend-card">
+            <div className="insight-card-head">
+              <span>Legend</span>
+              <strong>Read at a glance</strong>
+            </div>
+            <div className="schedule-legend-list">
+              <div className="schedule-legend-item">
+                <span className="legend-swatch shift" />
+                <div>
+                  <strong>Shift</strong>
+                  <span>Active work block with time window</span>
+                </div>
+              </div>
+              <div className="schedule-legend-item">
+                <span className="legend-swatch off" />
+                <div>
+                  <strong>Recovery</strong>
+                  <span>Day off or protected downtime</span>
+                </div>
+              </div>
+              <div className="schedule-legend-item">
+                <span className="legend-swatch open" />
+                <div>
+                  <strong>Open</strong>
+                  <span>No assignment published yet</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </section>
+      <PageGuide guide={pageGuides.userScheduleDashboard} />
     </div>
   );
 };

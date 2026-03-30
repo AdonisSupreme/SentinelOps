@@ -1,7 +1,6 @@
 // src/components/dashboard/DashboardHeader.tsx
 import React, { useEffect, useState } from 'react';
 import { User } from '../../contexts/AuthContext';
-import { FaBell, FaBolt, FaShieldAlt } from 'react-icons/fa';
 import ShiftReminder from './ShiftReminder';
 import './DashboardHeader.css';
 
@@ -31,9 +30,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
     <header className="dashboard-header">
       <div className="header-left">
         <h1>
-          <span className="greeting">{getGreeting()},</span>
+          <span className="greeting">{getGreeting()}</span>
           <span className="username">{user?.first_name || 'Operator'}</span>
-          <p className="subtitle">Welcome to SentinelOps Command Center</p>
+          <p className="subtitle">
+            SentinelOps operational dashboard
+            {user?.department ? ` · ${user.department}` : ''}
+          </p>
         </h1>
       </div>
       
@@ -43,7 +45,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
       
       <div className="header-right">
         <div className="mission-clock">
-          <div className="clock-label">Mission Time</div>
+          <div className="clock-label">Current Time</div>
           <div className="clock-value">
             {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </div>

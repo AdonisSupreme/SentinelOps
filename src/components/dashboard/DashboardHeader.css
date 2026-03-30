@@ -5,8 +5,7 @@
   align-items: center;
   margin-bottom: 1rem;
   padding: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
-  margin-left: 3px;
+  border-bottom: 1px solid var(--border-primary);
   gap: 2rem;
 }
 
@@ -30,88 +29,38 @@
 }
 
 .header-left h1 {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
+  font-size: 2.2rem;
+  margin: 0;
   display: flex;
   flex-direction: column;
+  gap: 0.2rem;
 }
 
 .greeting {
-  font-size: 1.5rem;
-  font-weight: 400;
+  font-size: 0.85rem;
+  font-weight: 600;
   color: var(--text-secondary);
-  margin-bottom: 0.25rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .username {
-  background: var(--primary-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--text-primary);
   font-weight: 700;
+  letter-spacing: -0.04em;
 }
 
 .subtitle {
   color: var(--text-secondary);
-  margin-bottom: 1.5rem;
-  font-size: 1rem;
-}
-
-.status-indicators {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.status-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.status-icon {
-  font-size: 1.5rem;
-  padding: 0.5rem;
-  border-radius: 12px;
-  background: var(--bg-secondary);
-}
-
-.status-icon.shield {
-  color: var(--accent);
-  background: rgba(0, 255, 157, 0.1);
-}
-
-.status-icon.bolt {
-  color: var(--primary);
-  background: rgba(0, 217, 255, 0.1);
-}
-
-.status-icon.bell {
-  color: var(--warning);
-  background: rgba(255, 165, 2, 0.1);
-}
-
-.status-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.status-value {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.status-value.active {
-  color: var(--accent);
+  font-size: 0.95rem;
+  margin: 0.2rem 0 0;
 }
 
 .mission-clock {
   background: var(--bg-card);
   border-radius: 16px;
   padding: 1rem 1.5rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-primary);
   min-width: 180px;
   text-align: center;
   display: flex;
@@ -124,7 +73,7 @@
   font-size: 0.75rem;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
   margin-bottom: 0.25rem;
   text-align: center;
 }
@@ -132,45 +81,12 @@
 .clock-value {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--text-primary);
   font-family: 'JetBrains Mono', monospace;
   margin-bottom: 0.25rem;
   text-align: center;
   line-height: 1;
   letter-spacing: 0.05em;
-  text-shadow: 0 0 10px rgba(0, 217, 255, 0.3);
-  transition: color 0.3s ease;
-  position: relative;
-}
-
-.clock-value:hover {
-  color: var(--primary);
-  text-shadow: 0 0 15px rgba(0, 217, 255, 0.5);
-}
-
-.clock-value::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: -8px;
-  width: 4px;
-  height: 4px;
-  background: var(--primary);
-  border-radius: 50%;
-  transform: translateY(-50%);
-  animation: pulse 2s infinite;
-  box-shadow: 0 0 8px rgba(0, 217, 255, 0.8);
-}
-
-@keyframes pulse {
-  0%, 100% { 
-    opacity: 1; 
-    transform: translateY(-50%) scale(1);
-  }
-  50% { 
-    opacity: 0.6; 
-    transform: translateY(-50%) scale(1.2);
-  }
 }
 
 .clock-date {
@@ -208,11 +124,11 @@
   }
   
   .header-left h1 {
-    font-size: 2rem;
+    font-size: 1.9rem;
   }
   
   .greeting {
-    font-size: 1.25rem;
+    font-size: 0.78rem;
   }
   
   .subtitle {

@@ -84,6 +84,14 @@
   opacity: 0;
 }
 
+.participant-card.is-offline {
+  border-color: rgba(136, 146, 176, 0.22);
+}
+
+.participant-card.is-offline .avatar-circle {
+  opacity: 0.82;
+}
+
 [data-theme="light"] .participant-card {
   background: rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(0, 123, 255, 0.2);
@@ -225,6 +233,13 @@
   gap: 0.5rem;
 }
 
+.participant-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
 .participant-name {
   margin: 0;
   font-size: 1rem;
@@ -232,6 +247,21 @@
   color: #ffffff;
   line-height: 1.2;
   word-break: break-word;
+}
+
+.participant-presence {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.participant-presence.online {
+  color: #00ff9d;
+}
+
+.participant-presence.offline {
+  color: #8892b0;
 }
 
 [data-theme="light"] .participant-name {

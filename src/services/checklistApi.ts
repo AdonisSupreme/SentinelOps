@@ -133,6 +133,18 @@ export interface LeaderboardEntry {
   avatar_url: string;
 }
 
+export interface ChecklistDateChangeResponse {
+  message: string;
+  instance: ChecklistInstance;
+  target_date: string;
+  verification: Array<{
+    table_name: string;
+    total_records: number;
+    earliest_date: string | null;
+    latest_date: string | null;
+  }>;
+}
+
 class ChecklistApi {
     async deleteInstance(instanceId: string): Promise<{ message: string; effects?: any }> {
       const response = await api.delete<{ message: string; effects?: any }>(`/api/v1/checklists/instances/${instanceId}`);
@@ -284,6 +296,14 @@ class ChecklistApi {
     return response.data.instance; // Extract the instance from the response
   }
 
+  async changeInstanceDate(instanceId: string, targetDate: string): Promise<ChecklistDateChangeResponse> {
+    const response = await api.post<ChecklistDateChangeResponse>(
+      `/api/v1/checklists/instances/${instanceId}/change-date`,
+      { target_date: targetDate }
+    );
+    return response.data;
+  }
+
   // Items
   async updateItemStatus(
     instanceId: string,
@@ -370,11 +390,26 @@ class ChecklistApi {
   }
 
   // Notifications
-  async getNotifications(unreadOnly: boolean = false): Promise<Notification[]> {
-    const response = await api.get<Notification[]>('/api/v1/notifications', {
-      params: { unread_only: unreadOnly }
-    });
-    return response.data;
+  async getNotifications(unreadOnly: boolean = true): Promise<Notification[]> {
+    const response = await api.get<Notification[] | { notifications?: Notification[]; results?: Notification[]; data?: Notification[] }>(
+      '/api/v1/notifications/',
+      {
+        // Send both naming conventions for compatibility with older/newer backends.
+        params: { unread_only: unreadOnly, unreadOnly, include_read: !unreadOnly }
+      }
+    );
+
+    const payload = response.data;
+    const notifications = Array.isArray(payload)
+      ? payload
+      : payload?.notifications || payload?.results || payload?.data || [];
+
+    // Safety guard: even if backend ignores query params, keep unread-only contract.
+    if (!unreadOnly) {
+      return notifications;
+    }
+
+    return notifications.filter((n: any) => !(n?.is_read ?? n?.read ?? n?.isRead));
   }
 
   async markNotificationAsRead(notificationId: string): Promise<Notification> {

@@ -1,14 +1,11 @@
 // src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useApi, setAuthToken, clearAuthToken, authService } from '../services/api';
+import { setAuthToken, clearAuthToken, authService } from '../services/api';
 import websocketService from '../services/websocketService';
+import { checkAdAvailability, AdAvailability } from '../services/adGatewayAuth';
 import {
-  SignInRequest,
-  SignInResponse,
   MeResponse,
-  LogoutResponse,
-  BackendError,
 } from '../contracts/generated/api.types';
 
 // Export MeResponse as User for backward compatibility
@@ -22,6 +19,9 @@ interface AuthContextType {
   logout: () => Promise<void>;
   loading: boolean;
   refreshUser: () => Promise<void>;
+  adAvailability: AdAvailability;
+  refreshAdAvailability: () => Promise<void>;
+  lastAuthMethod: 'ad+app' | 'app' | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -30,8 +30,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<MeResponse | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
+  const [adAvailability, setAdAvailability] = useState<AdAvailability>('checking');
+  const [lastAuthMethod, setLastAuthMethod] = useState<'ad+app' | 'app' | null>(null);
   const isLoggingOutRef = useRef(false);
-  const api = useApi();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -70,6 +71,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    let isMounted = true;
+
+    const loadAdAvailability = async () => {
+      if (!isMounted) return;
+      setAdAvailability('checking');
+      const status = await checkAdAvailability();
+      if (isMounted) {
+        setAdAvailability(status);
+      }
+    };
+
+    void loadAdAvailability();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
     const validateToken = async () => {
       try {
         await fetchUser();
@@ -99,46 +119,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    console.log(' [AuthContext] Login attempt started', { email, passwordLength: password.length });
-    
-    try {
-      console.log(' [AuthContext] Calling authService.login...');
-      const response = await authService.login({ email, password });
-      console.log(' [AuthContext] Login response received:', { 
-        status: response.status, 
-        hasToken: !!response.data.token,
-        hasUser: !!response.data.user,
-        userKeys: response.data.user ? Object.keys(response.data.user) : null
-      });
-      
-      const newToken = response.data.token;
-      const userData = response.data.user;
-
-      console.log(' [AuthContext] Storing token and user data...');
+    const finalizeLogin = (newToken: string, userData: MeResponse) => {
       localStorage.setItem('token', newToken);
       setAuthToken(newToken);
       setToken(newToken);
-
-      // Use user data from signin response instead of separate API call
-      console.log(' [AuthContext] Setting user data:', userData);
       setUser(userData);
-
-      console.log(' [AuthContext] Navigating to:', location.state?.from?.pathname || '/');
       navigate(location.state?.from?.pathname || '/');
-      
-      console.log(' [AuthContext] Login completed successfully');
+    };
+
+    try {
+      // Backend is source-of-truth for AD-vs-local route selection.
+      const response = await authService.login({ email, password });
+      finalizeLogin(response.data.token, response.data.user);
+
+      const authSource = (response.data as any)?.auth_source;
+      setLastAuthMethod(authSource === 'active_directory' ? 'ad+app' : 'app');
+      setAdAvailability(await checkAdAvailability());
     } catch (error: any) {
-      console.error(' [AuthContext] Login failed:', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          headers: error.config?.headers
-        }
-      });
       throw error;
     }
   };
@@ -173,6 +170,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const refreshAdAvailability = async () => {
+    setAdAvailability('checking');
+    const status = await checkAdAvailability();
+    setAdAvailability(status);
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -181,7 +184,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login,
       logout,
       loading,
-      refreshUser
+      refreshUser,
+      adAvailability,
+      refreshAdAvailability,
+      lastAuthMethod
     }}>
       {children}
     </AuthContext.Provider>

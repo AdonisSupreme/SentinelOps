@@ -4,7 +4,7 @@
 import centralizedWebSocketManager, { WebSocketEndpoint } from './centralizedWebSocketManager';
 
 export interface ChecklistUpdateEvent {
-  type: 'CHECKLIST_UPDATE' | 'ITEM_UPDATED' | 'SUBITEM_UPDATED' | 'INSTANCE_JOINED' | 'INSTANCE_CREATED';
+  type: 'CHECKLIST_UPDATE' | 'ITEM_UPDATED' | 'SUBITEM_UPDATED' | 'INSTANCE_JOINED' | 'INSTANCE_CREATED' | 'PARTICIPANT_PRESENCE_CHANGED';
   data: {
     instance_id: string;
     user_id?: string;
@@ -21,6 +21,7 @@ class WebSocketService {
   private endpoint: WebSocketEndpoint = 'checklists';
   private subscriptions: Set<string> = new Set();
   private currentInstanceId: string | null = null;
+  private managerUnsubscribe: (() => void) | null = null;
   public static readonly GLOBAL_KEY = '__sentinel_websocket_service__';
   private static instance: WebSocketService | null = null;
 
@@ -55,17 +56,21 @@ class WebSocketService {
       (window as any)[WebSocketService.GLOBAL_KEY] = this;
     }
     
-    // Set up event handlers from centralized manager
-    this.setupCentralizedHandlers();
   }
 
   private setupCentralizedHandlers() {
-    centralizedWebSocketManager.subscribe(this.endpoint, (event) => {
+    if (this.managerUnsubscribe) {
+      return;
+    }
+
+    this.managerUnsubscribe = centralizedWebSocketManager.subscribe(this.endpoint, (event) => {
       this.handleCentralizedEvent(event);
     });
   }
 
   private handleCentralizedEvent(event: any) {
+    const normalizedChecklistEvent = this.normalizeChecklistEvent(event);
+
     switch (event.type) {
       case 'connected':
         console.log('✅ Checklist WebSocket connected via centralized manager');
@@ -94,8 +99,11 @@ class WebSocketService {
       case 'SUBITEM_UPDATED':
       case 'INSTANCE_JOINED':
       case 'INSTANCE_CREATED':
-        console.log('📋 Checklist update received:', event);
-        this.onChecklistUpdate?.(event as ChecklistUpdateEvent);
+      case 'PARTICIPANT_PRESENCE_CHANGED':
+        console.log('📋 Checklist update received:', normalizedChecklistEvent || event);
+        if (normalizedChecklistEvent) {
+          this.onChecklistUpdate?.(normalizedChecklistEvent);
+        }
         break;
 
       case 'CONNECTION_ESTABLISHED':
@@ -114,11 +122,37 @@ class WebSocketService {
     }
   }
 
+  private normalizeChecklistEvent(event: any): ChecklistUpdateEvent | null {
+    if (!event || typeof event !== 'object') return null;
+
+    const nestedType = event.type === 'CHECKLIST_UPDATE' ? event?.data?.type : event?.type;
+    const type = nestedType || event?.type;
+    if (!type) return null;
+
+    const allowedTypes = new Set([
+      'CHECKLIST_UPDATE',
+      'ITEM_UPDATED',
+      'SUBITEM_UPDATED',
+      'INSTANCE_JOINED',
+      'INSTANCE_CREATED',
+      'PARTICIPANT_PRESENCE_CHANGED',
+    ]);
+    if (!allowedTypes.has(type)) return null;
+
+    const payload = event?.data && typeof event.data === 'object' ? event.data : {};
+    return {
+      type: type as ChecklistUpdateEvent['type'],
+      data: payload,
+      timestamp: payload.timestamp || event.timestamp || new Date().toISOString(),
+    };
+  }
+
   /**
    * Connect to WebSocket (now uses centralized manager)
    */
   async connect(): Promise<void> {
     try {
+      this.setupCentralizedHandlers();
       await centralizedWebSocketManager.connect(this.endpoint);
     } catch (error) {
       console.error('Failed to connect checklist WebSocket:', error);

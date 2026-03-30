@@ -4,7 +4,7 @@
   flex-direction: column;
   gap: 1.5rem;
   padding: 1.5rem;
-  background: var(--bg-card);
+  background: transparent;
   border: none;
   box-shadow: none;
   max-width: none;
@@ -22,8 +22,8 @@
   align-items: center;
   margin-bottom: 1rem;
   padding: 1rem;
-  background: rgba(0, 217, 255, 0.05);
-  border: 1px solid rgba(0, 217, 255, 0.1);
+  background: linear-gradient(180deg, rgba(15, 34, 61, 0.88), rgba(11, 24, 44, 0.78));
+  border: 1px solid rgba(125, 186, 255, 0.16);
   border-radius: 8px;
 }
 
@@ -73,9 +73,9 @@
   flex: 1;
   min-width: 200px;
   padding: 0.875rem;
-  border: 1px solid var(--border-primary);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
+  border: 1px solid rgba(125, 186, 255, 0.16);
+  background: linear-gradient(180deg, rgba(17, 36, 61, 0.88), rgba(12, 25, 45, 0.92));
+  color: #d8e9ff;
   border-radius: var(--radius-md);
   font-weight: 600;
   cursor: pointer;
@@ -85,45 +85,43 @@
   gap: var(--spacing-sm);
   transition: all var(--transition-normal);
   font-size: var(--font-size-sm);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 10px 22px rgba(2, 8, 20, 0.18);
 }
 
 .btn-action:hover {
   transform: translateY(-2px);
-  border-color: var(--primary);
-  background: var(--primary);
-  color: var(--text-inverse);
-  box-shadow: var(--shadow-lg);
+  border-color: rgba(106, 182, 255, 0.4);
+  background: linear-gradient(180deg, rgba(33, 70, 119, 0.95), rgba(19, 43, 76, 0.98));
+  color: #ffffff;
+  box-shadow: 0 16px 30px rgba(7, 25, 48, 0.34);
 }
 
 .btn-action.active {
-  border-color: var(--primary);
-  background: var(--primary);
-  color: var(--text-inverse);
-  box-shadow: var(--shadow-glow);
+  color: #ffffff;
+  box-shadow: 0 16px 36px rgba(8, 26, 48, 0.3);
 }
 
 .btn-action:first-child.active {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: linear-gradient(135deg, #2196f3, #0f6dcb);
+  border-color: rgba(124, 196, 255, 0.42);
 }
 
 .btn-action:nth-child(2).active {
-  background: var(--success);
-  border-color: var(--success);
-  color: var(--text-inverse);
+  background: linear-gradient(135deg, #18b97a, #109867);
+  border-color: rgba(64, 224, 161, 0.38);
+  color: #ffffff;
 }
 
 .btn-action:nth-child(3).active {
-  background: var(--warning);
-  border-color: var(--warning);
-  color: var(--text-inverse);
+  background: linear-gradient(135deg, #f4b54f, #d98d1a);
+  border-color: rgba(251, 202, 96, 0.4);
+  color: #ffffff;
 }
 
 .btn-action:nth-child(4).active {
-  background: var(--error);
-  border-color: var(--error);
-  color: var(--text-inverse);
+  background: linear-gradient(135deg, #ef6b63, #dc4e45);
+  border-color: rgba(255, 145, 135, 0.38);
+  color: #ffffff;
 }
 
 .action-form {
@@ -133,9 +131,9 @@
 .action-form textarea {
   width: 100%;
   padding: var(--spacing-md);
-  border: 1px solid var(--border-primary);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
+  border: 1px solid rgba(125, 186, 255, 0.14);
+  background: rgba(6, 17, 33, 0.78);
+  color: #edf5ff;
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   resize: vertical;
@@ -149,22 +147,22 @@
 }
 
 .action-form textarea:hover {
-  border-color: var(--primary);
-  background: var(--bg-tertiary);
+  border-color: rgba(125, 186, 255, 0.28);
+  background: rgba(9, 22, 40, 0.88);
 }
 
 .action-form textarea:focus {
   outline: none;
-  border-color: var(--primary);
-  background: var(--bg-tertiary);
-  box-shadow: var(--shadow-glow);
-  color: var(--text-primary);
+  border-color: rgba(99, 177, 255, 0.46);
+  background: rgba(9, 22, 40, 0.94);
+  box-shadow: 0 0 0 3px rgba(56, 145, 255, 0.14);
+  color: #ffffff;
 }
 
 .btn-action.confirm {
   width: 100%;
   padding: var(--spacing-md);
-  background: var(--primary-gradient);
+  background: linear-gradient(135deg, #3aa2ff, #1b7fe0 58%, #22d3a6);
   color: var(--text-inverse);
   border: none;
   border-radius: var(--radius-md);
@@ -175,7 +173,7 @@
   letter-spacing: 0.5px;
   position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 18px 36px rgba(10, 38, 66, 0.32);
 }
 
 .btn-action.confirm::before {
@@ -200,7 +198,7 @@
 
 .btn-action.confirm:hover {
   transform: translateY(-3px);
-  box-shadow: var(--shadow-glow);
+  box-shadow: 0 22px 42px rgba(13, 44, 77, 0.42);
 }
 
 .btn-action.confirm:active {
@@ -215,16 +213,16 @@
 
 .action-tips {
   padding: var(--spacing-md);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
+  background: linear-gradient(180deg, rgba(14, 30, 54, 0.78), rgba(9, 21, 38, 0.9));
+  border: 1px solid rgba(125, 186, 255, 0.14);
   border-radius: var(--radius-md);
-  border-left: 3px solid var(--primary);
+  border-left: 3px solid #46a9ff;
 }
 
 .action-tips p {
   margin: 0;
   font-size: var(--font-size-sm);
-  color: var(--text-primary);
+  color: #d7e9ff;
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);

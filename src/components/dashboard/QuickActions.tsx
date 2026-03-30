@@ -1,4 +1,4 @@
-// src/components/dashboard/QuickActions.tsx
+﻿// src/components/dashboard/QuickActions.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -29,8 +29,7 @@ const QuickActions: React.FC = () => {
     Array.isArray((user as any).roles) ? (user as any).roles.map((r: string) => String(r).toLowerCase()) : [String((user as any).role || '').toLowerCase()]
   ) : [];
   const isAdmin = roles.includes('admin');
-  const isManager = roles.includes('manager');
-  const canCreateChecklist = isAdmin || isManager;
+  const canCreateChecklist = true;
   // Normalize section id from user (available to whole component)
   const userSection = (user as any)?.section_id ?? (user as any)?.sectionId ?? (user as any)?.section ?? null;
 
@@ -139,20 +138,18 @@ const QuickActions: React.FC = () => {
     navigate('/performance');
   };
 
-  const handleTeam = () => navigate('/team');
+  const handleWorkforce = () => navigate('/team');
   const handleSettings = () => addNotification({ type: 'info', message: 'Settings feature coming soon!', priority: 'low' });
 
   return (
     <div className="quick-actions">
       <div className="quick-actions-header">
-        <h3>Quick Actions</h3>
+        <h3>Operator Actions</h3>
         <button 
           className="refresh-btn"
           onClick={loadTodayInstances}
           title="Refresh dashboard"
-        >
-          ↻
-        </button>
+        >↻</button>
       </div>
 
       <div className="actions-grid">
@@ -163,18 +160,18 @@ const QuickActions: React.FC = () => {
             disabled={isLoading}
           >
             <FaPlus />
-            <span>{isLoading ? 'Starting...' : 'New Checklist'}</span>
+            <span>{isLoading ? 'Starting...' : 'Start Checklist'}</span>
           </button>
         )}
 
         <button className="qa-action-btn qa-secondary" onClick={handleTemplates}>
           <FaFileAlt />
-          <span>Performance</span>
+          <span>Analytics</span>
         </button>
 
-        <button className="qa-action-btn qa-secondary" onClick={handleTeam}>
+        <button className="qa-action-btn qa-secondary" onClick={handleWorkforce}>
           <FaUsers />
-          <span>Team</span>
+          <span>Workforce</span>
         </button>
 
         <button className="qa-action-btn qa-secondary" onClick={handleSettings}>
@@ -240,7 +237,7 @@ const QuickActions: React.FC = () => {
           <div className="qa-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="qa-modal-header">
               <h3>Start Checklist</h3>
-              <button className="qa-modal-close" onClick={() => setShowModal(false)}>✕</button>
+              <button className="qa-modal-close" onClick={() => setShowModal(false)}>×</button>
             </div>
 
             <div className="qa-modal-body">
@@ -283,3 +280,5 @@ const QuickActions: React.FC = () => {
 };
 
 export default QuickActions;
+
+

@@ -206,6 +206,7 @@ export interface ChecklistInstance {
     username: string;
     email: string;
     role: string;
+    is_online?: boolean;
   }[];
   notes: string[];
   attachments: string[];

@@ -23,6 +23,8 @@ class CentralizedWebSocketManager {
   private connectionStates: Map<WebSocketEndpoint, ConnectionState> = new Map();
   private subscribers: Map<WebSocketEndpoint, Set<(event: any) => void>> = new Map();
   private reconnectTimers: Map<WebSocketEndpoint, NodeJS.Timeout | null> = new Map();
+  private heartbeatTimers: Map<WebSocketEndpoint, NodeJS.Timeout | null> = new Map();
+  private reconnectAttempts: Map<WebSocketEndpoint, number> = new Map();
   private authToken: string | null = null;
   private static instance: CentralizedWebSocketManager | null = null;
   public static readonly GLOBAL_KEY = '__sentinel_centralized_websocket_manager__';
@@ -32,6 +34,7 @@ class CentralizedWebSocketManager {
   private readonly INITIAL_RECONNECT_DELAY = 2000;
   private readonly MAX_RECONNECT_DELAY = 10000;
   private readonly CONNECTION_TIMEOUT = 8000;
+  private readonly HEARTBEAT_INTERVAL = 25000;
 
   constructor() {
     // HMR-proof singleton pattern - check global window first
@@ -93,6 +96,8 @@ class CentralizedWebSocketManager {
       this.connectionStates.set(endpoint, 'CLOSED');
       this.subscribers.set(endpoint, new Set());
       this.reconnectTimers.set(endpoint, null);
+      this.heartbeatTimers.set(endpoint, null);
+      this.reconnectAttempts.set(endpoint, 0);
     });
   }
 
@@ -151,6 +156,8 @@ class CentralizedWebSocketManager {
       ws.onopen = () => {
         clearTimeout(timeout);
         this.connectionStates.set(endpoint, 'OPEN');
+        this.reconnectAttempts.set(endpoint, 0);
+        this.startHeartbeat(endpoint);
         console.log(`✅ ${endpoint} WebSocket connected`);
         
         // Notify subscribers
@@ -208,6 +215,9 @@ class CentralizedWebSocketManager {
       clearTimeout(reconnectTimer);
       this.reconnectTimers.set(endpoint, null);
     }
+
+    this.stopHeartbeat(endpoint);
+    this.reconnectAttempts.set(endpoint, 0);
 
     const ws = this.connections.get(endpoint);
     if (ws && this.connectionStates.get(endpoint) !== 'CLOSED') {
@@ -313,19 +323,20 @@ class CentralizedWebSocketManager {
   }
 
   private handleMessage(endpoint: WebSocketEndpoint, data: any) {
+    const normalizedData = this.normalizeMessage(endpoint, data);
     console.log(`📨 ${endpoint} message received:`, data);
 
     // Route message to appropriate subscribers
     if (endpoint === 'checklists') {
       // Handle checklist-specific events
-      this.handleChecklistMessage(data);
+      this.handleChecklistMessage(normalizedData);
     } else if (endpoint === 'notifications') {
       // Handle notification-specific events
-      this.handleNotificationMessage(data);
+      this.handleNotificationMessage(normalizedData);
     }
 
     // Notify general subscribers
-    this.notifySubscribers(endpoint, data);
+    this.notifySubscribers(endpoint, normalizedData);
   }
 
   private handleChecklistMessage(data: any) {
@@ -350,6 +361,7 @@ class CentralizedWebSocketManager {
     const previousState = this.connectionStates.get(endpoint);
     this.connectionStates.set(endpoint, 'CLOSED');
     this.connections.set(endpoint, null);
+    this.stopHeartbeat(endpoint);
 
     console.log(`🔌 ${endpoint} WebSocket disconnected:`, event.code, event.reason);
 
@@ -376,25 +388,38 @@ class CentralizedWebSocketManager {
   }
 
   private scheduleReconnect(endpoint: WebSocketEndpoint) {
+    const attempts = this.getReconnectAttempts(endpoint);
+    if (attempts >= this.MAX_RECONNECT_ATTEMPTS) {
+      this.notifySubscribers(endpoint, {
+        type: 'reconnect_failed',
+        data: { attempts }
+      });
+      return;
+    }
+
     const timer = this.reconnectTimers.get(endpoint);
     if (timer) {
       clearTimeout(timer);
     }
 
+    const nextAttempt = attempts + 1;
+    this.reconnectAttempts.set(endpoint, nextAttempt);
     const delay = Math.min(
-      this.INITIAL_RECONNECT_DELAY * Math.pow(2, this.getReconnectAttempts(endpoint)),
+      this.INITIAL_RECONNECT_DELAY * Math.pow(2, nextAttempt - 1),
       this.MAX_RECONNECT_DELAY
     );
 
     console.log(`🔄 Scheduling ${endpoint} reconnect in ${delay}ms`);
 
+    this.notifySubscribers(endpoint, {
+      type: 'reconnecting',
+      data: { attempt: nextAttempt, delay }
+    });
+
     const newTimer = setTimeout(() => {
       this.connect(endpoint).catch(error => {
         console.error(`❌ ${endpoint} reconnect failed:`, error);
-        this.notifySubscribers(endpoint, { 
-          type: 'reconnect_failed', 
-          data: { error: error.message } 
-        });
+        this.scheduleReconnect(endpoint);
       });
     }, delay);
 
@@ -402,9 +427,57 @@ class CentralizedWebSocketManager {
   }
 
   private getReconnectAttempts(endpoint: WebSocketEndpoint): number {
-    // Simple tracking of reconnect attempts - could be enhanced with proper state
-    const attempts = (this.reconnectTimers.get(endpoint) as any)?.attempts || 0;
-    return attempts;
+    return this.reconnectAttempts.get(endpoint) || 0;
+  }
+
+  private startHeartbeat(endpoint: WebSocketEndpoint) {
+    this.stopHeartbeat(endpoint);
+
+    const timer = setInterval(() => {
+      if (!this.isConnected(endpoint)) {
+        return;
+      }
+
+      this.send(endpoint, {
+        type: endpoint === 'notifications' ? 'ping' : 'PING'
+      });
+    }, this.HEARTBEAT_INTERVAL);
+
+    this.heartbeatTimers.set(endpoint, timer);
+  }
+
+  private stopHeartbeat(endpoint: WebSocketEndpoint) {
+    const timer = this.heartbeatTimers.get(endpoint);
+    if (timer) {
+      clearInterval(timer);
+      this.heartbeatTimers.set(endpoint, null);
+    }
+  }
+
+  private normalizeMessage(endpoint: WebSocketEndpoint, raw: any) {
+    if (!raw || typeof raw !== 'object') {
+      return raw;
+    }
+
+    if (endpoint !== 'notifications' || !('payload' in raw)) {
+      return raw;
+    }
+
+    const payload = raw.payload || {};
+    switch (raw.type) {
+      case 'unread_notifications':
+        return { type: raw.type, data: payload };
+      case 'new_notification':
+        return { type: raw.type, data: payload.notification };
+      case 'notification_updated':
+        return { type: raw.type, data: payload };
+      case 'error':
+        return { type: raw.type, data: payload };
+      case 'pong':
+        return { type: raw.type, data: payload };
+      default:
+        return { ...raw, data: payload };
+    }
   }
 
   private notifySubscribers(endpoint: WebSocketEndpoint, event: any) {

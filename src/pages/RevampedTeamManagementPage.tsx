@@ -13,7 +13,9 @@ import {
   FaSync,
   FaFilter
 } from 'react-icons/fa';
+import PageGuide from '../components/ui/PageGuide';
 import { useAuth } from '../contexts/AuthContext';
+import { pageGuides } from '../content/pageGuides';
 import { teamApi, Shift, ScheduledShift } from '../services/teamApi';
 import { shiftSchedulingApi, ShiftPattern } from '../services/shiftSchedulingApi';
 import { userApi, UserListItem } from '../services/userApi';
@@ -557,6 +559,7 @@ const RevampedTeamManagementPage: React.FC = () => {
           </div>
         </div>
       )}
+      <PageGuide guide={pageGuides.revampedTeamManagement} />
     </div>
   );
 };

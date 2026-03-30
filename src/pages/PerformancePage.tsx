@@ -1,6 +1,8 @@
 // src/pages/PerformancePage.tsx
 import React, { useEffect, useState } from 'react';
+import PageGuide from '../components/ui/PageGuide';
 import { useAuth } from '../contexts/AuthContext';
+import { pageGuides } from '../content/pageGuides';
 import { checklistApi } from '../services/checklistApi';
 import { 
   FaTrophy, FaChartLine, FaFire, FaUsers, FaCheckCircle
@@ -195,6 +197,7 @@ const PerformancePage: React.FC = () => {
           </section>
         </div>
       </div>
+      <PageGuide guide={pageGuides.performance} />
     </div>
   );
 };

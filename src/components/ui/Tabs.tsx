@@ -1,5 +1,6 @@
 // src/components/ui/Tabs.tsx
 import React from 'react';
+import './Tabs.css';
 
 interface TabProps {
   id: string;
@@ -24,21 +25,22 @@ export const Tabs: React.FC<TabsProps> = ({ activeTab, onChange, children }) => 
             className={`tab ${activeTab === child.props.id ? 'active' : ''} ${child.props.disabled ? 'disabled' : ''}`}
             onClick={() => !child.props.disabled && onChange(child.props.id)}
             disabled={child.props.disabled}
+            type="button"
           >
             {child.props.label}
-            {child.props.disabled && <span className="coming-soon">Soon</span>}
+            {child.props.disabled ? <span className="coming-soon">Soon</span> : null}
           </button>
         ))}
       </div>
-      
+
       <div className="tabs-content">
-        {React.Children.map(children, (child) => (
-          activeTab === child.props.id && (
+        {React.Children.map(children, (child) =>
+          activeTab === child.props.id ? (
             <div key={child.props.id} className="tab-panel">
               {child.props.children}
             </div>
-          )
-        ))}
+          ) : null
+        )}
       </div>
     </div>
   );
@@ -56,13 +58,8 @@ export const Input: React.FC<{
   icon?: React.ReactNode;
 }> = ({ type, placeholder, value, onChange, icon }) => (
   <div className="input-wrapper">
-    {icon && <span className="input-icon">{icon}</span>}
-    <input
-      type={type}
-      placeholder={placeholder}
-      value={value}
-      onChange={onChange}
-    />
+    {icon ? <span className="input-icon">{icon}</span> : null}
+    <input type={type} placeholder={placeholder} value={value} onChange={onChange} />
   </div>
 );
 
@@ -74,22 +71,8 @@ export const Button: React.FC<{
   type?: 'button' | 'submit' | 'reset';
   className?: string;
   'aria-label'?: string;
-}> = ({ 
-  variant = 'primary', 
-  children, 
-  onClick, 
-  disabled = false, 
-  type = 'button',
-  className = '',
-  'aria-label': ariaLabel 
-}) => (
-  <button 
-    className={`btn-${variant} ${className}`}
-    onClick={onClick}
-    disabled={disabled}
-    type={type}
-    aria-label={ariaLabel}
-  >
+}> = ({ variant = 'primary', children, onClick, disabled = false, type = 'button', className = '', 'aria-label': ariaLabel }) => (
+  <button className={`btn-${variant} ${className}`} onClick={onClick} disabled={disabled} type={type} aria-label={ariaLabel}>
     {children}
   </button>
 );
@@ -103,18 +86,9 @@ export const Select: React.FC<{
   label?: string;
   'aria-label'?: string;
   disabled?: boolean;
-}> = ({ 
-  options, 
-  value, 
-  onChange, 
-  placeholder, 
-  id, 
-  label, 
-  'aria-label': ariaLabel,
-  disabled = false 
-}) => (
+}> = ({ options, value, onChange, placeholder, id, label, 'aria-label': ariaLabel, disabled = false }) => (
   <div className="select-wrapper">
-    {label && <label htmlFor={id} className="select-label">{label}</label>}
+    {label ? <label htmlFor={id} className="select-label">{label}</label> : null}
     <select
       id={id}
       value={value}
@@ -123,7 +97,7 @@ export const Select: React.FC<{
       aria-label={ariaLabel || label || placeholder || 'Select an option'}
       disabled={disabled}
     >
-      {placeholder && <option value="">{placeholder}</option>}
+      {placeholder ? <option value="">{placeholder}</option> : null}
       {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
@@ -147,6 +121,8 @@ export const DateRangePicker: React.FC<{
       {ranges.map((range, index) => (
         <button
           key={index}
+          type="button"
+          className="date-range-btn"
           onClick={() => handleSelect(range.startDate, range.endDate)}
         >
           {range.startDate.toLocaleDateString()} - {range.endDate.toLocaleDateString()}

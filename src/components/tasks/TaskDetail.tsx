@@ -370,7 +370,7 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
                 )}
               </div>
             )}
-            <button className="td-close" onClick={onClose}><FaTimes className='tc-actn-icon'/></button>
+            <button className="td-close" onClick={onClose}><FaThLarge className='tc-actn-icon'/></button>
           </div>
         </div>
 

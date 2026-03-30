@@ -1,0 +1,110 @@
+.tabs-container {
+  display: grid;
+  gap: 12px;
+}
+
+.tabs-header {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.28);
+  color: var(--text-secondary);
+}
+
+.tab.active {
+  color: #fff;
+  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 58%, #14b8a6 100%);
+}
+
+.input-wrapper,
+.select-wrapper,
+.date-range-picker {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.28);
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.input-wrapper input,
+.select-input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--text-primary);
+}
+
+.input-wrapper input::placeholder {
+  color: var(--text-secondary);
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.select-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.select-input {
+  min-height: 42px;
+  padding: 10px 34px 10px 12px;
+  appearance: none;
+}
+
+.select-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.date-range-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+}
+
+.date-range-btn {
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(2, 6, 23, 0.28);
+  color: var(--text-primary);
+}
+
+.input-wrapper:focus-within,
+.select-wrapper:focus-within {
+  border-color: rgba(125, 211, 252, 0.34);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2);
+}
+
+[data-theme='light'] .tab,
+[data-theme='light'] .input-wrapper,
+[data-theme='light'] .select-wrapper,
+[data-theme='light'] .date-range-picker,
+[data-theme='light'] .date-range-btn {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(37, 99, 235, 0.1);
+}

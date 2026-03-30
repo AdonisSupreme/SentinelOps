@@ -1,430 +1,186 @@
-/* src/components/dashboard/DashboardSkeleton.css */
-
-/* Base Skeleton Animation */
-@keyframes skeleton-shimmer {
-  0% {
-    background-position: -200px 0;
-  }
-  100% {
-    background-position: calc(200px + 100%) 0;
-  }
+@keyframes dashboardSkelPulse {
+  0% { background-position: -220px 0; }
+  100% { background-position: calc(220px + 100%) 0; }
 }
 
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(139, 92, 246, 0.2) 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-  border-radius: 8px;
+.dashboard-skeleton-page {
+  display: grid;
+  gap: 18px;
 }
 
-.skeleton-shimmer {
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+.dashboard-skeleton-hero,
+.dashboard-skeleton-panel,
+.dash-signal-card,
+.dash-radar-card,
+.dash-thread-card,
+.dash-skel-aside {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 22px;
+  background:
+    linear-gradient(145deg, rgba(13, 24, 45, 0.9), rgba(7, 13, 28, 0.82)),
+    linear-gradient(135deg, rgba(56, 189, 248, 0.05), rgba(59, 130, 246, 0.03));
 }
 
-/* Header Skeleton */
-.dashboard-header-skeleton {
-  background: var(--bg-card);
-  border: 1px solid rgba(139, 92, 246, 0.1);
-  border-radius: 16px;
-  padding: 1.5rem 2rem;
-  margin-bottom: 2rem;
-  backdrop-filter: blur(10px);
+.dashboard-skeleton-hero {
+  display: grid;
+  grid-template-columns: 1.35fr 0.85fr;
+  gap: 16px;
+  padding: 22px;
 }
 
-.header-content-skeleton {
+.dash-skel-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.dash-signal-grid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dash-signal-card {
+  padding: 12px;
   display: flex;
-  justify-content: space-between;
+  gap: 10px;
   align-items: center;
 }
 
-.user-info-skeleton {
+.dash-signal-copy {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+}
+
+.dash-skel-aside {
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.dash-ring-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.dash-footer-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dashboard-skeleton-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 0.78fr;
+  gap: 16px;
+}
+
+.dashboard-skeleton-main,
+.dashboard-skeleton-side {
+  display: grid;
+  gap: 14px;
+}
+
+.dashboard-skeleton-panel {
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.dashboard-skeleton-panel.compact {
+  min-height: 148px;
+}
+
+.dash-radar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dash-radar-card,
+.dash-thread-card {
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.dash-thread-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.dash-tag-row {
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  gap: 8px;
 }
 
-.skeleton-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(139, 92, 246, 0.2) 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-}
-
-.header-actions-skeleton {
-  display: flex;
-  gap: 1rem;
-}
-
-/* Section Skeleton */
-.dashboard-section-skeleton {
-  background: var(--bg-card);
-  border: 1px solid rgba(139, 92, 246, 0.1);
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  backdrop-filter: blur(10px);
-}
-
-.section-header-skeleton {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.skeleton-badge {
-  width: 80px;
-  height: 24px;
-  border-radius: 12px;
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(139, 92, 246, 0.2) 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-}
-
-.skeleton-badge-small {
-  width: 60px;
-  height: 20px;
-  border-radius: 10px;
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(139, 92, 246, 0.2) 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-}
-
-/* Text Skeletons */
-.skeleton-text {
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(139, 92, 246, 0.2) 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-  border-radius: 4px;
-  height: 1em;
-  margin-bottom: 0.5em;
-}
-
-.skeleton-text-xs {
-  width: 60px;
-  height: 12px;
-}
-
-.skeleton-text-sm {
-  width: 120px;
-  height: 14px;
-}
-
-.skeleton-text-md {
-  width: 180px;
-  height: 16px;
-}
-
-.skeleton-text-lg {
-  width: 240px;
-  height: 20px;
-}
-
-/* Button Skeletons */
-.skeleton-button {
-  width: 100px;
-  height: 40px;
-  border-radius: 8px;
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(139, 92, 246, 0.2) 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-}
-
-.skeleton-button-small {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(139, 92, 246, 0.2) 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-}
-
-/* Checklist Cards Skeleton */
-.checklist-cards-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.checklist-card-skeleton {
-  background: rgba(139, 92, 246, 0.05);
-  border: 1px solid rgba(139, 92, 246, 0.1);
-  border-radius: 12px;
-  padding: 1.5rem;
-  backdrop-filter: blur(10px);
-}
-
-.card-header-skeleton {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.card-content-skeleton {
-  margin-bottom: 1rem;
-}
-
-/* Progress Bar Skeleton */
-.progress-bar-skeleton {
-  width: 100%;
-  height: 8px;
-  background: rgba(139, 92, 246, 0.1);
-  border-radius: 4px;
+.dash-skel-line,
+.dash-skel-block,
+.dash-skel-progress,
+.dash-skel-chip {
+  position: relative;
   overflow: hidden;
+  background: rgba(148, 163, 184, 0.16);
 }
 
-.progress-fill-skeleton {
-  width: 60%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 246, 0.2) 0%,
-    rgba(139, 92, 246, 0.3) 50%,
-    rgba(139, 92, 246, 0.2) 100%
-  );
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-  border-radius: 4px;
+.dash-skel-line::after,
+.dash-skel-block::after,
+.dash-skel-progress::after,
+.dash-skel-chip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  animation: dashboardSkelPulse 1.3s linear infinite;
 }
 
-/* Performance Stats Skeleton */
-.performance-stats-skeleton {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.stat-card-skeleton {
-  background: rgba(139, 92, 246, 0.05);
-  border: 1px solid rgba(139, 92, 246, 0.1);
-  border-radius: 12px;
-  padding: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  backdrop-filter: blur(10px);
-}
-
-.stat-icon-skeleton {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(139, 92, 246, 0.2) 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-}
-
-.stat-content-skeleton {
-  flex: 1;
-}
-
-/* Quick Actions Skeleton */
-.quick-actions-skeleton {
-  background: var(--bg-card);
-  border: 1px solid rgba(139, 92, 246, 0.1);
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  backdrop-filter: blur(10px);
-}
-
-.quick-actions-header-skeleton {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.actions-grid-skeleton {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-.action-button-skeleton {
-  background: rgba(139, 92, 246, 0.05);
-  border: 1px solid rgba(139, 92, 246, 0.1);
-  border-radius: 12px;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  backdrop-filter: blur(10px);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.skeleton-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(139, 92, 246, 0.2) 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-}
-
-/* Live Activity Skeleton */
-.activity-feed-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.activity-item-skeleton {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: rgba(139, 92, 246, 0.05);
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-}
-
-.activity-avatar-skeleton {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(139, 92, 246, 0.2) 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-}
-
-.activity-content-skeleton {
-  flex: 1;
-}
-
-.activity-time-skeleton {
-  width: 60px;
+.dash-skel-line {
   height: 12px;
-  border-radius: 4px;
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(139, 92, 246, 0.2) 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 999px;
 }
 
-/* Gamification Skeleton */
-.gamification-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+.dash-skel-line.kicker { width: 180px; }
+.dash-skel-line.title { width: min(520px, 100%); height: 32px; border-radius: 14px; }
+.dash-skel-line.copy { width: min(620px, 100%); }
+.dash-skel-line.copy.short { width: min(260px, 100%); }
+.dash-skel-line.label { width: 120px; }
+.dash-skel-line.value { width: 170px; height: 16px; }
+.dash-skel-line.meta { width: 150px; }
+.dash-skel-line.panel-title { width: 220px; height: 16px; }
+
+.dash-skel-block.icon { width: 36px; height: 36px; border-radius: 10px; }
+.dash-skel-block.ring { height: 70px; border-radius: 14px; }
+.dash-skel-progress { width: 100%; height: 8px; border-radius: 999px; }
+.dash-skel-chip { width: 96px; height: 24px; border-radius: 999px; }
+
+[data-theme='light'] .dashboard-skeleton-hero,
+[data-theme='light'] .dashboard-skeleton-panel,
+[data-theme='light'] .dash-signal-card,
+[data-theme='light'] .dash-radar-card,
+[data-theme='light'] .dash-thread-card,
+[data-theme='light'] .dash-skel-aside {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(239, 246, 255, 0.88)),
+    linear-gradient(135deg, rgba(37, 99, 235, 0.04), rgba(20, 184, 166, 0.03));
+  border-color: rgba(37, 99, 235, 0.12);
 }
 
-.level-progress-skeleton {
-  background: rgba(139, 92, 246, 0.05);
-  border: 1px solid rgba(139, 92, 246, 0.1);
-  border-radius: 12px;
-  padding: 1.5rem;
-  backdrop-filter: blur(10px);
-}
-
-.level-info-skeleton {
-  margin-bottom: 1rem;
-}
-
-.achievements-skeleton {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-}
-
-.achievement-badge-skeleton {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(
-    90deg,
-    rgba(139, 92, 246, 0.1) 0%,
-    rgba(139, 92, 246, 0.2) 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
-  background-size: 200px 100%;
-  animation: skeleton-shimmer 1.5s ease-in-out infinite;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .dashboard-grid {
+@media (max-width: 1280px) {
+  .dashboard-skeleton-hero,
+  .dashboard-skeleton-grid {
     grid-template-columns: 1fr;
   }
-  
-  .performance-stats-skeleton {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .actions-grid-skeleton {
-    grid-template-columns: 1fr;
-  }
-  
-  .achievements-skeleton {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
-@media (max-width: 480px) {
-  .performance-stats-skeleton {
+@media (max-width: 880px) {
+  .dash-signal-grid,
+  .dash-radar-grid,
+  .dash-footer-row {
     grid-template-columns: 1fr;
-  }
-  
-  .achievements-skeleton {
-    grid-template-columns: repeat(2, 1fr);
   }
 }

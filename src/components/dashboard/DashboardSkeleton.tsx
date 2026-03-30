@@ -1,133 +1,88 @@
-// src/components/dashboard/DashboardSkeleton.tsx
 import React from 'react';
 
 export const DashboardSkeleton: React.FC = () => {
   return (
-    <div className="sentinel-dashboard">
-      {/* Header Skeleton */}
-      <div className="dashboard-header-skeleton">
-        <div className="header-content-skeleton">
-          <div className="user-info-skeleton">
-            <div className="skeleton-avatar"></div>
-            <div className="skeleton-text skeleton-text-lg"></div>
-          </div>
-          <div className="header-actions-skeleton">
-            <div className="skeleton-button"></div>
-            <div className="skeleton-button"></div>
-          </div>
-        </div>
-      </div>
-
-      <div className="dashboard-grid">
-        {/* Left Column Skeleton */}
-        <div className="dashboard-left">
-          {/* Today's Checkpoints Skeleton */}
-          <section className="dashboard-section-skeleton">
-            <div className="section-header-skeleton">
-              <div className="skeleton-text skeleton-text-lg skeleton-shimmer"></div>
-              <div className="skeleton-badge"></div>
-            </div>
-            <div className="checklist-cards-skeleton">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="checklist-card-skeleton">
-                  <div className="card-header-skeleton">
-                    <div className="skeleton-text skeleton-text-md"></div>
-                    <div className="skeleton-badge-small"></div>
-                  </div>
-                  <div className="card-content-skeleton">
-                    <div className="skeleton-text skeleton-text-sm"></div>
-                    <div className="skeleton-text skeleton-text-sm"></div>
-                  </div>
-                  <div className="card-progress-skeleton">
-                    <div className="progress-bar-skeleton">
-                      <div className="progress-fill-skeleton"></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Performance Widget Skeleton */}
-          <section className="dashboard-section-skeleton">
-            <div className="section-header-skeleton">
-              <div className="skeleton-text skeleton-text-lg skeleton-shimmer"></div>
-            </div>
-            <div className="performance-stats-skeleton">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="stat-card-skeleton">
-                  <div className="stat-icon-skeleton"></div>
-                  <div className="stat-content-skeleton">
-                    <div className="skeleton-text skeleton-text-lg"></div>
-                    <div className="skeleton-text skeleton-text-sm"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-
-        {/* Right Column Skeleton */}
-        <div className="dashboard-right">
-          {/* Quick Actions Skeleton */}
-          <section className="quick-actions-skeleton">
-            <div className="quick-actions-header-skeleton">
-              <div className="skeleton-text skeleton-text-md"></div>
-              <div className="skeleton-button-small"></div>
-            </div>
-            <div className="actions-grid-skeleton">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="action-button-skeleton">
-                  <div className="skeleton-icon"></div>
-                  <div className="skeleton-text skeleton-text-sm"></div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Live Activity Skeleton */}
-          <section className="dashboard-section-skeleton">
-            <div className="section-header-skeleton">
-              <div className="skeleton-text skeleton-text-lg skeleton-shimmer"></div>
-            </div>
-            <div className="activity-feed-skeleton">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="activity-item-skeleton">
-                  <div className="activity-avatar-skeleton"></div>
-                  <div className="activity-content-skeleton">
-                    <div className="skeleton-text skeleton-text-sm"></div>
-                    <div className="skeleton-text skeleton-text-xs"></div>
-                  </div>
-                  <div className="activity-time-skeleton"></div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Gamification Panel Skeleton */}
-          <section className="dashboard-section-skeleton">
-            <div className="section-header-skeleton">
-              <div className="skeleton-text skeleton-text-lg skeleton-shimmer"></div>
-            </div>
-            <div className="gamification-skeleton">
-              <div className="level-progress-skeleton">
-                <div className="level-info-skeleton">
-                  <div className="skeleton-text skeleton-text-md"></div>
-                  <div className="skeleton-text skeleton-text-sm"></div>
-                </div>
-                <div className="progress-bar-skeleton">
-                  <div className="progress-fill-skeleton"></div>
+    <div className="sentinel-dashboard dashboard-skeleton-page">
+      <section className="dashboard-skeleton-hero">
+        <div className="dash-skel-copy">
+          <div className="dash-skel-line kicker" />
+          <div className="dash-skel-line title" />
+          <div className="dash-skel-line copy" />
+          <div className="dash-signal-grid">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="dash-signal-card">
+                <div className="dash-skel-block icon" />
+                <div className="dash-signal-copy">
+                  <div className="dash-skel-line label" />
+                  <div className="dash-skel-line value" />
+                  <div className="dash-skel-line meta" />
                 </div>
               </div>
-              <div className="achievements-skeleton">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="achievement-badge-skeleton"></div>
-                ))}
-              </div>
-            </div>
-          </section>
+            ))}
+          </div>
         </div>
-      </div>
+        <div className="dash-skel-aside">
+          <div className="dash-skel-line label" />
+          <div className="dash-skel-line value" />
+          <div className="dash-ring-row">
+            <div className="dash-skel-block ring" />
+            <div className="dash-skel-block ring" />
+            <div className="dash-skel-block ring" />
+          </div>
+          <div className="dash-footer-row">
+            <div className="dash-skel-line meta" />
+            <div className="dash-skel-line meta" />
+          </div>
+        </div>
+      </section>
+
+      <section className="dashboard-skeleton-grid">
+        <div className="dashboard-skeleton-main">
+          <article className="dashboard-skeleton-panel">
+            <div className="dash-skel-line panel-title" />
+            <div className="dash-radar-grid">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="dash-radar-card">
+                  <div className="dash-skel-line label" />
+                  <div className="dash-skel-line value" />
+                  <div className="dash-skel-progress" />
+                  <div className="dash-tag-row">
+                    <div className="dash-skel-chip" />
+                    <div className="dash-skel-chip" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="dashboard-skeleton-panel">
+            <div className="dash-skel-line panel-title" />
+            <div className="dash-thread-grid">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="dash-thread-card">
+                  <div className="dash-skel-line value" />
+                  <div className="dash-skel-line copy" />
+                  <div className="dash-skel-progress" />
+                </div>
+              ))}
+            </div>
+          </article>
+        </div>
+
+        <div className="dashboard-skeleton-side">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <article key={index} className="dashboard-skeleton-panel compact">
+              <div className="dash-skel-line panel-title" />
+              <div className="dash-skel-line copy" />
+              <div className="dash-skel-line copy short" />
+              <div className="dash-tag-row">
+                <div className="dash-skel-chip" />
+                <div className="dash-skel-chip" />
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
     </div>
   );
 };

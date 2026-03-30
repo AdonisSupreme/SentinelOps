@@ -1,5 +1,7 @@
 import React from 'react';
+import PageGuide from '../components/ui/PageGuide';
 import { useAuth } from '../contexts/AuthContext';
+import { pageGuides } from '../content/pageGuides';
 import TeamScheduleCalendar from '../components/team/TeamScheduleCalendar';
 import './UserScheduleDashboard.css';
 
@@ -17,6 +19,7 @@ const TeamManagementCalendarPage: React.FC = () => {
             <div>You need manager or admin rights to view team schedules.</div>
           </div>
         </div>
+        <PageGuide guide={pageGuides.teamManagementCalendar} />
       </div>
     );
   }
@@ -26,6 +29,7 @@ const TeamManagementCalendarPage: React.FC = () => {
       <TeamScheduleCalendar 
         sectionId={isAdmin ? undefined : userSectionId}
       />
+      <PageGuide guide={pageGuides.teamManagementCalendar} />
     </div>
   );
 };

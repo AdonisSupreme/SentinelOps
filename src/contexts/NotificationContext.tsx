@@ -1,11 +1,9 @@
-// src/contexts/NotificationContext.tsx (Updated)
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { FaInfoCircle, FaExclamationTriangle, FaCheckCircle, FaBell, FaCalendarAlt, FaFlag } from 'react-icons/fa';
+// src/contexts/NotificationContext.tsx
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import { checklistApi } from '../services/checklistApi';
 import {
   Notification as BackendNotification,
-  BackendError,
 } from '../contracts/generated/api.types';
 
 type NotificationType = 'info' | 'warning' | 'success' | 'error' | 'checklist' | 'handover' | 'reminder';
@@ -26,8 +24,8 @@ interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
   addNotification: (notification: Omit<Notification, 'id' | 'read' | 'timestamp'>) => void;
-  markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
+  markAsRead: (id: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
   removeNotification: (id: string) => void;
   loadNotifications: () => Promise<void>;
 }
@@ -37,69 +35,83 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { user } = useAuth();
+  const hiddenNotificationIdsRef = useRef<Set<string>>(new Set());
 
-  // Load initial notifications from API
-  useEffect(() => {
-    if (user) {
-      loadNotifications();
-    }
-  }, [user]);
-
-  // Poll for notifications every 30 seconds (instead of WebSocket)
-  useEffect(() => {
-    if (!user) return;
-
-    // Initial load
-    loadNotifications();
-
-    // Set up polling interval
-    const intervalId = setInterval(() => {
-      loadNotifications();
-    }, 30000); // Poll every 30 seconds
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [user]);
-
-  const mapNotificationType = (category: string): NotificationType => {
-    switch (category) {
+  const mapNotificationType = (value?: string): NotificationType => {
+    switch (value) {
       case 'CHECKLIST_ASSIGNED':
       case 'ITEM_DUE':
+      case 'checklist':
         return 'checklist';
       case 'HANDOVER_NOTE':
+      case 'handover':
         return 'handover';
       case 'REMINDER':
+      case 'reminder':
         return 'reminder';
       case 'SUCCESS':
+      case 'success':
         return 'success';
       case 'WARNING':
+      case 'warning':
         return 'warning';
       case 'ERROR':
+      case 'error':
         return 'error';
       default:
         return 'info';
     }
   };
 
-  const loadNotifications = async () => {
+  const isNotificationRead = (notification: BackendNotification & { read?: boolean; isRead?: boolean }): boolean => {
+    return Boolean(notification.is_read ?? notification.read ?? notification.isRead);
+  };
+
+  const mapPriority = (priority?: string): Priority => {
+    if (priority === 'high') return 'high';
+    if (priority === 'low') return 'low';
+    return 'medium';
+  };
+
+  const loadNotifications = useCallback(async () => {
     try {
       const apiNotifications = await checklistApi.getNotifications(true);
-      const mappedNotifications: Notification[] = apiNotifications.map((n: BackendNotification) => ({
+      const mappedNotifications: Notification[] = apiNotifications
+        .map((n: BackendNotification & { read?: boolean; isRead?: boolean }) => ({
         id: n.id,
-        type: mapNotificationType(n.related_entity || 'info'),
+        type: mapNotificationType(n.type || n.category || n.related_entity),
         message: n.message,
-        priority: n.priority === 'high' ? 'high' : n.priority === 'low' ? 'low' : 'medium',
-        read: n.is_read,
+        priority: mapPriority(n.priority),
+        read: isNotificationRead(n),
         timestamp: new Date(n.created_at),
         relatedId: n.related_id,
-        relatedType: n.related_entity
-      }));
+        relatedType: n.related_type || n.related_entity
+      }))
+      .filter((n) => !n.read && !hiddenNotificationIdsRef.current.has(n.id));
+
       setNotifications(mappedNotifications);
     } catch (error) {
       console.error('Failed to load notifications:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      hiddenNotificationIdsRef.current.clear();
+      setNotifications([]);
+      return;
+    }
+
+    void loadNotifications();
+
+    const intervalId = setInterval(() => {
+      void loadNotifications();
+    }, 30000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [user, loadNotifications]);
 
   const addNotification = (notification: Omit<Notification, 'id' | 'read' | 'timestamp'>) => {
     const newNotification: Notification = {
@@ -121,22 +133,30 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   };
 
   const markAsRead = async (id: string) => {
+    hiddenNotificationIdsRef.current.add(id);
+    setNotifications(prev => prev.filter(n => n.id !== id));
+
     try {
       await checklistApi.markNotificationAsRead(id);
-      setNotifications(prev => 
-        prev.map(n => n.id === id ? { ...n, read: true } : n)
-      );
+      void loadNotifications();
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
+      hiddenNotificationIdsRef.current.delete(id);
+      void loadNotifications();
     }
   };
 
   const markAllAsRead = async () => {
+    notifications.forEach((notification) => hiddenNotificationIdsRef.current.add(notification.id));
+    setNotifications([]);
+
     try {
       await checklistApi.markAllNotificationsAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      void loadNotifications();
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
+      hiddenNotificationIdsRef.current.clear();
+      void loadNotifications();
     }
   };
 
@@ -160,100 +180,6 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     >
       {children}
     </NotificationContext.Provider>
-  );
-};
-
-// Updated NotificationContainer component
-export const NotificationContainer: React.FC = () => {
-  const { notifications, markAsRead, markAllAsRead, unreadCount, loadNotifications } = useNotifications();
-  const [isOpen, setIsOpen] = useState(false);
-  
-  const getIcon = (type: NotificationType) => {
-    switch (type) {
-      case 'success': return <FaCheckCircle />;
-      case 'warning': 
-      case 'error': return <FaExclamationTriangle />;
-      case 'checklist': return <FaBell />;
-      case 'handover': return <FaFlag />;
-      case 'reminder': return <FaCalendarAlt />;
-      default: return <FaInfoCircle />;
-    }
-  };
-
-  const getTypeClass = (type: NotificationType) => {
-    switch (type) {
-      case 'success': return 'success';
-      case 'error': return 'error';
-      case 'warning': return 'warning';
-      case 'checklist': return 'checklist';
-      case 'handover': return 'handover';
-      default: return 'info';
-    }
-  };
-
-  const handleNotificationClick = (notification: Notification) => {
-    markAsRead(notification.id);
-    
-    // Navigate based on notification type
-    if (notification.relatedType === 'CHECKLIST_INSTANCE' && notification.relatedId) {
-      window.location.href = `/checklist/${notification.relatedId}`;
-    }
-  };
-
-  return (
-    <div className="notification-wrapper">
-      <button 
-        className="notification-trigger"
-        onClick={() => {
-          setIsOpen(!isOpen);
-          if (!isOpen) {
-            loadNotifications();
-          }
-        }}
-        aria-label="Toggle notifications"
-      >
-        <FaBell />
-        {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
-      </button>
-      
-      {isOpen && (
-        <div className="notification-container">
-          <div className="notification-header">
-            <h4>Operational Notifications</h4>
-            <button onClick={markAllAsRead}>Mark all as read</button>
-          </div>
-          
-          <div className="notification-list">
-            {notifications.length === 0 ? (
-              <div className="empty-state">All caught up! No new notifications.</div>
-            ) : (
-              notifications.map(notification => (
-                <div 
-                  key={notification.id} 
-                  className={`notification ${getTypeClass(notification.type)} ${notification.read ? 'read' : 'unread'}`}
-                  onClick={() => handleNotificationClick(notification)}
-                >
-                  <div className="notification-icon">{getIcon(notification.type)}</div>
-                  <div className="notification-content">
-                    <div className="message">{notification.message}</div>
-                    <div className="timestamp">
-                      {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                  {!notification.read && <div className="unread-indicator"></div>}
-                </div>
-              ))
-            )}
-          </div>
-          
-          <div className="notification-footer">
-            <button className="refresh-btn" onClick={loadNotifications}>
-              Refresh
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
   );
 };
 

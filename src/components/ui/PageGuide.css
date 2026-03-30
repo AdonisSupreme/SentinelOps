@@ -1,0 +1,207 @@
+:root {
+  --page-guide-z-trigger: 1200;
+  --page-guide-z-overlay: 1300;
+}
+
+.page-guide-trigger {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: var(--page-guide-z-trigger);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(0, 217, 255, 0.35);
+  border-radius: 999px;
+  padding: 0.8rem 1.05rem;
+  background:
+    radial-gradient(circle at top left, rgba(68, 255, 210, 0.26), transparent 52%),
+    linear-gradient(135deg, rgba(7, 14, 33, 0.96), rgba(14, 24, 52, 0.92));
+  color: #f3fbff;
+  box-shadow: 0 18px 40px rgba(4, 11, 28, 0.42), 0 0 22px rgba(0, 217, 255, 0.18);
+  backdrop-filter: blur(14px);
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.page-guide-trigger:hover,
+.page-guide-trigger.active {
+  transform: translateY(-2px);
+  border-color: rgba(88, 255, 226, 0.7);
+  box-shadow: 0 22px 48px rgba(4, 11, 28, 0.5), 0 0 28px rgba(0, 217, 255, 0.28);
+}
+
+.page-guide-trigger-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.28), rgba(88, 255, 226, 0.16));
+  color: #72faff;
+  font-size: 1rem;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.page-guide-trigger-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+
+.page-guide-trigger-copy strong {
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.page-guide-trigger-copy small {
+  color: rgba(215, 235, 255, 0.76);
+  font-size: 0.72rem;
+}
+
+.page-guide-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--page-guide-z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top, rgba(0, 217, 255, 0.16), transparent 42%),
+    rgba(3, 7, 18, 0.7);
+  backdrop-filter: blur(8px);
+}
+
+.page-guide-panel {
+  width: min(960px, 100%);
+  max-height: min(86vh, 920px);
+  overflow: auto;
+  border: 1px solid rgba(0, 217, 255, 0.24);
+  border-radius: 28px;
+  padding: 1.5rem;
+  background:
+    linear-gradient(155deg, rgba(8, 16, 38, 0.98), rgba(12, 23, 50, 0.96)),
+    rgba(8, 16, 38, 0.96);
+  color: #eaf6ff;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.4);
+}
+
+.page-guide-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-guide-eyebrow {
+  display: inline-block;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  color: #72faff;
+}
+
+.page-guide-header h3 {
+  margin: 0;
+  font-size: clamp(1.45rem, 2vw, 2rem);
+}
+
+.page-guide-close {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  cursor: pointer;
+}
+
+.page-guide-intro {
+  margin: 1rem 0 1.35rem;
+  color: rgba(223, 237, 247, 0.85);
+  line-height: 1.65;
+}
+
+.page-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.page-guide-card,
+.page-guide-workflow,
+.page-guide-tip {
+  border: 1px solid rgba(114, 250, 255, 0.16);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+    rgba(8, 16, 38, 0.72);
+  padding: 1rem 1.05rem;
+}
+
+.page-guide-card strong {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 1rem;
+}
+
+.page-guide-card p,
+.page-guide-tip p {
+  margin: 0;
+  color: rgba(221, 234, 244, 0.82);
+  line-height: 1.55;
+}
+
+.page-guide-lower {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.page-guide-section-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0.9rem;
+  color: #72faff;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.page-guide-workflow ol {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: rgba(238, 246, 255, 0.9);
+}
+
+.page-guide-workflow li + li {
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 820px) {
+  .page-guide-trigger {
+    right: 16px;
+    bottom: 16px;
+    padding: 0.72rem 0.9rem;
+  }
+
+  .page-guide-lower {
+    grid-template-columns: 1fr;
+  }
+
+  .page-guide-panel {
+    padding: 1.1rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .page-guide-trigger-copy small {
+    display: none;
+  }
+}

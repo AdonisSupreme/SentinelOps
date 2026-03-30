@@ -5,8 +5,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
+  background:
+    radial-gradient(circle at top, rgba(31, 156, 255, 0.18), transparent 42%),
+    linear-gradient(180deg, rgba(3, 10, 24, 0.78), rgba(3, 10, 24, 0.9));
+  backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -18,15 +20,15 @@
 }
 
 .enhanced-item-actions-modal {
-  background: linear-gradient(135deg, 
-    rgba(20, 30, 60, 0.95) 0%,
-    rgba(30, 40, 80, 0.95) 100%);
-  border: 1px solid rgba(0, 217, 255, 0.3);
+  background:
+    linear-gradient(180deg, rgba(8, 16, 34, 0.98), rgba(10, 22, 43, 0.96)),
+    linear-gradient(135deg, rgba(30, 144, 255, 0.06), rgba(0, 255, 157, 0.04));
+  border: 1px solid rgba(120, 186, 255, 0.22);
   border-radius: 16px;
   box-shadow: 
-    0 0 30px rgba(0, 217, 255, 0.2),
-    0 0 60px rgba(124, 9, 128, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 26px 70px rgba(2, 8, 20, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 1px 0 rgba(255, 255, 255, 0.07) inset;
   max-width: 90vw;
   max-height: 90vh;
   width: 600px;
@@ -43,13 +45,13 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 3px;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(0, 217, 255, 0.5) 25%,
-    rgba(0, 217, 255, 0.8) 50%,
-    rgba(0, 217, 255, 0.5) 75%,
+    rgba(88, 179, 255, 0.5) 18%,
+    rgba(35, 227, 187, 0.8) 50%,
+    rgba(88, 179, 255, 0.5) 82%,
     transparent 100%
   );
   animation: shimmer 3s infinite;
@@ -61,10 +63,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(0, 217, 255, 0.2);
-  background: linear-gradient(135deg, 
-    rgba(0, 217, 255, 0.05) 0%,
-    rgba(124, 9, 128, 0.05) 100%);
+  border-bottom: 1px solid rgba(120, 186, 255, 0.14);
+  background: linear-gradient(180deg, rgba(18, 36, 67, 0.9), rgba(13, 29, 53, 0.72));
   position: sticky;
   top: 0;
   z-index: 10;
@@ -74,7 +74,7 @@
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--primary);
+  color: #eef6ff;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -82,9 +82,9 @@
 }
 
 .enhanced-modal-close {
-  background: transparent;
-  border: 1px solid rgba(0, 217, 255, 0.3);
-  color: var(--primary);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(120, 186, 255, 0.2);
+  color: #8fc8ff;
   width: 32px;
   height: 32px;
   border-radius: 8px;
@@ -97,8 +97,8 @@
 }
 
 .enhanced-modal-close:hover {
-  background: rgba(0, 217, 255, 0.1);
-  box-shadow: 0 0 15px rgba(0, 217, 255, 0.4);
+  background: rgba(79, 159, 255, 0.12);
+  box-shadow: 0 10px 26px rgba(34, 125, 255, 0.2);
   transform: scale(1.1);
 }
 

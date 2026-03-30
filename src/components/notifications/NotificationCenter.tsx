@@ -1,243 +1,303 @@
 // src/components/notifications/NotificationCenter.tsx
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FaBell,
-  FaTimes,
+  FaCalendarAlt,
   FaCheckCircle,
+  FaChevronRight,
+  FaClipboardCheck,
   FaExclamationTriangle,
+  FaFlag,
   FaInfoCircle,
-  FaSignal,
-  FaWifi,
-  FaTimesCircle,
+  FaRedo,
+  FaTimes,
 } from 'react-icons/fa';
-import useNotifications from '../../hooks/useNotifications';
+import { useNotifications } from '../../contexts/NotificationContext';
 import './NotificationCenter.css';
 
-/**
- * NotificationCenter Component
- * Displays connection status, unread notification count, and notification list
- * Supports mark as read, manual refresh, and debug info panel
- */
 const NotificationCenter: React.FC = () => {
   const {
-    unreadCount,
     notifications,
-    isConnected,
-    error,
-    connectionState,
-    getUnread,
+    unreadCount,
     markAsRead,
+    markAllAsRead,
+    loadNotifications,
   } = useNotifications();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [showDebug, setShowDebug] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showNewBadge, setShowNewBadge] = useState(false);
+  const centerRef = useRef<HTMLDivElement>(null);
+  const knownNotificationIdsRef = useRef<Set<string>>(new Set());
 
-  const handleRefresh = () => {
-    getUnread(20);
-  };
+  const sortedNotifications = useMemo(
+    () =>
+      [...notifications].sort(
+        (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+      ),
+    [notifications]
+  );
 
-  const handleMarkAsRead = (notificationId: string) => {
-    markAsRead(notificationId);
-  };
+  useEffect(() => {
+    const currentIds = new Set(sortedNotifications.map((notification) => notification.id));
+    const knownIds = knownNotificationIdsRef.current;
+    const hasNewNotification = sortedNotifications.some(
+      (notification) => !knownIds.has(notification.id)
+    );
 
-  const handleCloseNotification = (notificationId: string) => {
-    // Mark as read when closing the notification
-    handleMarkAsRead(notificationId);
-  };
+    if (knownIds.size > 0 && hasNewNotification) {
+      setShowNewBadge(true);
+      const timerId = window.setTimeout(() => setShowNewBadge(false), 2600);
+      knownNotificationIdsRef.current = currentIds;
+      return () => window.clearTimeout(timerId);
+    }
 
-  const handleCloseAllNotifications = () => {
-    // Mark all unread notifications as read when closing the panel
-    notifications.forEach(notification => {
-      if (!notification.is_read) {
-        handleMarkAsRead(notification.id);
+    knownNotificationIdsRef.current = currentIds;
+  }, [sortedNotifications]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShowNewBadge(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (centerRef.current && !centerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
       }
-    });
-    setIsOpen(false);
-  };
+    };
 
-  const getConnectionStatusIcon = () => {
-    if (isConnected) {
-      return <FaWifi className="status-icon connected" />;
-    }
-    if (error) {
-      return <FaTimesCircle className="status-icon error" />;
-    }
-    return <FaSignal className="status-icon connecting" />;
-  };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
 
-  const getConnectionStatusText = () => {
-    if (isConnected) {
-      return 'Connected';
-    }
-    if (error) {
-      return `Disconnected: ${typeof error === 'string' ? error : JSON.stringify(error)}`;
-    }
-    return `${connectionState}...`;
-  };
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleEscape);
 
-  const getNotificationIcon = (notification: any) => {
-    if (notification.type === 'success' || notification.related_entity === 'SUCCESS') {
-      return <FaCheckCircle className="notification-icon success" />;
-    }
-    if (notification.type === 'error' || notification.related_entity === 'ERROR') {
-      return <FaExclamationTriangle className="notification-icon error" />;
-    }
-    if (notification.type === 'warning' || notification.related_entity === 'WARNING') {
-      return <FaExclamationTriangle className="notification-icon warning" />;
-    }
-    return <FaInfoCircle className="notification-icon info" />;
-  };
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen]);
 
-  const formatTime = (timestamp: string | Date) => {
-    const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const seconds = Math.floor(diff / 1000);
+  const formatRelativeTime = useCallback((timestamp: Date) => {
+    const deltaMs = Date.now() - timestamp.getTime();
+    const seconds = Math.floor(deltaMs / 1000);
+
+    if (seconds < 60) return 'now';
+
     const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (seconds < 60) return 'just now';
     if (minutes < 60) return `${minutes}m ago`;
+
+    const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours}h ago`;
+
+    const days = Math.floor(hours / 24);
     if (days < 7) return `${days}d ago`;
-    return date.toLocaleDateString();
-  };
+
+    return timestamp.toLocaleDateString();
+  }, []);
+
+  const getNotificationIcon = useCallback((type: string) => {
+    switch (type) {
+      case 'success':
+        return <FaCheckCircle />;
+      case 'warning':
+        return <FaExclamationTriangle />;
+      case 'error':
+        return <FaExclamationTriangle />;
+      case 'checklist':
+        return <FaClipboardCheck />;
+      case 'handover':
+        return <FaFlag />;
+      case 'reminder':
+        return <FaCalendarAlt />;
+      default:
+        return <FaInfoCircle />;
+    }
+  }, []);
+
+  const getEyebrow = useCallback((type: string) => {
+    switch (type) {
+      case 'success':
+        return 'Success signal';
+      case 'warning':
+        return 'Warning';
+      case 'error':
+        return 'Critical alert';
+      case 'checklist':
+        return 'Checklist activity';
+      case 'handover':
+        return 'Handover note';
+      case 'reminder':
+        return 'Reminder';
+      default:
+        return 'Operations update';
+    }
+  }, []);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await loadNotifications();
+    } finally {
+      window.setTimeout(() => setIsRefreshing(false), 180);
+    }
+  }, [loadNotifications]);
+
+  const handleMarkAllAsRead = useCallback(async () => {
+    await markAllAsRead();
+  }, [markAllAsRead]);
 
   return (
-    <div className="notification-center-wrapper">
-      {/* Trigger Button */}
+    <div className="notification-center-wrapper" ref={centerRef}>
       <button
-        className={`notification-trigger ${isConnected ? 'connected' : 'disconnected'}`}
-        onClick={() => setIsOpen(!isOpen)}
-        title={getConnectionStatusText()}
-        aria-label="Toggle notifications"
+        className={`notification-trigger ${isOpen ? 'active' : ''}`}
+        onClick={() => {
+          const nextOpen = !isOpen;
+          setIsOpen(nextOpen);
+          if (nextOpen) {
+            void loadNotifications();
+          }
+        }}
+        aria-label="Open notifications"
+        aria-expanded={isOpen}
+        type="button"
       >
-        <FaBell className="trigger-icon" />
-        {unreadCount > 0 && <span className="badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
-        <span className="status-dot" style={{ backgroundColor: isConnected ? '#4caf50' : '#ff9800' }}></span>
+        <span className="notification-trigger-shell">
+          <FaBell className="trigger-icon" />
+          <span className="trigger-pulse" aria-hidden="true" />
+          {unreadCount > 0 && (
+            <span className="trigger-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+          )}
+        </span>
       </button>
 
-      {/* Notification Panel */}
+      {showNewBadge && !isOpen && (
+        <div className="notification-new-toast" aria-live="polite">
+          <span className="notification-new-toast-orb" aria-hidden="true" />
+          <span>New notification</span>
+        </div>
+      )}
+
       {isOpen && (
-        <div className="notification-center">
-          {/* Header */}
-          <div className="notification-header">
-            <div className="header-title">
-              <h4>Notifications</h4>
-              <span className="unread-badge">{unreadCount} unread</span>
+        <div className="notification-center-panel">
+          <div className="notification-panel-glow" aria-hidden="true" />
+
+          <div className="notification-center-header">
+            <div className="notification-center-title">
+              <span className="notification-center-kicker">Mission inbox</span>
+              <h3>Notification Center</h3>
+              <p>Live operational signals for your queue, team movement, and checklist flow.</p>
             </div>
             <button
-              className="close-btn"
-              onClick={handleCloseAllNotifications}
-              aria-label="Close notifications"
-              title="Close and mark all as read"
+              className="notification-dismiss-panel"
+              onClick={() => setIsOpen(false)}
+              aria-label="Close notification center"
+              type="button"
             >
               <FaTimes />
             </button>
           </div>
 
-          {/* Connection Status */}
-          <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
-            {getConnectionStatusIcon()}
-            <span className="status-text">{getConnectionStatusText()}</span>
+          <div className="notification-center-summary">
+            <div className="notification-summary-card">
+              <span className="summary-label">Unread</span>
+              <strong>{unreadCount}</strong>
+              <span className="summary-copy">Awaiting acknowledgement</span>
+            </div>
+            <div className="notification-summary-card">
+              <span className="summary-label">Visible</span>
+              <strong>{sortedNotifications.length}</strong>
+              <span className="summary-copy">Active in this session</span>
+            </div>
           </div>
 
-          {/* Error Display */}
-          {error && !isConnected && (
-            <div className="error-banner">
-              <FaExclamationTriangle />
-              <span>{typeof error === 'string' ? error : JSON.stringify(error)}</span>
-            </div>
-          )}
+          <div className="notification-center-actions">
+            <button
+              className="notification-action secondary"
+              onClick={() => void handleRefresh()}
+              disabled={isRefreshing}
+              type="button"
+            >
+              <FaRedo className={isRefreshing ? 'spinning' : ''} />
+              {isRefreshing ? 'Refreshing' : 'Refresh'}
+            </button>
+            <button
+              className="notification-action primary"
+              onClick={() => void handleMarkAllAsRead()}
+              disabled={sortedNotifications.length === 0}
+              type="button"
+            >
+              <FaCheckCircle />
+              Mark all read
+            </button>
+          </div>
 
-          {/* Notifications List */}
-          <div className="notification-list">
-            {notifications.length === 0 ? (
-              <div className="empty-state">
-                <FaBell className="empty-icon" />
-                <p>No notifications</p>
-                {isConnected && <p className="empty-hint">You're all caught up!</p>}
+          <div className="notification-center-list">
+            {sortedNotifications.length === 0 ? (
+              <div className="notification-empty-state">
+                <div className="notification-empty-icon">
+                  <FaBell />
+                </div>
+                <h4>All clear</h4>
+                <p>No active notifications are waiting for you right now.</p>
               </div>
             ) : (
-              notifications.map((notification) => (
-                <div
+              sortedNotifications.map((notification) => (
+                <article
                   key={notification.id}
-                  className={`notification-item ${notification.is_read ? 'read' : 'unread'}`}
+                  className={`notification-center-item type-${notification.type} ${
+                    notification.read ? 'read' : 'unread'
+                  }`}
                 >
-                  <div className="notification-icon-wrapper">
-                    {getNotificationIcon(notification)}
+                  <div className="notification-item-icon">
+                    {getNotificationIcon(notification.type)}
                   </div>
-                  <div className="notification-content">
-                    <div className="notification-message">
-                      {notification.message || notification.title || 'New notification'}
-                    </div>
-                    <div className="notification-meta">
-                      <span className="notification-time">
-                        {formatTime(notification.created_at || new Date())}
+
+                  <div className="notification-item-body">
+                    <div className="notification-item-header">
+                      <span className="notification-item-eyebrow">
+                        {getEyebrow(notification.type)}
                       </span>
-                      {!notification.is_read && <span className="unread-dot"></span>}
+                      <span className="notification-item-time">
+                        {formatRelativeTime(notification.timestamp)}
+                      </span>
+                    </div>
+                    <p className="notification-item-message">{notification.message}</p>
+                    <div className="notification-item-footer">
+                      <span className={`notification-priority-chip priority-${notification.priority}`}>
+                        {notification.priority}
+                      </span>
+                      <span className="notification-item-status">
+                        <FaChevronRight />
+                        Tap close to acknowledge
+                      </span>
                     </div>
                   </div>
-                  <div className="notification-actions">
-                    {!notification.is_read && (
-                      <button
-                        className="mark-read-btn"
-                        onClick={() => handleMarkAsRead(notification.id)}
-                        title="Mark as read"
-                        aria-label="Mark as read"
-                      >
-                        <FaCheckCircle />
-                      </button>
-                    )}
+
+                  <div className="notification-item-actions">
                     <button
-                      className="close-notification-btn"
-                      onClick={() => handleCloseNotification(notification.id)}
-                      title="Close notification"
-                      aria-label="Close notification"
+                      className="notification-item-close"
+                      onClick={() => void markAsRead(notification.id)}
+                      aria-label="Mark notification as read"
+                      title="Mark as read"
+                      type="button"
                     >
                       <FaTimes />
                     </button>
                   </div>
-                </div>
+                </article>
               ))
             )}
           </div>
-
-          {/* Footer */}
-          <div className="notification-footer">
-            <button
-              className="refresh-btn"
-              onClick={handleRefresh}
-              disabled={!isConnected}
-              title="Refresh notifications"
-            >
-              <FaSignal className="icon" />
-              Refresh
-            </button>
-            <button
-              className="debug-toggle-btn"
-              onClick={() => setShowDebug(!showDebug)}
-              title="Toggle debug info"
-            >
-              Debug
-            </button>
-          </div>
-
-          {/* Debug Info */}
-          {showDebug && (
-            <div className="debug-panel">
-              <h5>Debug Info</h5>
-              <div className="debug-content">
-                <p><strong>Connection State:</strong> {connectionState}</p>
-                <p><strong>Is Connected:</strong> {isConnected ? 'Yes' : 'No'}</p>
-                <p><strong>Unread Count:</strong> {unreadCount}</p>
-                <p><strong>Total Cached:</strong> {notifications.length}</p>
-                {error && <p><strong>Error:</strong> {typeof error === 'string' ? error : JSON.stringify(error)}</p>}
-                <p><strong>Token:</strong> {localStorage.getItem('token') ? '✓ Present' : '✗ Missing'}</p>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>

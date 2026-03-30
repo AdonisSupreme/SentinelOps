@@ -88,7 +88,11 @@
 }
 
 .item-header.has-subitems {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.02));
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.1) 0%, rgba(148, 163, 184, 0.04) 100%);
+}
+
+[data-theme="dark"] .item-header.has-subitems {
+  background: linear-gradient(180deg, rgba(51, 65, 85, 0.5) 0%, rgba(30, 41, 59, 0.25) 100%);
 }
 
 .item-header.pending {

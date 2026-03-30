@@ -17,6 +17,8 @@ import UserManagementPage from './pages/UserManagementPage';
 import AdvancedTeamManagementPage from './pages/AdvancedTeamManagementPage';
 import UserScheduleDashboard from './pages/UserScheduleDashboard';
 import TemplateManagerPage from './pages/TemplateManagerPage';
+import TrustlinkOperationsPage from './pages/TrustlinkOperationsPage';
+import NetworkSentinelPage from './pages/NetworkSentinelPage';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import ScrollToTop from './components/ui/ScrollToTop';
@@ -52,6 +54,8 @@ function App() {
                           <Route path="/checklist/:id" element={<ChecklistPage />} />
                           <Route path="/tasks" element={<TaskCenterPage />} />
                           <Route path="/templates" element={<TemplateManagerPage />} />
+                          <Route path="/trustlink" element={<TrustlinkOperationsPage />} />
+                          <Route path="/network-sentinel" element={<NetworkSentinelPage />} />
                           <Route path="/performance" element={<PerformancePage />} />
                           <Route path="/users" element={<UserManagementPage />} />
                           <Route path="/team" element={<AdvancedTeamManagementPage />} />

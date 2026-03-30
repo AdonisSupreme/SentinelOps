@@ -1,9 +1,11 @@
 // src/pages/TemplateManagerPage.tsx
 import React, { useState } from 'react';
-import { FaPlus, FaClipboardList } from 'react-icons/fa';
+import { FaPlus, FaClipboardList, FaLayerGroup, FaStream, FaShieldAlt } from 'react-icons/fa';
 import SentinelTemplateList from '../components/checklist/TemplateList';
 import TemplateBuilder from '../components/checklist/TemplateBuilder';
 import TemplateEditor from '../components/checklist/TemplateEditor';
+import PageGuide from '../components/ui/PageGuide';
+import { pageGuides } from '../content/pageGuides';
 import type { ChecklistTemplate } from '../services/checklistApi';
 import './TemplateManagerPage.css';
 
@@ -12,6 +14,27 @@ type View = 'list' | 'create' | 'edit' | 'view';
 const SentinelTemplateManagerPage: React.FC = () => {
   const [view, setView] = useState<View>('list');
   const [selectedTemplate, setSelectedTemplate] = useState<ChecklistTemplate | null>(null);
+  const heroTitle =
+    view === 'create'
+      ? 'Create checklist template'
+      : view === 'edit'
+        ? 'Refine checklist template'
+        : view === 'view'
+          ? 'Template briefing'
+          : 'Checklist template command';
+  const heroBody =
+    view === 'create'
+      ? 'Build a SentinelOps-ready checklist template with a clear shift scope, ordered execution items, and reusable substeps.'
+      : view === 'edit'
+        ? 'Update template structure and metadata while preserving the working execution model already in place.'
+        : view === 'view'
+          ? 'Review the active structure, shift targeting, and item hierarchy for this template.'
+          : 'Manage reusable operational checklists with the same command-surface feel used across SentinelOps.';
+  const heroSignals = [
+    { label: 'Template flow', value: view === 'list' ? 'Library' : view === 'create' ? 'Authoring' : view === 'edit' ? 'Editing' : 'Inspecting', icon: <FaLayerGroup /> },
+    { label: 'Structure', value: selectedTemplate?.items?.length ? `${selectedTemplate.items.length} items` : 'Reusable', icon: <FaStream /> },
+    { label: 'SentinelOps fit', value: 'Aligned', icon: <FaShieldAlt /> },
+  ];
 
   const handleShowCreate = () => {
     setView('create');
@@ -51,36 +74,50 @@ const SentinelTemplateManagerPage: React.FC = () => {
 
   return (
     <div className="stm-template-manager-page">
-      {/* Header */}
-      <div className="stm-template-header">
-        <div className="stm-header-content">
-          <h1>
+      <section className="stm-command-hero">
+        <div className="stm-command-copy">
+          <div className="stm-command-kicker">
             <FaClipboardList className="stm-header-icon" />
-            Sentinel Template Manager
-          </h1>
-          <p className="stm-header-subtitle">Create and manage advanced checklist templates for your SentinelOps team</p>
-        </div>
+            <span>SentinelOps Template Manager</span>
+          </div>
+          <div className="stm-template-header">
+            <div className="stm-header-content">
+              <h1>{heroTitle}</h1>
+              <p className="stm-header-subtitle">{heroBody}</p>
+            </div>
 
-        {/* Navigation Tabs */}
-        <div className="stm-nav-tabs">
-          <button
-            className={`stm-nav-tab ${view === 'list' ? 'stm-active' : ''}`}
-            onClick={handleShowList}
-          >
-            <FaClipboardList />
-            Templates
-          </button>
-          {view !== 'create' && (
-            <button
-              className={`stm-nav-tab stm-create-tab`}
-              onClick={handleShowCreate}
-            >
-              <FaPlus />
-              Create Template
-            </button>
-          )}
+            <div className="stm-nav-tabs">
+              <button
+                className={`stm-nav-tab ${view === 'list' ? 'stm-active' : ''}`}
+                onClick={handleShowList}
+              >
+                <FaClipboardList />
+                Templates
+              </button>
+              {view !== 'create' && (
+                <button
+                  className={`stm-nav-tab stm-create-tab`}
+                  onClick={handleShowCreate}
+                >
+                  <FaPlus />
+                  Create Template
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="stm-command-signals">
+            {heroSignals.map((signal) => (
+              <div key={signal.label} className="stm-command-signal">
+                <div className="stm-command-signal-icon">{signal.icon}</div>
+                <div className="stm-command-signal-copy">
+                  <span>{signal.label}</span>
+                  <strong>{signal.value}</strong>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Page Content */}
       <div className="stm-page-content">
@@ -231,6 +268,7 @@ const SentinelTemplateManagerPage: React.FC = () => {
           )}
         </div>
       </div>
+      <PageGuide guide={pageGuides.templateManager} />
     </div>
   );
 };

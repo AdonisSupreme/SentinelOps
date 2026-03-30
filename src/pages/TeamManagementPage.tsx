@@ -13,7 +13,9 @@ import {
   FaExclamationTriangle,
   FaUserPlus
 } from 'react-icons/fa';
+import PageGuide from '../components/ui/PageGuide';
 import { useAuth } from '../contexts/AuthContext';
+import { pageGuides } from '../content/pageGuides';
 import { teamApi, Shift, ScheduledShift } from '../services/teamApi';
 import { userApi, UserListItem } from '../services/userApi';
 import { orgApi, Section } from '../services/orgApi';
@@ -484,6 +486,7 @@ const TeamManagementPage: React.FC = () => {
           </div>
         )}
       </div>
+      <PageGuide guide={pageGuides.teamManagement} />
     </div>
   );
 };

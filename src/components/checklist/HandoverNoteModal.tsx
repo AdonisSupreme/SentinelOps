@@ -180,8 +180,8 @@ const HandoverNoteModal: React.FC<HandoverNoteModalProps> = ({
           <div className="help-text">
             <FaFlag />
             <span>
-              Handover notes are automatically shared with the next shift team. 
-              They will be visible to all participants of the next shift and can be acknowledged or resolved.
+              Handover notes now notify both current and next shift participants.
+              If the next shift instance does not exist yet, SentinelOps initializes it automatically before routing the note.
             </span>
           </div>
         </div>

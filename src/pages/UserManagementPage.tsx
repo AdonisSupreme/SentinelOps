@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FaSearch, FaUserShield, FaUserEdit, FaUserPlus, FaToggleOn, FaToggleOff } from 'react-icons/fa';
+import PageGuide from '../components/ui/PageGuide';
 import { useAuth } from '../contexts/AuthContext';
+import { pageGuides } from '../content/pageGuides';
 import { userApi, UserListItem, CreateUserRequest, UpdateUserRequest } from '../services/userApi';
 import { orgApi, Department, Section } from '../services/orgApi';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -197,6 +199,7 @@ const UserManagementPage: React.FC = () => {
           <h2>Restricted Area</h2>
           <p>You need administrator rights to manage SentinelOps users.</p>
         </div>
+        <PageGuide guide={pageGuides.userManagement} />
       </div>
     );
   }
@@ -500,6 +503,7 @@ const UserManagementPage: React.FC = () => {
           </div>
         </div>
       )}
+      <PageGuide guide={pageGuides.userManagement} />
     </div>
   );
 };

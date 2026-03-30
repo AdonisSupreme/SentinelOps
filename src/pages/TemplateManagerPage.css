@@ -1,6 +1,145 @@
 /* src/pages/TemplateManagerPage.css - SentinelOps Template Manager */
 
 .stm-template-manager-page {
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.08), transparent 28%),
+    linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
+}
+
+.stm-template-manager-page::before {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 45% 65%, rgba(15, 23, 42, 0.05) 0%, transparent 36%);
+}
+
+.stm-command-hero {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.stm-command-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 30px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(241,245,249,0.96));
+  border: 1px solid rgba(148,163,184,0.18);
+  box-shadow: 0 20px 56px rgba(15, 23, 42, 0.09);
+}
+
+.stm-command-copy {
+  position: relative;
+  z-index: 1;
+  padding: 1.8rem;
+}
+
+.stm-command-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.22);
+  background: rgba(148,163,184,0.09);
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.stm-template-header {
+  margin-bottom: 0;
+  padding: 1rem 0 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.stm-template-header::before,
+.stm-template-header::after {
+  display: none;
+}
+
+.stm-header-content h1,
+.stm-list-header h2,
+.stm-view-header h2 {
+  background: none;
+  color: var(--text-primary);
+  -webkit-text-fill-color: initial;
+  letter-spacing: -0.04em;
+  text-shadow: none;
+}
+
+.stm-header-content h1 {
+  font-size: clamp(1.9rem, 3vw, 2.8rem);
+  margin-top: 0.85rem;
+}
+
+.stm-header-icon {
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: #0f172a;
+  filter: none;
+}
+
+.stm-header-subtitle {
+  margin-left: 0;
+  max-width: 56rem;
+  line-height: 1.75;
+}
+
+.stm-command-signals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 1.5rem;
+}
+
+.stm-command-signal {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(148,163,184,0.14);
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(12px);
+}
+
+.stm-command-signal-icon {
+  display: grid;
+  place-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 14px;
+  background: rgba(148,163,184,0.14);
+  color: #334155;
+}
+
+.stm-command-signal-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.stm-command-signal-copy span {
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stm-command-signal-copy strong {
+  color: var(--text-primary);
+  font-size: 1.15rem;
+}
+
+.stm-template-manager-page {
   min-height: 100vh;
   color: var(--text-primary);
   padding: 2rem;
@@ -684,6 +823,81 @@
   .stm-item-meta {
     width: 100%;
     justify-content: flex-start;
+  }
+}
+
+.stm-breadcrumb,
+.stm-list-header,
+.stm-view-header {
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(148,163,184,0.18);
+  box-shadow: 0 18px 48px rgba(15,23,42,0.08);
+}
+
+.stm-breadcrumb a:hover {
+  background: rgba(255,255,255,0.94);
+  text-decoration: none;
+}
+
+.stm-nav-tab,
+.stm-btn,
+.stm-btn-create {
+  box-shadow: none;
+}
+
+.stm-nav-tab {
+  background: rgba(255,255,255,0.8);
+  border: 1px solid rgba(148,163,184,0.2);
+  color: var(--text-primary);
+}
+
+.stm-nav-tab:hover {
+  background: rgba(255,255,255,0.98);
+  border-color: rgba(100,116,139,0.34);
+  color: var(--text-primary);
+}
+
+.stm-nav-tab.stm-active,
+.stm-btn-create,
+.stm-btn-primary {
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+  border-color: rgba(15,23,42,0.12);
+  color: #fff;
+}
+
+.stm-create-tab.stm-active {
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+  box-shadow: 0 16px 32px rgba(29, 78, 216, 0.18);
+}
+
+[data-theme="dark"] .stm-template-manager-page {
+  background:
+    radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(96, 165, 250, 0.1), transparent 28%),
+    linear-gradient(180deg, #020617 0%, #0f172a 100%);
+}
+
+[data-theme="dark"] .stm-command-hero::before,
+[data-theme="dark"] .stm-breadcrumb,
+[data-theme="dark"] .stm-list-header,
+[data-theme="dark"] .stm-view-header,
+[data-theme="dark"] .stm-nav-tab,
+[data-theme="dark"] .stm-command-signal {
+  background: rgba(15,23,42,0.84);
+  border-color: rgba(148,163,184,0.18);
+}
+
+[data-theme="dark"] .stm-header-icon {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .stm-nav-tab:hover {
+  background: rgba(15,23,42,0.96);
+}
+
+@media (max-width: 960px) {
+  .stm-command-signals {
+    grid-template-columns: 1fr;
   }
 }
 

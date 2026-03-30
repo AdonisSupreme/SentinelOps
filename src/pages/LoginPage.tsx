@@ -1,108 +1,165 @@
-// src/components/auth/LoginForm.tsx
-import React, { useState } from 'react';
-import { FaLock, FaEnvelope, FaSignInAlt } from 'react-icons/fa';
+import React, { useMemo, useState } from 'react';
+import {
+  FaArrowRight,
+  FaEnvelope,
+  FaLock,
+  FaSatelliteDish,
+  FaShieldAlt,
+  FaSyncAlt
+} from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import { Link } from 'react-router-dom';
 import '../styles/LoginPage.css';
 
-const LoginForm: React.FC = () => {
+const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, adAvailability, refreshAdAvailability, lastAuthMethod } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const adStatusLabel = useMemo(() => {
+    if (adAvailability === 'checking') return 'Checking';
+    if (adAvailability === 'available') return 'Online';
+    return 'Offline';
+  }, [adAvailability]);
+
+  const adStatusClass = useMemo(() => {
+    if (adAvailability === 'checking') return 'status-checking';
+    if (adAvailability === 'available') return 'status-online';
+    return 'status-offline';
+  }, [adAvailability]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setIsLoading(true);
     setError('');
 
-    console.log('🔐 [LOGIN_PAGE] Form submission started');
-    console.log('📧 [LOGIN_PAGE] Email:', email);
-    console.log('🔑 [LOGIN_PAGE] Password length:', password.length);
-    console.log('🌐 [LOGIN_PAGE] Current URL:', window.location.href);
-
     try {
-      console.log('🚀 [LOGIN_PAGE] Calling login function...');
       await login(email, password);
-      console.log('✅ [LOGIN_PAGE] Login successful!');
     } catch (err: any) {
-      console.error('❌ [LOGIN_PAGE] Login error:', {
-        message: err.message,
-        stack: err.stack,
-        response: err.response,
-        status: err.response?.status,
-        data: err.response?.data
-      });
-      
-      // More specific error handling
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (err.response?.status === 401) {
-        setError('Invalid email or password');
-      } else if (err.response?.status >= 500) {
-        setError('Server error. Please try again later.');
-      } else if (err.code === 'NETWORK_ERROR' || err.message?.includes('Network Error')) {
-        setError('Cannot connect to server. Please check your connection.');
+      const responseMessage = err?.response?.data?.message || err?.response?.data?.detail;
+      const authSource = err?.response?.data?.context?.source;
+      if (responseMessage) {
+        setError(authSource ? `${responseMessage} (${authSource})` : responseMessage);
+      } else if (err?.status === 401 || err?.response?.status === 401) {
+        setError('Invalid email or password.');
+      } else if (err?.message?.toLowerCase?.().includes('network')) {
+        setError('Network issue detected. Please retry.');
       } else {
-        setError(`Login failed: ${err.message || 'Unknown error'}`);
+        setError(err?.message || 'Sign in failed. Please try again.');
       }
     } finally {
       setIsLoading(false);
-      console.log('🏁 [LOGIN_PAGE] Form submission completed');
     }
   };
 
   return (
-    <div className="login-form">
-      <div className="form-header">
-        <h2>SentinelOps</h2>
-        <p className='oap'>Operational Access Portal</p>
-      </div>
+    <div className="login-page-shell">
+      <div className="login-backdrop-grid" aria-hidden="true" />
+      <div className="login-orb login-orb-a" aria-hidden="true" />
+      <div className="login-orb login-orb-b" aria-hidden="true" />
 
-      {error && <div className="alert error">{typeof error === 'string' ? error : JSON.stringify(error)}</div>}
+      <section className="sops-login-panel">
+        <aside className="sops-login-intel">
+          <span className="sops-intel-kicker">SentinelOps Access Grid</span>
+          <h1>Operational Command Authentication</h1>
+          <p>
+            Securely enter SentinelOps through adaptive authentication. Active Directory is used when available, with
+            resilient fallback to the platform credential service when AD is unreachable.
+          </p>
 
-      <form onSubmit={handleSubmit}>
-        <div className="input-group">
-          <FaEnvelope className="input-icon" />
-          <input
-            type="email"
-            placeholder="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
+          <div className="sops-auth-route-card">
+            <div className="sops-auth-route-header">
+              <div className="sops-route-icon-wrap">
+                <FaSatelliteDish />
+              </div>
+              <div>
+                <div className="sops-route-label">Active Directory Gateway</div>
+                <div className={`sops-route-status ${adStatusClass}`}>
+                  <span className="sops-status-dot" />
+                  <span>{adStatusLabel}</span>
+                </div>
+              </div>
+            </div>
+            <button
+              className="sops-route-refresh"
+              type="button"
+              onClick={() => {
+                void refreshAdAvailability();
+              }}
+              disabled={adAvailability === 'checking'}
+            >
+              <FaSyncAlt />
+              Refresh AD status
+            </button>
+          </div>
 
-        <div className="input-group">
-          <FaLock className="input-icon" />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
+          <div className="sops-auth-path-hint">
+            <FaShieldAlt />
+            <span>
+              {adAvailability === 'available'
+                ? 'AD is online. Credentials will be validated by AD first, then signed into SentinelOps.'
+                : 'AD is offline. SentinelOps local authentication is active.'}
+            </span>
+          </div>
 
-        <button
-          type="submit"
-          className="btn-primary"
-          disabled={isLoading}
-        >
-          {isLoading ? 'Signing in...' : (
-            <>
-              <FaSignInAlt /> Sign In
-            </>
+          {lastAuthMethod && (
+            <div className="sops-last-route">
+              Last successful route: <strong>{lastAuthMethod === 'ad+app' ? 'AD + SentinelOps' : 'SentinelOps Local'}</strong>
+            </div>
           )}
-        </button>
-      </form>
+        </aside>
 
-      <p style={{ marginTop: '1rem' }}>
-        Forgot password? <Link to="/signup">reset</Link>
-      </p>
+        <div className="sops-login-card">
+          <div className="sops-card-head">
+            <h2>Sign In</h2>
+            <p>Mission-ready access for authorized operators</p>
+          </div>
+
+          {error && <div className="sops-alert sops-alert-error">{error}</div>}
+
+          <form onSubmit={handleSubmit}>
+            <label className="sops-field-label" htmlFor="login-email">Email</label>
+            <div className="sops-input-group">
+              <FaEnvelope className="sops-input-icon" />
+              <input
+                id="login-email"
+                type="email"
+                placeholder="operator@domain.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                required
+              />
+            </div>
+
+            <label className="sops-field-label" htmlFor="login-password">Password</label>
+            <div className="sops-input-group">
+              <FaLock className="sops-input-icon" />
+              <input
+                id="login-password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="sops-btn-primary"
+              disabled={isLoading}
+            >
+              <span>{isLoading ? 'Authenticating...' : 'Access SentinelOps'}</span>
+              {!isLoading && <FaArrowRight />}
+            </button>
+          </form>
+        </div>
+      </section>
     </div>
   );
 };
 
-export default LoginForm;
+export default LoginPage;

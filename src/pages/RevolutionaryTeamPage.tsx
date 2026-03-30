@@ -14,7 +14,9 @@ import {
   FaSearch,
   FaFilter
 } from 'react-icons/fa';
+import PageGuide from '../components/ui/PageGuide';
 import { useAuth } from '../contexts/AuthContext';
+import { pageGuides } from '../content/pageGuides';
 import { teamApi, Shift, ScheduledShift } from '../services/teamApi';
 import { shiftSchedulingApi, ShiftPattern } from '../services/shiftSchedulingApi';
 import { userApi, UserListItem } from '../services/userApi';
@@ -374,6 +376,7 @@ const RevolutionaryTeamPage: React.FC = () => {
           <FaPlus />
         </button>
       </div>
+      <PageGuide guide={pageGuides.revolutionaryTeam} />
     </div>
   );
 };
