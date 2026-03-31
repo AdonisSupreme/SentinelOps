@@ -45,7 +45,7 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
 }
 
-.enhanced-checklist-item.futuristic {
+.eci-card.eci-card--futuristic {
   background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   border: 1px solid var(--border-primary);
   margin: 16px 0;
@@ -56,12 +56,12 @@
   transition: all 0.3s ease;
 }
 
-.enhanced-checklist-item.futuristic:hover {
+.eci-card.eci-card--futuristic:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-xl);
 }
 
-.enhanced-checklist-item.futuristic::before {
+.eci-card.eci-card--futuristic::before {
   content: '';
   position: absolute;
   top: 0;
@@ -78,7 +78,7 @@
   100% { transform: translateX(100%); opacity: 0; }
 }
 
-.item-header {
+.eci-header {
   display: flex;
   align-items: center;
   padding: 20px;
@@ -87,19 +87,19 @@
   z-index: 1;
 }
 
-.item-header.has-subitems {
+.eci-header.eci-header--has-subitems {
   background: linear-gradient(180deg, rgba(148, 163, 184, 0.1) 0%, rgba(148, 163, 184, 0.04) 100%);
 }
 
-[data-theme="dark"] .item-header.has-subitems {
+[data-theme="dark"] .eci-header.eci-header--has-subitems {
   background: linear-gradient(180deg, rgba(51, 65, 85, 0.5) 0%, rgba(30, 41, 59, 0.25) 100%);
 }
 
-.item-header.pending {
+.eci-header.eci-header--pending {
   border-left: 4px solid var(--text-tertiary);
 }
 
-.item-header.in-progress {
+.eci-header.eci-header--in-progress {
   border-left: 4px solid var(--accent-primary);
   animation: pulse-glow 2s infinite;
 }
@@ -109,19 +109,19 @@
   50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.5); }
 }
 
-.item-header.completed {
+.eci-header.eci-header--completed {
   border-left: 4px solid var(--success);
 }
 
-.item-header.skipped {
+.eci-header.eci-header--skipped {
   border-left: 4px solid var(--warning);
 }
 
-.item-header.failed {
+.eci-header.eci-header--failed {
   border-left: 4px solid var(--error);
 }
 
-.item-main-info {
+.eci-main-info {
   display: flex;
   align-items: flex-start;
   gap: 16px;
@@ -130,7 +130,7 @@
   z-index: 2;
 }
 
-.status-indicator {
+.eci-status-indicator {
   position: absolute;
   top: 20px;
   left: 20px;
@@ -147,15 +147,15 @@
   z-index: 10;
 }
 
-.status-icon {
+.eci-status-icon {
   font-size: 18px;
 }
 
-.status-icon.completed {
+.eci-status-icon--completed {
   color: var(--success);
 }
 
-.status-icon.in-progress {
+.eci-status-icon--in-progress {
   color: var(--accent-primary);
   animation: spin 2s linear infinite;
 }
@@ -165,25 +165,25 @@
   to { transform: rotate(360deg); }
 }
 
-.status-icon.skipped {
+.eci-status-icon--skipped {
   color: var(--warning);
 }
 
-.status-icon.failed {
+.eci-status-icon--failed {
   color: var(--error);
 }
 
-.status-icon.pending {
+.eci-status-icon--pending {
   color: var(--text-tertiary);
 }
 
-.item-content {
+.eci-content {
   flex: 1;
   min-width: 0;
   padding-left: 72px; /* 48px indicator + 16px gap + 8px extra */
 }
 
-.item-title {
+.eci-title {
   color: var(--text-primary);
   font-size: 18px;
   font-weight: 700;
@@ -191,21 +191,21 @@
   line-height: 1.3;
 }
 
-.item-description {
+.eci-description {
   color: var(--text-secondary);
   font-size: 14px;
   line-height: 1.5;
   margin: 0 0 12px 0;
 }
 
-.item-metadata {
+.eci-metadata {
   display: flex;
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
 }
 
-.type-badge {
+.eci-type-badge {
   background: rgba(59, 130, 246, 0.1);
   color: var(--accent-primary);
   padding: 4px 8px;
@@ -216,12 +216,21 @@
   letter-spacing: 0.5px;
 }
 
-.severity-indicator {
+.eci-severity-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 16px;
   letter-spacing: 1px;
+  color: var(--warning);
 }
 
-.item-controls {
+.eci-severity-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.eci-controls {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -231,7 +240,7 @@
   z-index: 5;
 }
 
-.subitems-progress {
+.eci-subitems-progress {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -240,17 +249,17 @@
   z-index: 3;
 }
 
-.progress-ring {
+.eci-progress-ring {
   position: relative;
   width: 40px;
   height: 40px;
 }
 
-.progress-circle {
+.eci-progress-circle {
   transition: stroke-dasharray 0.5s ease;
 }
 
-.progress-text {
+.eci-progress-text {
   position: absolute;
   top: 0;
   left: 0;
@@ -270,18 +279,18 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.progress-stats {
+.eci-progress-stats {
   text-align: center;
 }
 
-.progress-stats .stat {
+.eci-progress-stats .eci-progress-stat {
   display: block;
   font-size: 12px;
   font-weight: 700;
   color: var(--success);
 }
 
-.progress-stats .label {
+.eci-progress-stats .eci-progress-label {
   display: block;
   font-size: 9px;
   color: var(--text-quaternary);
@@ -289,7 +298,7 @@
   letter-spacing: 0.5px;
 }
 
-.expand-btn {
+.eci-expand-btn {
   background: rgba(148, 163, 184, 0.1);
   border: 1px solid var(--border-secondary);
   color: var(--text-quaternary);
@@ -299,7 +308,7 @@
   transition: all 0.3s ease;
 }
 
-.expand-btn:hover {
+.eci-expand-btn:hover {
   background: rgba(59, 130, 246, 0.1);
   border-color: var(--accent-primary);
   color: var(--accent-primary);
@@ -357,7 +366,7 @@
   border-top: 1px solid var(--border-primary);
 }
 
-.subitems-section {
+.eci-subitems-section {
   border-top: 1px solid var(--border-primary);
 }
 
@@ -398,7 +407,7 @@
   transform: scale(1.05);
 }
 
-.completion-info {
+.eci-completion-info {
   text-align: left;
   color: var(--success);
   display: flex;
@@ -406,12 +415,12 @@
   gap: 8px;
 }
 
-.completion-icon {
+.eci-completion-icon {
   font-size: 24px;
   color: var(--success);
 }
 
-.it-completion-time {
+.eci-completion-time {
   font-size: 11px;
   color: var(--text-tertiary);
   opacity: 0.8;
@@ -429,13 +438,13 @@
   align-items: stretch;
 }
 
-.it-completion-overlay {
+.eci-completion-overlay {
   width: fit-content;
   padding: 12px;
 }
 
 /* Animation for item interactions */
-.enhanced-checklist-item.futuristic.interactive {
+.eci-card.eci-card--futuristic.interactive {
   animation: item-pulse 0.3s ease;
 }
 
@@ -579,26 +588,26 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .enhanced-checklist-item.futuristic {
+  .eci-card.eci-card--futuristic {
     margin: 12px 0;
   }
   
-  .item-header {
+  .eci-header {
     padding: 16px;
   }
   
-  .status-indicator {
+  .eci-status-indicator {
     width: 40px;
     height: 40px;
     top: 16px;
     left: 16px;
   }
   
-  .item-content {
+  .eci-content {
     padding-left: 64px;
   }
   
-  .item-title {
+  .eci-title {
     font-size: 16px;
   }
   
