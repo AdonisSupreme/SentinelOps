@@ -15,7 +15,7 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, adAvailability, refreshAdAvailability, lastAuthMethod } = useAuth();
+  const { login, adAvailability, refreshAdAvailability } = useAuth();
 
   const adStatusLabel = useMemo(() => {
     if (adAvailability === 'checking') return 'Checking';
@@ -61,11 +61,11 @@ const LoginPage: React.FC = () => {
 
       <section className="sops-login-panel">
         <aside className="sops-login-intel">
-          <span className="sops-intel-kicker">SentinelOps Access Grid</span>
-          <h1>Operational Command Authentication</h1>
+          <span className="sops-intel-kicker">SentinelOps Command Layer</span>
+          <h1>One place to see the operation clearly.</h1>
           <p>
-            Securely enter SentinelOps through adaptive authentication. Active Directory is used when available, with
-            resilient fallback to the platform credential service when AD is unreachable.
+            SentinelOps brings live oversight, shift continuity, task execution, and operational accountability into a
+            single command space so every team starts informed, responds faster, and leaves a cleaner handover behind.
           </p>
 
           <div className="sops-auth-route-card">
@@ -98,22 +98,16 @@ const LoginPage: React.FC = () => {
             <FaShieldAlt />
             <span>
               {adAvailability === 'available'
-                ? 'AD is online. Credentials will be validated by AD first, then signed into SentinelOps.'
-                : 'AD is offline. SentinelOps local authentication is active.'}
+                ? 'Use Windows credentials'
+                : 'Use SentinelOps credential'}
             </span>
           </div>
-
-          {lastAuthMethod && (
-            <div className="sops-last-route">
-              Last successful route: <strong>{lastAuthMethod === 'ad+app' ? 'AD + SentinelOps' : 'SentinelOps Local'}</strong>
-            </div>
-          )}
         </aside>
 
         <div className="sops-login-card">
           <div className="sops-card-head">
             <h2>Sign In</h2>
-            <p>Mission-ready access for authorized operators</p>
+            <p>Continue into the workspace where people, priorities, and proof stay aligned.</p>
           </div>
 
           {error && <div className="sops-alert sops-alert-error">{error}</div>}
