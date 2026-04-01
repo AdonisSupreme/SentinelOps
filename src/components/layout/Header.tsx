@@ -20,7 +20,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import ThemeToggle from '../ui/ThemeToggle';
 import NotificationCenter from '../notifications/NotificationCenter';
-import Logo from '../../logo.svg';
+import Logo from '../../logo.png';
 import './Header.css';
 
 interface NavItem {
@@ -100,22 +100,22 @@ const Header: React.FC = () => {
   const navItems: NavItem[] = useMemo(() => (
     isAdmin
       ? [
-          ...baseNavItems,
-          {
-            path: '/team',
-            label: 'Team',
-            icon: <FaUsers />,
-            description: 'Command your crew with staffing visibility, structure updates, and cross-functional coordination.'
-          },
-          {
-            path: '/users',
-            label: 'Users',
-            icon: <FaUserShield />,
-            description: 'Identity control center for access, roles, and the people trusted to run SentinelOps.'
-          }
-        ]
+        ...baseNavItems,
+        {
+          path: '/team',
+          label: 'Team',
+          icon: <FaUsers />,
+          description: 'Command your crew with staffing visibility, structure updates, and cross-functional coordination.'
+        },
+        {
+          path: '/users',
+          label: 'Users',
+          icon: <FaUserShield />,
+          description: 'Identity control center for access, roles, and the people trusted to run SentinelOps.'
+        }
+      ]
       : isManager
-      ? [
+        ? [
           ...baseNavItems,
           {
             path: '/team',
@@ -124,7 +124,7 @@ const Header: React.FC = () => {
             description: 'Command your crew with staffing visibility, structure updates, and cross-functional coordination.'
           }
         ]
-      : baseNavItems
+        : baseNavItems
   ), [baseNavItems, isAdmin, isManager]);
 
   useEffect(() => {
@@ -164,7 +164,7 @@ const Header: React.FC = () => {
   return (
     <header className="app-header">
       <div className="header-container">
-        
+
         {/* Brand Section - Left */}
         <div className="header-brand">
           <div className="brand-wrapper" onClick={() => navigate('/')}>

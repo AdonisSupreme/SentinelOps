@@ -4,17 +4,21 @@ export interface TrustlinkRunListItem {
   id: string;
   run_date: string;
   run_type: 'manual' | 'scheduled';
+  triggered_by?: string | null;
+  triggered_by_display?: string | null;
   status: 'pending' | 'running' | 'success' | 'failed' | 'duplicate';
   started_at?: string | null;
   completed_at?: string | null;
   total_rows: number;
   total_duration_ms?: number;
   file_path?: string | null;
+  file_name?: string | null;
+  file_status?: 'available' | 'deleted' | 'not_generated';
+  file_present?: boolean;
   error_message?: string | null;
 }
 
 export interface TrustlinkRunDetail extends TrustlinkRunListItem {
-  triggered_by?: string | null;
   file_hash?: string | null;
   integrity_report_path?: string | null;
   idc_rows: number;
@@ -44,7 +48,9 @@ export interface TrustlinkRunStartResponse {
   run_id?: string | null;
   run_type?: 'manual' | 'scheduled';
   triggered_by?: string | null;
+  triggered_by_display?: string | null;
   file_path?: string | null;
+  file_name?: string | null;
   options?: Array<'download' | 'overwrite'>;
   detail?: string | null;
 }
@@ -54,6 +60,13 @@ export interface TrustlinkTodayStatusResponse {
   run?: TrustlinkRunDetail | null;
   has_file: boolean;
   options: Array<'download' | 'overwrite'>;
+}
+
+export interface TrustlinkFileDeleteResponse {
+  deleted: boolean;
+  run_id: string;
+  file_status: 'available' | 'deleted' | 'not_generated';
+  detail: string;
 }
 
 type UnknownRecord = Record<string, unknown>;
@@ -109,17 +122,23 @@ const normalizeOptions = (value: unknown): Array<'download' | 'overwrite'> => {
 
 const normalizeRunListItem = (value: unknown): TrustlinkRunListItem => {
   const item = asRecord(value);
+  const fileStatus = asString(item.file_status, 'not_generated').toLowerCase();
 
   return {
     id: asString(item.id),
     run_date: asString(item.run_date),
     run_type: normalizeRunType(item.run_type),
+    triggered_by: asNullableString(item.triggered_by),
+    triggered_by_display: asNullableString(item.triggered_by_display),
     status: normalizeRunStatus(item.status),
     started_at: asNullableString(item.started_at),
     completed_at: asNullableString(item.completed_at),
     total_rows: asNumber(item.total_rows),
     total_duration_ms: asNumber(item.total_duration_ms),
     file_path: asNullableString(item.file_path),
+    file_name: asNullableString(item.file_name),
+    file_status: fileStatus === 'available' || fileStatus === 'deleted' ? fileStatus : 'not_generated',
+    file_present: Boolean(item.file_present),
     error_message: asNullableString(item.error_message),
   };
 };
@@ -130,7 +149,6 @@ const normalizeRunDetail = (value: unknown): TrustlinkRunDetail => {
 
   return {
     ...item,
-    triggered_by: asNullableString(detail.triggered_by),
     file_hash: asNullableString(detail.file_hash),
     integrity_report_path: asNullableString(detail.integrity_report_path),
     idc_rows: asNumber(detail.idc_rows),
@@ -181,7 +199,9 @@ const normalizeStartResponse = (value: unknown): TrustlinkRunStartResponse => {
     run_id: asNullableString(payload.run_id),
     run_type: normalizeRunType(payload.run_type),
     triggered_by: asNullableString(payload.triggered_by),
+    triggered_by_display: asNullableString(payload.triggered_by_display),
     file_path: asNullableString(payload.file_path),
+    file_name: asNullableString(payload.file_name),
     options: normalizeOptions(payload.options),
     detail: asNullableString(payload.detail),
   };
@@ -223,13 +243,13 @@ export const trustlinkApi = {
     return normalizeTodayStatus(response.data);
   },
 
-  async downloadRunFile(runId: string): Promise<void> {
+  async downloadRunFile(runId: string, preferredFilename?: string | null): Promise<void> {
     const response = await api.get(`/api/v1/trustlink/download/${runId}`, {
       responseType: 'blob',
     });
 
     const blob = new Blob([response.data], { type: 'application/octet-stream' });
-    const fallbackName = `STPLINK_AGRI_ACC_${runId}`;
+    const fallbackName = preferredFilename || `STPLINK_AGRI_ACC_${runId}`;
     const contentDisposition = response.headers?.['content-disposition'] as string | undefined;
     const matchedName = contentDisposition?.match(/filename="?([^"]+)"?/i)?.[1];
     const filename = matchedName || fallbackName;
@@ -247,6 +267,21 @@ export const trustlinkApi = {
   getDownloadUrl(runId: string): string {
     const base = (api.defaults.baseURL || '').replace(/\/$/, '');
     return `${base}/api/v1/trustlink/download/${runId}`;
+  },
+
+  async deleteRunFile(runId: string): Promise<TrustlinkFileDeleteResponse> {
+    const response = await api.delete(`/api/v1/trustlink/runs/${runId}/file`);
+    const payload = asRecord(response.data);
+    return {
+      deleted: Boolean(payload.deleted),
+      run_id: asString(payload.run_id),
+      file_status: asString(payload.file_status, 'not_generated') === 'available'
+        ? 'available'
+        : asString(payload.file_status, 'not_generated') === 'deleted'
+          ? 'deleted'
+          : 'not_generated',
+      detail: asString(payload.detail),
+    };
   },
 };
 

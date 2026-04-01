@@ -6,12 +6,19 @@ import {
   Notification as BackendNotification,
 } from '../contracts/generated/api.types';
 
+type BackendNotificationWithCompat = BackendNotification & {
+  read?: boolean;
+  isRead?: boolean;
+  title?: string;
+};
+
 type NotificationType = 'info' | 'warning' | 'success' | 'error' | 'checklist' | 'handover' | 'reminder';
 type Priority = 'low' | 'medium' | 'high';
 
 interface Notification {
   id: string;
   type: NotificationType;
+  title?: string;
   message: string;
   priority: Priority;
   read: boolean;
@@ -63,7 +70,17 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   };
 
-  const isNotificationRead = (notification: BackendNotification & { read?: boolean; isRead?: boolean }): boolean => {
+  const resolveNotificationType = (notification: BackendNotificationWithCompat): NotificationType => {
+    if ((notification.related_entity || '').toLowerCase() === 'trustlink_run') {
+      const signal = `${notification.title || ''} ${notification.message || ''}`.toLowerCase();
+      if (signal.includes('failed')) return 'error';
+      if (signal.includes('ready') || signal.includes('successfully')) return 'success';
+      return 'info';
+    }
+    return mapNotificationType(notification.type || notification.category || notification.related_entity);
+  };
+
+  const isNotificationRead = (notification: BackendNotificationWithCompat): boolean => {
     return Boolean(notification.is_read ?? notification.read ?? notification.isRead);
   };
 
@@ -77,9 +94,10 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     try {
       const apiNotifications = await checklistApi.getNotifications(true);
       const mappedNotifications: Notification[] = apiNotifications
-        .map((n: BackendNotification & { read?: boolean; isRead?: boolean }) => ({
+        .map((n: BackendNotificationWithCompat) => ({
         id: n.id,
-        type: mapNotificationType(n.type || n.category || n.related_entity),
+        type: resolveNotificationType(n),
+        title: n.title || undefined,
         message: n.message,
         priority: mapPriority(n.priority),
         read: isNotificationRead(n),
@@ -126,7 +144,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     // Show browser notification if supported
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('SentinelOps', {
-        body: notification.message,
+        body: notification.title ? `${notification.title}\n${notification.message}` : notification.message,
         icon: '/logo192.png'
       });
     }

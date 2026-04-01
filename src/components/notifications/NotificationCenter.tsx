@@ -271,6 +271,9 @@ const NotificationCenter: React.FC = () => {
                         {formatRelativeTime(notification.timestamp)}
                       </span>
                     </div>
+                    {notification.title && (
+                      <h4 className="notification-item-title">{notification.title}</h4>
+                    )}
                     <p className="notification-item-message">{notification.message}</p>
                     <div className="notification-item-footer">
                       <span className={`notification-priority-chip priority-${notification.priority}`}>

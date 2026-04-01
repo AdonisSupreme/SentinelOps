@@ -207,6 +207,7 @@ const AdvancedTeamManagementPage: React.FC = () => {
   const userMap = useMemo(() => new Map(sectionUsers.map((member) => [member.id, member])), [sectionUsers]);
   const shiftMap = useMemo(() => new Map(shifts.map((shift) => [shift.id, shift])), [shifts]);
   const activeSection = useMemo(() => sections.find((section) => section.id === effectiveSectionId) || null, [effectiveSectionId, sections]);
+  const shiftIds = useMemo(() => new Set(shifts.map((shift) => shift.id)), [shifts]);
 
   const sortedAssignments = useMemo(
     () =>
@@ -327,11 +328,27 @@ const AdvancedTeamManagementPage: React.FC = () => {
     if (!patternForm.name || !effectiveSectionId) return;
     setPatternSubmitting(true);
     try {
+      const normalizedScheduleDays = patternForm.schedule_days.map((day) => ({
+        day_of_week: day.day_of_week,
+        is_off_day: Boolean(day.is_off_day),
+        shift_id: day.is_off_day || day.shift_id == null ? null : Number(day.shift_id),
+      }));
+
+      const missingShiftDays = normalizedScheduleDays.filter((day) => !day.is_off_day && day.shift_id == null);
+      if (missingShiftDays.length) {
+        throw new Error(`Select a shift for: ${missingShiftDays.map((day) => DAY_LABELS[day.day_of_week]).join(', ')}`);
+      }
+
+      const invalidShiftDays = normalizedScheduleDays.filter((day) => day.shift_id != null && !shiftIds.has(day.shift_id));
+      if (invalidShiftDays.length) {
+        throw new Error(`One or more selected shifts are no longer available: ${invalidShiftDays.map((day) => DAY_LABELS[day.day_of_week]).join(', ')}`);
+      }
+
       const payload = {
         name: patternForm.name.trim(),
         description: patternForm.description.trim(),
         pattern_type: patternForm.pattern_type,
-        schedule_days: patternForm.schedule_days,
+        schedule_days: normalizedScheduleDays,
         section_id: effectiveSectionId,
       };
 

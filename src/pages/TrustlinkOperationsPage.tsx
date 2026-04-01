@@ -3,6 +3,7 @@ import {
   FiActivity,
   FiAlertTriangle,
   FiArrowDownCircle,
+  FiCheckCircle,
   FiClock,
   FiDatabase,
   FiPlay,
@@ -97,6 +98,16 @@ const formatRunDate = (value?: string | null): string => {
   }).format(date);
 };
 
+const formatRunType = (value?: string | null): string => (
+  (value || 'manual').toLowerCase() === 'scheduled' ? 'Scheduled' : 'Manual'
+);
+
+const prettyFileStatus = (status?: string | null): string => {
+  if (status === 'available') return 'Available';
+  if (status === 'deleted') return 'Deleted';
+  return 'Not generated';
+};
+
 const normalizeVisualStatus = (status?: string | null): string => {
   const normalized = (status || 'pending').toLowerCase();
 
@@ -146,6 +157,8 @@ const TrustlinkOperationsPage: React.FC = () => {
   const [selectedRun, setSelectedRun] = useState<TrustlinkRunDetail | null>(null);
   const [steps, setSteps] = useState<TrustlinkStep[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showOverwriteWarning, setShowOverwriteWarning] = useState(false);
+  const [pendingFileDeleteRun, setPendingFileDeleteRun] = useState<TrustlinkRunListItem | null>(null);
 
   const selectedRunId = selectedRun?.id || todayStatus?.run?.id || null;
 
@@ -325,7 +338,7 @@ const TrustlinkOperationsPage: React.FC = () => {
 
   const timeline = PIPELINE_ORDER.map((name, index) => {
     if (name === 'DOWNLOAD') {
-      const hasDownload = Boolean(selectedRun?.file_path || todayStatus?.has_file);
+      const hasDownload = Boolean(selectedRun?.file_present || todayStatus?.run?.file_present || todayStatus?.has_file);
       const saveStepStatus = stepMap.get('FILE_SAVE')?.status;
       const downloadStatus = hasDownload
         ? 'completed'
@@ -400,19 +413,50 @@ const TrustlinkOperationsPage: React.FC = () => {
     }
   };
 
-  const handleDownload = async (runId: string) => {
+  const confirmOverwrite = async () => {
+    setShowOverwriteWarning(false);
+    await handleOverwrite();
+  };
+
+  const handleDownload = async (runId: string, preferredFilename?: string | null) => {
     setActionLoading(true);
     setActionLabel('Preparing export download');
     setError(null);
 
     try {
-      await trustlinkApi.downloadRunFile(runId);
+      await trustlinkApi.downloadRunFile(runId, preferredFilename);
     } catch (e) {
       setError(getErrorMessage(e));
     } finally {
       setActionLoading(false);
       setActionLabel(null);
     }
+  };
+
+  const handleDeleteFile = async (runId: string) => {
+    setActionLoading(true);
+    setActionLabel('Removing saved export file');
+    setError(null);
+
+    try {
+      const result = await trustlinkApi.deleteRunFile(runId);
+      await hydrate({ silent: true });
+      if (selectedRunId === runId) {
+        setError(result.detail);
+      }
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setActionLoading(false);
+      setActionLabel(null);
+    }
+  };
+
+  const confirmDeleteFile = async () => {
+    if (!pendingFileDeleteRun) return;
+    const runId = pendingFileDeleteRun.id;
+    setPendingFileDeleteRun(null);
+    await handleDeleteFile(runId);
   };
 
   const selectRun = async (runId: string) => {
@@ -527,15 +571,15 @@ const TrustlinkOperationsPage: React.FC = () => {
             <FiRefreshCcw />
             Refresh Live Data
           </button>
-          {todayStatus?.has_file && todayStatus.run?.id && (
-            <button className="trustlink-btn ghost" onClick={() => void handleDownload(todayStatus.run!.id)} disabled={actionLoading}>
+          {todayStatus?.run?.file_present && todayStatus.run?.id && (
+            <button className="trustlink-btn ghost" onClick={() => void handleDownload(todayStatus.run!.id, todayStatus.run?.file_name)} disabled={actionLoading}>
               <FiArrowDownCircle />
               Download Export
             </button>
           )}
         </div>
 
-        <button className="trustlink-btn danger" onClick={handleOverwrite} disabled={actionLoading}>
+        <button className="trustlink-btn danger" onClick={() => setShowOverwriteWarning(true)} disabled={actionLoading}>
           <FiZap />
           Overwrite and Re-Extract
         </button>
@@ -645,7 +689,11 @@ const TrustlinkOperationsPage: React.FC = () => {
                 </div>
                 <div className="trustlink-data-point">
                   <span>Run Type</span>
-                  <strong>{todayStatus?.run?.run_type || '-'}</strong>
+                  <strong>{formatRunType(todayStatus?.run?.run_type)}</strong>
+                </div>
+                <div className="trustlink-data-point">
+                  <span>Triggered By</span>
+                  <strong>{todayStatus?.run?.triggered_by_display || '-'}</strong>
                 </div>
                 <div className="trustlink-data-point">
                   <span>Started</span>
@@ -656,8 +704,8 @@ const TrustlinkOperationsPage: React.FC = () => {
                   <strong>{formatDateTime(todayStatus?.run?.completed_at)}</strong>
                 </div>
                 <div className="trustlink-data-point">
-                  <span>File Ready</span>
-                  <strong>{todayStatus?.has_file ? 'Available' : 'Not yet'}</strong>
+                  <span>File Presence</span>
+                  <strong>{prettyFileStatus(todayStatus?.run?.file_status)}</strong>
                 </div>
               </div>
             </article>
@@ -694,6 +742,22 @@ const TrustlinkOperationsPage: React.FC = () => {
                 <div className="trustlink-data-point">
                   <span>Validation Time</span>
                   <strong>{formatDuration(selectedRun?.validation_duration_ms)}</strong>
+                </div>
+                <div className="trustlink-data-point trustlink-data-point-wide">
+                  <span>Triggered By</span>
+                  <strong>{selectedRun?.triggered_by_display || '-'}</strong>
+                </div>
+                <div className="trustlink-data-point trustlink-data-point-wide">
+                  <span>Export File</span>
+                  <strong>{selectedRun?.file_name || 'No file recorded'}</strong>
+                </div>
+                <div className="trustlink-data-point">
+                  <span>File Status</span>
+                  <strong>{prettyFileStatus(selectedRun?.file_status)}</strong>
+                </div>
+                <div className="trustlink-data-point">
+                  <span>Run Type</span>
+                  <strong>{formatRunType(selectedRun?.run_type)}</strong>
                 </div>
                 <div className="trustlink-data-point trustlink-data-point-wide">
                   <span>Integrity Hash</span>
@@ -743,9 +807,11 @@ const TrustlinkOperationsPage: React.FC = () => {
                     </div>
 
                     <div className="history-item-metrics">
-                      <span>{run.run_type}</span>
+                      <span>{formatRunType(run.run_type)}</span>
                       <span>{formatNumber(run.total_rows)} rows</span>
                       <span>{formatDuration(run.total_duration_ms)}</span>
+                      <span>{run.triggered_by_display || 'Unknown trigger'}</span>
+                      <span>{prettyFileStatus(run.file_status)}</span>
                       <span>{formatDateTime(run.completed_at || run.started_at)}</span>
                     </div>
 
@@ -760,15 +826,26 @@ const TrustlinkOperationsPage: React.FC = () => {
                       >
                         Inspect run
                       </button>
-                      {run.file_path && (
+                      {run.file_present && (
                         <button
                           className="trustlink-inline-btn"
                           onClick={(event) => {
                             event.stopPropagation();
-                            void handleDownload(run.id);
+                            void handleDownload(run.id, run.file_name);
                           }}
                         >
                           Download
+                        </button>
+                      )}
+                      {run.file_status === 'available' && run.run_date < new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10) && (
+                        <button
+                          className="trustlink-inline-btn danger"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setPendingFileDeleteRun(run);
+                          }}
+                        >
+                          Delete file
                         </button>
                       )}
                     </div>
@@ -781,6 +858,99 @@ const TrustlinkOperationsPage: React.FC = () => {
         </>
       )}
       
+      {showOverwriteWarning && (
+        <div className="trustlink-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="trustlink-overwrite-title">
+          <div className="trustlink-modal warning">
+            <div className="trustlink-modal-glow" aria-hidden="true" />
+            <div className="trustlink-modal-header">
+              <span className="trustlink-modal-icon">
+                <FiAlertTriangle />
+              </span>
+              <div>
+                <span className="trustlink-card-kicker">Critical Command</span>
+                <h3 id="trustlink-overwrite-title">Overwrite today&apos;s extraction?</h3>
+              </div>
+            </div>
+
+            <p className="trustlink-modal-copy">
+              You are about to replace today&apos;s TrustLink extraction with a fresh run. This command preserves the audit row,
+              clears the previous pipeline steps, removes the currently saved export file, and regenerates today&apos;s output from source systems.
+            </p>
+
+            <div className="trustlink-warning-grid">
+              <article className="trustlink-warning-card">
+                <span><FiArrowDownCircle /> Export impact</span>
+                <strong>The current saved file will be removed and replaced by the new extraction output.</strong>
+              </article>
+              <article className="trustlink-warning-card">
+                <span><FiRefreshCcw /> Pipeline impact</span>
+                <strong>Today&apos;s step history will reset for the rerun and live status will reflect the new execution path.</strong>
+              </article>
+              <article className="trustlink-warning-card">
+                <span><FiCheckCircle /> Audit impact</span>
+                <strong>The run record remains tracked, but its file evidence and step results are refreshed with the new extraction.</strong>
+              </article>
+            </div>
+
+            <div className="trustlink-modal-footer">
+              <button className="trustlink-btn secondary" onClick={() => setShowOverwriteWarning(false)} disabled={actionLoading}>
+                Cancel
+              </button>
+              <button className="trustlink-btn danger" onClick={() => void confirmOverwrite()} disabled={actionLoading}>
+                <FiZap />
+                Confirm Overwrite
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingFileDeleteRun && (
+        <div className="trustlink-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="trustlink-delete-file-title">
+          <div className="trustlink-modal warning delete-file">
+            <div className="trustlink-modal-glow" aria-hidden="true" />
+            <div className="trustlink-modal-header">
+              <span className="trustlink-modal-icon">
+                <FiAlertTriangle />
+              </span>
+              <div>
+                <span className="trustlink-card-kicker">File Deletion Warning</span>
+                <h3 id="trustlink-delete-file-title">Delete saved TrustLink export?</h3>
+              </div>
+            </div>
+
+            <p className="trustlink-modal-copy">
+              You are about to permanently remove the saved export file for this run from server storage. The TrustLink audit run,
+              timings, row counts, trigger details, and notification history will remain intact, but the file will no longer be downloadable.
+            </p>
+
+            <div className="trustlink-warning-grid">
+              <article className="trustlink-warning-card">
+                <span><FiArrowDownCircle /> File impact</span>
+                <strong>{pendingFileDeleteRun.file_name || 'The saved export'} will be removed from the TrustLink storage directory.</strong>
+              </article>
+              <article className="trustlink-warning-card">
+                <span><FiShield /> Audit impact</span>
+                <strong>The run record remains visible with its metadata, but file presence will update to Deleted.</strong>
+              </article>
+              <article className="trustlink-warning-card">
+                <span><FiClock /> Recovery impact</span>
+                <strong>To restore a downloadable file, you would need to run a fresh extraction or overwrite for the relevant date.</strong>
+              </article>
+            </div>
+
+            <div className="trustlink-modal-footer">
+              <button className="trustlink-btn secondary" onClick={() => setPendingFileDeleteRun(null)} disabled={actionLoading}>
+                Cancel
+              </button>
+              <button className="trustlink-btn danger" onClick={() => void confirmDeleteFile()} disabled={actionLoading}>
+                <FiAlertTriangle />
+                Confirm File Deletion
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
