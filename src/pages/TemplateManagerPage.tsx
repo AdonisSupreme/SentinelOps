@@ -6,10 +6,23 @@ import TemplateBuilder from '../components/checklist/TemplateBuilder';
 import TemplateEditor from '../components/checklist/TemplateEditor';
 import PageGuide from '../components/ui/PageGuide';
 import { pageGuides } from '../content/pageGuides';
-import type { ChecklistTemplate } from '../services/checklistApi';
+import { checklistApi, type ChecklistTemplate } from '../services/checklistApi';
 import './TemplateManagerPage.css';
 
 type View = 'list' | 'create' | 'edit' | 'view';
+
+const formatTemplateTime = (value?: string | null) => {
+  if (!value) return null;
+  return new Date(`2000-01-01T${value}`).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+const formatTemplateEvent = (value?: string) => {
+  if (!value) return null;
+  return new Date(value).toLocaleString();
+};
 
 const SentinelTemplateManagerPage: React.FC = () => {
   const [view, setView] = useState<View>('list');
@@ -45,13 +58,25 @@ const SentinelTemplateManagerPage: React.FC = () => {
     setSelectedTemplate(null);
   };
 
-  const handleEditTemplate = (template: ChecklistTemplate) => {
-    setSelectedTemplate(template);
+  const handleEditTemplate = async (template: ChecklistTemplate) => {
+    try {
+      const fullTemplate = await checklistApi.getTemplate(template.id);
+      setSelectedTemplate(fullTemplate);
+    } catch (error) {
+      console.error('Failed to load full template for editing:', error);
+      setSelectedTemplate(template);
+    }
     setView('edit');
   };
 
-  const handleViewTemplate = (template: ChecklistTemplate) => {
-    setSelectedTemplate(template);
+  const handleViewTemplate = async (template: ChecklistTemplate) => {
+    try {
+      const fullTemplate = await checklistApi.getTemplate(template.id);
+      setSelectedTemplate(fullTemplate);
+    } catch (error) {
+      console.error('Failed to load full template for viewing:', error);
+      setSelectedTemplate(template);
+    }
     setView('view');
   };
 
@@ -231,6 +256,32 @@ const SentinelTemplateManagerPage: React.FC = () => {
                           {item.description && (
                             <p className="stm-item-description">{item.description}</p>
                           )}
+                          {item.item_type === 'TIMED' && item.scheduled_time && (
+                            <p className="stm-item-description">
+                              Timed for {formatTemplateTime(item.scheduled_time)}
+                              {typeof item.notify_before_minutes === 'number'
+                                ? ` with ${item.notify_before_minutes} minute reminder`
+                                : ''}
+                            </p>
+                          )}
+                          {item.item_type === 'SCHEDULED_EVENT' && (
+                            <div className="stm-item-description">
+                              <p>
+                                Scheduled events: <strong>{item.scheduled_events?.length || 0}</strong>
+                              </p>
+                              {item.scheduled_events && item.scheduled_events.length > 0 && (
+                                <p>
+                                  Next event: <strong>{formatTemplateEvent(item.scheduled_events[0].event_datetime)}</strong>
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          {item.item_type === 'CONDITIONAL' && (
+                            <p className="stm-item-description">Manual-only conditional decision point.</p>
+                          )}
+                          {item.item_type === 'INFORMATIONAL' && (
+                            <p className="stm-item-description">Informational context only, no execution timer.</p>
+                          )}
                           {item.subitems && item.subitems.length > 0 && (
                             <div className="stm-subitems-list-view">
                               <p className="stm-subitems-title">Subitems:</p>
@@ -240,7 +291,13 @@ const SentinelTemplateManagerPage: React.FC = () => {
                                     <span className="stm-subitem-number">
                                       {idx + 1}.{subIdx + 1}
                                     </span>
-                                    <span className="stm-subitem-title">{sub.title}</span>
+                                    <span className="stm-subitem-title">
+                                      {sub.title}
+                                      {sub.item_type === 'TIMED' && sub.scheduled_time
+                                        ? ` · ${formatTemplateTime(sub.scheduled_time)}`
+                                        : ''}
+                                      {sub.item_type === 'CONDITIONAL' ? ' · Manual only' : ''}
+                                    </span>
                                   </li>
                                 ))}
                               </ul>

@@ -70,6 +70,39 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
     }
   };
 
+  const formatScheduledTime = (value?: string | null) => {
+    if (!value) {
+      return null;
+    }
+
+    return new Date(`2000-01-01T${value}`).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const getScheduledEventSummary = () => {
+    const scheduledEvents = item.scheduled_events || item.template_item?.scheduled_events || [];
+    if (!Array.isArray(scheduledEvents) || scheduledEvents.length === 0) {
+      return null;
+    }
+
+    const sortedEvents = [...scheduledEvents].sort(
+      (left, right) => new Date(left.event_datetime).getTime() - new Date(right.event_datetime).getTime()
+    );
+    const now = Date.now();
+    const nextUpcoming = sortedEvents.find((scheduledEvent) => new Date(scheduledEvent.event_datetime).getTime() >= now);
+    const referenceEvent = nextUpcoming || sortedEvents[sortedEvents.length - 1];
+    const isOverdue = !nextUpcoming && item.status !== 'COMPLETED';
+
+    return {
+      count: sortedEvents.length,
+      nextLabel: new Date(referenceEvent.event_datetime).toLocaleString(),
+      notifyBeforeMinutes: referenceEvent.notify_before_minutes,
+      isOverdue,
+    };
+  };
+
   const renderSeverity = (severity: number) => (
     Array.from({ length: Math.max(0, severity) }, (_, index) => (
       <FaExclamationTriangle
@@ -110,6 +143,12 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
     }
   };
 
+  const itemType = item.item_type || item.template_item?.item_type || 'ROUTINE';
+  const itemDescription = item.description || item.template_item?.description;
+  const scheduledTime = item.scheduled_time ?? item.template_item?.scheduled_time;
+  const notifyBeforeMinutes = item.notify_before_minutes ?? item.template_item?.notify_before_minutes;
+  const scheduledEventSummary = getScheduledEventSummary();
+
   return (
     <div className="eci-card eci-card--futuristic">
       <div
@@ -141,14 +180,39 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
               )}
             </h3>
 
-            {item.description && (
-              <p className="eci-description">{item.description}</p>
+            {itemDescription && (
+              <p className="eci-description">{itemDescription}</p>
             )}
 
             <div className="eci-metadata">
-              <span className="eci-type-badge">{item.item_type || item.template_item?.item_type}</span>
+              <span className="eci-type-badge">{itemType}</span>
               {item.severity && (
                 <span className="eci-severity-indicator">{renderSeverity(item.severity)}</span>
+              )}
+              {itemType === 'TIMED' && scheduledTime && (
+                <span className="eci-type-badge">
+                  <FaClock /> {formatScheduledTime(scheduledTime)}
+                </span>
+              )}
+              {itemType === 'TIMED' && typeof notifyBeforeMinutes === 'number' && (
+                <span className="eci-type-badge">Reminder {notifyBeforeMinutes}m</span>
+              )}
+              {itemType === 'SCHEDULED_EVENT' && scheduledEventSummary && (
+                <>
+                  <span className="eci-type-badge">{scheduledEventSummary.count} events</span>
+                  <span className="eci-type-badge">
+                    {scheduledEventSummary.isOverdue ? 'Overdue since' : 'Next'} {scheduledEventSummary.nextLabel}
+                  </span>
+                  <span className="eci-type-badge">
+                    Reminder {scheduledEventSummary.notifyBeforeMinutes}m
+                  </span>
+                </>
+              )}
+              {itemType === 'CONDITIONAL' && (
+                <span className="eci-type-badge">Manual only</span>
+              )}
+              {itemType === 'INFORMATIONAL' && (
+                <span className="eci-type-badge">Visibility only</span>
               )}
             </div>
           </div>

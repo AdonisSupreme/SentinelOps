@@ -78,7 +78,7 @@ const DashboardPage: React.FC = () => {
     const exceptionCount = todayInstances.filter(
       (instance) =>
         instance.status === 'COMPLETED_WITH_EXCEPTIONS' ||
-        instance.status === 'CLOSED_BY_EXCEPTION' ||
+        instance.status === 'INCOMPLETE' ||
         (instance.exceptions?.length ?? 0) > 0
     ).length;
     const coverageGapCount = todayInstances.filter((instance) => instance.participants.length === 0).length;

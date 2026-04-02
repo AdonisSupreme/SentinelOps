@@ -1,6 +1,6 @@
 // src/components/checklist/TemplateList.tsx
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaEye, FaFilter, FaSearch, FaPlus } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEye, FaFilter, FaSearch } from 'react-icons/fa';
 import { checklistApi, type ChecklistTemplate } from '../../services/checklistApi';
 import TemplateManagerSkeleton from './TemplateManagerSkeleton';
 import './TemplateList-New.css';
@@ -159,6 +159,19 @@ const TemplateList: React.FC<TemplateListProps> = ({ onEdit, onDelete, onView })
                 </span>
                 <span className="sentinel-meta-info-row">
                   Created: <strong>{formatDate(template.created_at)}</strong>
+                </span>
+                <span className="sentinel-meta-info-row">
+                  Timed: <strong>{template.items?.filter((item) => item.item_type === 'TIMED').length || 0}</strong>
+                </span>
+                <span className="sentinel-meta-info-row">
+                  Events:{' '}
+                  <strong>
+                    {template.items?.reduce((count, item) => count + (item.scheduled_events?.length || 0), 0) || 0}
+                  </strong>
+                </span>
+                <span className="sentinel-meta-info-row">
+                  Conditional:{' '}
+                  <strong>{template.items?.filter((item) => item.item_type === 'CONDITIONAL').length || 0}</strong>
                 </span>
               </div>
 

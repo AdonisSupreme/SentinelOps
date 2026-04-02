@@ -130,7 +130,7 @@ class ChecklistStatePolicyManager {
         IN_PROGRESS: {
           label: 'In Progress',
           description: 'Checklist is being worked on',
-          allowed_transitions: ['COMPLETED', 'CLOSED_BY_EXCEPTION'],
+          allowed_transitions: ['COMPLETED', 'INCOMPLETE'],
           required_fields: [],
           allowed_roles: [],
         },
@@ -141,9 +141,9 @@ class ChecklistStatePolicyManager {
           required_fields: [],
           allowed_roles: [],
         },
-        CLOSED_BY_EXCEPTION: {
-          label: 'Closed by Exception',
-          description: 'Checklist closed due to exceptions',
+        INCOMPLETE: {
+          label: 'Incomplete',
+          description: 'Checklist closed without full completion',
           allowed_transitions: [],
           required_fields: [],
           allowed_roles: [],
@@ -166,10 +166,10 @@ class ChecklistStatePolicyManager {
           requires_reason: false,
           allowed_capabilities: ['COMPLETE_CHECKLIST'],
         },
-        'IN_PROGRESS->CLOSED_BY_EXCEPTION': {
+        'IN_PROGRESS->INCOMPLETE': {
           from: 'IN_PROGRESS',
-          to: 'CLOSED_BY_EXCEPTION',
-          label: 'Close with Exceptions',
+          to: 'INCOMPLETE',
+          label: 'Mark Incomplete',
           requires_comment: true,
           requires_reason: true,
           allowed_capabilities: ['CLOSE_CHECKLIST_EXCEPTION'],

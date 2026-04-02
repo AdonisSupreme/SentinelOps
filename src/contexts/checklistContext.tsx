@@ -19,7 +19,7 @@ interface ChecklistContextType {
   
   // Actions
   loadTodayInstances: () => Promise<void>;
-  loadInstance: (id: string) => Promise<void>;
+  loadInstance: (id: string) => Promise<ChecklistInstance | void>;
   joinInstance: (instanceId: string) => Promise<void>;
   updateItemStatus: (
     instanceId: string,
@@ -209,7 +209,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, []);
 
-  const loadInstanceWithRetry = useCallback(async (id: string, retryCount = 0) => {
+  const loadInstanceWithRetry = useCallback(async (id: string, retryCount = 0): Promise<ChecklistInstance | void> => {
     if (!id || id === 'undefined') {
       console.error('Invalid instance ID provided:', id);
       setError('Invalid checklist ID');
@@ -235,6 +235,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       setCurrentInstance(instance);
       setError(null);
+      return instance;
     } catch (err: any) {
       console.error('Error loading instance:', err);
       
@@ -431,7 +432,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       errors.push('Valid status is required');
     }
     
-    const validStatuses = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED', 'FAILED', 'NOT_APPLICABLE'];
+    const validStatuses = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED', 'FAILED'];
     if (!validStatuses.includes(status)) {
       errors.push(`Status must be one of: ${validStatuses.join(', ')}`);
     }
@@ -473,6 +474,8 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // Find current item for previous status and timing
       const currentItem = currentInstance?.items.find(item => item.id === itemId);
       const previousStatus = currentItem?.status || 'PENDING';
+      const currentItemHasSubitems =
+        Array.isArray(currentItem?.subitems) && (currentItem?.subitems?.length || 0) > 0;
       
       // Validate state transition before proceeding
       if (!validateTransition(previousStatus, status)) {
@@ -494,7 +497,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           if (item.id === itemId) {
             const updatedItem = {
               ...item,
-              status: status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'NOT_APPLICABLE',
+              status: status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'FAILED',
               notes: comment || reason || null,
               updated_at: new Date().toISOString(),
               skipped_reason: (status === 'SKIPPED' ? reason : null) || item.skipped_reason,
@@ -564,8 +567,19 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       // Make API call with retry logic - server returns the full instance
       const updatedInstance = await retryWithBackoff(async () => {
+        if (status === 'IN_PROGRESS' && currentItemHasSubitems) {
+          await checklistApi.startItemWork(instanceId, itemId, comment || reason || undefined);
+          const refreshedInstance = await loadInstance(instanceId);
+
+          if (!refreshedInstance) {
+            throw new Error('Failed to reload checklist instance after starting work');
+          }
+
+          return refreshedInstance;
+        }
+
         return await checklistApi.updateItemStatus(instanceId, itemId, {
-          status: status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'NOT_APPLICABLE',
+          status: status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'FAILED',
           notes: comment || reason || undefined,
           action_type: getActionType(status),
           reason: reason,
@@ -584,41 +598,8 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         updatedItem: updatedInstance.items.find(i => i.id === itemId)
       });
 
-      // Check if we need to transition instance from OPEN to IN_PROGRESS
-      // This happens when the first item starts working (PENDING → IN_PROGRESS)
-      if (
-        currentInstance.status === 'OPEN' && 
-        status === 'IN_PROGRESS' && 
-        previousStatus === 'PENDING'
-      ) {
-        console.log('🔄 Transitioning checklist instance from OPEN to IN_PROGRESS');
-        
-        // Update the instance status to IN_PROGRESS
-        const instanceWithInProgress: ChecklistInstance = {
-          ...updatedInstance,
-          status: 'IN_PROGRESS' as const
-        };
-        
-        setCurrentInstance(instanceWithInProgress);
-        
-        // Also update todayInstances list if it exists
-        setTodayInstances(prev => {
-          if (!prev || prev.length === 0) return prev;
-          const idx = prev.findIndex(p => p.id === instanceWithInProgress.id);
-          if (idx === -1) return prev;
-          const copy = [...prev];
-          copy[idx] = instanceWithInProgress;
-          return copy;
-        });
-        
-        console.log('✅ Checklist instance status transitioned to IN_PROGRESS');
-      } else {
-        // Normal flow - use server-returned instance
-        setError(null);
-
-        // Refresh currentInstance from server-provided instance to ensure source-of-truth
-        setCurrentInstance(updatedInstance);
-      }
+      setError(null);
+      setCurrentInstance(updatedInstance);
 
       // Also update the in-memory `todayInstances` list to replace the instance
       setTodayInstances(prev => {

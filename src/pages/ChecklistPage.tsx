@@ -76,9 +76,8 @@ const ChecklistPage: React.FC = () => {
     if (action === 'IN_PROGRESS' && hasSubitems && selectedItemForActions) {
       // Refresh instance to get updated status
       if (id) {
-        await loadInstance(id);
-        // Get the current instance data to ensure we have the latest
-        const updatedItem = currentInstance?.items?.find((item: any) => item.id === selectedItemForActions.id);
+        const refreshedInstance = await loadInstance(id);
+        const updatedItem = refreshedInstance?.items?.find((item: any) => item.id === selectedItemForActions.id);
         
         if (updatedItem) {
           // Show SmartSubitemModal for items with subitems
@@ -245,7 +244,7 @@ const ChecklistPage: React.FC = () => {
   const handleDownloadPDF = async () => {
     if (!id || isGeneratingPDF) return;
 
-    const isCompletedChecklist = ['COMPLETED', 'COMPLETED_WITH_EXCEPTIONS', 'CLOSED_BY_EXCEPTION'].includes(
+    const isCompletedChecklist = ['COMPLETED', 'COMPLETED_WITH_EXCEPTIONS', 'INCOMPLETE'].includes(
       currentInstance?.status || ''
     );
 
@@ -270,7 +269,7 @@ const ChecklistPage: React.FC = () => {
   };
 
   const openDateShiftFeature = () => {
-    const isCompletedChecklist = ['COMPLETED', 'COMPLETED_WITH_EXCEPTIONS', 'CLOSED_BY_EXCEPTION'].includes(
+    const isCompletedChecklist = ['COMPLETED', 'COMPLETED_WITH_EXCEPTIONS', 'INCOMPLETE'].includes(
       currentInstance?.status || ''
     );
 
@@ -310,7 +309,7 @@ const ChecklistPage: React.FC = () => {
       'PENDING_REVIEW': { label: 'Pending Review', tone: 'review', icon: <FaClock /> },
       'COMPLETED': { label: 'Completed', tone: 'success', icon: <FaCheckCircle /> },
       'COMPLETED_WITH_EXCEPTIONS': { label: 'With Exceptions', tone: 'critical', icon: <FaExclamationTriangle /> },
-      'CLOSED_BY_EXCEPTION': { label: 'Closed by Exception', tone: 'critical', icon: <FaBan /> },
+      'INCOMPLETE': { label: 'Incomplete', tone: 'critical', icon: <FaBan /> },
     };
 
     const config = statusConfig[status] || statusConfig.OPEN;

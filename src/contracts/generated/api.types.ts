@@ -55,6 +55,17 @@ export interface ChecklistTemplate {
   items?: ChecklistItem[];
 }
 
+export interface ChecklistScheduledEvent {
+  id?: string;
+  template_item_id?: string;
+  event_datetime: string;
+  notify_before_minutes: number;
+  notify_roles?: string[] | null;
+  notify_all: boolean;
+  created_by?: string | null;
+  created_at?: string;
+}
+
 export interface CreateChecklistTemplateRequest {
   name: string;
   description: string;
@@ -86,9 +97,11 @@ export interface ChecklistItem {
   item_type: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
   is_required: boolean;
   scheduled_time: string | null;
+  notify_before_minutes?: number | null;
   severity: number;
   sort_order: number;
   subitems?: ChecklistItem[];
+  scheduled_events?: ChecklistScheduledEvent[];
 }
 
 export interface CreateTemplateItemRequest {
@@ -96,12 +109,13 @@ export interface CreateTemplateItemRequest {
   description?: string;
   item_type: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
   is_required: boolean;
-  scheduled_time?: string;
-  notify_before_minutes?: number;
+  scheduled_time?: string | null;
+  notify_before_minutes?: number | null;
   severity: number;
   sort_order: number;
   id?: string; // Include ID for updates
   subitems?: CreateTemplateSubitemRequest[];
+  scheduled_events?: ChecklistScheduledEvent[];
 }
 
 export interface CreateTemplateSubitemRequest {
@@ -109,6 +123,8 @@ export interface CreateTemplateSubitemRequest {
   description?: string;
   item_type: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
   is_required: boolean;
+  scheduled_time?: string | null;
+  notify_before_minutes?: number | null;
   severity: number;
   sort_order: number;
   id?: string; // Include ID for updates
@@ -162,10 +178,12 @@ export interface ChecklistItemInstance {
   item_type?: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
   is_required?: boolean;
   scheduled_time?: string | null;
+  notify_before_minutes?: number | null;
   severity?: number;
   sort_order?: number;
+  scheduled_events?: ChecklistScheduledEvent[];
   // Instance-specific properties
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'NOT_APPLICABLE';
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'FAILED';
   completed_at: string | null;
   completed_by: {
     id: string;
@@ -188,7 +206,7 @@ export interface ChecklistInstance {
   shift: 'MORNING' | 'AFTERNOON' | 'NIGHT';
   shift_start: string;
   shift_end: string;
-  status: 'OPEN' | 'IN_PROGRESS' | 'PENDING_REVIEW' | 'COMPLETED' | 'COMPLETED_WITH_EXCEPTIONS' | 'CLOSED_BY_EXCEPTION';
+  status: 'OPEN' | 'IN_PROGRESS' | 'PENDING_REVIEW' | 'COMPLETED' | 'COMPLETED_WITH_EXCEPTIONS' | 'INCOMPLETE';
   created_by: {
     id: string;
     username: string;
@@ -221,7 +239,7 @@ export interface CreateChecklistInstanceRequest {
 }
 
 export interface UpdateChecklistItemRequest {
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'NOT_APPLICABLE';
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'FAILED';
   notes?: string;
   attachments?: string[];
   action_type?: 'STARTED' | 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'ESCALATED' | 'UPDATED';

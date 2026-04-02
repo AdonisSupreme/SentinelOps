@@ -26,6 +26,7 @@ import {
   UpdateChecklistTemplateRequest,
   CreateTemplateItemRequest,
   CreateTemplateSubitemRequest,
+  ChecklistScheduledEvent,
   TemplateMutationResponse,
 } from '../contracts/generated/api.types';
 
@@ -56,6 +57,7 @@ export type {
   UpdateChecklistTemplateRequest,
   CreateTemplateItemRequest,
   CreateTemplateSubitemRequest,
+  ChecklistScheduledEvent,
   TemplateMutationResponse,
 };
 
@@ -316,6 +318,28 @@ class ChecklistApi {
     );
     // Return the full instance (source-of-truth) so callers can refresh local state
     return response.data.instance;
+  }
+
+  async startItemWork(
+    instanceId: string,
+    itemId: string,
+    comment?: string
+  ): Promise<{
+    item_id: string;
+    item_title: string;
+    item_status: 'IN_PROGRESS';
+    has_subitems: boolean;
+    subitems: any[];
+    next_subitem: any | null;
+    subitem_count: number;
+    completed_subitem_count: number;
+    subitem_status?: string | null;
+  }> {
+    const response = await api.post(
+      `/api/v1/checklists/instances/${instanceId}/items/${itemId}/start-work`,
+      comment ? { comment } : undefined
+    );
+    return response.data;
   }
 
   // Subitems

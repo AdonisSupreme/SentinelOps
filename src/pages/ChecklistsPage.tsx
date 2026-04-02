@@ -285,7 +285,7 @@ const ChecklistsPage: React.FC = () => {
       if (instance.status === 'COMPLETED') data.completed += 1;
       else if (instance.status === 'IN_PROGRESS') data.active += 1;
       else if (instance.status === 'OPEN') data.open += 1;
-      else if (instance.status === 'COMPLETED_WITH_EXCEPTIONS' || instance.status === 'CLOSED_BY_EXCEPTION') {
+      else if (instance.status === 'COMPLETED_WITH_EXCEPTIONS' || instance.status === 'INCOMPLETE') {
         data.exceptions += 1;
       }
     });
@@ -581,7 +581,7 @@ const ChecklistsPage: React.FC = () => {
                 <option value="COMPLETED">Completed</option>
                 <option value="PENDING_REVIEW">Pending Review</option>
                 <option value="COMPLETED_WITH_EXCEPTIONS">Completed with Exceptions</option>
-                <option value="CLOSED_BY_EXCEPTION">Closed by Exception</option>
+                <option value="INCOMPLETE">Incomplete</option>
               </select>
               <select value={shiftFilter} onChange={(event) => { setShiftFilter(event.target.value); setCurrentPage(1); }}>
                 <option value="all">All Shifts</option>
