@@ -4,11 +4,11 @@ export const pageGuides: Record<string, PageGuideDefinition> = {
   dashboard: {
     eyebrow: 'SentinelOps Guide',
     title: 'Understanding the command overview',
-    intro: 'This page is the fastest way to understand what is active today, where pressure is building, and which checklist needs attention first.',
+    intro: 'This page is the fastest way to understand what is active in the current operational day, where pressure is building, and which checklist needs attention first.',
     sections: [
       { title: 'Operational State', body: 'The hero metrics summarize readiness, execution, containment, and staffing so you can assess the day at a glance.' },
       { title: 'Shift Radar', body: 'Each shift card shows how many operations are live, how many people are present, and whether the shift is moving smoothly.' },
-      { title: 'Command Threads', body: 'These cards represent today\'s live checklists. Open one when you want full task-level progress and participation details.' },
+      { title: 'Command Threads', body: 'These cards represent the current operational day\'s live checklists. Open one when you want full task-level progress and participation details.' },
       { title: 'Attention Queue', body: 'This panel surfaces the items most likely to need intervention, like missing coverage or active exceptions.' },
     ],
     workflow: [

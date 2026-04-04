@@ -62,7 +62,7 @@ const DashboardPage: React.FC = () => {
     setHasInitialized(true);
 
     const interval = setInterval(() => {
-      loadTodayInstances();
+      loadDashboardData();
     }, 30000);
 
     return () => clearInterval(interval);
@@ -158,8 +158,26 @@ const DashboardPage: React.FC = () => {
       return `Operations are progressing, but supervision attention is required. ${commandMetrics.coverageGapCount} shift${commandMetrics.coverageGapCount === 1 ? '' : 's'} still need operator coverage, and ${commandMetrics.pendingReviewCount} checklist${commandMetrics.pendingReviewCount === 1 ? '' : 's'} are waiting for review.`;
     }
 
-    return `The command overview is stable, with ${commandMetrics.executionRate}% of today\'s operational tasks already actioned across live checklists.`;
+    return `The command overview is stable, with ${commandMetrics.executionRate}% of the current operational day\'s tasks already actioned across live checklists.`;
   }, [commandMetrics]);
+
+  const operationalDayLabel = useMemo(() => {
+    const rawDate = dashboardData?.operational_day?.checklist_date;
+    if (!rawDate || typeof rawDate !== 'string') {
+      return 'Operational day';
+    }
+
+    const parsed = new Date(`${rawDate}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) {
+      return `Operational day ${rawDate}`;
+    }
+
+    return `Operational day ${parsed.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })}`;
+  }, [dashboardData]);
 
   const shiftCards = useMemo(() => {
     return SHIFT_ORDER.map((shift) => {
@@ -270,7 +288,7 @@ const DashboardPage: React.FC = () => {
   const guideItems = [
     {
       title: 'Operational State',
-      body: 'Summarizes the current posture of today\'s active operations by combining exceptions, unresolved critical work, and review pressure.'
+      body: 'Summarizes the current posture of the active operational-day threads by combining exceptions, unresolved critical work, and review pressure.'
     },
     {
       title: 'Shift Radar',
@@ -278,7 +296,7 @@ const DashboardPage: React.FC = () => {
     },
     {
       title: 'Command Threads',
-      body: 'Represents the live checklists for today. Each card shows execution progress, participation, and the current checklist status.'
+      body: 'Represents the live checklists for the current operational day. Each card shows execution progress, participation, and the current checklist status.'
     },
     {
       title: 'Operational Matrix',
@@ -383,8 +401,8 @@ const DashboardPage: React.FC = () => {
 
           <section className="dashboard-section command-panel">
             <div className="section-header command-section-header">
-              <h2><FaClipboardCheck /> Today's Command Threads</h2>
-              <span className="section-badge">{todayInstances.length} Active</span>
+              <h2><FaClipboardCheck /> Operational Day Command Threads</h2>
+              <span className="section-badge">{operationalDayLabel} • {todayInstances.length} Active</span>
             </div>
 
             <div className="checklist-grid">
@@ -392,7 +410,7 @@ const DashboardPage: React.FC = () => {
                 <div className="empty-state command-empty-state">
                   <FaCalendarAlt size={44} />
                   <h3>No active operations in the queue</h3>
-                  <p>Start a checklist to establish visibility, ownership, and execution tracking for the current shift.</p>
+                  <p>Start a checklist to establish visibility, ownership, and execution tracking for the current operational day.</p>
                 </div>
               ) : (
                 todayInstances.map((instance) => <ChecklistCard key={instance.id} instance={instance} />)
@@ -499,7 +517,7 @@ const DashboardPage: React.FC = () => {
             </div>
 
             <p className="dashboard-guide-intro">
-              This view is designed to help operators and supervisors understand the state of today&apos;s work quickly:
+              This view is designed to help operators and supervisors understand the current operational day quickly:
               what is active, what needs attention, and where intervention is most useful.
             </p>
 
