@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   FaBolt,
   FaCalendarAlt,
@@ -17,9 +17,8 @@ import { DashboardHeader, ChecklistCard, QuickActions, DashboardSkeleton } from 
 import PageGuide from '../components/ui/PageGuide';
 import { pageGuides } from '../content/pageGuides';
 import { useAuth } from '../contexts/AuthContext';
-import { useChecklist } from '../contexts/checklistContext';
-import { checklistApi } from '../services/checklistApi';
-import { NetworkService, networkSentinelApi } from '../services/networkSentinelApi';
+import { useDashboardSnapshot } from '../hooks/useDashboardSnapshot';
+import { OperationalDashboardSummary } from '../services/checklistApi';
 import './DashboardPage.css';
 import '../components/dashboard/DashboardSkeleton.css';
 
@@ -32,138 +31,99 @@ const SHIFT_WINDOWS: Record<ShiftName, string> = {
   NIGHT: '23:00 - 07:00'
 };
 
+const EMPTY_DASHBOARD_SNAPSHOT: OperationalDashboardSummary = {
+  operational_day: {
+    checklist_date: '',
+    window_start: '',
+    window_end: '',
+    timezone: '',
+    boundary_time: ''
+  },
+  command_metrics: {
+    active_instances: 0,
+    in_progress_count: 0,
+    pending_review_count: 0,
+    completed_count: 0,
+    exception_count: 0,
+    coverage_gap_count: 0,
+    total_items: 0,
+    completed_items: 0,
+    actioned_items: 0,
+    critical_items: 0,
+    open_critical_items: 0,
+    participants: 0,
+    handover_count: 0,
+    execution_rate: 0,
+    completion_rate: 0,
+    critical_containment: 100,
+    posture_label: 'Standby'
+  },
+  shift_cards: SHIFT_ORDER.map((shift) => ({
+    shift,
+    window: SHIFT_WINDOWS[shift],
+    operations: 0,
+    participants: 0,
+    exceptions: 0,
+    readiness: 0,
+    status: 'No active thread'
+  })),
+  checklist_threads: [],
+  attention_queue: [],
+  handover_feed: [],
+  notifications_unread: 0,
+  generated_at: ''
+};
+
+const guideItems = [
+  {
+    title: 'Operational State',
+    body: 'Summarizes the current posture of the active operational-day threads by combining exceptions, unresolved critical work, and review pressure.'
+  },
+  {
+    title: 'Shift Radar',
+    body: 'Shows each shift window, how many operations are active, how many operators are present, and how far execution has progressed.'
+  },
+  {
+    title: 'Command Threads',
+    body: 'Represents the live checklists for the current operational day. Each card shows execution progress, participation, and the current checklist status.'
+  },
+  {
+    title: 'Operational Matrix',
+    body: 'Highlights the key metrics that supervisors usually need first: critical queue, review pressure, completed threads, and coverage gaps.'
+  }
+];
+
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const { todayInstances, loadTodayInstances, loading } = useChecklist();
-  const [dashboardData, setDashboardData] = useState<any>(null);
-  const [networkServices, setNetworkServices] = useState<NetworkService[]>([]);
-  const [hasInitialized, setHasInitialized] = useState(false);
+  const { snapshot, loading, refresh } = useDashboardSnapshot();
   const [showGuide, setShowGuide] = useState(false);
 
-  useEffect(() => {
-    if (hasInitialized) return;
-
-    const loadDashboardData = async () => {
-      await loadTodayInstances();
-
-      try {
-        const [dashboardSummary, services] = await Promise.all([
-          checklistApi.getDashboardSummary(),
-          networkSentinelApi.listServices()
-        ]);
-        setDashboardData(dashboardSummary);
-        setNetworkServices(services);
-      } catch (error) {
-        console.error('Failed to load dashboard data:', error);
-      }
-    };
-
-    loadDashboardData();
-    setHasInitialized(true);
-
-    const interval = setInterval(() => {
-      loadDashboardData();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [hasInitialized, loadTodayInstances]);
-
-  const commandMetrics = useMemo(() => {
-    const activeInstances = todayInstances.length;
-    const inProgressCount = todayInstances.filter((instance) => instance.status === 'IN_PROGRESS').length;
-    const pendingReviewCount = todayInstances.filter((instance) => instance.status === 'PENDING_REVIEW').length;
-    const completedCount = todayInstances.filter(
-      (instance) => instance.status === 'COMPLETED' || instance.status === 'COMPLETED_WITH_EXCEPTIONS'
-    ).length;
-    const exceptionCount = todayInstances.filter(
-      (instance) =>
-        instance.status === 'COMPLETED_WITH_EXCEPTIONS' ||
-        instance.status === 'INCOMPLETE' ||
-        (instance.exceptions?.length ?? 0) > 0
-    ).length;
-    const coverageGapCount = todayInstances.filter((instance) => instance.participants.length === 0).length;
-
-    const totalItems = todayInstances.reduce((sum, instance) => sum + instance.items.length, 0);
-    const completedItems = todayInstances.reduce(
-      (sum, instance) => sum + instance.items.filter((item) => item.status === 'COMPLETED').length,
-      0
-    );
-    const actionedItems = todayInstances.reduce(
-      (sum, instance) =>
-        sum + instance.items.filter((item) => ['COMPLETED', 'SKIPPED', 'FAILED'].includes(item.status)).length,
-      0
-    );
-    const criticalItems = todayInstances.reduce(
-      (sum, instance) =>
-        sum +
-        instance.items.filter((item) => (item.severity ?? item.template_item?.severity ?? 0) >= 4).length,
-      0
-    );
-    const openCriticalItems = todayInstances.reduce(
-      (sum, instance) =>
-        sum +
-        instance.items.filter((item) => {
-          const severity = item.severity ?? item.template_item?.severity ?? 0;
-          return severity >= 4 && !['COMPLETED', 'SKIPPED'].includes(item.status);
-        }).length,
-      0
-    );
-    const participants = todayInstances.reduce((sum, instance) => sum + instance.participants.length, 0);
-    const handoverCount = todayInstances.reduce((sum, instance) => sum + (instance.handover_notes?.length ?? 0), 0);
-
-    const executionRate = totalItems > 0 ? Math.round((actionedItems / totalItems) * 100) : 0;
-    const completionRate = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-    const criticalContainment = criticalItems > 0 ? Math.round(((criticalItems - openCriticalItems) / criticalItems) * 100) : 100;
-
-    const postureLabel =
-      exceptionCount > 0 || openCriticalItems > 0
-        ? 'Elevated'
-        : coverageGapCount > 0 || pendingReviewCount > 0
-          ? 'Guarded'
-          : activeInstances > 0
-            ? 'Stable'
-            : 'Standby';
-
-    return {
-      activeInstances,
-      inProgressCount,
-      pendingReviewCount,
-      completedCount,
-      exceptionCount,
-      coverageGapCount,
-      totalItems,
-      completedItems,
-      actionedItems,
-      criticalItems,
-      openCriticalItems,
-      participants,
-      handoverCount,
-      executionRate,
-      completionRate,
-      criticalContainment,
-      postureLabel
-    };
-  }, [todayInstances]);
+  const dashboardSnapshot = snapshot ?? EMPTY_DASHBOARD_SNAPSHOT;
+  const commandMetrics = dashboardSnapshot.command_metrics;
+  const checklistThreads = dashboardSnapshot.checklist_threads;
+  const shiftCards = dashboardSnapshot.shift_cards;
+  const watchlist = dashboardSnapshot.attention_queue;
+  const handoverFeed = dashboardSnapshot.handover_feed;
 
   const missionBrief = useMemo(() => {
-    if (commandMetrics.activeInstances === 0) {
+    if (commandMetrics.active_instances === 0) {
       return 'No active operations are running right now. Start a checklist to bring the command overview online and establish the day\'s operating picture.';
     }
 
-    if (commandMetrics.exceptionCount > 0 || commandMetrics.openCriticalItems > 0) {
-      return `Operational posture needs attention. ${commandMetrics.exceptionCount} active operation${commandMetrics.exceptionCount === 1 ? '' : 's'} report exception pressure, and ${commandMetrics.openCriticalItems} high-severity task${commandMetrics.openCriticalItems === 1 ? '' : 's'} still require resolution.`;
+    if (commandMetrics.exception_count > 0 || commandMetrics.open_critical_items > 0) {
+      return `Operational posture needs attention. ${commandMetrics.exception_count} active operation${commandMetrics.exception_count === 1 ? '' : 's'} report exception pressure, and ${commandMetrics.open_critical_items} high-severity task${commandMetrics.open_critical_items === 1 ? '' : 's'} still require resolution.`;
     }
 
-    if (commandMetrics.coverageGapCount > 0 || commandMetrics.pendingReviewCount > 0) {
-      return `Operations are progressing, but supervision attention is required. ${commandMetrics.coverageGapCount} shift${commandMetrics.coverageGapCount === 1 ? '' : 's'} still need operator coverage, and ${commandMetrics.pendingReviewCount} checklist${commandMetrics.pendingReviewCount === 1 ? '' : 's'} are waiting for review.`;
+    if (commandMetrics.coverage_gap_count > 0 || commandMetrics.pending_review_count > 0) {
+      return `Operations are progressing, but supervision attention is required. ${commandMetrics.coverage_gap_count} shift${commandMetrics.coverage_gap_count === 1 ? '' : 's'} still need operator coverage, and ${commandMetrics.pending_review_count} checklist${commandMetrics.pending_review_count === 1 ? '' : 's'} are waiting for review.`;
     }
 
-    return `The command overview is stable, with ${commandMetrics.executionRate}% of the current operational day\'s tasks already actioned across live checklists.`;
+    return `The command overview is stable, with ${commandMetrics.execution_rate}% of the current operational day's tasks already actioned across live checklists.`;
   }, [commandMetrics]);
 
   const operationalDayLabel = useMemo(() => {
-    const rawDate = dashboardData?.operational_day?.checklist_date;
-    if (!rawDate || typeof rawDate !== 'string') {
+    const rawDate = dashboardSnapshot.operational_day.checklist_date;
+    if (!rawDate) {
       return 'Operational day';
     }
 
@@ -177,134 +137,39 @@ const DashboardPage: React.FC = () => {
       month: 'short',
       day: 'numeric'
     })}`;
-  }, [dashboardData]);
+  }, [dashboardSnapshot.operational_day.checklist_date]);
 
-  const shiftCards = useMemo(() => {
-    return SHIFT_ORDER.map((shift) => {
-      const instances = todayInstances.filter((instance) => instance.shift === shift);
-      const totalItems = instances.reduce((sum, instance) => sum + instance.items.length, 0);
-      const actionedItems = instances.reduce(
-        (sum, instance) =>
-          sum + instance.items.filter((item) => ['COMPLETED', 'SKIPPED', 'FAILED'].includes(item.status)).length,
-        0
-      );
-      const participants = instances.reduce((sum, instance) => sum + instance.participants.length, 0);
-      const exceptions = instances.reduce((sum, instance) => sum + (instance.exceptions?.length ?? 0), 0);
-      const readiness = totalItems > 0 ? Math.round((actionedItems / totalItems) * 100) : 0;
+  const commandSignals = useMemo(
+    () => [
+      {
+        label: 'Command posture',
+        value: commandMetrics.posture_label,
+        meta: `${commandMetrics.active_instances} live threads`,
+        icon: <FaShieldAlt />
+      },
+      {
+        label: 'Execution',
+        value: `${commandMetrics.execution_rate}%`,
+        meta: `${commandMetrics.actioned_items}/${commandMetrics.total_items} tasks actioned`,
+        icon: <FaBolt />
+      },
+      {
+        label: 'Containment',
+        value: `${commandMetrics.critical_containment}%`,
+        meta: `${commandMetrics.open_critical_items} critical tasks open`,
+        icon: <FaCrosshairs />
+      },
+      {
+        label: 'Staffed coverage',
+        value: `${Math.max(commandMetrics.active_instances - commandMetrics.coverage_gap_count, 0)}/${commandMetrics.active_instances}`,
+        meta: `${commandMetrics.participants} operators on deck`,
+        icon: <FaUserShield />
+      }
+    ],
+    [commandMetrics]
+  );
 
-      return {
-        shift,
-        window: SHIFT_WINDOWS[shift],
-        operations: instances.length,
-        participants,
-        exceptions,
-        readiness,
-        status:
-          instances.length === 0
-            ? 'No active thread'
-            : exceptions > 0
-              ? 'Exceptions tracked'
-              : readiness >= 80
-                ? 'On cadence'
-                : 'Building momentum'
-      };
-    });
-  }, [todayInstances]);
-
-  const watchlist = useMemo(() => {
-    const operationWatch = todayInstances
-      .filter((instance) => instance.participants.length === 0 || (instance.exceptions?.length ?? 0) > 0)
-      .slice(0, 4)
-      .map((instance) => ({
-        id: `ops-${instance.id}`,
-        title: `${instance.shift} shift`,
-        detail:
-          instance.participants.length === 0
-            ? 'No operator joined this checklist yet.'
-            : `${instance.exceptions.length} exception${instance.exceptions.length === 1 ? '' : 's'} logged on this operation.`,
-        tone: instance.participants.length === 0 ? 'warning' : 'critical'
-      }));
-
-    const networkWatch = networkServices
-      .filter((service) => ['DOWN', 'DEGRADED'].includes(service.status?.overall_status || 'UNKNOWN'))
-      .sort((a, b) => {
-        const weight = (status?: string) => (status === 'DOWN' ? 2 : status === 'DEGRADED' ? 1 : 0);
-        return weight(b.status?.overall_status) - weight(a.status?.overall_status);
-      })
-      .slice(0, 4)
-      .map((service) => {
-        const isDown = service.status?.overall_status === 'DOWN';
-        return {
-          id: `net-${service.id}`,
-          title: `${service.name} (${service.status?.overall_status || 'UNKNOWN'})`,
-          detail: `${service.address}${service.port ? `:${service.port}` : ''} • state since ${
-            service.status?.last_state_change_at ? new Date(service.status.last_state_change_at).toLocaleString() : 'unknown'
-          }`,
-          tone: isDown ? 'network-down' : 'network-degraded'
-        };
-      });
-
-    return [...networkWatch, ...operationWatch].slice(0, 8);
-  }, [networkServices, todayInstances]);
-
-  const handoverFeed = useMemo(() => {
-    return todayInstances
-      .filter((instance) => (instance.handover_notes?.length ?? 0) > 0)
-      .slice(0, 4)
-      .map((instance) => ({
-        id: instance.id,
-        shift: instance.shift,
-        count: instance.handover_notes.length
-      }));
-  }, [todayInstances]);
-
-  const commandSignals = [
-    {
-      label: 'Command posture',
-      value: commandMetrics.postureLabel,
-      meta: `${commandMetrics.activeInstances} live threads`,
-      icon: <FaShieldAlt />
-    },
-    {
-      label: 'Execution',
-      value: `${commandMetrics.executionRate}%`,
-      meta: `${commandMetrics.actionedItems}/${commandMetrics.totalItems} tasks actioned`,
-      icon: <FaBolt />
-    },
-    {
-      label: 'Containment',
-      value: `${commandMetrics.criticalContainment}%`,
-      meta: `${commandMetrics.openCriticalItems} critical tasks open`,
-      icon: <FaCrosshairs />
-    },
-    {
-      label: 'Staffed coverage',
-      value: `${Math.max(commandMetrics.activeInstances - commandMetrics.coverageGapCount, 0)}/${commandMetrics.activeInstances}`,
-      meta: `${commandMetrics.participants} operators on deck`,
-      icon: <FaUserShield />
-    }
-  ];
-
-  const guideItems = [
-    {
-      title: 'Operational State',
-      body: 'Summarizes the current posture of the active operational-day threads by combining exceptions, unresolved critical work, and review pressure.'
-    },
-    {
-      title: 'Shift Radar',
-      body: 'Shows each shift window, how many operations are active, how many operators are present, and how far execution has progressed.'
-    },
-    {
-      title: 'Command Threads',
-      body: 'Represents the live checklists for the current operational day. Each card shows execution progress, participation, and the current checklist status.'
-    },
-    {
-      title: 'Operational Matrix',
-      body: 'Highlights the key metrics that supervisors usually need first: critical queue, review pressure, completed threads, and coverage gaps.'
-    }
-  ];
-
-  if (loading && !dashboardData) {
+  if (loading && !snapshot) {
     return <DashboardSkeleton />;
   }
 
@@ -338,20 +203,20 @@ const DashboardPage: React.FC = () => {
           <div className="command-status-panel">
             <div className="command-status-header">
               <span>Operational state</span>
-              <strong>{commandMetrics.postureLabel}</strong>
+              <strong>{commandMetrics.posture_label}</strong>
             </div>
 
             <div className="command-status-rings">
               <div className="status-ring status-ring-primary">
-                <span>{commandMetrics.completionRate}%</span>
+                <span>{commandMetrics.completion_rate}%</span>
                 <small>completion</small>
               </div>
               <div className="status-ring">
-                <span>{commandMetrics.pendingReviewCount}</span>
+                <span>{commandMetrics.pending_review_count}</span>
                 <small>review queue</small>
               </div>
               <div className="status-ring status-ring-alert">
-                <span>{commandMetrics.exceptionCount}</span>
+                <span>{commandMetrics.exception_count}</span>
                 <small>exceptions</small>
               </div>
             </div>
@@ -359,11 +224,11 @@ const DashboardPage: React.FC = () => {
             <div className="command-status-footer">
               <div>
                 <span>Unread alerts</span>
-                <strong>{dashboardData?.notifications_unread ?? 0}</strong>
+                <strong>{dashboardSnapshot.notifications_unread}</strong>
               </div>
               <div>
                 <span>Handover notes</span>
-                <strong>{commandMetrics.handoverCount}</strong>
+                <strong>{commandMetrics.handover_count}</strong>
               </div>
             </div>
           </div>
@@ -374,25 +239,27 @@ const DashboardPage: React.FC = () => {
         <div className="dashboard-left command-main">
           <section className="dashboard-section command-panel">
             <div className="section-header command-section-header">
-              <h2><FaSitemap /> Shift Radar</h2>
+              <h2>
+                <FaSitemap /> Shift Radar
+              </h2>
               <span className="section-badge">Current state</span>
             </div>
 
             <div className="shift-radar-grid">
-              {shiftCards.map((shift) => (
-                <article key={shift.shift} className="shift-radar-card">
+              {shiftCards.map((shiftCard) => (
+                <article key={shiftCard.shift} className="shift-radar-card">
                   <div className="shift-radar-topline">
-                    <span>{shift.shift}</span>
-                    <small>{shift.window}</small>
+                    <span>{shiftCard.shift}</span>
+                    <small>{shiftCard.window}</small>
                   </div>
-                  <strong>{shift.status}</strong>
+                  <strong>{shiftCard.status}</strong>
                   <div className="shift-radar-meter">
-                    <div className="shift-radar-fill" style={{ width: `${shift.readiness}%` }} />
+                    <div className="shift-radar-fill" style={{ width: `${shiftCard.readiness}%` }} />
                   </div>
                   <div className="shift-radar-stats">
-                    <span>{shift.operations} ops</span>
-                    <span>{shift.participants} operators</span>
-                    <span>{shift.exceptions} exceptions</span>
+                    <span>{shiftCard.operations} ops</span>
+                    <span>{shiftCard.participants} operators</span>
+                    <span>{shiftCard.exceptions} exceptions</span>
                   </div>
                 </article>
               ))}
@@ -401,19 +268,23 @@ const DashboardPage: React.FC = () => {
 
           <section className="dashboard-section command-panel">
             <div className="section-header command-section-header">
-              <h2><FaClipboardCheck /> Operational Day Command Threads</h2>
-              <span className="section-badge">{operationalDayLabel} • {todayInstances.length} Active</span>
+              <h2>
+                <FaClipboardCheck /> Operational Day Command Threads
+              </h2>
+              <span className="section-badge">
+                {operationalDayLabel} | {checklistThreads.length} Active
+              </span>
             </div>
 
             <div className="checklist-grid">
-              {todayInstances.length === 0 ? (
+              {checklistThreads.length === 0 ? (
                 <div className="empty-state command-empty-state">
                   <FaCalendarAlt size={44} />
                   <h3>No active operations in the queue</h3>
                   <p>Start a checklist to establish visibility, ownership, and execution tracking for the current operational day.</p>
                 </div>
               ) : (
-                todayInstances.map((instance) => <ChecklistCard key={instance.id} instance={instance} />)
+                checklistThreads.map((thread) => <ChecklistCard key={thread.id} thread={thread} />)
               )}
             </div>
           </section>
@@ -422,38 +293,47 @@ const DashboardPage: React.FC = () => {
         <div className="dashboard-right command-side">
           <section className="dashboard-section command-panel command-matrix-panel">
             <div className="section-header command-section-header">
-              <h2><FaSignal /> Operational Matrix</h2>
+              <h2>
+                <FaSignal /> Operational Matrix
+              </h2>
             </div>
 
             <div className="command-matrix">
               <article className="matrix-stat matrix-stat-critical">
                 <span>Critical queue</span>
-                <strong>{commandMetrics.openCriticalItems}</strong>
-                <small>{commandMetrics.criticalItems} high-severity tasks observed</small>
+                <strong>{commandMetrics.open_critical_items}</strong>
+                <small>{commandMetrics.critical_items} high-severity tasks observed</small>
               </article>
               <article className="matrix-stat">
                 <span>Review pressure</span>
-                <strong>{commandMetrics.pendingReviewCount}</strong>
+                <strong>{commandMetrics.pending_review_count}</strong>
                 <small>checklists waiting for supervisor sign-off</small>
               </article>
               <article className="matrix-stat">
                 <span>Completed threads</span>
-                <strong>{commandMetrics.completedCount}</strong>
+                <strong>{commandMetrics.completed_count}</strong>
                 <small>operations closed or closed with exceptions</small>
               </article>
               <article className="matrix-stat">
                 <span>Coverage gaps</span>
-                <strong>{commandMetrics.coverageGapCount}</strong>
+                <strong>{commandMetrics.coverage_gap_count}</strong>
                 <small>active shifts missing operator presence</small>
               </article>
             </div>
           </section>
 
-          <QuickActions />
+          <QuickActions
+            onRefresh={async () => {
+              await refresh({ background: true });
+            }}
+            existingThreads={checklistThreads}
+          />
 
           <section className="dashboard-section command-panel">
             <div className="section-header command-section-header">
-                <h2><FaExclamationTriangle /> Attention Queue</h2>
+              <h2>
+                <FaExclamationTriangle /> Attention Queue
+              </h2>
             </div>
 
             <div className="watchlist">
@@ -478,7 +358,9 @@ const DashboardPage: React.FC = () => {
 
           <section className="dashboard-section command-panel">
             <div className="section-header command-section-header">
-                <h2><FaArrowTrendUp /> Handover Summary</h2>
+              <h2>
+                <FaArrowTrendUp /> Handover Summary
+              </h2>
             </div>
 
             <div className="handover-feed">
@@ -494,7 +376,7 @@ const DashboardPage: React.FC = () => {
                       <span>{item.shift} shift</span>
                       <strong>{item.count} note{item.count === 1 ? '' : 's'}</strong>
                     </div>
-                      <small>Prepared for the next operating team.</small>
+                    <small>Prepared for the next operating team.</small>
                   </article>
                 ))
               )}
@@ -512,7 +394,7 @@ const DashboardPage: React.FC = () => {
                 <h3>Understanding the command overview</h3>
               </div>
               <button type="button" className="dashboard-guide-close" onClick={() => setShowGuide(false)}>
-                ×
+                x
               </button>
             </div>
 

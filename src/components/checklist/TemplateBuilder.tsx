@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaCheck, FaChevronDown, FaChevronUp, FaClock, FaPlus, FaTimes, FaTrash } from 'react-icons/fa';
 import { checklistApi, type CreateChecklistTemplateRequest } from '../../services/checklistApi';
+import { useAuth } from '../../contexts/AuthContext';
+import { orgApi, type Section } from '../../services/orgApi';
 import {
   ITEM_TYPE_OPTIONS,
   applyItemTypeRules,
@@ -25,14 +27,53 @@ interface TemplateBuilderProps {
 }
 
 const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }) => {
+  const { user } = useAuth();
+  const isAdmin = (user?.role || '').toLowerCase() === 'admin';
+  const userSectionId = user?.section_id || '';
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [shift, setShift] = useState<'MORNING' | 'AFTERNOON' | 'NIGHT'>('MORNING');
   const [isActive, setIsActive] = useState(true);
+  const [selectedSectionId, setSelectedSectionId] = useState('');
+  const [sections, setSections] = useState<Section[]>([]);
+  const [sectionsLoading, setSectionsLoading] = useState(false);
+  const [sectionsError, setSectionsError] = useState<string | null>(null);
   const [items, setItems] = useState<ItemForm[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!isAdmin) {
+      setSelectedSectionId(userSectionId);
+      return;
+    }
+
+    let mounted = true;
+    const loadSections = async () => {
+      try {
+        setSectionsLoading(true);
+        setSectionsError(null);
+        const data = await orgApi.listSections();
+        if (!mounted) return;
+        setSections(data);
+      } catch (loadError) {
+        console.error('Failed to load sections for template builder:', loadError);
+        if (mounted) {
+          setSectionsError('Failed to load sections');
+        }
+      } finally {
+        if (mounted) {
+          setSectionsLoading(false);
+        }
+      }
+    };
+
+    void loadSections();
+    return () => {
+      mounted = false;
+    };
+  }, [isAdmin, userSectionId]);
 
   const updateItems = (nextItems: ItemForm[]) => {
     setItems(normalizeItems(nextItems));
@@ -40,9 +81,16 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
 
   const validate = () => {
     const nextErrors: Record<string, string> = {};
+    const effectiveSectionId = isAdmin ? selectedSectionId.trim() : userSectionId;
 
     if (!name.trim()) {
       nextErrors.name = 'Template name is required';
+    }
+
+    if (!effectiveSectionId) {
+      nextErrors.section_id = isAdmin
+        ? 'Section is required for template creation'
+        : 'Your profile is not assigned to a section';
     }
 
     if (items.length === 0) {
@@ -203,12 +251,14 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
     try {
       setLoading(true);
       setError(null);
+      const effectiveSectionId = isAdmin ? selectedSectionId.trim() : userSectionId;
 
       const templateData: CreateChecklistTemplateRequest = {
         name: name.trim(),
         description: description.trim(),
         shift,
         is_active: isActive,
+        section_id: effectiveSectionId,
         items: normalizeItems(items).map(serializeItemForRequest),
       };
 
@@ -430,6 +480,43 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
               Active
             </label>
           </div>
+        </div>
+
+        <div className="stb-form-group">
+          <label htmlFor="section_id" className="stb-form-label">
+            Section {isAdmin ? '*' : ''}
+          </label>
+          {isAdmin ? (
+            <>
+              <select
+                id="section_id"
+                value={selectedSectionId}
+                onChange={(e) => setSelectedSectionId(e.target.value)}
+                className={`stb-form-select ${errors.section_id ? 'stb-error' : ''}`}
+                disabled={sectionsLoading}
+              >
+                <option value="">{sectionsLoading ? 'Loading sections...' : 'Select a section'}</option>
+                {sections.map((section) => (
+                  <option key={section.id} value={section.id}>
+                    {section.section_name}
+                  </option>
+                ))}
+              </select>
+              {errors.section_id && <span className="stb-error-text">{errors.section_id}</span>}
+              {!errors.section_id && sectionsError && <span className="stb-error-text">{sectionsError}</span>}
+            </>
+          ) : (
+            <>
+              <input
+                id="section_id"
+                type="text"
+                value={userSectionId ? 'Assigned automatically from your profile' : 'No section assigned'}
+                readOnly
+                className={`stb-form-input ${errors.section_id ? 'stb-error' : ''}`}
+              />
+              {errors.section_id && <span className="stb-error-text">{errors.section_id}</span>}
+            </>
+          )}
         </div>
 
         <div className="stb-form-group">

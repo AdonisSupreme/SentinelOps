@@ -15,6 +15,7 @@
   z-index: var(--z-modal);
   animation: fadeIn 0.3s ease;
   padding: var(--spacing-lg);
+  overflow-y: auto;
 }
 
 @keyframes fadeIn {
@@ -30,8 +31,7 @@
   box-shadow: var(--shadow-xl);
   max-width: 600px;
   width: 100%;
-  max-height: 90vh;
-  height: fit-content;
+  max-height: min(90vh, 760px);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -85,6 +85,7 @@
   border-bottom: 1px solid var(--border-primary);
   position: relative;
   z-index: 2;
+  flex-shrink: 0;
 }
 
 .handover-note-modal .modal-title {
@@ -135,6 +136,31 @@
   gap: var(--spacing-lg);
   position: relative;
   z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.handover-note-modal .modal-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.handover-note-modal .modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.handover-note-modal .modal-body::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.45);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.handover-note-modal .modal-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.42);
+  background-clip: padding-box;
 }
 
 /* Section Labels */
@@ -274,6 +300,9 @@
 
 .handover-note-modal .textarea-wrapper {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
 }
 
 .handover-note-modal .handover-textarea {
@@ -286,8 +315,10 @@
   font-family: var(--font-family);
   font-size: var(--font-size-base);
   line-height: 1.5;
-  resize: vertical;
-  min-height: 120px;
+  resize: none;
+  min-height: 140px;
+  max-height: min(34vh, 320px);
+  overflow-y: auto;
   transition: all var(--transition-fast);
 }
 
@@ -358,6 +389,7 @@
   border-top: 1px solid var(--border-primary);
   position: relative;
   z-index: 2;
+  flex-shrink: 0;
 }
 
 /* Buttons */
@@ -481,11 +513,13 @@
 @media (max-width: 768px) {
   .handover-note-modal-backdrop {
     padding: var(--spacing-md);
+    align-items: flex-start;
   }
   
   .handover-note-modal.futuristic {
     max-width: 100%;
-    margin: var(--spacing-md);
+    max-height: calc(100dvh - (var(--spacing-md) * 2));
+    margin: 0;
   }
   
   .handover-note-modal .modal-header {
@@ -513,12 +547,17 @@
 }
 
 @media (max-width: 480px) {
+  .handover-note-modal-backdrop {
+    padding: var(--spacing-sm);
+  }
+
   .handover-note-modal .priority-options {
     grid-template-columns: 1fr;
   }
   
   .handover-note-modal .handover-textarea {
     min-height: 100px;
+    max-height: min(28vh, 220px);
     font-size: var(--font-size-sm);
   }
 }

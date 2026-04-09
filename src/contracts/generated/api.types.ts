@@ -18,6 +18,7 @@ export interface SignInResponse {
     last_name: string;
     department: string;
     position: string;
+    section_id?: string;
     role: string;
   };
 }
@@ -30,6 +31,7 @@ export interface MeResponse {
   last_name: string;
   department: string;
   position: string;
+  section_id?: string;
   role: string;
 }
 
@@ -218,6 +220,7 @@ export interface ChecklistInstance {
   } | null;
   closed_at: string | null;
   created_at: string;
+  section_id?: string | null;
   items: ChecklistItemInstance[];
   participants: {
     id: string;
@@ -236,6 +239,7 @@ export interface CreateChecklistInstanceRequest {
   template_id: string;
   checklist_date: string;
   shift: 'MORNING' | 'AFTERNOON' | 'NIGHT';
+  section_id?: string;
 }
 
 export interface UpdateChecklistItemRequest {

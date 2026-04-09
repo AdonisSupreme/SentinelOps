@@ -344,20 +344,11 @@ export const useTasks = (): TasksState & TasksActions => {
     );
 
     if (result) {
-      // Refresh relevant task lists
-      if (taskType === 'PERSONAL') {
-        await fetchMyTasks();
-      }
-      if (['admin', 'manager'].includes(userRole || '')) {
-        await fetchTasksAssignedByMe();
-      }
-      await fetchTasks();
-      
       return result;
     }
 
     throw new Error('Failed to create task');
-  }, [user, fetchWithLoading, fetchMyTasks, fetchTasksAssignedByMe, fetchTasks]);
+  }, [user, fetchWithLoading]);
 
   // Update task with permission validation
   const updateTask = useCallback(async (taskId: string, data: UpdateTaskRequest): Promise<TaskMutationResponse> => {
@@ -373,20 +364,11 @@ export const useTasks = (): TasksState & TasksActions => {
     );
 
     if (result) {
-      // Refresh current task if it's the one being updated
-      if (state.currentTask?.id === taskId) {
-        await fetchTask(taskId);
-      }
-      
-      // Refresh task lists
-      await fetchTasks();
-      await fetchMyTasks();
-      
       return result;
     }
 
     throw new Error('Failed to update task');
-  }, [user, fetchWithLoading, fetchTask, fetchTasks, fetchMyTasks, state.currentTask]);
+  }, [user, fetchWithLoading]);
 
   // Delete task with permission validation
   const deleteTask = useCallback(async (taskId: string): Promise<TaskMutationResponse> => {
@@ -402,20 +384,15 @@ export const useTasks = (): TasksState & TasksActions => {
     );
 
     if (result) {
-      // Clear current task if it's the one being deleted
       if (state.currentTask?.id === taskId) {
         updateState({ currentTask: null });
       }
-      
-      // Refresh task lists
-      await fetchTasks();
-      await fetchMyTasks();
-      
+
       return result;
     }
 
     throw new Error('Failed to delete task');
-  }, [user, fetchWithLoading, fetchTasks, fetchMyTasks, state.currentTask, updateState]);
+  }, [user, fetchWithLoading, state.currentTask, updateState]);
 
   // Assign task with permission validation
   const assignTask = useCallback(async (taskId: string, data: AssignTaskRequest): Promise<TaskMutationResponse> => {
@@ -431,18 +408,11 @@ export const useTasks = (): TasksState & TasksActions => {
     );
 
     if (result) {
-      // Refresh task lists
-      await fetchTasks();
-      await fetchMyTasks();
-      if (['admin', 'manager'].includes(user.role?.toLowerCase() || '')) {
-        await fetchTasksAssignedByMe();
-      }
-      
       return result;
     }
 
     throw new Error('Failed to assign task');
-  }, [user, fetchWithLoading, fetchTasks, fetchMyTasks, fetchTasksAssignedByMe]);
+  }, [user, fetchWithLoading]);
 
   // Complete task
   const completeTask = useCallback(async (taskId: string): Promise<TaskMutationResponse> => {
@@ -458,15 +428,11 @@ export const useTasks = (): TasksState & TasksActions => {
     );
 
     if (result) {
-      // Refresh task lists
-      await fetchTasks();
-      await fetchMyTasks();
-      
       return result;
     }
 
     throw new Error('Failed to complete task');
-  }, [user, fetchWithLoading, fetchTasks, fetchMyTasks]);
+  }, [user, fetchWithLoading]);
 
   // Change task status
   const changeTaskStatus = useCallback(async (taskId: string, status: string): Promise<TaskMutationResponse> => {
@@ -482,15 +448,11 @@ export const useTasks = (): TasksState & TasksActions => {
     );
 
     if (result) {
-      // Refresh task lists
-      await fetchTasks();
-      await fetchMyTasks();
-      
       return result;
     }
 
     throw new Error('Failed to change task status');
-  }, [user, fetchWithLoading, fetchTasks, fetchMyTasks]);
+  }, [user, fetchWithLoading]);
 
   // Bulk operation
   const bulkOperation = useCallback(async (data: BulkTaskOperation): Promise<BulkTaskResponse> => {
@@ -506,15 +468,11 @@ export const useTasks = (): TasksState & TasksActions => {
     );
 
     if (result) {
-      // Refresh all task lists
-      await fetchTasks();
-      await fetchMyTasks();
-      
       return result;
     }
 
     throw new Error('Failed to perform bulk operation');
-  }, [user, fetchWithLoading, fetchTasks, fetchMyTasks]);
+  }, [user, fetchWithLoading]);
 
   // Fetch analytics (managers and admins only)
   const fetchAnalytics = useCallback(async () => {
@@ -571,13 +529,6 @@ export const useTasks = (): TasksState & TasksActions => {
       await fetchAnalytics();
     }
   }, [user, fetchMyTasks, fetchTasks, fetchTasksAssignedByMe, fetchAnalytics]);
-
-  // Auto-refresh on user change
-  useEffect(() => {
-    if (user) {
-      refreshTasks();
-    }
-  }, [user]);
 
   // Cleanup on unmount
   useEffect(() => {

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { FaCheck, FaChevronDown, FaChevronUp, FaClock, FaPlus, FaTimes, FaTrash } from 'react-icons/fa';
 import { checklistApi, type ChecklistTemplate, type UpdateChecklistTemplateRequest } from '../../services/checklistApi';
+import { useAuth } from '../../contexts/AuthContext';
+import { orgApi, type Section } from '../../services/orgApi';
 import {
   ITEM_TYPE_OPTIONS,
   applyItemTypeRules,
@@ -27,10 +29,17 @@ interface TemplateEditorProps {
 }
 
 const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, onCancel }) => {
+  const { user } = useAuth();
+  const isAdmin = (user?.role || '').toLowerCase() === 'admin';
+  const userSectionId = user?.section_id || '';
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [shift, setShift] = useState<'MORNING' | 'AFTERNOON' | 'NIGHT'>('MORNING');
   const [isActive, setIsActive] = useState(true);
+  const [selectedSectionId, setSelectedSectionId] = useState('');
+  const [sections, setSections] = useState<Section[]>([]);
+  const [sectionsLoading, setSectionsLoading] = useState(false);
+  const [sectionsError, setSectionsError] = useState<string | null>(null);
   const [items, setItems] = useState<ItemForm[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -42,9 +51,41 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
     setDescription(template.description || '');
     setShift(template.shift);
     setIsActive(template.is_active);
+    setSelectedSectionId(isAdmin ? template.section_id || '' : userSectionId || template.section_id || '');
     setItems(normalizeItems((template.items || []).map(mapTemplateItemToForm)));
     setLoading(false);
-  }, [template]);
+  }, [template, isAdmin, userSectionId]);
+
+  useEffect(() => {
+    if (!isAdmin) {
+      return;
+    }
+
+    let mounted = true;
+    const loadSections = async () => {
+      try {
+        setSectionsLoading(true);
+        setSectionsError(null);
+        const data = await orgApi.listSections();
+        if (!mounted) return;
+        setSections(data);
+      } catch (loadError) {
+        console.error('Failed to load sections for template editor:', loadError);
+        if (mounted) {
+          setSectionsError('Failed to load sections');
+        }
+      } finally {
+        if (mounted) {
+          setSectionsLoading(false);
+        }
+      }
+    };
+
+    void loadSections();
+    return () => {
+      mounted = false;
+    };
+  }, [isAdmin]);
 
   const updateItems = (nextItems: ItemForm[]) => {
     setItems(normalizeItems(nextItems));
@@ -52,9 +93,16 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
 
   const validate = () => {
     const nextErrors: Record<string, string> = {};
+    const effectiveSectionId = isAdmin ? selectedSectionId.trim() : userSectionId;
 
     if (!name.trim()) {
       nextErrors.name = 'Template name is required';
+    }
+
+    if (!effectiveSectionId) {
+      nextErrors.section_id = isAdmin
+        ? 'Section is required for template updates'
+        : 'Your profile is not assigned to a section';
     }
 
     if (items.length === 0) {
@@ -215,12 +263,14 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
     try {
       setSaving(true);
       setError(null);
+      const effectiveSectionId = isAdmin ? selectedSectionId.trim() : userSectionId;
 
       const updateData: UpdateChecklistTemplateRequest = {
         name: name.trim(),
         description: description.trim(),
         shift,
         is_active: isActive,
+        section_id: effectiveSectionId,
         items: normalizeItems(items).map(serializeItemForRequest),
       };
 
@@ -440,6 +490,41 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
               Active
             </label>
           </div>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="section_id">Section {isAdmin ? '*' : ''}</label>
+          {isAdmin ? (
+            <>
+              <select
+                id="section_id"
+                value={selectedSectionId}
+                onChange={(e) => setSelectedSectionId(e.target.value)}
+                className={`form-select ${errors.section_id ? 'error' : ''}`}
+                disabled={sectionsLoading}
+              >
+                <option value="">{sectionsLoading ? 'Loading sections...' : 'Select a section'}</option>
+                {sections.map((section) => (
+                  <option key={section.id} value={section.id}>
+                    {section.section_name}
+                  </option>
+                ))}
+              </select>
+              {errors.section_id && <span className="error-text">{errors.section_id}</span>}
+              {!errors.section_id && sectionsError && <span className="error-text">{sectionsError}</span>}
+            </>
+          ) : (
+            <>
+              <input
+                id="section_id"
+                type="text"
+                value={userSectionId ? 'Assigned automatically from your profile' : 'No section assigned'}
+                readOnly
+                className={`form-input ${errors.section_id ? 'error' : ''}`}
+              />
+              {errors.section_id && <span className="error-text">{errors.section_id}</span>}
+            </>
+          )}
         </div>
 
         <div className="form-group">

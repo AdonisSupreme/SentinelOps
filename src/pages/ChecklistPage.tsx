@@ -299,7 +299,8 @@ const ChecklistPage: React.FC = () => {
     }
   };
 
-  const canCompleteChecklist = user?.role === 'MANAGER' || user?.role === 'admin';
+  const userRole = (user?.role || '').toLowerCase();
+  const canCompleteChecklist = userRole === 'manager' || userRole === 'admin';
   const isChecklistActive = currentInstance?.status === 'OPEN' || currentInstance?.status === 'IN_PROGRESS' || currentInstance?.status === 'PENDING_REVIEW';
 
   const getStatusBadge = (status: string) => {

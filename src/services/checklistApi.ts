@@ -17,7 +17,7 @@ import {
   LeaderboardResponse,
   UserScoresResponse,
   PerformanceMetrics as BackendPerformanceMetrics,
-  DashboardSummary,
+  DashboardSummary as GeneratedDashboardSummary,
   ChecklistStatePolicy,
   AuthorizationPolicy,
   BackendEffects,
@@ -48,7 +48,7 @@ export type {
   LeaderboardResponse,
   UserScoresResponse,
   PerformanceMetrics as BackendPerformanceMetrics,
-  DashboardSummary,
+  GeneratedDashboardSummary as DashboardSummary,
   ChecklistStatePolicy,
   AuthorizationPolicy,
   BackendEffects,
@@ -71,6 +71,15 @@ export interface PaginatedResponse<T> {
     hasNext: boolean;
     hasPrev: boolean;
   };
+}
+
+interface BackendPaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pages: number;
+  has_next: boolean;
+  has_prev: boolean;
 }
 
 export interface ChecklistInstanceQueryParams {
@@ -147,6 +156,96 @@ export interface ChecklistDateChangeResponse {
   }>;
 }
 
+export interface TodayChecklistCoverage {
+  MORNING: number;
+  AFTERNOON: number;
+  NIGHT: number;
+}
+
+export type DashboardShiftName = 'MORNING' | 'AFTERNOON' | 'NIGHT';
+
+export interface DashboardCommandMetrics {
+  active_instances: number;
+  in_progress_count: number;
+  pending_review_count: number;
+  completed_count: number;
+  exception_count: number;
+  coverage_gap_count: number;
+  total_items: number;
+  completed_items: number;
+  actioned_items: number;
+  critical_items: number;
+  open_critical_items: number;
+  participants: number;
+  handover_count: number;
+  execution_rate: number;
+  completion_rate: number;
+  critical_containment: number;
+  posture_label: 'Elevated' | 'Guarded' | 'Stable' | 'Standby';
+}
+
+export interface DashboardShiftCard {
+  shift: DashboardShiftName;
+  window: string;
+  operations: number;
+  participants: number;
+  exceptions: number;
+  readiness: number;
+  status: string;
+}
+
+export interface DashboardChecklistThread {
+  id: string;
+  template_id: string | null;
+  template_name: string;
+  checklist_date: string;
+  shift: DashboardShiftName;
+  status: string;
+  participant_count: number;
+  user_joined: boolean;
+  total_items: number;
+  completed_items: number;
+  actioned_items: number;
+  critical_items: number;
+  open_critical_items: number;
+  exception_items: number;
+  handover_count: number;
+  execution_percentage: number;
+  has_exception_pressure: boolean;
+}
+
+export interface DashboardAttentionItem {
+  id: string;
+  title: string;
+  detail: string;
+  tone: 'warning' | 'critical' | 'network-down' | 'network-degraded';
+}
+
+export interface DashboardHandoverFeedItem {
+  id: string;
+  shift: DashboardShiftName;
+  count: number;
+}
+
+export interface DashboardOperationalDay {
+  checklist_date: string;
+  window_start: string;
+  window_end: string;
+  timezone: string;
+  boundary_time: string;
+}
+
+export interface OperationalDashboardSummary {
+  operational_day: DashboardOperationalDay;
+  command_metrics: DashboardCommandMetrics;
+  shift_cards: DashboardShiftCard[];
+  checklist_threads: DashboardChecklistThread[];
+  attention_queue: DashboardAttentionItem[];
+  handover_feed: DashboardHandoverFeedItem[];
+  notifications_unread: number;
+  generated_at: string;
+}
+
 class ChecklistApi {
     async deleteInstance(instanceId: string): Promise<{ message: string; effects?: any }> {
       const response = await api.delete<{ message: string; effects?: any }>(`/api/v1/checklists/instances/${instanceId}`);
@@ -154,7 +253,10 @@ class ChecklistApi {
     }
   // Templates
   async getTemplates(params?: { shift?: string; sectionId?: string }): Promise<ChecklistTemplate[]> {
-    const response = await api.get<ChecklistTemplate[]>('/api/v1/checklists/templates', { params });
+    const queryParams: Record<string, string> = {};
+    if (params?.shift) queryParams.shift = params.shift;
+    if (params?.sectionId) queryParams.section_id = params.sectionId;
+    const response = await api.get<ChecklistTemplate[]>('/api/v1/checklists/templates', { params: queryParams });
     return response.data;
   }
 
@@ -233,6 +335,11 @@ class ChecklistApi {
     return response.data;
   }
 
+  async getTodayChecklistCoverage(): Promise<TodayChecklistCoverage> {
+    const response = await api.get<TodayChecklistCoverage>('/api/v1/checklists/instances/today/coverage');
+    return response.data;
+  }
+
   async getAllInstances(startDate?: string, endDate?: string, shift?: string): Promise<ChecklistInstance[]> {
     const params = new URLSearchParams();
     if (startDate) params.append('start_date', startDate);
@@ -256,10 +363,26 @@ class ChecklistApi {
     if (params.sort_by) searchParams.append('sort_by', params.sort_by);
     if (params.sort_order) searchParams.append('sort_order', params.sort_order);
     
-    const response = await api.get<PaginatedResponse<ChecklistInstance>>(
+    const response = await api.get<PaginatedResponse<ChecklistInstance> | BackendPaginatedResponse<ChecklistInstance>>(
       `/api/v1/checklists/instances/paginated?${searchParams.toString()}`
     );
-    return response.data;
+    const payload: any = response.data;
+
+    if (Array.isArray(payload?.data) && payload?.pagination) {
+      return payload as PaginatedResponse<ChecklistInstance>;
+    }
+
+    return {
+      data: Array.isArray(payload?.items) ? payload.items : [],
+      pagination: {
+        page: payload?.page || 1,
+        limit: params.limit || (Array.isArray(payload?.items) ? payload.items.length : 0),
+        total: payload?.total || 0,
+        totalPages: payload?.pages || 1,
+        hasNext: Boolean(payload?.has_next),
+        hasPrev: Boolean(payload?.has_prev),
+      },
+    };
   }
 
   async getInstance(id: string): Promise<ChecklistInstance> {
@@ -377,8 +500,8 @@ class ChecklistApi {
     return response.data;
   }
 
-  async getDashboardSummary(): Promise<DashboardSummary> {
-    const response = await api.get<DashboardSummary>('/api/v1/checklists/dashboard/summary');
+  async getDashboardSummary(): Promise<OperationalDashboardSummary> {
+    const response = await api.get<OperationalDashboardSummary>('/api/v1/checklists/dashboard/summary');
     return response.data;
   }
 

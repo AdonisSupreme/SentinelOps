@@ -43,7 +43,7 @@ const HandoverNoteModal: React.FC<HandoverNoteModalProps> = ({
     setError('');
 
     try {
-      await createHandoverNote(content.trim(), priority);
+      await createHandoverNote(content.trim(), priority, instanceId);
       setContent('');
       setPriority(2);
       onClose();
@@ -102,10 +102,16 @@ const HandoverNoteModal: React.FC<HandoverNoteModalProps> = ({
       onKeyDown={handleKeyDown}
       tabIndex={-1}
     >
-      <div className="handover-note-modal futuristic" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="handover-note-modal futuristic"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="handover-note-modal-title"
+      >
         {/* Modal Header */}
         <div className="modal-header">
-          <div className="modal-title">
+          <div className="modal-title" id="handover-note-modal-title">
             <FaFlag />
             Create Handover Note
           </div>

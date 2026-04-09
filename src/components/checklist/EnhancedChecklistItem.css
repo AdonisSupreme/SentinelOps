@@ -205,6 +205,118 @@
   flex-wrap: wrap;
 }
 
+.eci-activity-panel {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border-primary);
+  background:
+    linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(15, 23, 42, 0.03)),
+    var(--bg-primary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.eci-activity-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.eci-activity-panel-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+}
+
+.eci-activity-panel-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+.eci-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.eci-activity-entry {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-primary);
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.eci-activity-entry--completed {
+  border-left: 3px solid var(--success);
+}
+
+.eci-activity-entry--started {
+  border-left: 3px solid var(--accent-primary);
+}
+
+.eci-activity-entry--skipped {
+  border-left: 3px solid var(--warning);
+}
+
+.eci-activity-entry--failed,
+.eci-activity-entry--escalated {
+  border-left: 3px solid var(--error);
+}
+
+.eci-activity-entry-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.eci-activity-entry-action {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.eci-activity-entry-actor {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.eci-activity-entry-time {
+  font-size: 11px;
+  color: var(--text-quaternary);
+  font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
+}
+
+.eci-activity-entry-note {
+  margin-top: 8px;
+  padding-left: 2px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+
+.eci-activity-more {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-top: 2px;
+}
+
 .eci-type-badge {
   background: rgba(59, 130, 246, 0.1);
   color: var(--accent-primary);
@@ -609,6 +721,15 @@
   
   .eci-title {
     font-size: 16px;
+  }
+
+  .eci-activity-panel {
+    padding: 12px;
+  }
+
+  .eci-activity-panel-header,
+  .eci-activity-entry-main {
+    align-items: flex-start;
   }
   
   .quick-actions-bar {

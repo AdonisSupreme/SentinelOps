@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useChecklist } from '../../contexts/checklistContext';
 import {
   FaCheckCircle, FaPlay, FaBan, FaExclamationTriangle, FaClock,
-  FaChevronDown, FaChevronUp
+  FaChevronDown, FaChevronUp, FaHistory, FaUser
 } from 'react-icons/fa';
 import SubitemTimeline from './SubitemTimeline';
 import './EnhancedChecklistItem.css';
@@ -148,6 +148,40 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
   const scheduledTime = item.scheduled_time ?? item.template_item?.scheduled_time;
   const notifyBeforeMinutes = item.notify_before_minutes ?? item.template_item?.notify_before_minutes;
   const scheduledEventSummary = getScheduledEventSummary();
+  const activities = Array.isArray(item.activities)
+    ? [...item.activities]
+      .filter((activity: any) => activity?.actor?.username && activity?.timestamp)
+      .sort((left: any, right: any) => new Date(right.timestamp).getTime() - new Date(left.timestamp).getTime())
+    : [];
+  const recentActivities = activities.slice(0, 3);
+
+  const getActivityLabel = (action: string) => {
+    switch (action) {
+      case 'STARTED':
+        return 'Started';
+      case 'COMPLETED':
+        return 'Completed';
+      case 'SKIPPED':
+        return 'Skipped';
+      case 'FAILED':
+        return 'Failed';
+      case 'ESCALATED':
+        return 'Escalated';
+      case 'UPDATED':
+        return 'Updated';
+      default:
+        return action;
+    }
+  };
+
+  const formatActivityTimestamp = (value: string) => (
+    new Date(value).toLocaleString([], {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  );
 
   return (
     <div className="eci-card eci-card--futuristic">
@@ -215,6 +249,54 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
                 <span className="eci-type-badge">Visibility only</span>
               )}
             </div>
+
+            {activities.length > 0 && (
+              <div className="eci-activity-panel">
+                <div className="eci-activity-panel-header">
+                  <span className="eci-activity-panel-title">
+                    <FaHistory />
+                    Activity
+                  </span>
+                  <span className="eci-activity-panel-count">
+                    {activities.length} action{activities.length === 1 ? '' : 's'}
+                  </span>
+                </div>
+
+                <div className="eci-activity-list">
+                  {recentActivities.map((activity: any) => (
+                    <div
+                      key={activity.id}
+                      className={`eci-activity-entry eci-activity-entry--${String(activity.action || '').toLowerCase()}`}
+                    >
+                      <div className="eci-activity-entry-main">
+                        <span className="eci-activity-entry-action">
+                          {getActivityLabel(activity.action)}
+                        </span>
+                        <span className="eci-activity-entry-actor">
+                          <FaUser />
+                          {activity.actor.username}
+                        </span>
+                        <span className="eci-activity-entry-time">
+                          {formatActivityTimestamp(activity.timestamp)}
+                        </span>
+                      </div>
+
+                      {activity.notes && (
+                        <div className="eci-activity-entry-note">
+                          {activity.notes}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {activities.length > recentActivities.length && (
+                    <div className="eci-activity-more">
+                      +{activities.length - recentActivities.length} more recorded action{activities.length - recentActivities.length === 1 ? '' : 's'}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

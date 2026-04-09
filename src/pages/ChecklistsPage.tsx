@@ -91,6 +91,8 @@ const ChecklistsPage: React.FC = () => {
   });
   const [clockTick, setClockTick] = useState(() => new Date());
   const hasLoadedRef = useRef(false);
+  const realtimeRefreshTimerRef = useRef<number | null>(null);
+  const coverageRefreshPendingRef = useRef(false);
 
   useEffect(() => {
     const timer = window.setInterval(() => setClockTick(new Date()), 30_000);
@@ -219,18 +221,6 @@ const ChecklistsPage: React.FC = () => {
       setHasNextPage(next);
       setError(null);
       hasLoadedRef.current = true;
-
-      try {
-        const todayInstances = await checklistApi.getTodayInstances();
-        const coverage = { MORNING: 0, AFTERNOON: 0, NIGHT: 0 };
-        todayInstances.forEach((instance) => {
-          const shift = instance.shift as 'MORNING' | 'AFTERNOON' | 'NIGHT';
-          if (shift in coverage) coverage[shift] += 1;
-        });
-        setTodayShiftCoverage(coverage);
-      } catch (coverageError) {
-        console.warn('Failed to fetch today shift coverage', coverageError);
-      }
     } catch (err) {
       console.error('Failed to load instances:', err);
       setError('Failed to load checklist instances');
@@ -240,9 +230,43 @@ const ChecklistsPage: React.FC = () => {
     }
   }, [currentPage, instancesPerPage, queryParams]);
 
+  const loadTodayShiftCoverage = useCallback(async () => {
+    try {
+      const coverage = await checklistApi.getTodayChecklistCoverage();
+      setTodayShiftCoverage(coverage);
+    } catch (coverageError) {
+      console.warn('Failed to fetch today shift coverage', coverageError);
+    }
+  }, []);
+
+  const scheduleRealtimeRefresh = useCallback((refreshCoverage: boolean = false) => {
+    if (refreshCoverage) {
+      coverageRefreshPendingRef.current = true;
+    }
+
+    if (realtimeRefreshTimerRef.current !== null) {
+      return;
+    }
+
+    realtimeRefreshTimerRef.current = window.setTimeout(() => {
+      realtimeRefreshTimerRef.current = null;
+      const shouldRefreshCoverage = coverageRefreshPendingRef.current;
+      coverageRefreshPendingRef.current = false;
+
+      void loadInstances();
+      if (shouldRefreshCoverage) {
+        void loadTodayShiftCoverage();
+      }
+    }, 250);
+  }, [loadInstances, loadTodayShiftCoverage]);
+
   useEffect(() => {
     void loadInstances();
   }, [loadInstances]);
+
+  useEffect(() => {
+    void loadTodayShiftCoverage();
+  }, [clockTick, loadTodayShiftCoverage]);
 
   useEffect(() => {
     const unsubscribe = centralizedWebSocketManager.subscribe('checklists', (event: any) => {
@@ -251,17 +275,23 @@ const ChecklistsPage: React.FC = () => {
       if (!updateType) return;
       const realtimeTypes = new Set([
         'INSTANCE_CREATED',
-        'INSTANCE_JOINED',
         'ITEM_UPDATED',
         'SUBITEM_UPDATED',
-        'PARTICIPANT_PRESENCE_CHANGED',
       ]);
       if (!realtimeTypes.has(updateType)) return;
-      void loadInstances();
+      scheduleRealtimeRefresh(updateType === 'INSTANCE_CREATED');
     });
 
     return unsubscribe;
-  }, [loadInstances]);
+  }, [scheduleRealtimeRefresh]);
+
+  useEffect(() => {
+    return () => {
+      if (realtimeRefreshTimerRef.current !== null) {
+        window.clearTimeout(realtimeRefreshTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -359,6 +389,7 @@ const ChecklistsPage: React.FC = () => {
       setDeleteId(null);
       setDeleteError(null);
       setTotalInstances((previous) => Math.max(0, previous - 1));
+      void loadTodayShiftCoverage();
     } catch (err) {
       setDeleteError('Failed to delete checklist instance');
     }

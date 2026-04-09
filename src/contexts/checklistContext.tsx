@@ -38,7 +38,7 @@ interface ChecklistContextType {
   ) => Promise<void>;
   completeInstance: (instanceId: string, withExceptions?: boolean) => Promise<void>;
   deleteInstance: (instanceId: string) => Promise<void>;
-  createHandoverNote: (content: string, priority: number) => Promise<void>;
+  createHandoverNote: (content: string, priority: number, instanceId?: string) => Promise<void>;
   refreshInstance: () => Promise<void>;
 }
 
@@ -856,13 +856,18 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [currentInstance, loadInstance, validateTransition, user, addNotification]);
 
-  const createHandoverNote = useCallback(async (content: string, priority: number) => {
+  const createHandoverNote = useCallback(async (content: string, priority: number, instanceId?: string) => {
     setLoading(true);
     try {
+      const sourceInstanceId = instanceId || currentInstance?.id;
+      if (!sourceInstanceId) {
+        throw new Error('No active checklist instance selected for handover');
+      }
+
       const handoverResult: any = await checklistApi.createHandoverNote({
         content,
         priority,
-        from_instance_id: currentInstance?.id
+        from_instance_id: sourceInstanceId
       });
 
       const summary = handoverResult?.notification_summary;
@@ -903,7 +908,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } finally {
       setLoading(false);
     }
-  }, [currentInstance?.id, currentInstance?.shift, addNotification]);
+  }, [currentInstance?.id, addNotification]);
 
   const completeInstance = useCallback(async (instanceId: string, withExceptions: boolean = false) => {
     setLoading(true);

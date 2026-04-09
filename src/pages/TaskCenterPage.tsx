@@ -1,5 +1,5 @@
 // src/pages/TaskCenterPage.tsx
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useDeferredValue, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
@@ -42,6 +42,15 @@ const TaskDetail = TaskDetailModule.default;
 interface TaskCenterPageProps {}
 
 type ViewMode = 'list' | 'detail';
+type TaskLaneFilter = 'my-tasks' | 'assigned-to-me' | 'assigned-by-me' | 'team-tasks' | 'department-tasks';
+
+const TASK_LANE_FILTERS: TaskLaneFilter[] = [
+  'my-tasks',
+  'assigned-to-me',
+  'assigned-by-me',
+  'team-tasks',
+  'department-tasks'
+];
 
 const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
   const navigate = useNavigate();
@@ -62,12 +71,8 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
     fetchTeamTasks,
     fetchDepartmentTasks,
     createTask,
-    updateTask,
-    deleteTask,
-    completeTask,
     changeTaskStatus,
     clearError,
-    refreshTasks
   } = useTasks();
 
   // UI State
@@ -77,6 +82,14 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
   const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskSummary | null>(null);
+  const loadedTaskLanesRef = useRef<Record<TaskLaneFilter, boolean>>({
+    'my-tasks': false,
+    'assigned-to-me': false,
+    'assigned-by-me': false,
+    'team-tasks': false,
+    'department-tasks': false
+  });
+  const deferredSearchTerm = useDeferredValue(searchTerm.trim().toLowerCase());
 
   // History modal state lifted to page so it can render above everything
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
@@ -194,32 +207,110 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
     }
   }, [activeFilter, myTasks, allVisibleTasks, assignedByMeTasks, assignedToMeTasks, teamTasks, departmentTasks, user?.id]);
 
-  // Apply filters to current tasks
-  const getFilteredTasks = useCallback(() => {
-    let tasks = getCurrentTasks();
-    
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      tasks = tasks.filter(task => task.status === statusFilter);
+  const setTaskLanesLoaded = useCallback((lanes: TaskLaneFilter[], loaded: boolean) => {
+    lanes.forEach((lane) => {
+      loadedTaskLanesRef.current[lane] = loaded;
+    });
+  }, []);
+
+  const invalidateTaskLaneCache = useCallback((lanes: TaskLaneFilter[] = TASK_LANE_FILTERS) => {
+    setTaskLanesLoaded(lanes, false);
+  }, [setTaskLanesLoaded]);
+
+  const getTaskLanesForFilter = useCallback((filter: string): TaskLaneFilter[] => {
+    switch (filter) {
+      case 'my-tasks':
+        return ['my-tasks'];
+      case 'assigned-to-me':
+        return ['assigned-to-me'];
+      case 'assigned-by-me':
+        return ['assigned-by-me'];
+      case 'team-tasks':
+        return ['team-tasks'];
+      case 'department-tasks':
+        return ['department-tasks'];
+      default:
+        return ['my-tasks'];
     }
-    
-    // Apply priority filter
-    if (priorityFilter !== 'all') {
-      tasks = tasks.filter(task => task.priority === priorityFilter);
+  }, []);
+
+  const loadActiveTaskLane = useCallback(async (filter: string, options: { force?: boolean } = {}) => {
+    if (!user || authLoading) {
+      return;
     }
-    
-    // Apply search filter
-    if (searchTerm) {
-      tasks = tasks.filter(task => 
-        task.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+
+    const lanes = getTaskLanesForFilter(filter);
+    const shouldLoad = options.force || lanes.some((lane) => !loadedTaskLanesRef.current[lane]);
+
+    if (!shouldLoad) {
+      return;
     }
-    
-    return tasks;
-  }, [getCurrentTasks, statusFilter, priorityFilter, searchTerm]);
+
+    try {
+      switch (filter) {
+        case 'my-tasks':
+          await fetchMyTasks();
+          setTaskLanesLoaded(['my-tasks'], true);
+          break;
+        case 'assigned-to-me':
+          await fetchAssignedToMe();
+          setTaskLanesLoaded(['assigned-to-me'], true);
+          break;
+        case 'assigned-by-me':
+          if (isManager) {
+            await fetchTasksAssignedByMe();
+            setTaskLanesLoaded(['assigned-by-me'], true);
+          }
+          break;
+        case 'team-tasks':
+          if (isManager) {
+            await fetchTeamTasks();
+            setTaskLanesLoaded(['team-tasks'], true);
+          }
+          break;
+        case 'department-tasks':
+          if (isManager) {
+            await fetchDepartmentTasks();
+            setTaskLanesLoaded(['department-tasks'], true);
+          }
+          break;
+        case 'overdue':
+        case 'completed':
+        default:
+          await fetchMyTasks();
+          setTaskLanesLoaded(['my-tasks'], true);
+          break;
+      }
+    } catch (err) {
+      console.error('Failed to load tasks:', err);
+    }
+  }, [
+    authLoading,
+    fetchAssignedToMe,
+    fetchDepartmentTasks,
+    fetchMyTasks,
+    fetchTasksAssignedByMe,
+    fetchTeamTasks,
+    getTaskLanesForFilter,
+    isManager,
+    setTaskLanesLoaded,
+    user
+  ]);
+
+  const refreshActiveTasks = useCallback(async (invalidateAll: boolean = false) => {
+    if (invalidateAll) {
+      invalidateTaskLaneCache();
+    } else {
+      invalidateTaskLaneCache(getTaskLanesForFilter(activeFilter));
+    }
+
+    await loadActiveTaskLane(activeFilter, { force: true });
+  }, [activeFilter, getTaskLanesForFilter, invalidateTaskLaneCache, loadActiveTaskLane]);
 
   // Load tasks based on active filter
   useEffect(() => {
+    loadActiveTaskLane(activeFilter);
+    return;
     const loadTasks = async () => {
       // Don't load tasks if user is not available or auth is still loading
       if (!user || authLoading) {
@@ -259,7 +350,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
     };
 
     loadTasks();
-  }, [activeFilter, fetchMyTasks, fetchAssignedToMe, fetchTasksAssignedByMe, fetchTeamTasks, fetchDepartmentTasks, isManager, user, authLoading]);
+  }, [activeFilter, loadActiveTaskLane]);
 
   useEffect(() => {
     const linkedTaskId = searchParams.get('task');
@@ -331,7 +422,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
   const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
     try {
       await changeTaskStatus(taskId, newStatus);
-      // Tasks will be refreshed automatically by the hook
+      await refreshActiveTasks(true);
     } catch (error) {
       console.error('Failed to change task status:', error);
     }
@@ -345,14 +436,32 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
         assigned_by_id: user?.id || ''
       });
       setShowCreateModal(false);
-      // Tasks will be refreshed automatically by the hook
+      await refreshActiveTasks(true);
     } catch (error) {
       console.error('Failed to create task:', error);
     }
   };
 
-  const currentTasks = getFilteredTasks();
-  const filteredTasks = getFilteredTasks();
+  const currentTasks = useMemo(() => getCurrentTasks(), [getCurrentTasks]);
+  const filteredTasks = useMemo(() => {
+    let tasks = currentTasks;
+
+    if (statusFilter !== 'all') {
+      tasks = tasks.filter((task) => task.status === statusFilter);
+    }
+
+    if (priorityFilter !== 'all') {
+      tasks = tasks.filter((task) => task.priority === priorityFilter);
+    }
+
+    if (deferredSearchTerm) {
+      tasks = tasks.filter((task) =>
+        task.title.toLowerCase().includes(deferredSearchTerm)
+      );
+    }
+
+    return tasks;
+  }, [currentTasks, deferredSearchTerm, priorityFilter, statusFilter]);
   const activeFilterLabel = filterOptions.find(option => option.id === activeFilter)?.label || 'Task Center';
   const overdueCount = filteredTasks.filter((task) => isOpenOverdueTask(task)).length;
   const inProgressCount = filteredTasks.filter(task => task.status === 'IN_PROGRESS').length;
@@ -482,13 +591,13 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
             </div>
           ) : (
             <div className="task-detail-pane">
-              <TaskDetail
-                taskId={selectedTask.id}
-                onClose={handleCloseDetail}
-                onRefresh={refreshTasks}
-                onRequestHistory={(entries: any[]) => {
-                  setHistoryEntries(entries || []);
-                  setHistoryModalOpen(true);
+                <TaskDetail
+                  taskId={selectedTask.id}
+                  onClose={handleCloseDetail}
+                  onRefresh={() => refreshActiveTasks(true)}
+                  onRequestHistory={(entries: any[]) => {
+                    setHistoryEntries(entries || []);
+                    setHistoryModalOpen(true);
                 }}
               />
             </div>
@@ -563,8 +672,8 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
                       )}
                       {task.status === 'IN_PROGRESS' && (getAssignedId(task) === user?.id) && (
                         <>
-                          <button className="tc-action-btn tc-complete" onClick={() => handleStatusChange(task.id, 'COMPLETED')} title="Complete Task"><FaCheckCircle className='tc-actn-icon'/></button>
-                          <button className="tc-action-btn tc-hold" onClick={() => handleStatusChange(task.id, 'ON_HOLD')} title="Put on Hold"><FaPause className='tc-actn-icon'/></button>
+                          <button className="tc-action-btn tc-complete" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'COMPLETED'); }} title="Complete Task"><FaCheckCircle className='tc-actn-icon'/></button>
+                          <button className="tc-action-btn tc-hold" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'ON_HOLD'); }} title="Put on Hold"><FaPause className='tc-actn-icon'/></button>
                         </>
                       )}
                       {(getAssignedId(task) === user?.id) && (
@@ -618,7 +727,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
                   <span className="filter-label">{option.label}</span>
                   {activeFilter === option.id && (
                     <span className="filter-count">
-                      {getCurrentTasks().length}
+                      {currentTasks.length}
                     </span>
                   )}
                 </button>
@@ -685,7 +794,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
             </button>
             <button 
               className="quick-action-btn secondary"
-              onClick={refreshTasks}
+              onClick={() => refreshActiveTasks()}
             >
               <FaArrowRight /> Refresh
             </button>

@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { taskApi, Task } from '../../services/taskApi';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTasks } from '../../hooks/useTasks';
 import { FaThLarge, FaComment, FaHistory, FaTimes } from 'react-icons/fa';
 import './TaskDetail.css';
 
@@ -19,7 +18,6 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { changeTaskStatus } = useTasks();
   const [commentText, setCommentText] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -29,8 +27,6 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
     setLoading(true);
     try {
       const data = await taskApi.getTask(taskId);
-      // Debug: log full task payload for timeline troubleshooting
-      console.log('TaskDetail.load() received task:', { taskId, comments: data.comments?.length, history: data.history?.length, task: data });
       setTask(data);
     } catch (err) {
       console.error('Failed to load task detail', err);
@@ -112,9 +108,8 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
     if (!task) return;
     try {
       setLoading(true);
-      await changeTaskStatus(task.id, newStatus as any);
-      await load();
-      onRefresh?.();
+      await taskApi.changeTaskStatus(task.id, newStatus as any);
+      await Promise.all([load(), Promise.resolve(onRefresh?.())]);
     } catch (err) {
       console.error('Failed to change status', err);
     } finally {
@@ -132,7 +127,6 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
       await taskApi.addComment(taskId, commentText.trim());
       setCommentText('');
       await load();
-      onRefresh?.();
     } catch (err) {
       console.error('Failed to add comment', err);
     }
@@ -149,7 +143,6 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
       setFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       await load();
-      onRefresh?.();
     } catch (err) {
       console.error('Failed to upload attachment', err);
     }
