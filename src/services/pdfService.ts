@@ -42,6 +42,8 @@ export interface ChecklistInstanceData {
       total_subitems: number;
       completed_subitems: number;
     };
+    download_filename?: string;
+    completed_by_summary?: string;
   };
 }
 
@@ -64,7 +66,7 @@ class PDFService {
   /**
    * Download PDF for checklist instance
    */
-  async downloadPDF(instanceId: string): Promise<void> {
+  async downloadPDF(instanceId: string, fallbackFilename?: string): Promise<void> {
     try {
       const response = await api.get(`${this.baseUrl}/download/${instanceId}`, {
         responseType: 'blob',
@@ -72,8 +74,7 @@ class PDFService {
 
       // Get filename from Content-Disposition header
       const contentDisposition = response.headers['content-disposition'];
-      const filenameMatch = contentDisposition?.match(/filename="?([^"]+)"?/);
-      const filename = filenameMatch?.[1] || `SentinelOps_Checklist_${instanceId}.pdf`;
+      const filename = this.extractFilename(contentDisposition) || fallbackFilename || 'SentinelOps_Checklist.pdf';
 
       // Create blob and download
       const blob = new Blob([response.data], { type: 'application/pdf' });
@@ -148,7 +149,7 @@ class PDFService {
       }
 
       // Download the PDF
-      await this.downloadPDF(instanceId);
+      await this.downloadPDF(instanceId, generateResponse.filename);
 
       this.hideLoadingState();
       this.showSuccessMessage('PDF downloaded successfully!');
@@ -163,10 +164,51 @@ class PDFService {
    * Get formatted filename for PDF
    */
   getFormattedFilename(instanceData: ChecklistInstanceData['data']): string {
-    const templateName = instanceData.template_name.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
-    const date = instanceData.checklist_date;
-    const shift = instanceData.shift.toLowerCase();
-    return `SentinelOps_${templateName}_${date}_${shift}.pdf`;
+    if (instanceData.download_filename) {
+      return instanceData.download_filename;
+    }
+
+    const shift = this.toTitleCase(instanceData.shift || 'Checklist');
+    const shiftLabel = shift.endsWith('_Shift') ? shift : `${shift}_Shift`;
+    const date = this.formatDateForFilename(instanceData.checklist_date);
+    return `SentinelOps_${shiftLabel}_${date}.pdf`;
+  }
+
+  private extractFilename(contentDisposition?: string): string | undefined {
+    if (!contentDisposition) {
+      return undefined;
+    }
+
+    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    if (utf8Match?.[1]) {
+      return decodeURIComponent(utf8Match[1]);
+    }
+
+    const basicMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+    return basicMatch?.[1];
+  }
+
+  private formatDateForFilename(dateValue?: string): string {
+    if (!dateValue) {
+      return 'Unknown_Date';
+    }
+
+    const parts = dateValue.split('T')[0].split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${day}_${month}_${year}`;
+    }
+
+    return dateValue.replace(/[^0-9a-zA-Z]+/g, '_');
+  }
+
+  private toTitleCase(value: string): string {
+    return value
+      .toLowerCase()
+      .split(/[\s_-]+/)
+      .filter(Boolean)
+      .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+      .join('_');
   }
 
   /**
