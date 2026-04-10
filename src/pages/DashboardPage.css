@@ -107,6 +107,42 @@
   margin-top: 1.75rem;
 }
 
+.command-network-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-top: 1rem;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(224, 242, 254, 0.82));
+  color: var(--text-primary);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
+}
+
+.command-network-banner svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  color: #0284c7;
+}
+
+.command-network-banner strong,
+.command-network-banner span {
+  display: block;
+}
+
+.command-network-banner strong {
+  font-size: 0.88rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.command-network-banner span {
+  margin-top: 0.25rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
 .command-signal-card {
   display: flex;
   align-items: flex-start;

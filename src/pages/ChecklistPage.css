@@ -4,7 +4,8 @@
   padding: auto;
   height: 100%;
   gap: 0;
-  background: transparent; /* No page background - uses app background */
+  background: transparent;
+  /* No page background - uses app background */
 }
 
 /* Handover Notes Styles */
@@ -223,17 +224,17 @@
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .note-footer {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
   }
-  
+
   .note-actions {
     align-self: stretch;
   }
-  
+
   .btn-acknowledge {
     flex: 1;
     justify-content: center;
@@ -387,18 +388,21 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      transparent 100%);
   animation: shimmer 2s infinite;
 }
 
 @keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 100%;
+  }
 }
 
 .progress-markers {
@@ -420,10 +424,21 @@
   border-radius: 1px;
 }
 
-.marker[data-position="25"] { left: 25%; }
-.marker[data-position="50"] { left: 50%; }
-.marker[data-position="75"] { left: 75%; }
-.marker[data-position="100"] { left: 100%; }
+.marker[data-position="25"] {
+  left: 25%;
+}
+
+.marker[data-position="50"] {
+  left: 50%;
+}
+
+.marker[data-position="75"] {
+  left: 75%;
+}
+
+.marker[data-position="100"] {
+  left: 100%;
+}
 
 [data-theme="light"] .marker {
   background: rgba(0, 0, 0, 0.2);
@@ -555,8 +570,15 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
 }
 
 /* Compact Modern Checklist Header */
@@ -571,6 +593,10 @@
   position: relative;
   overflow: hidden;
   height: fit-content;
+}
+
+.checklist-header.main-header {
+  margin-top: 1rem;
 }
 
 .shift-header-title {
@@ -681,6 +707,7 @@
 .btn-complete,
 .btn-join,
 .btn-share,
+.btn-inspect,
 .btn-download-pdf {
   display: flex;
   align-items: center;
@@ -703,6 +730,12 @@
   border: 1px solid var(--border-primary);
 }
 
+.btn-inspect {
+  background: rgba(59, 130, 246, 0.08);
+  color: #1d4ed8;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
 .btn-join:hover {
   background: var(--primary);
   opacity: 0.9;
@@ -711,12 +744,20 @@
 }
 
 .btn-complete:hover,
-.btn-share:hover {
+.btn-share:hover,
+.btn-inspect:hover {
   background: var(--primary);
   border-color: var(--primary);
   color: var(--text-inverse);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+}
+
+.btn-inspect.is-active {
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+  border-color: rgba(29, 78, 216, 0.28);
+  color: white;
+  box-shadow: none;
 }
 
 .btn-download-pdf {
@@ -951,11 +992,12 @@
 
   .btn-join,
   .btn-share,
+  .btn-inspect,
   .btn-download-pdf {
     flex: 1;
     justify-content: center;
   }
-  
+
   .checklist-header {
     padding: 0.75rem 1rem;
     flex-wrap: wrap;
@@ -984,14 +1026,17 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   10% {
     opacity: 1;
     transform: translateY(0);
   }
+
   90% {
     opacity: 1;
     transform: translateY(0);
   }
+
   100% {
     opacity: 0;
     transform: translateY(-10px);
@@ -1029,6 +1074,7 @@
 .btn-complete,
 .btn-join,
 .btn-share,
+.btn-inspect,
 .btn-download-pdf {
   min-height: 40px;
   border-radius: 12px;
@@ -1038,18 +1084,26 @@
 
 .back-btn,
 .btn-help,
-.btn-share {
+.btn-share,
+.btn-inspect {
   background: rgba(148, 163, 184, 0.08);
   color: var(--text-primary);
 }
 
 .back-btn:hover,
 .btn-help:hover,
-.btn-share:hover {
+.btn-share:hover,
+.btn-inspect:hover {
   background: rgba(148, 163, 184, 0.14);
   border-color: rgba(100, 116, 139, 0.28);
   color: var(--text-primary);
   transform: translateY(-1px);
+}
+
+.btn-inspect.is-active {
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+  border-color: rgba(29, 78, 216, 0.32);
+  color: white;
 }
 
 .btn-help {
@@ -1252,7 +1306,7 @@
   transform: none;
 }
 
-.items-section > .eci-card.eci-card--futuristic {
+.items-section>.eci-card.eci-card--futuristic {
   margin: 0;
   border-radius: 22px;
   border: 1px solid rgba(148, 163, 184, 0.16);
@@ -1260,11 +1314,11 @@
   box-shadow: var(--enhanced-item-shadow);
 }
 
-.items-section > .eci-card.eci-card--futuristic:hover {
+.items-section>.eci-card.eci-card--futuristic:hover {
   transform: translateY(-1px);
 }
 
-.items-section > .eci-card.eci-card--futuristic::before,
+.items-section>.eci-card.eci-card--futuristic::before,
 .eci-header.eci-header--in-progress,
 .eci-status-icon--in-progress {
   animation: none;
@@ -1274,7 +1328,7 @@
   padding: 1.1rem;
 }
 
-.items-section > .eci-card.eci-card--futuristic .eci-header.eci-header--has-subitems {
+.items-section>.eci-card.eci-card--futuristic .eci-header.eci-header--has-subitems {
   background: linear-gradient(180deg, var(--enhanced-item-header-start) 0%, var(--enhanced-item-header-end) 100%);
 }
 
@@ -1605,6 +1659,7 @@
 
   .btn-help,
   .btn-share,
+  .btn-inspect,
   .btn-download-pdf,
   .btn-join,
   .btn-complete {
@@ -1674,4 +1729,3 @@
   color: #ef4444;
   font-weight: 600;
 }
-

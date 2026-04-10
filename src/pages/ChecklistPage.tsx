@@ -3,14 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useChecklist } from '../contexts/checklistContext';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  FaArrowLeft, FaPlay, FaCheckCircle, FaClock, 
+import {
+  FaArrowLeft, FaPlay, FaCheckCircle, FaClock,
   FaExclamationTriangle, FaBan, FaTimes,
   FaUsers, FaCalendarAlt, FaFlag, FaShareAlt,
-  FaChevronDown, FaChevronUp, FaFilePdf, FaHistory
+  FaChevronDown, FaChevronUp, FaFilePdf, FaHistory, FaSearch
 } from 'react-icons/fa';
-import { 
-  ChecklistStats, HandoverNotes, ItemActions, 
+import {
+  ChecklistStats, HandoverNotes, ItemActions,
   ParticipantList, EnhancedChecklistItem, SmartSubitemModal
 } from '../components/checklist';
 import HandoverNoteModal from '../components/checklist/HandoverNoteModal';
@@ -27,16 +27,16 @@ const ChecklistPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { 
-    currentInstance, 
-    loadInstance, 
-    joinInstance, 
+  const {
+    currentInstance,
+    loadInstance,
+    joinInstance,
     completeInstance,
     updateSubitemStatus,
-    loading, 
-    error 
+    loading,
+    error
   } = useChecklist();
-  
+
   const [showHandover, setShowHandover] = useState(false);
   const [showParticipants, setShowParticipants] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
@@ -56,6 +56,8 @@ const ChecklistPage: React.FC = () => {
   const [dateShiftValue, setDateShiftValue] = useState('');
   const [dateShiftError, setDateShiftError] = useState('');
   const [dateShiftBusy, setDateShiftBusy] = useState(false);
+  const [inspectionMode, setInspectionMode] = useState(false);
+  const [timelineNow, setTimelineNow] = useState(() => Date.now());
 
   // Handler for ItemActions modal
   const handleItemActionsClick = (item: any) => {
@@ -71,14 +73,14 @@ const ChecklistPage: React.FC = () => {
   // Handler for when ItemActions completes (e.g., starting work)
   const handleItemActionsComplete = async (action?: string, hasSubitems?: boolean) => {
     console.log('ðŸ”„ handleItemActionsComplete called with:', { action, hasSubitems, selectedItemForActions });
-    
+
     // If action is IN_PROGRESS and item has subitems, show SmartSubitemModal immediately
     if (action === 'IN_PROGRESS' && hasSubitems && selectedItemForActions) {
       // Refresh instance to get updated status
       if (id) {
         const refreshedInstance = await loadInstance(id);
         const updatedItem = refreshedInstance?.items?.find((item: any) => item.id === selectedItemForActions.id);
-        
+
         if (updatedItem) {
           // Show SmartSubitemModal for items with subitems
           setSelectedItem(updatedItem);
@@ -90,7 +92,7 @@ const ChecklistPage: React.FC = () => {
       // For all other actions or items without subitems, just close the modal
       console.log('âœ… Closing ItemActions modal - no subitems or different action');
     }
-    
+
     // Close ItemActions modal
     handleItemActionsClose();
   };
@@ -123,6 +125,16 @@ const ChecklistPage: React.FC = () => {
     }
   }, [currentInstance]);
 
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setTimelineNow(Date.now());
+    }, 30000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
   const handleJoin = async () => {
     if (currentInstance && !isJoining) {
       setIsJoining(true);
@@ -143,7 +155,7 @@ const ChecklistPage: React.FC = () => {
   const handleItemClick = (itemId: string, item: any) => {
     // Check if item has subitems
     const hasSubitems = item.subitems && item.subitems.length > 0;
-    
+
     if (hasSubitems) {
       // If item has subitems and is in progress, show subitem modal
       if (item.status === 'IN_PROGRESS') {
@@ -165,7 +177,7 @@ const ChecklistPage: React.FC = () => {
     setShowItemActionsModal(false);
     setSelectedItem(null);
     setSelectedItemForActions(null);
-    
+
     // Refresh current instance to show updated item status
     if (id) {
       console.log('ðŸ”„ Refreshing instance after item action...');
@@ -183,9 +195,9 @@ const ChecklistPage: React.FC = () => {
       // Call the proper API method from checklist context
       // The context will handle optimistic updates and instance refresh
       await updateSubitemStatus(id, selectedItem.id, subitemId, action, notes, notes);
-      
+
       console.log(`âœ… Subitem action completed: ${action} on ${subitemId}`, notes);
-      
+
       // No need to manually refresh instance here - context handles it
       // This prevents race conditions and ensures consistent state
     } catch (error) {
@@ -199,7 +211,7 @@ const ChecklistPage: React.FC = () => {
         await completeInstance(id, completeWithExceptions);
         setShowSubitemModal(false);
         setSelectedItem(null);
-        
+
         // Refresh instance
         await loadInstance(id);
       }
@@ -258,7 +270,7 @@ const ChecklistPage: React.FC = () => {
 
   const handleCompleteChecklist = async () => {
     if (!currentInstance || !id) return;
-    
+
     try {
       await completeInstance(id, completeWithExceptions);
       setShowCompleteDialog(false);
@@ -333,10 +345,10 @@ const ChecklistPage: React.FC = () => {
 
   const calculateTimeRemaining = (instance: any) => {
     if (!instance) return 0;
-    
+
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     // Get shift end time based on shift type
     let shiftEndTime;
     switch (instance.shift) {
@@ -359,11 +371,11 @@ const ChecklistPage: React.FC = () => {
       default:
         shiftEndTime = '23:00';
     }
-    
+
     const shiftEndDateTime = new Date(today.toDateString() + ' ' + shiftEndTime);
     const timeDiff = shiftEndDateTime.getTime() - now.getTime();
     const minutesRemaining = Math.floor(timeDiff / (1000 * 60));
-    
+
     return minutesRemaining;
   };
 
@@ -396,7 +408,7 @@ const ChecklistPage: React.FC = () => {
         <FaExclamationTriangle size={48} />
         <h3>Connection Error</h3>
         <p>
-          {error.includes('Failed to load') 
+          {error.includes('Failed to load')
             ? 'Unable to connect to server. Please check your connection and try again.'
             : error}
         </p>
@@ -427,11 +439,11 @@ const ChecklistPage: React.FC = () => {
   return (
     <div className="checklist-page">
       {/* Header */}
-      <header className="checklist-header">
+      <header className="checklist-header main-header">
         <button type="button" onClick={() => navigate('/')} className="back-btn">
           <FaArrowLeft /> Dashboard
         </button>
-        
+
         <div className="header-content">
           <div className="checklist-title">
             <span className='shift-header-title'>{currentInstance?.template?.name || 'Untitled Checklist'}</span>
@@ -446,10 +458,10 @@ const ChecklistPage: React.FC = () => {
 
           <div className="header-actions">
             <RealtimeIndicator />
-            
+
             {canJoin && (
-              <button 
-                onClick={handleJoin} 
+              <button
+                onClick={handleJoin}
                 className="btn-join"
                 disabled={isJoining}
               >
@@ -457,24 +469,31 @@ const ChecklistPage: React.FC = () => {
               </button>
             )}
             {canCompleteChecklist && isChecklistActive && (
-              <button 
-                onClick={() => setShowCompleteDialog(true)} 
+              <button
+                onClick={() => setShowCompleteDialog(true)}
                 className="btn-complete"
               >
                 <FaCheckCircle /> Complete Checklist
               </button>
             )}
-            <button 
-              className="btn-download-pdf" 
+            <button
+              className="btn-download-pdf"
               onClick={handleDownloadPDF}
               disabled={isGeneratingPDF || !id}
               title="Download SentinelOps Checklist PDF"
             >
-              <FaFilePdf /> 
+              <FaFilePdf />
               {isGeneratingPDF ? 'Generating...' : 'Download PDF'}
             </button>
             <button className="btn-share" onClick={handleShare}>
               <FaShareAlt /> Share
+            </button>
+            <button
+              className={`btn-inspect ${inspectionMode ? 'is-active' : ''}`}
+              onClick={() => setInspectionMode((current) => !current)}
+              type="button"
+            >
+              <FaSearch /> {inspectionMode ? 'Hide Inspection' : 'Inspect Activity'}
             </button>
             <button
               className="btn-date-shift-hidden"
@@ -498,6 +517,8 @@ const ChecklistPage: React.FC = () => {
               key={item.id}
               instanceId={currentInstance.id}
               item={item}
+              inspectionMode={inspectionMode}
+              currentTime={timelineNow}
               onItemAction={handleItemClick}
               onItemComplete={handleItemComplete}
               onItemActionsClick={handleItemActionsClick}
@@ -511,7 +532,7 @@ const ChecklistPage: React.FC = () => {
           <ChecklistStats stats={{
             completed_items: currentInstance.items?.filter(item => item.status === 'COMPLETED').length || 0,
             total_items: currentInstance.items?.length || 0,
-            completion_percentage: (currentInstance.items?.length || 0) > 0 
+            completion_percentage: (currentInstance.items?.length || 0) > 0
               ? Math.round(((currentInstance.items?.filter(item => ['COMPLETED', 'SKIPPED', 'FAILED'].includes(item.status)).length || 0) / (currentInstance.items?.length || 0)) * 100)
               : 0,
             time_remaining_minutes: calculateTimeRemaining(currentInstance)
@@ -519,7 +540,7 @@ const ChecklistPage: React.FC = () => {
 
           {/* Handover Notes */}
           <section className="sidebar-section">
-            <div 
+            <div
               className="section-header collapsible"
               onClick={() => setShowHandover(!showHandover)}
             >
@@ -527,8 +548,8 @@ const ChecklistPage: React.FC = () => {
               {showHandover ? <FaChevronUp /> : <FaChevronDown />}
             </div>
             {showHandover && (
-              <HandoverNotes 
-                instanceId={currentInstance.id} 
+              <HandoverNotes
+                instanceId={currentInstance.id}
                 onShowModal={() => setShowHandoverNoteModal(true)}
               />
             )}
@@ -536,7 +557,7 @@ const ChecklistPage: React.FC = () => {
 
           {/* Participants */}
           <section className="sidebar-section">
-            <div 
+            <div
               className="section-header collapsible"
               onClick={() => setShowParticipants(!showParticipants)}
             >
@@ -552,20 +573,20 @@ const ChecklistPage: React.FC = () => {
 
       {/* Item Actions Modal */}
       {showItemActionsModal && selectedItemForActions && (
-        <div 
-          className="enhanced-item-actions-modal-overlay" 
+        <div
+          className="enhanced-item-actions-modal-overlay"
           onClick={handleItemActionsClose}
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
         >
-          <div 
-            className="enhanced-item-actions-modal" 
+          <div
+            className="enhanced-item-actions-modal"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="enhanced-modal-header">
               <h3 id="modal-title"><FaPlay /> Item Actions</h3>
-              <button 
+              <button
                 className="enhanced-modal-close"
                 onClick={handleItemActionsClose}
                 aria-label="Close modal"
@@ -616,7 +637,7 @@ const ChecklistPage: React.FC = () => {
           <div className="reason-modal">
             <div className="reason-modal-header">
               <h3><FaCheckCircle /> Complete Checklist</h3>
-              <button 
+              <button
                 onClick={() => {
                   setShowCompleteDialog(false);
                   setCompleteWithExceptions(false);
@@ -643,14 +664,14 @@ const ChecklistPage: React.FC = () => {
               </label>
             </div>
             <div className="reason-modal-actions">
-              <button 
+              <button
                 onClick={handleCompleteChecklist}
                 className="reason-btn confirm"
                 disabled={loading}
               >
                 {loading ? 'Completing...' : 'Confirm Complete'}
               </button>
-              
+
             </div>
           </div>
         </div>

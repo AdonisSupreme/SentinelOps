@@ -95,7 +95,7 @@ const guideItems = [
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const { snapshot, loading, refresh } = useDashboardSnapshot();
+  const { snapshot, loading, refresh, error } = useDashboardSnapshot();
   const [showGuide, setShowGuide] = useState(false);
 
   const dashboardSnapshot = snapshot ?? EMPTY_DASHBOARD_SNAPSHOT;
@@ -184,6 +184,15 @@ const DashboardPage: React.FC = () => {
           </div>
           <h2>Operational command overview</h2>
           <p>{missionBrief}</p>
+          {error && (
+            <div className="command-network-banner" role="status" aria-live="polite">
+              <FaSignal />
+              <div>
+                <strong>Command link stabilizing</strong>
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
 
           <div className="command-signal-grid">
             {commandSignals.map((signal) => (

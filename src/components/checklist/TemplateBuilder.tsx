@@ -656,6 +656,19 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
                       </div>
                     </div>
 
+                    <div className="stb-form-group">
+                      <label htmlFor={`item_${item.id}_has_exe_time`} className="stb-checkbox-label">
+                        <input
+                          id={`item_${item.id}_has_exe_time`}
+                          type="checkbox"
+                          className="sentinel-checkbox-input custom-checkbox"
+                          checked={item.has_exe_time}
+                          onChange={(e) => handleUpdateItem(item.id, { has_exe_time: e.target.checked })}
+                        />
+                        Track execution time for this item
+                      </label>
+                    </div>
+
                     {renderItemTypeContent(item, itemIdx)}
 
                     <div className="stb-subitems-section">
@@ -783,6 +796,23 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
                                     Required
                                   </label>
                                 </div>
+                              </div>
+
+                              <div className="stb-form-group">
+                                <label htmlFor={`subitem_${subitem.id}_has_exe_time`} className="stb-checkbox-label">
+                                  <input
+                                    id={`subitem_${subitem.id}_has_exe_time`}
+                                    type="checkbox"
+                                    className="sentinel-checkbox-input custom-checkbox"
+                                    checked={subitem.has_exe_time}
+                                    onChange={(e) =>
+                                      handleUpdateSubitem(item.id, subitem.id, {
+                                        has_exe_time: e.target.checked,
+                                      })
+                                    }
+                                  />
+                                  Track execution time for this subitem
+                                </label>
                               </div>
 
                               <div className="stb-panel-note">

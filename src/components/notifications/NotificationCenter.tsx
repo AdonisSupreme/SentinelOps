@@ -1,5 +1,6 @@
 // src/components/notifications/NotificationCenter.tsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FaBell,
   FaCalendarAlt,
@@ -29,6 +30,7 @@ const NotificationCenter: React.FC = () => {
   const [showNewBadge, setShowNewBadge] = useState(false);
   const centerRef = useRef<HTMLDivElement>(null);
   const knownNotificationIdsRef = useRef<Set<string>>(new Set());
+  const navigate = useNavigate();
 
   const sortedNotifications = useMemo(
     () =>
@@ -156,6 +158,22 @@ const NotificationCenter: React.FC = () => {
     await markAllAsRead();
   }, [markAllAsRead]);
 
+  const getNotificationAction = useCallback(
+    (notification: {
+      relatedType?: string;
+    }) => {
+      if ((notification.relatedType || '').toLowerCase() === 'schedule') {
+        return {
+          label: 'Open schedule',
+          onClick: () => navigate('/schedule'),
+        };
+      }
+
+      return null;
+    },
+    [navigate]
+  );
+
   return (
     <div className="notification-center-wrapper" ref={centerRef}>
       <button
@@ -251,7 +269,10 @@ const NotificationCenter: React.FC = () => {
                 <p>No active notifications are waiting for you right now.</p>
               </div>
             ) : (
-              sortedNotifications.map((notification) => (
+              sortedNotifications.map((notification) => {
+                const notificationAction = getNotificationAction(notification);
+
+                return (
                 <article
                   key={notification.id}
                   className={`notification-center-item type-${notification.type} ${
@@ -275,6 +296,16 @@ const NotificationCenter: React.FC = () => {
                       <h4 className="notification-item-title">{notification.title}</h4>
                     )}
                     <p className="notification-item-message">{notification.message}</p>
+                    {notificationAction && (
+                      <button
+                        className="notification-item-cta"
+                        onClick={notificationAction.onClick}
+                        type="button"
+                      >
+                        <FaCalendarAlt />
+                        {notificationAction.label}
+                      </button>
+                    )}
                     <div className="notification-item-footer">
                       <span className={`notification-priority-chip priority-${notification.priority}`}>
                         {notification.priority}
@@ -298,7 +329,7 @@ const NotificationCenter: React.FC = () => {
                     </button>
                   </div>
                 </article>
-              ))
+              )})
             )}
           </div>
         </div>

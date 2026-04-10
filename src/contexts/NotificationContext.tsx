@@ -50,6 +50,8 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       case 'ITEM_DUE':
       case 'checklist':
         return 'checklist';
+      case 'schedule':
+        return 'reminder';
       case 'HANDOVER_NOTE':
       case 'handover':
         return 'handover';

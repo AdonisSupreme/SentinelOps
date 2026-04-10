@@ -1,12 +1,29 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { checklistApi, OperationalDashboardSummary } from '../services/checklistApi';
 import { useEffectListener } from '../effects/effectInterpreter';
+import { getErrorMessage, normalizeError } from '../utils/errorNormalizer';
 
 interface RefreshOptions {
   background?: boolean;
 }
 
 const DEFAULT_POLL_INTERVAL_MS = 30000;
+const NETWORK_RETRY_DELAYS_MS = [1200, 3000];
+
+const wait = (delayMs: number) =>
+  new Promise<void>((resolve) => {
+    window.setTimeout(resolve, delayMs);
+  });
+
+const isNetworkBootstrapError = (err: unknown) => {
+  const normalized = normalizeError(err);
+  return (
+    normalized.code === 'NETWORK_ABORTED' ||
+    normalized.code === 'NETWORK_TIMEOUT' ||
+    normalized.code === 'GENERIC_ERROR' ||
+    (normalized.message || '').includes('Network Error')
+  );
+};
 
 export const useDashboardSnapshot = (pollIntervalMs: number = DEFAULT_POLL_INTERVAL_MS) => {
   const [snapshot, setSnapshot] = useState<OperationalDashboardSummary | null>(null);
@@ -34,18 +51,38 @@ export const useDashboardSnapshot = (pollIntervalMs: number = DEFAULT_POLL_INTER
 
     setError(null);
 
-    const refreshPromise = checklistApi
-      .getDashboardSummary()
+    const runRefresh = async () => {
+      let lastError: unknown = null;
+
+      for (let attempt = 0; attempt <= NETWORK_RETRY_DELAYS_MS.length; attempt += 1) {
+        try {
+          return await checklistApi.getDashboardSummary();
+        } catch (err) {
+          lastError = err;
+          if (!isNetworkBootstrapError(err) || attempt === NETWORK_RETRY_DELAYS_MS.length) {
+            throw err;
+          }
+          await wait(NETWORK_RETRY_DELAYS_MS[attempt]);
+        }
+      }
+
+      throw lastError instanceof Error ? lastError : new Error('Failed to load dashboard');
+    };
+
+    const refreshPromise = runRefresh()
       .then((data) => {
         snapshotRef.current = data;
         setSnapshot(data);
+        setError(null);
         return data;
       })
       .catch((err) => {
-        const message = err instanceof Error ? err.message : 'Failed to load dashboard';
+        const message = isNetworkBootstrapError(err)
+          ? 'SentinelOps is reconnecting to the backend. The dashboard will come online automatically.'
+          : getErrorMessage(err);
         setError(message);
         console.error('Dashboard refresh error:', err);
-        throw err;
+        return snapshotRef.current as OperationalDashboardSummary;
       })
       .finally(() => {
         setLoading(false);
@@ -58,7 +95,7 @@ export const useDashboardSnapshot = (pollIntervalMs: number = DEFAULT_POLL_INTER
   }, []);
 
   useEffect(() => {
-    void refresh();
+    void refresh().catch(() => undefined);
   }, [refresh]);
 
   useEffect(() => {
@@ -67,42 +104,42 @@ export const useDashboardSnapshot = (pollIntervalMs: number = DEFAULT_POLL_INTER
     }
 
     const interval = window.setInterval(() => {
-      void refresh({ background: true });
+      void refresh({ background: true }).catch(() => undefined);
     }, pollIntervalMs);
 
     return () => window.clearInterval(interval);
   }, [pollIntervalMs, refresh]);
 
   useEffectListener('dashboard_refresh', () => {
-    void refresh({ background: true });
+    void refresh({ background: true }).catch(() => undefined);
   });
 
   useEffectListener('checklist_started', () => {
-    void refresh({ background: true });
+    void refresh({ background: true }).catch(() => undefined);
   });
 
   useEffectListener('checklist_completed', () => {
-    void refresh({ background: true });
+    void refresh({ background: true }).catch(() => undefined);
   });
 
   useEffectListener('checklist_exception', () => {
-    void refresh({ background: true });
+    void refresh({ background: true }).catch(() => undefined);
   });
 
   useEffectListener('handover_note_created', () => {
-    void refresh({ background: true });
+    void refresh({ background: true }).catch(() => undefined);
   });
 
   useEffectListener('notification_created', () => {
-    void refresh({ background: true });
+    void refresh({ background: true }).catch(() => undefined);
   });
 
   useEffectListener('points_awarded', () => {
-    void refresh({ background: true });
+    void refresh({ background: true }).catch(() => undefined);
   });
 
   useEffectListener('badge_earned', () => {
-    void refresh({ background: true });
+    void refresh({ background: true }).catch(() => undefined);
   });
 
   return {

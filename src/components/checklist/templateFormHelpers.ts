@@ -25,6 +25,7 @@ export interface SubitemForm {
   description: string;
   item_type: ChecklistItemType;
   is_required: boolean;
+  has_exe_time: boolean;
   severity: number;
   sort_order: number;
   scheduled_time: string;
@@ -87,6 +88,7 @@ export const createEmptySubitem = (sortOrder: number): SubitemForm => ({
   description: '',
   item_type: 'ROUTINE',
   is_required: false,
+  has_exe_time: false,
   severity: 1,
   sort_order: sortOrder,
   scheduled_time: '',
@@ -99,6 +101,7 @@ export const createEmptyItem = (sortOrder: number): ItemForm => ({
   description: '',
   item_type: 'ROUTINE',
   is_required: true,
+  has_exe_time: false,
   severity: 1,
   sort_order: sortOrder,
   scheduled_time: '',
@@ -179,6 +182,7 @@ export const serializeSubitemForRequest = (
   description: normalizeOptionalText(subitem.description),
   item_type: subitem.item_type,
   is_required: subitem.is_required,
+  has_exe_time: subitem.has_exe_time,
   scheduled_time: subitem.item_type === 'TIMED' ? subitem.scheduled_time || null : null,
   notify_before_minutes:
     subitem.item_type === 'TIMED' && typeof subitem.notify_before_minutes === 'number'
@@ -196,6 +200,7 @@ export const serializeItemForRequest = (
   description: normalizeOptionalText(item.description),
   item_type: item.item_type,
   is_required: item.is_required,
+  has_exe_time: item.has_exe_time,
   scheduled_time: item.item_type === 'TIMED' ? item.scheduled_time || null : null,
   notify_before_minutes:
     item.item_type === 'TIMED' && typeof item.notify_before_minutes === 'number'
@@ -219,6 +224,7 @@ export const mapTemplateItemToForm = (item: ChecklistItem): ItemForm =>
     description: item.description || '',
     item_type: item.item_type,
     is_required: item.is_required,
+    has_exe_time: item.has_exe_time ?? false,
     severity: item.severity,
     sort_order: item.sort_order,
     scheduled_time: normalizeScheduledTimeForType(item.item_type, item.scheduled_time),
@@ -231,6 +237,7 @@ export const mapTemplateItemToForm = (item: ChecklistItem): ItemForm =>
           description: subitem.description || '',
           item_type: subitem.item_type,
           is_required: subitem.is_required,
+          has_exe_time: subitem.has_exe_time ?? false,
           severity: subitem.severity,
           sort_order: subitem.sort_order,
           scheduled_time: normalizeScheduledTimeForType(subitem.item_type, subitem.scheduled_time),

@@ -98,6 +98,7 @@ export interface ChecklistItem {
   description: string;
   item_type: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
   is_required: boolean;
+  has_exe_time: boolean;
   scheduled_time: string | null;
   notify_before_minutes?: number | null;
   severity: number;
@@ -111,6 +112,7 @@ export interface CreateTemplateItemRequest {
   description?: string;
   item_type: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
   is_required: boolean;
+  has_exe_time: boolean;
   scheduled_time?: string | null;
   notify_before_minutes?: number | null;
   severity: number;
@@ -125,6 +127,7 @@ export interface CreateTemplateSubitemRequest {
   description?: string;
   item_type: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
   is_required: boolean;
+  has_exe_time: boolean;
   scheduled_time?: string | null;
   notify_before_minutes?: number | null;
   severity: number;
@@ -157,9 +160,11 @@ export interface ChecklistInstanceSubitem {
   description: string | null;
   item_type: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
   is_required: boolean;
+  has_exe_time: boolean;
   severity: number;
   sort_order: number;
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'FAILED';
+  started_at: string | null;
   completed_by: {
     id: string;
     username: string;
@@ -179,6 +184,7 @@ export interface ChecklistItemInstance {
   description?: string;
   item_type?: 'ROUTINE' | 'TIMED' | 'SCHEDULED_EVENT' | 'CONDITIONAL' | 'INFORMATIONAL';
   is_required?: boolean;
+  has_exe_time?: boolean;
   scheduled_time?: string | null;
   notify_before_minutes?: number | null;
   severity?: number;
@@ -186,6 +192,7 @@ export interface ChecklistItemInstance {
   scheduled_events?: ChecklistScheduledEvent[];
   // Instance-specific properties
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'FAILED';
+  started_at?: string | null;
   completed_at: string | null;
   completed_by: {
     id: string;
