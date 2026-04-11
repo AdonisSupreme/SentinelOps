@@ -32,6 +32,7 @@ const ChecklistPage: React.FC = () => {
     loadInstance,
     joinInstance,
     completeInstance,
+    updateItemStatus,
     updateSubitemStatus,
     loading,
     error
@@ -208,7 +209,7 @@ const ChecklistPage: React.FC = () => {
   const handleCompleteItem = async () => {
     try {
       if (selectedItem && id) {
-        await completeInstance(id, completeWithExceptions);
+        await updateItemStatus(id, selectedItem.id, 'COMPLETED', 'All subitems completed');
         setShowSubitemModal(false);
         setSelectedItem(null);
 
@@ -314,12 +315,13 @@ const ChecklistPage: React.FC = () => {
   const userRole = (user?.role || '').toLowerCase();
   const canCompleteChecklist = userRole === 'manager' || userRole === 'admin';
   const isChecklistActive = currentInstance?.status === 'OPEN' || currentInstance?.status === 'IN_PROGRESS' || currentInstance?.status === 'PENDING_REVIEW';
+  const canApproveChecklist = canCompleteChecklist && currentInstance?.status === 'PENDING_REVIEW';
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; tone: string; icon: React.ReactNode }> = {
       'OPEN': { label: 'Open', tone: 'neutral', icon: <FaClock /> },
       'IN_PROGRESS': { label: 'In Progress', tone: 'progress', icon: <FaPlay /> },
-      'PENDING_REVIEW': { label: 'Pending Review', tone: 'review', icon: <FaClock /> },
+      'PENDING_REVIEW': { label: 'Pending Approval', tone: 'review', icon: <FaClock /> },
       'COMPLETED': { label: 'Completed', tone: 'success', icon: <FaCheckCircle /> },
       'COMPLETED_WITH_EXCEPTIONS': { label: 'With Exceptions', tone: 'critical', icon: <FaExclamationTriangle /> },
       'INCOMPLETE': { label: 'Incomplete', tone: 'critical', icon: <FaBan /> },
@@ -468,7 +470,7 @@ const ChecklistPage: React.FC = () => {
                 <FaUsers /> {isJoining ? 'Joining...' : 'Join Checklist'}
               </button>
             )}
-            {canCompleteChecklist && isChecklistActive && (
+            {canApproveChecklist && isChecklistActive && (
               <button
                 onClick={() => setShowCompleteDialog(true)}
                 className="btn-complete"
@@ -857,4 +859,3 @@ const ChecklistPage: React.FC = () => {
 };
 
 export default ChecklistPage;
-

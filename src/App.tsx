@@ -16,6 +16,8 @@ import NotFoundPage from './pages/NotFoundPage';
 import UserManagementPage from './pages/UserManagementPage';
 import AdvancedTeamManagementPage from './pages/AdvancedTeamManagementPage';
 import UserScheduleDashboard from './pages/UserScheduleDashboard';
+import ProfileSettingsPage from './pages/ProfileSettingsPage';
+import SentinelManualPage from './pages/SentinelManualPage';
 import TemplateManagerPage from './pages/TemplateManagerPage';
 import TrustlinkOperationsPage from './pages/TrustlinkOperationsPage';
 import NetworkSentinelPage from './pages/NetworkSentinelPage';
@@ -60,6 +62,8 @@ function App() {
                           <Route path="/users" element={<UserManagementPage />} />
                           <Route path="/team" element={<AdvancedTeamManagementPage />} />
                           <Route path="/schedule" element={<UserScheduleDashboard />} />
+                          <Route path="/settings" element={<ProfileSettingsPage />} />
+                          <Route path="/manual" element={<SentinelManualPage />} />
                         </Route>
 
                         <Route path="*" element={<NotFoundPage />} />

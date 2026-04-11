@@ -55,47 +55,47 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
               <div className="sk-line sk-sub" />
             </div>
           </div>
-          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div className="sk-pill" />
-            <div style={{display:'flex', gap:8}}>
+            <div style={{ display: 'flex', gap: 8 }}>
               <div className="sk-btn" />
               <div className="sk-btn" />
             </div>
-            <button className="td-close" onClick={onClose}><FaThLarge className='tc-actn-icon'/></button>
+            <button className="td-close" onClick={onClose}><FaThLarge className='tc-actn-icon' /></button>
           </div>
         </div>
 
         <div className="td-body">
           <div className="td-left">
             <div className="td-card sk-card">
-              <div className="sk-line" style={{width:'70%'}} />
-              <div className="sk-line" style={{width:'60%'}} />
-              <div className="sk-line" style={{width:'50%'}} />
-              <div className="sk-line" style={{width:'80%'}} />
+              <div className="sk-line" style={{ width: '70%' }} />
+              <div className="sk-line" style={{ width: '60%' }} />
+              <div className="sk-line" style={{ width: '50%' }} />
+              <div className="sk-line" style={{ width: '80%' }} />
             </div>
 
             <div className="td-card sk-card">
-              <div className="sk-line sk-sub" style={{height:18,width:'40%'}} />
-              <div className="sk-line" style={{height:14,width:'100%',marginTop:10}} />
-              <div className="sk-line" style={{height:14,width:'90%'}} />
-              <div className="sk-line" style={{height:14,width:'80%'}} />
+              <div className="sk-line sk-sub" style={{ height: 18, width: '40%' }} />
+              <div className="sk-line" style={{ height: 14, width: '100%', marginTop: 10 }} />
+              <div className="sk-line" style={{ height: 14, width: '90%' }} />
+              <div className="sk-line" style={{ height: 14, width: '80%' }} />
             </div>
           </div>
 
           <div className="td-right">
             <div className="td-card sk-card">
-              <div className="sk-line" style={{height:84}} />
-              <div className="td-actions" style={{marginTop:10}}>
+              <div className="sk-line" style={{ height: 84 }} />
+              <div className="td-actions" style={{ marginTop: 10 }}>
                 <div className="sk-btn" />
-                <div style={{flex:1}} />
+                <div style={{ flex: 1 }} />
                 <div className="sk-btn" />
               </div>
             </div>
 
             <div className="td-card sk-card">
-              <div className="sk-line sk-sub" style={{height:18,width:'30%'}} />
-              <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:10}}>
-                {Array.from({length:4}).map((_,i)=> <div key={i} className="sk-line" style={{height:14,width:`${90 - i*10}%`}} />)}
+              <div className="sk-line sk-sub" style={{ height: 18, width: '30%' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                {Array.from({ length: 4 }).map((_, i) => <div key={i} className="sk-line" style={{ height: 14, width: `${90 - i * 10}%` }} />)}
               </div>
             </div>
           </div>
@@ -159,7 +159,7 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
 
   const handleDownloadAttachment = async (att: any) => {
     try {
-    const rawUrl = att.url || att.file_path || att.fileUrl;
+      const rawUrl = att.url || att.file_path || att.fileUrl;
       let downloadUrl = rawUrl;
 
       // If the backend stored a local filesystem path (Windows or file://), use backend proxy
@@ -344,11 +344,11 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
               <div className="td-sub">{task?.id ? `#${task.id}` : ''}</div>
             </div>
           </div>
-          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div className={`td-pill td-status`}>{statusLabel(task?.status)}</div>
             {/* Action buttons: show based on status and permissions */}
             {task?.permissions && (task.permissions.can_edit || task.permissions.can_complete) && (
-              <div style={{display:'flex', gap:8}}>
+              <div style={{ display: 'flex', gap: 8 }}>
                 {task.status === 'ACTIVE' && task.assigned_to_id === user?.id && (
                   <button className="tc-action-btn tc-start" onClick={() => handleStatusAction('IN_PROGRESS')} disabled={loading}>Start</button>
                 )}
@@ -363,7 +363,7 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
                 )}
               </div>
             )}
-            <button className="td-close" onClick={onClose}><FaThLarge className='tc-actn-icon'/></button>
+            <button className="td-close" onClick={onClose}>TASKS <FaThLarge className='tc-actn-icon' /></button>
           </div>
         </div>
 
@@ -392,7 +392,7 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
                 />
                 <div className="td-actions">
                   <button onClick={handleAddComment} className="td-btn">Add Comment</button>
-                  <div style={{flex:1}} />
+                  <div style={{ flex: 1 }} />
                   <input ref={fileInputRef} type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
                   <button onClick={handleUpload} disabled={!file} className="td-btn">Upload</button>
                 </div>
@@ -400,9 +400,9 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
             )}
 
             <div className="td-card td-timeline-wrapper">
-              <div style={{display:'flex',alignItems:'center',gap:8}}>
-                <h4 style={{margin:0}}>Timeline</h4>
-                <div style={{flex:1}} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h4 style={{ margin: 0 }}>Timeline</h4>
+                <div style={{ flex: 1 }} />
                 <button
                   className="td-btn"
                   onClick={() => {
@@ -438,14 +438,14 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
             </div>
 
             <div className="td-card td-attachments">
-              <div style={{display:'flex',alignItems:'center',gap:8}}>
-                <h4 style={{margin:0}}>Attachments</h4>
-                <div style={{flex:1}} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h4 style={{ margin: 0 }}>Attachments</h4>
+                <div style={{ flex: 1 }} />
                 <div className="td-small">{(task?.attachments?.length || 0)} files</div>
               </div>
               {(() => {
                 const { attachments } = computeFormattedEntries();
-                if (!attachments || attachments.length === 0) return <div className="td-small" style={{marginTop:8}}>No attachments</div>;
+                if (!attachments || attachments.length === 0) return <div className="td-small" style={{ marginTop: 8 }}>No attachments</div>;
                 return (
                   <div className="td-attachments-grid">
                     {attachments.map((att: any) => (
@@ -479,38 +479,38 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
         </div>
       </div>
       {showHistory && (() => {
-              const { historyEntries } = computeFormattedEntries();
-              return (
-                <div className="history-modal-backdrop" style={{zIndex:40}} onClick={() => setShowHistory(false)}>
-                  <div className="history-modal" style={{width:'720px'}} onClick={e => e.stopPropagation()}>
-                    <div className="td-header">
-                      <div className="td-title"><h2>Task History</h2><div className="td-sub">{task?.id ? `#${task.id}` : ''}</div></div>
-                      <div style={{display:'flex',gap:8,alignItems:'center'}}>
-                        <button className="td-close" onClick={() => setShowHistory(false)}>×</button>
-                      </div>
-                    </div>
-                    <div className="history-body">
-                      <div style={{display:'flex',flexDirection:'column',gap:12}}>
-                        {historyEntries.length === 0 ? (
-                          <div className="td-small">No history events</div>
-                        ) : (
-                          historyEntries.map((ev: any) => (
-                            <div key={ev.id} className="td-event">
-                              <div className="td-event-time">{new Date(ev.timestamp).toLocaleString()}</div>
-                              <div className="td-event-content">
-                                <strong>{ev.action || 'Updated'}</strong>
-                                <div className="td-small">{ev.summary}</div>
-                                <div className="td-small">by {ev.user?.username || `${ev.user?.first_name || ''} ${ev.user?.last_name || ''}`}</div>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  </div>
+        const { historyEntries } = computeFormattedEntries();
+        return (
+          <div className="history-modal-backdrop" style={{ zIndex: 40 }} onClick={() => setShowHistory(false)}>
+            <div className="history-modal" style={{ width: '720px' }} onClick={e => e.stopPropagation()}>
+              <div className="td-header">
+                <div className="td-title"><h2>Task History</h2><div className="td-sub">{task?.id ? `#${task.id}` : ''}</div></div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button className="td-close" onClick={() => setShowHistory(false)}>×</button>
                 </div>
-              );
-            })()}
+              </div>
+              <div className="history-body">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {historyEntries.length === 0 ? (
+                    <div className="td-small">No history events</div>
+                  ) : (
+                    historyEntries.map((ev: any) => (
+                      <div key={ev.id} className="td-event">
+                        <div className="td-event-time">{new Date(ev.timestamp).toLocaleString()}</div>
+                        <div className="td-event-content">
+                          <strong>{ev.action || 'Updated'}</strong>
+                          <div className="td-small">{ev.summary}</div>
+                          <div className="td-small">by {ev.user?.username || `${ev.user?.first_name || ''} ${ev.user?.last_name || ''}`}</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

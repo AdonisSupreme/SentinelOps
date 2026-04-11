@@ -10,6 +10,7 @@ type BackendNotificationWithCompat = BackendNotification & {
   read?: boolean;
   isRead?: boolean;
   title?: string;
+  priority?: string;
 };
 
 type NotificationType = 'info' | 'warning' | 'success' | 'error' | 'checklist' | 'handover' | 'reminder';
@@ -29,6 +30,7 @@ interface Notification {
 
 interface NotificationContextType {
   notifications: Notification[];
+  popupNotifications: Notification[];
   unreadCount: number;
   addNotification: (notification: Omit<Notification, 'id' | 'read' | 'timestamp'>) => void;
   markAsRead: (id: string) => Promise<void>;
@@ -41,15 +43,39 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [popupNotifications, setPopupNotifications] = useState<Notification[]>([]);
   const { user } = useAuth();
   const hiddenNotificationIdsRef = useRef<Set<string>>(new Set());
+  const popupTimeoutsRef = useRef<Map<string, number>>(new Map());
+
+  const clearPopupTimeout = useCallback((id: string) => {
+    const timeoutId = popupTimeoutsRef.current.get(id);
+    if (timeoutId) {
+      window.clearTimeout(timeoutId);
+      popupTimeoutsRef.current.delete(id);
+    }
+  }, []);
+
+  const dismissPopupNotification = useCallback((id: string) => {
+    clearPopupTimeout(id);
+    setPopupNotifications((prev) => prev.filter((notification) => notification.id !== id));
+  }, [clearPopupTimeout]);
 
   const mapNotificationType = (value?: string): NotificationType => {
     switch (value) {
+      case 'checklist_manager_review':
+        return 'warning';
+      case 'checklist_manager_alert':
+        return 'error';
       case 'CHECKLIST_ASSIGNED':
       case 'ITEM_DUE':
+      case 'item_action':
+      case 'subitem_action':
+      case 'checklist_completion':
       case 'checklist':
         return 'checklist';
+      case 'performance_badge':
+        return 'success';
       case 'schedule':
         return 'reminder';
       case 'HANDOVER_NOTE':
@@ -119,6 +145,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     if (!user) {
       hiddenNotificationIdsRef.current.clear();
       setNotifications([]);
+      popupTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      popupTimeoutsRef.current.clear();
+      setPopupNotifications([]);
       return;
     }
 
@@ -133,16 +162,22 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     };
   }, [user, loadNotifications]);
 
-  const addNotification = (notification: Omit<Notification, 'id' | 'read' | 'timestamp'>) => {
+  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'read' | 'timestamp'>) => {
     const newNotification: Notification = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       ...notification,
       read: false,
       timestamp: new Date()
     };
-    
-    setNotifications(prev => [newNotification, ...prev.slice(0, 49)]);
-    
+
+    setPopupNotifications((prev) => [newNotification, ...prev.slice(0, 4)]);
+
+    const timeoutId = window.setTimeout(() => {
+      setPopupNotifications((prev) => prev.filter((item) => item.id !== newNotification.id));
+      popupTimeoutsRef.current.delete(newNotification.id);
+    }, 5200);
+    popupTimeoutsRef.current.set(newNotification.id, timeoutId);
+
     // Show browser notification if supported
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('SentinelOps', {
@@ -150,9 +185,15 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         icon: '/logo192.png'
       });
     }
-  };
+  }, []);
 
   const markAsRead = async (id: string) => {
+    const isPersistentNotification = notifications.some((notification) => notification.id === id);
+    if (!isPersistentNotification) {
+      dismissPopupNotification(id);
+      return;
+    }
+
     hiddenNotificationIdsRef.current.add(id);
     setNotifications(prev => prev.filter(n => n.id !== id));
 
@@ -181,7 +222,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   };
 
   const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    dismissPopupNotification(id);
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -190,6 +231,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     <NotificationContext.Provider 
       value={{ 
         notifications, 
+        popupNotifications,
         unreadCount, 
         addNotification, 
         markAsRead, 

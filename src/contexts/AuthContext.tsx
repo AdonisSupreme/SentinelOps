@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { useNavigate, useLocation } from 'react-router-dom';
 import { setAuthToken, clearAuthToken, authService } from '../services/api';
 import websocketService from '../services/websocketService';
+import centralizedWebSocketManager from '../services/centralizedWebSocketManager';
 import { checkAdAvailability, AdAvailability } from '../services/adGatewayAuth';
 import {
   MeResponse,
@@ -45,12 +46,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     clearAuthToken();
-    // On logout, WebSocket connections are cleaned up by providers/components
+    websocketService.setAuthToken('');
+    centralizedWebSocketManager.disconnectAll();
   }, [token]);
 
   const forceLogout = () => {
     localStorage.removeItem('token');
     clearAuthToken();
+    websocketService.setAuthToken('');
+    centralizedWebSocketManager.disconnectAll();
     setToken(null);
     setUser(null);
     navigate('/login');
@@ -154,6 +158,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Always perform full cleanup regardless of API response
       localStorage.removeItem('token');
       clearAuthToken();
+      websocketService.setAuthToken('');
+      centralizedWebSocketManager.disconnectAll();
       setToken(null);
       setUser(null);
       navigate('/login');

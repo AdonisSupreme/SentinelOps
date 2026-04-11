@@ -60,13 +60,6 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const { addNotification } = useNotifications();
   const { user } = useAuth();
 
-  // Register handlers once; keep the connection itself lazy.
-  useEffect(() => {
-    websocketService.onChecklistUpdateCallback(handleRealtimeUpdate);
-    websocketService.onConnectionChangeCallback(handleConnectionChange);
-    websocketService.onErrorCallback(handleWebSocketError);
-  }, []);
-
   // Only open the checklist socket when an actual checklist is active.
   useEffect(() => {
     if (!currentInstance?.id) {
@@ -87,6 +80,16 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
   }, [currentInstance?.id]);
 
+  useEffect(() => {
+    if (user) {
+      return;
+    }
+
+    setCurrentInstance(null);
+    setTodayInstances([]);
+    websocketService.disconnect();
+  }, [user]);
+
   // Handle real-time updates from WebSocket
   const handleRealtimeUpdate = useCallback(async (event: ChecklistUpdateEvent) => {
     console.log('🔄 Real-time update received:', event);
@@ -102,6 +105,38 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     console.log('✅ Processing update for current instance');
 
     try {
+      if (event.type === 'PARTICIPANT_PRESENCE_CHANGED') {
+        const participantId = event.data.user_id;
+        const isOnline = Boolean(event.data.is_online);
+
+        if (participantId) {
+          setCurrentInstance(prev => {
+            if (!prev || prev.id !== event.data.instance_id) {
+              return prev;
+            }
+
+            return {
+              ...prev,
+              participants: (prev.participants || []).map((participant: any) =>
+                participant.id === participantId
+                  ? { ...participant, is_online: isOnline }
+                  : participant
+              )
+            };
+          });
+        }
+
+        if (participantId && participantId !== user?.id) {
+          addNotification({
+            type: 'info',
+            message: `Participant is now ${isOnline ? 'online' : 'offline'}`,
+            priority: 'low'
+          });
+        }
+
+        return;
+      }
+
       // Fetch the latest instance data from server
       const updatedInstance = await checklistApi.getInstance(currentInstance.id);
       console.log('📥 Fetched updated instance:', updatedInstance);
@@ -156,10 +191,6 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           break;
         }
 
-        case 'PARTICIPANT_PRESENCE_CHANGED': {
-          message = `Participant is now ${event.data.is_online ? 'online' : 'offline'}`;
-          break;
-        }
       }
       // Only show notification if the update wasn't made by the current user
       if (event.data.user_id !== user?.id) {
@@ -194,6 +225,13 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     console.error('WebSocket error:', error);
     setError('Real-time connection error');
   }, []);
+
+  // Register handlers with fresh closures so real-time updates always target the active checklist.
+  useEffect(() => {
+    websocketService.onChecklistUpdateCallback(handleRealtimeUpdate);
+    websocketService.onConnectionChangeCallback(handleConnectionChange);
+    websocketService.onErrorCallback(handleWebSocketError);
+  }, [handleRealtimeUpdate, handleConnectionChange, handleWebSocketError]);
 
   const loadTodayInstances = useCallback(async () => {
     setLoading(true);
@@ -946,6 +984,8 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         errorMessage = 'You are not authorized to complete this checklist.';
       } else if (err.response?.status === 400) {
         errorMessage = err.response.data?.detail || 'Invalid request to complete checklist.';
+      } else if (err.response?.status === 409) {
+        errorMessage = err.response.data?.detail || 'Checklist must reach pending approval before it can be completed.';
       } else if (err.response?.status === 404) {
         errorMessage = 'Checklist instance not found.';
       }

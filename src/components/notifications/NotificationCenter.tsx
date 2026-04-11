@@ -19,10 +19,12 @@ import './NotificationCenter.css';
 const NotificationCenter: React.FC = () => {
   const {
     notifications,
+    popupNotifications,
     unreadCount,
     markAsRead,
     markAllAsRead,
     loadNotifications,
+    removeNotification,
   } = useNotifications();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -160,12 +162,32 @@ const NotificationCenter: React.FC = () => {
 
   const getNotificationAction = useCallback(
     (notification: {
+      relatedId?: string;
       relatedType?: string;
     }) => {
-      if ((notification.relatedType || '').toLowerCase() === 'schedule') {
+      const relatedType = (notification.relatedType || '').toLowerCase();
+
+      if (
+        notification.relatedId &&
+        ['checklist_manager_review', 'checklist_manager_alert', 'checklist_instance'].includes(relatedType)
+      ) {
+        return {
+          label: 'Open checklist',
+          onClick: () => navigate(`/checklist/${notification.relatedId}`),
+        };
+      }
+
+      if (relatedType === 'schedule') {
         return {
           label: 'Open schedule',
           onClick: () => navigate('/schedule'),
+        };
+      }
+
+      if (relatedType === 'performance_badge') {
+        return {
+          label: 'Open Badge Forge',
+          onClick: () => navigate('/performance#badge-forge'),
         };
       }
 
@@ -173,6 +195,10 @@ const NotificationCenter: React.FC = () => {
     },
     [navigate]
   );
+
+  const activePopupNotification = popupNotifications[0];
+  const queuedPopupCount = Math.max(0, popupNotifications.length - 1);
+  const popupAction = activePopupNotification ? getNotificationAction(activePopupNotification) : null;
 
   return (
     <div className="notification-center-wrapper" ref={centerRef}>
@@ -198,7 +224,50 @@ const NotificationCenter: React.FC = () => {
         </span>
       </button>
 
-      {showNewBadge && !isOpen && (
+      {activePopupNotification && !isOpen && (
+        <div className={`notification-live-toast type-${activePopupNotification.type}`} aria-live="polite">
+          <div className="notification-live-toast-icon">
+            {getNotificationIcon(activePopupNotification.type)}
+          </div>
+          <div className="notification-live-toast-body">
+            <div className="notification-live-toast-header">
+              <span className="notification-live-toast-eyebrow">
+                {activePopupNotification.title || getEyebrow(activePopupNotification.type)}
+              </span>
+              <button
+                className="notification-live-toast-close"
+                onClick={() => removeNotification(activePopupNotification.id)}
+                aria-label="Dismiss notification popup"
+                type="button"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <p className="notification-live-toast-message">{activePopupNotification.message}</p>
+            <div className="notification-live-toast-footer">
+              <span className={`notification-priority-chip priority-${activePopupNotification.priority}`}>
+                {activePopupNotification.priority}
+              </span>
+              {queuedPopupCount > 0 && (
+                <span className="notification-live-toast-queue">
+                  +{queuedPopupCount} more
+                </span>
+              )}
+              {popupAction && (
+                <button
+                  className="notification-live-toast-action"
+                  onClick={popupAction.onClick}
+                  type="button"
+                >
+                  {popupAction.label}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showNewBadge && !isOpen && popupNotifications.length === 0 && (
         <div className="notification-new-toast" aria-live="polite">
           <span className="notification-new-toast-orb" aria-hidden="true" />
           <span>New notification</span>

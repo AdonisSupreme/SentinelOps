@@ -113,6 +113,140 @@
   z-index: 1009;
 }
 
+.notification-live-toast {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(320px, calc(100vw - 32px));
+  padding: 12px 12px 12px 11px;
+  border-radius: 18px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  color: #effaff;
+  background:
+    radial-gradient(circle at top left, rgba(0, 217, 255, 0.18), transparent 36%),
+    linear-gradient(135deg, rgba(8, 18, 34, 0.97), rgba(15, 26, 48, 0.97));
+  border: 1px solid rgba(125, 249, 255, 0.2);
+  box-shadow: 0 20px 36px rgba(0, 0, 0, 0.3), 0 0 26px rgba(0, 217, 255, 0.1);
+  animation: notificationToastIn 0.25s ease-out;
+  z-index: 1009;
+}
+
+.notification-live-toast.type-success {
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.notification-live-toast.type-warning {
+  border-color: rgba(245, 158, 11, 0.34);
+}
+
+.notification-live-toast.type-error {
+  border-color: rgba(239, 68, 68, 0.36);
+}
+
+.notification-live-toast-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #90f6ff;
+  background: rgba(125, 249, 255, 0.1);
+  border: 1px solid rgba(125, 249, 255, 0.14);
+}
+
+.notification-live-toast.type-success .notification-live-toast-icon {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.18);
+}
+
+.notification-live-toast.type-warning .notification-live-toast-icon {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.18);
+}
+
+.notification-live-toast.type-error .notification-live-toast-icon {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.18);
+}
+
+.notification-live-toast-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notification-live-toast-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.notification-live-toast-eyebrow {
+  min-width: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(214, 240, 255, 0.8);
+}
+
+.notification-live-toast-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(239, 250, 255, 0.86);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.notification-live-toast-message {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: rgba(231, 244, 252, 0.92);
+}
+
+.notification-live-toast-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.notification-live-toast-queue {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(153, 226, 255, 0.72);
+}
+
+.notification-live-toast-action {
+  margin-left: auto;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #ebf8ff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(125, 249, 255, 0.16);
+}
+
 .notification-new-toast-orb {
   width: 8px;
   height: 8px;
