@@ -184,6 +184,13 @@ const NotificationCenter: React.FC = () => {
         };
       }
 
+      if (notification.relatedId && relatedType === 'network_service') {
+        return {
+          label: 'Open outage timeline',
+          onClick: () => navigate(`/network-sentinel?service=${notification.relatedId}&tab=timeline`),
+        };
+      }
+
       if (relatedType === 'schedule') {
         return {
           label: 'Open schedule',

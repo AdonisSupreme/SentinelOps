@@ -1,4 +1,5 @@
 import React, { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   FaBolt,
   FaBroadcastTower,
@@ -46,6 +47,7 @@ type DetailTab = 'signal' | 'timeline' | 'evidence';
 const NetworkSentinelPage: React.FC = () => {
   const { user } = useAuth();
   const { addNotification } = useNotifications();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isManagerOrAdmin = ['admin', 'manager'].includes((user?.role || '').toLowerCase());
   const isAdmin = (user?.role || '').toLowerCase() === 'admin';
 
@@ -61,17 +63,21 @@ const NetworkSentinelPage: React.FC = () => {
   const [groupFilter, setGroupFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | Status>('ALL');
   const [rawSearch, setRawSearch] = useState('');
-  const [csvDownloading, setCsvDownloading] = useState(false);
+  const [evidenceDownloading, setEvidenceDownloading] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorMode, setEditorMode] = useState<'create' | 'edit'>('create');
   const [checkNowBusy, setCheckNowBusy] = useState(false);
   const [toggleBusy, setToggleBusy] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [todayEventsOpen, setTodayEventsOpen] = useState(false);
+  const [outageLedgerOpen, setOutageLedgerOpen] = useState(false);
   const [serviceForm, setServiceForm] = useState({
     name: '', address: '', port: '', environment: '', group_name: '', tags: '',
     timeout_ms: '3000', interval_seconds: '10', check_icmp: true, check_tcp: true, enabled: true, notes: '',
   });
+  const requestedServiceId = searchParams.get('service');
+  const requestedTab = searchParams.get('tab');
 
   const deferredQuery = useDeferredValue(serviceQuery);
   const detailRefreshTimerRef = useRef<number | null>(null);
@@ -94,11 +100,16 @@ const NetworkSentinelPage: React.FC = () => {
     if (showSpinner) setLoading(true);
     const data = await networkSentinelApi.getCommandCenter();
     setSnapshot(data);
-    setSelectedId((current) => (current && data.services.some((service) => service.id === current) ? current : data.services[0]?.id || null));
+    setSelectedId((current) => {
+      if (requestedServiceId && data.services.some((service) => service.id === requestedServiceId)) {
+        return requestedServiceId;
+      }
+      return current && data.services.some((service) => service.id === current) ? current : data.services[0]?.id || null;
+    });
     setError(null);
     setLoading(false);
     return data;
-  }, []);
+  }, [requestedServiceId]);
 
   const loadInvestigation = useCallback(async (serviceId: string, silent = false) => {
     if (!silent) setInvestigationLoading(true);
@@ -119,6 +130,31 @@ const NetworkSentinelPage: React.FC = () => {
   useEffect(() => {
     if (selectedId) loadInvestigation(selectedId).catch(() => undefined);
   }, [loadInvestigation, selectedId]);
+
+  useEffect(() => {
+    if (!requestedTab) return;
+    if (requestedTab === 'signal' || requestedTab === 'timeline' || requestedTab === 'evidence') {
+      setTab((current) => (current === requestedTab ? current : requestedTab));
+    }
+  }, [requestedTab]);
+
+  useEffect(() => {
+    if (!snapshot?.services?.length || !requestedServiceId) return;
+    if (!snapshot.services.some((service) => service.id === requestedServiceId)) return;
+    setSelectedId((current) => (current === requestedServiceId ? current : requestedServiceId));
+  }, [requestedServiceId, snapshot?.services]);
+
+  useEffect(() => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (selectedId) nextParams.set('service', selectedId);
+    else nextParams.delete('service');
+    if (tab !== 'signal') nextParams.set('tab', tab);
+    else nextParams.delete('tab');
+
+    if (nextParams.toString() !== searchParams.toString()) {
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [searchParams, selectedId, setSearchParams, tab]);
 
   useEffect(() => {
     if (!selectedId) return undefined;
@@ -219,6 +255,35 @@ const NetworkSentinelPage: React.FC = () => {
     return latestRow?.timestamp || null;
   }, [investigation?.raw_rows]);
 
+  const isInTodayWindow = useCallback((startedAt?: string | null, endedAt?: string | null) => {
+    if (!startedAt) return false;
+    const now = new Date();
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const dayEnd = dayStart + (24 * 60 * 60 * 1000);
+    const startMs = new Date(startedAt).getTime();
+    const endMs = endedAt ? new Date(endedAt).getTime() : now.getTime();
+    if (Number.isNaN(startMs) || Number.isNaN(endMs)) return false;
+    return startMs < dayEnd && endMs >= dayStart;
+  }, []);
+
+  const todaysOutages = useMemo(() => {
+    return (investigation?.outages || []).filter((outage) => isInTodayWindow(outage.started_at, outage.ended_at));
+  }, [investigation?.outages, isInTodayWindow]);
+
+  const historicalOutages = useMemo(() => {
+    const todayIds = new Set(todaysOutages.map((outage) => outage.id));
+    return (investigation?.outages || []).filter((outage) => !todayIds.has(outage.id));
+  }, [investigation?.outages, todaysOutages]);
+
+  const todaysEvents = useMemo(() => {
+    return (investigation?.events || []).filter((event) => isInTodayWindow(event.created_at, event.created_at));
+  }, [investigation?.events, isInTodayWindow]);
+
+  const historicalEvents = useMemo(() => {
+    const todayIds = new Set(todaysEvents.map((event) => event.id));
+    return (investigation?.events || []).filter((event) => !todayIds.has(event.id));
+  }, [investigation?.events, todaysEvents]);
+
   const runRefresh = async () => {
     try {
       const data = await loadCommandCenter();
@@ -277,19 +342,19 @@ const NetworkSentinelPage: React.FC = () => {
     }
   };
 
-  const downloadHistoryCsv = async () => {
-    if (!selectedId || csvDownloading) return;
-    setCsvDownloading(true);
+  const downloadEvidenceText = async () => {
+    if (!selectedId || evidenceDownloading) return;
+    setEvidenceDownloading(true);
     try {
-      await networkSentinelApi.downloadHistoryCsv(selectedId);
+      await networkSentinelApi.downloadHistoryText(selectedId);
     } catch (err: any) {
       addNotification({
         type: 'error',
-        message: getRequestErrorMessage(err, 'Failed to prepare the history export.'),
+        message: getRequestErrorMessage(err, 'Failed to prepare the evidence extract.'),
         priority: 'high',
       });
     } finally {
-      setCsvDownloading(false);
+      setEvidenceDownloading(false);
     }
   };
 
@@ -401,16 +466,19 @@ const NetworkSentinelPage: React.FC = () => {
         <aside className="detail-column network-shell">
           {!selectedCard ? <div className="placeholder-card detail-placeholder"><FaShieldAlt /><p>Select a service to open its investigation deck.</p></div> : <>
             <div className="detail-head"><div><span>{selectedCard.group_name || selectedCard.environment || 'Focused asset'}</span><h2>{selectedCard.name}</h2><p>{selectedCard.address}{selectedCard.port ? `:${selectedCard.port}` : ''}</p></div><strong className={`status-pill ${statusClass(selectedCard.status?.overall_status)}`}>{selectedCard.status?.overall_status || 'UNKNOWN'}</strong></div>
-            <div className="detail-actions">{isManagerOrAdmin ? <button onClick={runCheckNow} disabled={checkNowBusy}><FaBolt /> {checkNowBusy ? 'Checking...' : 'Check now'}</button> : null}{isManagerOrAdmin ? <button onClick={toggleEnabled} disabled={toggleBusy}>{toggleBusy ? 'Working...' : selectedCard.enabled ? 'Disable' : 'Enable'}</button> : null}{isManagerOrAdmin ? <button onClick={openEdit}>Edit</button> : null}<button onClick={downloadHistoryCsv} disabled={csvDownloading}><FaDownload /> {csvDownloading ? 'Preparing...' : 'CSV'}</button>{isAdmin ? <button className="danger-action" onClick={deleteService} disabled={deleteBusy}>{deleteBusy ? 'Deleting...' : 'Delete'}</button> : null}</div>
+            <div className="detail-actions">{isManagerOrAdmin ? <button onClick={runCheckNow} disabled={checkNowBusy}><FaBolt /> {checkNowBusy ? 'Checking...' : 'Check now'}</button> : null}{isManagerOrAdmin ? <button onClick={toggleEnabled} disabled={toggleBusy}>{toggleBusy ? 'Working...' : selectedCard.enabled ? 'Disable' : 'Enable'}</button> : null}{isManagerOrAdmin ? <button onClick={openEdit}>Edit</button> : null}<button onClick={downloadEvidenceText} disabled={evidenceDownloading}><FaDownload /> {evidenceDownloading ? 'Preparing...' : 'Evidence TXT'}</button>{isAdmin ? <button className="danger-action" onClick={deleteService} disabled={deleteBusy}>{deleteBusy ? 'Deleting...' : 'Delete'}</button> : null}</div>
             <div className="detail-metrics"><div><label>Availability 24h</label><strong>{formatPercent(investigation?.metrics.availability_percent_24h)}</strong></div><div><label>ICMP Latency</label><strong>{formatLatency(selectedCard.status?.icmp_latency_ms)}</strong></div><div><label>TCP Latency</label><strong>{formatLatency(selectedCard.status?.tcp_latency_ms)}</strong></div><div><label>State Since</label><strong>{formatSince(selectedCard.status?.last_state_change_at)}</strong></div><div><label>Diagnostic Incidents</label><strong>{investigation?.metrics.outage_count_diagnostic_window ?? 0}</strong></div><div><label>Raw Retention</label><strong>{investigation?.retention.raw_history_days ?? snapshot?.retention.raw_history_days ?? 2} days</strong></div></div>
             <div className="detail-tabs"><button className={tab === 'signal' ? 'active' : ''} onClick={() => setTab('signal')}>Signal</button><button className={tab === 'timeline' ? 'active' : ''} onClick={() => setTab('timeline')}>Timeline</button><button className={tab === 'evidence' ? 'active' : ''} onClick={() => setTab('evidence')}>Evidence</button></div>
             {investigationLoading ? <div className="network-shell inner-loading">Refreshing diagnostics...</div> : null}
             {tab === 'signal' ? <div className="tab-content"><div className="signal-panel"><div className="panel-head"><h3>Sampled Availability</h3><span>{signalLabel}</span></div><SignalBand samples={normalizedSamples} /></div><div className="signal-panel"><div className="panel-head"><h3>Latency Envelope</h3><span>{formatLatency(investigation?.metrics.avg_icmp_latency_ms_24h || investigation?.metrics.avg_tcp_latency_ms_24h)}</span></div><LatencyChart samples={normalizedSamples} /></div></div> : null}
-            {tab === 'timeline' ? <div className="tab-content two-column"><div className="timeline-panel"><div className="panel-head"><h3>Major Events</h3><span>{investigation?.events.length ?? 0}</span></div><div className="timeline-list">{(investigation?.events || []).map((event) => <div key={event.id} className={`timeline-entry ${event.severity.toLowerCase()}`}><strong>{event.title}</strong><span>{formatDateTime(event.created_at)}</span><p>{event.summary || 'No summary provided.'}</p></div>)}</div></div><div className="timeline-panel"><div className="panel-head"><h3>Outage Ledger</h3><span>{investigation?.outages.length ?? 0}</span></div><div className="timeline-list">{(investigation?.outages || []).map((outage) => <div key={outage.id} className={`timeline-entry ${outage.ended_at ? 'info' : 'critical'}`}><strong>{outage.ended_at ? 'Resolved incident' : 'Active incident'}</strong><span>{formatDateTime(outage.started_at)}</span><p>{outage.ended_at ? `Resolved in ${formatDuration(outage.duration_seconds)}` : `Ongoing for ${formatSince(outage.started_at)}`}</p></div>)}</div></div></div> : null}
+            {tab === 'timeline' ? <div className="tab-content two-column"><div className="timeline-panel"><div className="panel-head"><div className="timeline-panel-title"><h3>Major Events Archive</h3><span>{historicalEvents.length}</span></div><button className="timeline-focus-button" onClick={() => setTodayEventsOpen(true)} type="button"><span>View today's events</span><strong>{todaysEvents.length}</strong></button></div><div className="timeline-list">{historicalEvents.map((event) => <div key={event.id} className={`timeline-entry ${event.severity.toLowerCase()}`}><strong>{event.title}</strong><span>{formatDateTime(event.created_at)}</span><p>{event.summary || 'No summary provided.'}</p></div>)}{!historicalEvents.length ? <div className="list-empty">Older retained major events will appear here after today's activity rolls over.</div> : null}</div></div><div className="timeline-panel"><div className="panel-head"><div className="timeline-panel-title"><h3>Outage Ledger Archive</h3><span>{historicalOutages.length}</span></div><button className="timeline-focus-button" onClick={() => setOutageLedgerOpen(true)} type="button"><span>View today's outages</span><strong>{todaysOutages.length}</strong></button></div><div className="timeline-list">{historicalOutages.map((outage) => <div key={outage.id} className={`timeline-entry ${outage.ended_at ? 'info' : 'critical'}`}><strong>{outage.ended_at ? 'Resolved incident' : 'Active incident'}</strong><span>{formatDateTime(outage.started_at)}</span><p>{outage.ended_at ? `Resolved in ${formatDuration(outage.duration_seconds)}` : `Ongoing for ${formatSince(outage.started_at)}`}</p></div>)}{!historicalOutages.length ? <div className="list-empty">Older retained outages will appear here once today's incidents roll over.</div> : null}</div></div></div> : null}
             {tab === 'evidence' ? <div className="tab-content"><div className="panel-head"><h3>Raw Evidence Window</h3><span>{investigation?.retention.raw_history_days ?? snapshot?.retention.raw_history_days ?? 2} day retention{latestEvidenceAt ? ` / Updated ${formatDateTime(latestEvidenceAt)}` : ''}</span></div><label className="toolbar-search compact"><FaSearch /><input value={rawSearch} onChange={(event) => setRawSearch(event.target.value)} placeholder="Filter raw evidence..." /></label><div className="evidence-list">{rawRows.slice(-180).reverse().map((row: ServiceHistoryRow, index) => <div key={`${row.timestamp}-${index}`} className={`evidence-row ${statusClass(row.kind === 'OUTAGE_DETECTED' ? 'DOWN' : row.kind)}`}><span>{formatDateTime(row.timestamp)}</span><strong>{row.kind}</strong><code>{row.raw}</code></div>)}{!rawRows.length ? <div className="list-empty">No raw evidence retained in the current window.</div> : null}</div></div> : null}
           </>}
         </aside>
       </div>
+
+      {todayEventsOpen ? <div className="editor-backdrop" onClick={() => setTodayEventsOpen(false)}><div className="editor-card network-shell outage-ledger-modal" onClick={(event) => event.stopPropagation()}><div className="panel-head"><div><h3>Today's Major Events</h3><span>{selectedCard?.name || 'Focused asset'}</span></div><button type="button" onClick={() => setTodayEventsOpen(false)}>Close</button></div><div className="timeline-list outage-ledger-list">{todaysEvents.map((event) => <div key={event.id} className={`timeline-entry ${event.severity.toLowerCase()}`}><strong>{event.title}</strong><span>{formatDateTime(event.created_at)}</span><p>{event.summary || 'No summary provided.'}</p></div>)}{!todaysEvents.length ? <div className="list-empty">No major events recorded today for this service.</div> : null}</div></div></div> : null}
+      {outageLedgerOpen ? <div className="editor-backdrop" onClick={() => setOutageLedgerOpen(false)}><div className="editor-card network-shell outage-ledger-modal" onClick={(event) => event.stopPropagation()}><div className="panel-head"><div><h3>Today's Outages</h3><span>{selectedCard?.name || 'Focused asset'}</span></div><button type="button" onClick={() => setOutageLedgerOpen(false)}>Close</button></div><div className="timeline-list outage-ledger-list">{todaysOutages.map((outage) => <div key={outage.id} className={`timeline-entry ${outage.ended_at ? 'info' : 'critical'}`}><strong>{outage.ended_at ? 'Resolved incident' : 'Active incident'}</strong><span>{formatDateTime(outage.started_at)}</span><p>{outage.ended_at ? `Resolved in ${formatDuration(outage.duration_seconds)}` : `Ongoing for ${formatSince(outage.started_at)}`}</p></div>)}{!todaysOutages.length ? <div className="list-empty">No outages recorded today for this service.</div> : null}</div></div></div> : null}
 
       {editorOpen ? <div className="editor-backdrop" onClick={() => setEditorOpen(false)}><div className="editor-card network-shell" onClick={(event) => event.stopPropagation()}><h3>{editorMode === 'create' ? 'Add Service' : 'Edit Service'}</h3><div className="editor-grid"><input placeholder="Name" value={serviceForm.name} onChange={(event) => setServiceForm((state) => ({ ...state, name: event.target.value }))} /><input placeholder="Address / Hostname" value={serviceForm.address} onChange={(event) => setServiceForm((state) => ({ ...state, address: event.target.value }))} /><input placeholder="Port" value={serviceForm.port} onChange={(event) => setServiceForm((state) => ({ ...state, port: event.target.value }))} /><input placeholder="Environment" value={serviceForm.environment} onChange={(event) => setServiceForm((state) => ({ ...state, environment: event.target.value }))} /><input placeholder="Group" value={serviceForm.group_name} onChange={(event) => setServiceForm((state) => ({ ...state, group_name: event.target.value }))} /><input placeholder="Tags comma-separated" value={serviceForm.tags} onChange={(event) => setServiceForm((state) => ({ ...state, tags: event.target.value }))} /><input placeholder="Timeout ms" value={serviceForm.timeout_ms} onChange={(event) => setServiceForm((state) => ({ ...state, timeout_ms: event.target.value }))} /><input placeholder="Interval seconds" value={serviceForm.interval_seconds} onChange={(event) => setServiceForm((state) => ({ ...state, interval_seconds: event.target.value }))} /><textarea placeholder="Notes" value={serviceForm.notes} onChange={(event) => setServiceForm((state) => ({ ...state, notes: event.target.value }))} /><label><input type="checkbox" checked={serviceForm.check_icmp} onChange={(event) => setServiceForm((state) => ({ ...state, check_icmp: event.target.checked }))} /> ICMP</label><label><input type="checkbox" checked={serviceForm.check_tcp} onChange={(event) => setServiceForm((state) => ({ ...state, check_tcp: event.target.checked }))} /> TCP</label><label><input type="checkbox" checked={serviceForm.enabled} onChange={(event) => setServiceForm((state) => ({ ...state, enabled: event.target.checked }))} /> Enabled</label></div><div className="editor-actions"><button onClick={() => setEditorOpen(false)} disabled={saveBusy}>Cancel</button><button className="primary-action" onClick={submitServiceForm} disabled={saveBusy}>{saveBusy ? 'Saving...' : 'Save'}</button></div></div></div> : null}
       <PageGuide guide={pageGuides.networkSentinel} />

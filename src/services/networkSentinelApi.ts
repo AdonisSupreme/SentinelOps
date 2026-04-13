@@ -256,16 +256,16 @@ export const networkSentinelApi = {
     return response.data;
   },
 
-  historyCsvUrl(serviceId: string, startAt?: string, endAt?: string) {
+  historyTextUrl(serviceId: string, startAt?: string, endAt?: string) {
     const base = (api.defaults.baseURL || '').replace(/\/$/, '');
-    const qs = new URLSearchParams({ format: 'csv' });
+    const qs = new URLSearchParams({ format: 'txt' });
     if (startAt) qs.set('start_at', startAt);
     if (endAt) qs.set('end_at', endAt);
     return `${base}/api/v1/network-sentinel/history/${serviceId}?${qs.toString()}`;
   },
 
-  async downloadHistoryCsv(serviceId: string, startAt?: string, endAt?: string) {
-    const params: Record<string, string> = { format: 'csv' };
+  async downloadHistoryText(serviceId: string, startAt?: string, endAt?: string) {
+    const params: Record<string, string> = { format: 'txt' };
     if (startAt) params.start_at = startAt;
     if (endAt) params.end_at = endAt;
 
@@ -274,8 +274,8 @@ export const networkSentinelApi = {
       responseType: 'blob',
     });
 
-    const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8' });
-    const fallbackName = `history_${serviceId}.csv`;
+    const blob = new Blob([response.data], { type: 'text/plain;charset=utf-8' });
+    const fallbackName = `evidence_${serviceId}.txt`;
     const contentDisposition = response.headers?.['content-disposition'] as string | undefined;
     const matchedName = contentDisposition?.match(/filename=\"?([^\"]+)\"?/i)?.[1];
     const filename = matchedName || fallbackName;

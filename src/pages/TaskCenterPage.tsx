@@ -31,6 +31,7 @@ import PageGuide from '../components/ui/PageGuide';
 import { useTasks } from '../hooks/useTasks';
 import * as TaskDetailModule from '../components/tasks/TaskDetail';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import { pageGuides } from '../content/pageGuides';
 import { TaskSummary, TaskStatus, Priority, TaskType } from '../services/taskApi';
 import { orgApi, Department, Section } from '../services/orgApi';
@@ -56,6 +57,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
+  const { addNotification } = useNotifications();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const {
     myTasks,
@@ -435,10 +437,25 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
         ...taskData,
         assigned_by_id: user?.id || ''
       });
+      addNotification({
+        type: 'success',
+        message: `Task "${taskData.title}" created successfully.`,
+        priority: 'medium'
+      });
       setShowCreateModal(false);
       await refreshActiveTasks(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create task:', error);
+      const detail = error?.response?.data?.detail;
+      const message =
+        (typeof detail === 'string' && detail.trim()) ||
+        (typeof error?.message === 'string' && error.message.trim()) ||
+        'Failed to create task';
+      addNotification({
+        type: 'error',
+        message,
+        priority: 'high'
+      });
     }
   };
 

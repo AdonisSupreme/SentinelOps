@@ -327,8 +327,8 @@ export const useTasks = (): TasksState & TasksActions => {
         throw new Error('Only managers and admins can create department tasks');
       }
     } else if (taskType === 'SYSTEM') {
-      if (userRole !== 'admin') {
-        throw new Error('Only admins can create system tasks');
+      if (!['admin', 'manager'].includes(userRole || '')) {
+        throw new Error('Only managers and admins can create system tasks');
       }
     }
 

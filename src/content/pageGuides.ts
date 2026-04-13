@@ -218,7 +218,7 @@ export const pageGuides: Record<string, PageGuideDefinition> = {
     workflow: [
       'Scan the command center for any service marked degraded or down.',
       'Select the affected service and start in Signal to judge stability, then move to Timeline and Evidence for context.',
-      'Use manual check, filters, or CSV export only after you know which asset you are investigating.',
+      'Use manual check, filters, or the evidence TXT export only after you know which asset you are investigating.',
     ],
     tip: 'Treat the left side as detection and the right side as diagnosis. Staying disciplined about that flow keeps the page fast and makes investigations much easier to read.',
   },
