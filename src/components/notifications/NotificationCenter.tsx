@@ -177,6 +177,13 @@ const NotificationCenter: React.FC = () => {
         };
       }
 
+      if (notification.relatedId && relatedType === 'task') {
+        return {
+          label: 'Open task',
+          onClick: () => navigate(`/tasks?task=${notification.relatedId}`),
+        };
+      }
+
       if (relatedType === 'schedule') {
         return {
           label: 'Open schedule',

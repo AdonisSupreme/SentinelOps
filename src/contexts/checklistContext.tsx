@@ -60,6 +60,41 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const { addNotification } = useNotifications();
   const { user } = useAuth();
 
+  const applyInstanceSnapshot = useCallback((instance: ChecklistInstance) => {
+    setCurrentInstance(instance);
+    setTodayInstances(prev => {
+      if (!prev || prev.length === 0) return prev;
+      const idx = prev.findIndex(candidate => candidate.id === instance.id);
+      if (idx === -1) return prev;
+      const copy = [...prev];
+      copy[idx] = instance;
+      return copy;
+    });
+  }, []);
+
+  const getBackendErrorMessage = useCallback((err: any, fallback: string) => {
+    const detail = err?.response?.data?.detail;
+    const errorText = err?.response?.data?.error;
+    const message = err?.response?.data?.message;
+
+    if (typeof detail === 'string' && detail.trim()) return detail.trim();
+    if (typeof errorText === 'string' && errorText.trim()) return errorText.trim();
+    if (typeof message === 'string' && message.trim()) return message.trim();
+    if (typeof err?.message === 'string' && err.message.trim()) return err.message.trim();
+    return fallback;
+  }, []);
+
+  const syncInstanceSilently = useCallback(async (instanceId: string) => {
+    try {
+      const instance = await checklistApi.getInstance(instanceId);
+      applyInstanceSnapshot(instance);
+      return instance;
+    } catch (syncError) {
+      console.warn('Silent checklist sync skipped after mutation error:', syncError);
+      return null;
+    }
+  }, [applyInstanceSnapshot]);
+
   // Only open the checklist socket when an actual checklist is active.
   useEffect(() => {
     if (!currentInstance?.id) {
@@ -206,9 +241,13 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
     } catch (error) {
       console.error('Failed to process real-time update:', error);
-      setError('Failed to sync latest changes');
+      addNotification({
+        type: 'warning',
+        message: 'Live checklist sync is catching up. Your current view has been kept in place.',
+        priority: 'low'
+      });
     }
-  }, [currentInstance, user?.id, addNotification]);
+  }, [currentInstance, user?.id, addNotification, applyInstanceSnapshot]);
 
   // Handle WebSocket connection changes
   const handleConnectionChange = useCallback((connected: boolean) => {
@@ -223,8 +262,12 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Handle WebSocket errors
   const handleWebSocketError = useCallback((error: string) => {
     console.error('WebSocket error:', error);
-    setError('Real-time connection error');
-  }, []);
+    addNotification({
+      type: 'warning',
+      message: error || 'Real-time connection is unstable. SentinelOps will keep the current checklist view until sync resumes.',
+      priority: 'low'
+    });
+  }, [addNotification]);
 
   // Register handlers with fresh closures so real-time updates always target the active checklist.
   useEffect(() => {
@@ -250,7 +293,13 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const loadInstanceWithRetry = useCallback(async (id: string, retryCount = 0): Promise<ChecklistInstance | void> => {
     if (!id || id === 'undefined') {
       console.error('Invalid instance ID provided:', id);
-      setError('Invalid checklist ID');
+      const message = 'Invalid checklist ID';
+      setError(message);
+      addNotification({
+        type: 'error',
+        message,
+        priority: 'high'
+      });
       return;
     }
     
@@ -271,7 +320,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         allItemTitles: instance?.items?.map(item => item.title || item.template_item?.title || 'NO TITLE')
       });
       
-      setCurrentInstance(instance);
+      applyInstanceSnapshot(instance);
       setError(null);
       return instance;
     } catch (err: any) {
@@ -283,21 +332,31 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setTimeout(() => loadInstanceWithRetry(id, retryCount + 1), 2000);
         return;
       }
-      
-      // Handle different types of errors
+
+      let errorMessage = 'Failed to load checklist. Please try again.';
       if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error') || err.message?.includes('fetch')) {
-        setError('Network connection failed. Please check your internet connection and try again.');
+        errorMessage = 'Network connection failed. Please check your internet connection and try again.';
       } else if (err.response?.status === 500) {
-        setError('Server error occurred. The team has been notified. Please try again in a few moments.');
+        errorMessage = getBackendErrorMessage(
+          err,
+          'Server error occurred. The team has been notified. Please try again in a few moments.'
+        );
       } else if (err.response?.status === 404) {
-        setError('Checklist not found or has been removed.');
+        errorMessage = getBackendErrorMessage(err, 'Checklist not found or has been removed.');
       } else {
-        setError('Failed to load checklist. Please try again.');
+        errorMessage = getBackendErrorMessage(err, errorMessage);
       }
+
+      setError(errorMessage);
+      addNotification({
+        type: 'error',
+        message: errorMessage,
+        priority: 'high'
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [addNotification, applyInstanceSnapshot, getBackendErrorMessage]);
 
   const loadInstance = useCallback((id: string) => {
     return loadInstanceWithRetry(id, 0);
@@ -318,7 +377,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // Ensure the instance has all required data
       if (updatedInstance) {
         // Trust backend participant mapping (UserInfo) and use as-is
-        setCurrentInstance(updatedInstance);
+        applyInstanceSnapshot(updatedInstance);
         setError(null);
         
         // Update today instances to reflect the join
@@ -341,20 +400,18 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         errorData: err.response?.data
       });
       
-      setError(`Failed to join checklist: ${err.message || 'Unknown error'}`);
-      
       // Provide more specific error messages based on status code
-      let errorMessage = 'Failed to join checklist. Please try again.';
+      let errorMessage = getBackendErrorMessage(err, 'Failed to join checklist. Please try again.');
       if (err.response?.status === 400) {
         if (err.response?.data?.error?.includes('not open')) {
           errorMessage = 'This checklist is no longer open for joining.';
         } else {
-          errorMessage = err.response.data.error || 'Invalid request to join checklist.';
+          errorMessage = getBackendErrorMessage(err, 'Invalid request to join checklist.');
         }
       } else if (err.response?.status === 404) {
-        errorMessage = 'Checklist instance not found.';
+        errorMessage = getBackendErrorMessage(err, 'Checklist instance not found.');
       } else if (err.response?.status === 401) {
-        errorMessage = 'You are not authorized to join this checklist.';
+        errorMessage = getBackendErrorMessage(err, 'You are not authorized to join this checklist.');
       }
       
       addNotification({
@@ -365,7 +422,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } finally {
       setLoading(false);
     }
-  }, [loadTodayInstances, addNotification, user]);
+  }, [addNotification, getBackendErrorMessage, loadTodayInstances, user]);
 
   // State transition validation (updated to allow SKIPPED/FAILED -> COMPLETED)
   const validateTransition = useCallback((currentStatus: string, newStatus: string): boolean => {
@@ -487,6 +544,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   ) => {
     setLoading(true);
     const operationId = `update_item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    let previousStatus = 'PENDING';
     
     try {
       // Input validation
@@ -511,7 +569,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       // Find current item for previous status and timing
       const currentItem = currentInstance?.items.find(item => item.id === itemId);
-      const previousStatus = currentItem?.status || 'PENDING';
+      previousStatus = currentItem?.status || 'PENDING';
       const currentItemHasSubitems =
         Array.isArray(currentItem?.subitems) && (currentItem?.subitems?.length || 0) > 0;
       
@@ -637,17 +695,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
 
       setError(null);
-      setCurrentInstance(updatedInstance);
-
-      // Also update the in-memory `todayInstances` list to replace the instance
-      setTodayInstances(prev => {
-        if (!prev || prev.length === 0) return prev;
-        const idx = prev.findIndex(p => p.id === updatedInstance.id);
-        if (idx === -1) return prev;
-        const copy = [...prev];
-        copy[idx] = updatedInstance;
-        return copy;
-      });
+      applyInstanceSnapshot(updatedInstance);
 
       // Defer refreshing the full today instances list to avoid immediate race
       // with other components that may trigger instance reloads simultaneously.
@@ -691,36 +739,34 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         timestamp: new Date().toISOString()
       });
       
-      // Revert optimistic update on error
+      // Attempt a silent re-sync. If it fails, preserve the current UI snapshot.
       if (currentInstance && currentInstance.id === instanceId) {
-        await loadInstance(instanceId);
+        await syncInstanceSilently(instanceId);
         console.log('🔄 Reverted optimistic update due to error');
       }
       
       // Enhanced error messages based on error type
-      let errorMessage = 'Failed to update item. Please try again.';
+      let errorMessage = getBackendErrorMessage(err, 'Failed to update item. Please try again.');
       if (err.response?.status === 400) {
         const errorData = err.response.data;
         if (errorData?.code === 'INVALID_TRANSITION') {
-          errorMessage = `Invalid state transition: ${errorData.error}`;
+          errorMessage = errorData?.detail || errorData?.error || `Invalid state transition: ${previousStatus} to ${status}`;
         } else if (errorData?.code === 'VALIDATION_ERROR') {
-          errorMessage = `Validation error: ${errorData.error}`;
+          errorMessage = errorData?.detail || errorData?.error || 'Validation error.';
         } else {
-          errorMessage = errorData?.error || 'Invalid request.';
+          errorMessage = getBackendErrorMessage(err, 'Invalid request.');
         }
       } else if (err.response?.status === 404) {
-        errorMessage = 'Checklist item not found.';
+        errorMessage = getBackendErrorMessage(err, 'Checklist item not found.');
       } else if (err.response?.status === 401) {
-        errorMessage = 'You are not authorized to perform this action.';
+        errorMessage = getBackendErrorMessage(err, 'You are not authorized to perform this action.');
       } else if (err.response?.status === 409) {
-        errorMessage = 'Conflict detected. Please refresh and try again.';
+        errorMessage = getBackendErrorMessage(err, 'Conflict detected. Please refresh and try again.');
       } else if (err.code === 'NETWORK_ERROR' || err.message?.includes('Network Error')) {
         errorMessage = 'Network connection failed. Please check your internet connection.';
       } else if (err.message?.includes('Validation failed')) {
         errorMessage = err.message;
       }
-      
-      setError(errorMessage);
       
       addNotification({
         type: 'error',
@@ -730,7 +776,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } finally {
       setLoading(false);
     }
-  }, [loadTodayInstances, addNotification, currentInstance, loadInstance, validateTransition, user, retryWithBackoff, validateUpdateItemStatusInput, logErrorToService]);
+  }, [addNotification, applyInstanceSnapshot, currentInstance, getBackendErrorMessage, loadTodayInstances, retryWithBackoff, syncInstanceSilently, user, validateTransition, validateUpdateItemStatusInput, logErrorToService]);
 
   const updateSubitemStatus = useCallback(async (
     instanceId: string,
@@ -805,7 +851,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           updated_at: new Date().toISOString()
         };
 
-        setCurrentInstance(updatedInstance);
+        applyInstanceSnapshot(updatedInstance);
         console.log('✅ Local state updated optimistically for subitem');
       }
 
@@ -827,21 +873,10 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         instanceId
       });
 
-      setError(null);
-
       // Fetch the updated instance from server to get latest state
       const updatedInstance = await checklistApi.getInstance(instanceId);
-      setCurrentInstance(updatedInstance);
-
-      // Update today instances list
-      setTodayInstances(prev => {
-        if (!prev || prev.length === 0) return prev;
-        const idx = prev.findIndex(p => p.id === updatedInstance.id);
-        if (idx === -1) return prev;
-        const copy = [...prev];
-        copy[idx] = updatedInstance;
-        return copy;
-      });
+      setError(null);
+      applyInstanceSnapshot(updatedInstance);
 
       // Add notification
       const updatedItem = updatedInstance.items.find(i => i.id === itemId) as ExtendedChecklistItemInstance;
@@ -871,28 +906,29 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         errorStatus: err.status
       });
       
-      // Intelligent error recovery - only reload if it's a state transition error
-      if (err.message?.includes('Invalid state transition') && currentInstance && currentInstance.id === instanceId) {
-        // Only reload the specific item, not the entire instance
-        await loadInstance(instanceId);
-        console.log('🔄 Reverted optimistic update due to state transition error');
-      } else if (err.status === 404 || err.status === 500) {
-        // Full reload only for critical errors
-        await loadInstance(instanceId);
-        console.log('🔄 Full instance reload due to critical error');
+      if (currentInstance && currentInstance.id === instanceId) {
+        await syncInstanceSilently(instanceId);
+        console.log('🔄 Synced checklist snapshot after subitem update error');
       }
-      
-      setError(`Failed to update subitem: ${err.message || 'Unknown error'}`);
+
+      let errorMessage = getBackendErrorMessage(err, 'Failed to update subitem. Please try again.');
+      if (err.response?.status === 400) {
+        errorMessage = getBackendErrorMessage(err, 'This subitem was already updated by another teammate.');
+      } else if (err.response?.status === 404) {
+        errorMessage = getBackendErrorMessage(err, 'Subitem not found.');
+      } else if (err.response?.status === 409) {
+        errorMessage = getBackendErrorMessage(err, 'Another update landed first. The latest checklist state has been synced.');
+      }
       
       addNotification({
         type: 'error',
-        message: 'Failed to update subitem. Please try again.',
+        message: errorMessage,
         priority: 'high'
       });
     } finally {
       setLoading(false);
     }
-  }, [currentInstance, loadInstance, validateTransition, user, addNotification]);
+  }, [addNotification, applyInstanceSnapshot, currentInstance, getBackendErrorMessage, syncInstanceSilently, user, validateTransition]);
 
   const createHandoverNote = useCallback(async (content: string, priority: number, instanceId?: string) => {
     setLoading(true);
@@ -924,7 +960,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       setError(null);
     } catch (err: any) {
-      let errorMessage = 'Failed to create handover note';
+      let errorMessage = getBackendErrorMessage(err, 'Failed to create handover note');
       
       // Handle specific error cases
       if (err?.response?.data?.detail) {
@@ -934,8 +970,6 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           errorMessage = err.response.data.detail;
         }
       }
-      
-      setError(errorMessage);
       console.error('Error creating handover note:', err);
       
       addNotification({
@@ -954,7 +988,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.log('🔄 Completing checklist instance:', { instanceId, withExceptions });
       const completedInstance = await checklistApi.completeInstance(instanceId, withExceptions);
       
-      setCurrentInstance(completedInstance);
+      applyInstanceSnapshot(completedInstance);
       setError(null);
       
       // Update today instances to reflect completion
@@ -989,8 +1023,6 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       } else if (err.response?.status === 404) {
         errorMessage = 'Checklist instance not found.';
       }
-      
-      setError(errorMessage);
       addNotification({
         type: 'error',
         message: errorMessage,
@@ -999,7 +1031,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } finally {
       setLoading(false);
     }
-  }, [loadTodayInstances, addNotification]);
+  }, [addNotification, applyInstanceSnapshot, loadTodayInstances]);
 
   const deleteInstance = useCallback(async (instanceId: string) => {
     setLoading(true);
@@ -1023,17 +1055,17 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
     } catch (err: any) {
       console.error('Error deleting checklist instance:', err);
-      setError('Failed to delete checklist instance');
+      const errorMessage = getBackendErrorMessage(err, 'Failed to delete checklist instance. Please try again.');
       
       addNotification({
         type: 'error',
-        message: 'Failed to delete checklist instance. Please try again.',
+        message: errorMessage,
         priority: 'high'
       });
     } finally {
       setLoading(false);
     }
-  }, [currentInstance, addNotification]);
+  }, [currentInstance, addNotification, getBackendErrorMessage]);
 
   const refreshInstance = useCallback(async () => {
     if (currentInstance) {

@@ -974,6 +974,10 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
   const [departments, setDepartments] = useState<Department[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
   const [assignees, setAssignees] = useState<UserListItem[]>([]);
+  const [effectiveScope, setEffectiveScope] = useState<{
+    department_id?: number;
+    section_id?: string;
+  }>({});
 
   const [tagInput, setTagInput] = useState('');
 
@@ -992,20 +996,9 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
     let mounted = true;
     (async () => {
       try {
-        // initialize org data load
-        const depts = await orgApi.listDepartments();
-        if (!mounted) return;
         const userRole = (user?.role || '').toLowerCase();
+        const isAdmin = userRole === 'admin';
 
-        // If regular user, show only their department to avoid confusion
-        if (!['admin', 'manager'].includes(userRole) && (user as any)?.department_id) {
-          const filtered = depts.filter(d => d.id === (user as any).department_id);
-          setDepartments(filtered || []);
-        } else {
-          setDepartments(depts || []);
-        }
-
-        // If API lacks department/section on `user`, try to fetch the full user profile
         let effectiveUser = user as any;
         if (user && !effectiveUser?.department_id && !effectiveUser?.section_id) {
           try {
@@ -1017,13 +1010,30 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
           }
         }
 
+        if (!mounted) return;
+        setEffectiveScope({
+          department_id: effectiveUser?.department_id,
+          section_id: effectiveUser?.section_id,
+        });
+
+        // initialize org data load
+        const depts = await orgApi.listDepartments();
+        if (!mounted) return;
+
+        if (!isAdmin && effectiveUser?.department_id) {
+          const filtered = depts.filter(d => d.id === effectiveUser.department_id);
+          setDepartments(filtered || []);
+        } else {
+          setDepartments(depts || []);
+        }
+
         // Preselect user's department if available and load sections (pass debug header)
         if (effectiveUser?.department_id) {
           setFormData(fd => ({ ...fd, department_id: effectiveUser.department_id }));
           const sects = await orgApi.listSections(effectiveUser.department_id, 'TaskCenterCreateModal');
           // loaded sections for user.department_id
           if (!mounted) return;
-          if (!['admin', 'manager'].includes(userRole) && effectiveUser?.section_id) {
+          if (!isAdmin && effectiveUser?.section_id) {
             setSections(sects.filter(s => s.id === effectiveUser.section_id) || []);
           } else {
             setSections(sects || []);
@@ -1048,18 +1058,27 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
   const handleDepartmentChange = async (deptId?: number | string) => {
     try {
       const id = deptId === undefined || deptId === '' ? undefined : Number(deptId);
+      const isAdmin = (user?.role || '').toLowerCase() === 'admin';
       // department change
       setFormData(fd => ({ ...fd, department_id: id, section_id: undefined, assigned_to_id: undefined }));
       setAssignees([]);
       if (id) {
         const sects = await orgApi.listSections(id);
         // received sections
-        setSections(sects || []);
+        if (!isAdmin && effectiveScope.section_id) {
+          setSections((sects || []).filter(section => section.id === effectiveScope.section_id));
+        } else {
+          setSections(sects || []);
+        }
       } else {
         // If no department selected and user wants a TEAM task, load all sections to allow selecting a section
-        if (formData.task_type === 'TEAM') {
+        if (formData.task_type === 'TEAM' || formData.task_type === 'SYSTEM') {
           const sects = await orgApi.listSections(undefined);
-          setSections(sects || []);
+          if (!isAdmin && effectiveScope.section_id) {
+            setSections((sects || []).filter(section => section.id === effectiveScope.section_id));
+          } else {
+            setSections(sects || []);
+          }
         } else {
           setSections([]);
         }
@@ -1161,7 +1180,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
   const userRole = user?.role?.toLowerCase() || '';
   const canCreateTeamTasks = ['admin', 'manager'].includes(userRole);
   const canCreateDepartmentTasks = ['admin', 'manager'].includes(userRole);
-  const canCreateSystemTasks = userRole === 'admin';
+  const canCreateSystemTasks = ['admin', 'manager'].includes(userRole);
 
   return (
     <div className="create-task-modal-overlay" onClick={onClose}>
@@ -1271,7 +1290,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
 
           {(formData.task_type === 'TEAM' || formData.task_type === 'DEPARTMENT' || formData.task_type === 'SYSTEM') && (
             <div className="create-task-form-row">
-              {formData.task_type === 'DEPARTMENT' && (
+              {(formData.task_type === 'DEPARTMENT' || formData.task_type === 'SYSTEM') && (
                 <div className="create-task-form-group">
                   <label>Department</label>
                   <select
@@ -1287,7 +1306,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
                 </div>
               )}
 
-              {(formData.task_type === 'TEAM' || formData.task_type === 'DEPARTMENT') && (
+              {(formData.task_type === 'TEAM' || formData.task_type === 'DEPARTMENT' || formData.task_type === 'SYSTEM') && (
                 <div className="create-task-form-group">
                   <label>Section</label>
                   <select

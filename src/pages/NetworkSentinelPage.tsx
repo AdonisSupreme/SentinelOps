@@ -15,6 +15,7 @@ import {
 import PageGuide from '../components/ui/PageGuide';
 import { pageGuides } from '../content/pageGuides';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import {
   NetworkCommandCenterResponse,
   NetworkEvent,
@@ -44,6 +45,7 @@ type DetailTab = 'signal' | 'timeline' | 'evidence';
 
 const NetworkSentinelPage: React.FC = () => {
   const { user } = useAuth();
+  const { addNotification } = useNotifications();
   const isManagerOrAdmin = ['admin', 'manager'].includes((user?.role || '').toLowerCase());
   const isAdmin = (user?.role || '').toLowerCase() === 'admin';
 
@@ -62,6 +64,10 @@ const NetworkSentinelPage: React.FC = () => {
   const [csvDownloading, setCsvDownloading] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorMode, setEditorMode] = useState<'create' | 'edit'>('create');
+  const [checkNowBusy, setCheckNowBusy] = useState(false);
+  const [toggleBusy, setToggleBusy] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [serviceForm, setServiceForm] = useState({
     name: '', address: '', port: '', environment: '', group_name: '', tags: '',
     timeout_ms: '3000', interval_seconds: '10', check_icmp: true, check_tcp: true, enabled: true, notes: '',
@@ -70,6 +76,19 @@ const NetworkSentinelPage: React.FC = () => {
   const deferredQuery = useDeferredValue(serviceQuery);
   const detailRefreshTimerRef = useRef<number | null>(null);
   const snapshotRefreshTimerRef = useRef<number | null>(null);
+
+  const getRequestErrorMessage = useCallback((err: any, fallback: string) => {
+    const detail = err?.response?.data?.detail;
+    const message = err?.response?.data?.message;
+    const errorText = err?.response?.data?.error;
+
+    if (typeof detail === 'string' && detail.trim()) return detail.trim();
+    if (typeof message === 'string' && message.trim()) return message.trim();
+    if (typeof errorText === 'string' && errorText.trim()) return errorText.trim();
+    if (err?.response?.status === 403) return 'You do not have permission to perform that Network Sentinel action.';
+    if (typeof err?.message === 'string' && err.message.trim()) return err.message.trim();
+    return fallback;
+  }, []);
 
   const loadCommandCenter = useCallback(async (showSpinner = false) => {
     if (showSpinner) setLoading(true);
@@ -201,17 +220,77 @@ const NetworkSentinelPage: React.FC = () => {
   }, [investigation?.raw_rows]);
 
   const runRefresh = async () => {
-    const data = await loadCommandCenter();
-    const focusId = selectedId || data.services[0]?.id;
-    if (focusId) await loadInvestigation(focusId, true);
+    try {
+      const data = await loadCommandCenter();
+      const focusId = selectedId || data.services[0]?.id;
+      if (focusId) await loadInvestigation(focusId, true);
+    } catch (err: any) {
+      addNotification({
+        type: 'error',
+        message: getRequestErrorMessage(err, 'Network Sentinel could not refresh right now.'),
+        priority: 'high',
+      });
+    }
   };
 
-  const runCheckNow = async () => { if (selectedId) { await networkSentinelApi.checkNow(selectedId); await runRefresh(); } };
-  const toggleEnabled = async () => { if (selectedCard) { await networkSentinelApi.setEnabled(selectedCard.id, !selectedCard.enabled); await runRefresh(); } };
+  const runCheckNow = async () => {
+    if (!selectedId || checkNowBusy) return;
+    setCheckNowBusy(true);
+    try {
+      await networkSentinelApi.checkNow(selectedId);
+      addNotification({
+        type: 'success',
+        message: 'Manual network check recorded successfully.',
+        priority: 'medium',
+      });
+      await runRefresh();
+    } catch (err: any) {
+      addNotification({
+        type: 'error',
+        message: getRequestErrorMessage(err, 'Manual check failed.'),
+        priority: 'high',
+      });
+    } finally {
+      setCheckNowBusy(false);
+    }
+  };
+
+  const toggleEnabled = async () => {
+    if (!selectedCard || toggleBusy) return;
+    setToggleBusy(true);
+    try {
+      await networkSentinelApi.setEnabled(selectedCard.id, !selectedCard.enabled);
+      addNotification({
+        type: 'success',
+        message: `${selectedCard.name} ${selectedCard.enabled ? 'disabled' : 'enabled'} successfully.`,
+        priority: 'medium',
+      });
+      await runRefresh();
+    } catch (err: any) {
+      addNotification({
+        type: 'error',
+        message: getRequestErrorMessage(err, 'Failed to update monitoring state.'),
+        priority: 'high',
+      });
+    } finally {
+      setToggleBusy(false);
+    }
+  };
+
   const downloadHistoryCsv = async () => {
     if (!selectedId || csvDownloading) return;
     setCsvDownloading(true);
-    try { await networkSentinelApi.downloadHistoryCsv(selectedId); } finally { setCsvDownloading(false); }
+    try {
+      await networkSentinelApi.downloadHistoryCsv(selectedId);
+    } catch (err: any) {
+      addNotification({
+        type: 'error',
+        message: getRequestErrorMessage(err, 'Failed to prepare the history export.'),
+        priority: 'high',
+      });
+    } finally {
+      setCsvDownloading(false);
+    }
   };
 
   const openCreate = () => { setEditorMode('create'); setServiceForm({ name: '', address: '', port: '', environment: '', group_name: '', tags: '', timeout_ms: '3000', interval_seconds: '10', check_icmp: true, check_tcp: true, enabled: true, notes: '' }); setEditorOpen(true); };
@@ -228,6 +307,7 @@ const NetworkSentinelPage: React.FC = () => {
   };
 
   const submitServiceForm = async () => {
+    if (saveBusy) return;
     const payload = {
       name: serviceForm.name.trim(), address: serviceForm.address.trim(), port: serviceForm.port ? Number(serviceForm.port) : null,
       environment: serviceForm.environment || null, group_name: serviceForm.group_name || null,
@@ -235,18 +315,47 @@ const NetworkSentinelPage: React.FC = () => {
       timeout_ms: Number(serviceForm.timeout_ms || 3000), interval_seconds: Number(serviceForm.interval_seconds || 10),
       check_icmp: serviceForm.check_icmp, check_tcp: serviceForm.check_tcp, enabled: serviceForm.enabled, notes: serviceForm.notes || null,
     };
-    if (editorMode === 'create') await networkSentinelApi.createService(payload);
-    else if (selectedCard) await networkSentinelApi.updateService(selectedCard.id, payload);
-    setEditorOpen(false);
-    await runRefresh();
+    setSaveBusy(true);
+    try {
+      if (editorMode === 'create') {
+        await networkSentinelApi.createService(payload);
+        addNotification({ type: 'success', message: 'Service added to Network Sentinel.', priority: 'medium' });
+      } else if (selectedCard) {
+        await networkSentinelApi.updateService(selectedCard.id, payload);
+        addNotification({ type: 'success', message: 'Service configuration updated.', priority: 'medium' });
+      }
+      setEditorOpen(false);
+      await runRefresh();
+    } catch (err: any) {
+      addNotification({
+        type: 'error',
+        message: getRequestErrorMessage(err, 'Failed to save the service configuration.'),
+        priority: 'high',
+      });
+    } finally {
+      setSaveBusy(false);
+    }
   };
 
   const deleteService = async () => {
     if (!selectedCard || !isAdmin || !window.confirm(`Delete ${selectedCard.name}?`)) return;
-    await networkSentinelApi.deleteService(selectedCard.id);
-    setInvestigation(null);
-    setSelectedId(null);
-    await loadCommandCenter();
+    if (deleteBusy) return;
+    setDeleteBusy(true);
+    try {
+      await networkSentinelApi.deleteService(selectedCard.id);
+      addNotification({ type: 'success', message: 'Service removed from Network Sentinel.', priority: 'medium' });
+      setInvestigation(null);
+      setSelectedId(null);
+      await loadCommandCenter();
+    } catch (err: any) {
+      addNotification({
+        type: 'error',
+        message: getRequestErrorMessage(err, 'Failed to delete the service.'),
+        priority: 'high',
+      });
+    } finally {
+      setDeleteBusy(false);
+    }
   };
 
   return (
@@ -292,7 +401,7 @@ const NetworkSentinelPage: React.FC = () => {
         <aside className="detail-column network-shell">
           {!selectedCard ? <div className="placeholder-card detail-placeholder"><FaShieldAlt /><p>Select a service to open its investigation deck.</p></div> : <>
             <div className="detail-head"><div><span>{selectedCard.group_name || selectedCard.environment || 'Focused asset'}</span><h2>{selectedCard.name}</h2><p>{selectedCard.address}{selectedCard.port ? `:${selectedCard.port}` : ''}</p></div><strong className={`status-pill ${statusClass(selectedCard.status?.overall_status)}`}>{selectedCard.status?.overall_status || 'UNKNOWN'}</strong></div>
-            <div className="detail-actions"><button onClick={runCheckNow}><FaBolt /> Check now</button><button onClick={toggleEnabled}>{selectedCard.enabled ? 'Disable' : 'Enable'}</button>{isManagerOrAdmin ? <button onClick={openEdit}>Edit</button> : null}<button onClick={downloadHistoryCsv} disabled={csvDownloading}><FaDownload /> {csvDownloading ? 'Preparing...' : 'CSV'}</button>{isAdmin ? <button className="danger-action" onClick={deleteService}>Delete</button> : null}</div>
+            <div className="detail-actions">{isManagerOrAdmin ? <button onClick={runCheckNow} disabled={checkNowBusy}><FaBolt /> {checkNowBusy ? 'Checking...' : 'Check now'}</button> : null}{isManagerOrAdmin ? <button onClick={toggleEnabled} disabled={toggleBusy}>{toggleBusy ? 'Working...' : selectedCard.enabled ? 'Disable' : 'Enable'}</button> : null}{isManagerOrAdmin ? <button onClick={openEdit}>Edit</button> : null}<button onClick={downloadHistoryCsv} disabled={csvDownloading}><FaDownload /> {csvDownloading ? 'Preparing...' : 'CSV'}</button>{isAdmin ? <button className="danger-action" onClick={deleteService} disabled={deleteBusy}>{deleteBusy ? 'Deleting...' : 'Delete'}</button> : null}</div>
             <div className="detail-metrics"><div><label>Availability 24h</label><strong>{formatPercent(investigation?.metrics.availability_percent_24h)}</strong></div><div><label>ICMP Latency</label><strong>{formatLatency(selectedCard.status?.icmp_latency_ms)}</strong></div><div><label>TCP Latency</label><strong>{formatLatency(selectedCard.status?.tcp_latency_ms)}</strong></div><div><label>State Since</label><strong>{formatSince(selectedCard.status?.last_state_change_at)}</strong></div><div><label>Diagnostic Incidents</label><strong>{investigation?.metrics.outage_count_diagnostic_window ?? 0}</strong></div><div><label>Raw Retention</label><strong>{investigation?.retention.raw_history_days ?? snapshot?.retention.raw_history_days ?? 2} days</strong></div></div>
             <div className="detail-tabs"><button className={tab === 'signal' ? 'active' : ''} onClick={() => setTab('signal')}>Signal</button><button className={tab === 'timeline' ? 'active' : ''} onClick={() => setTab('timeline')}>Timeline</button><button className={tab === 'evidence' ? 'active' : ''} onClick={() => setTab('evidence')}>Evidence</button></div>
             {investigationLoading ? <div className="network-shell inner-loading">Refreshing diagnostics...</div> : null}
@@ -303,7 +412,7 @@ const NetworkSentinelPage: React.FC = () => {
         </aside>
       </div>
 
-      {editorOpen ? <div className="editor-backdrop" onClick={() => setEditorOpen(false)}><div className="editor-card network-shell" onClick={(event) => event.stopPropagation()}><h3>{editorMode === 'create' ? 'Add Service' : 'Edit Service'}</h3><div className="editor-grid"><input placeholder="Name" value={serviceForm.name} onChange={(event) => setServiceForm((state) => ({ ...state, name: event.target.value }))} /><input placeholder="Address / Hostname" value={serviceForm.address} onChange={(event) => setServiceForm((state) => ({ ...state, address: event.target.value }))} /><input placeholder="Port" value={serviceForm.port} onChange={(event) => setServiceForm((state) => ({ ...state, port: event.target.value }))} /><input placeholder="Environment" value={serviceForm.environment} onChange={(event) => setServiceForm((state) => ({ ...state, environment: event.target.value }))} /><input placeholder="Group" value={serviceForm.group_name} onChange={(event) => setServiceForm((state) => ({ ...state, group_name: event.target.value }))} /><input placeholder="Tags comma-separated" value={serviceForm.tags} onChange={(event) => setServiceForm((state) => ({ ...state, tags: event.target.value }))} /><input placeholder="Timeout ms" value={serviceForm.timeout_ms} onChange={(event) => setServiceForm((state) => ({ ...state, timeout_ms: event.target.value }))} /><input placeholder="Interval seconds" value={serviceForm.interval_seconds} onChange={(event) => setServiceForm((state) => ({ ...state, interval_seconds: event.target.value }))} /><textarea placeholder="Notes" value={serviceForm.notes} onChange={(event) => setServiceForm((state) => ({ ...state, notes: event.target.value }))} /><label><input type="checkbox" checked={serviceForm.check_icmp} onChange={(event) => setServiceForm((state) => ({ ...state, check_icmp: event.target.checked }))} /> ICMP</label><label><input type="checkbox" checked={serviceForm.check_tcp} onChange={(event) => setServiceForm((state) => ({ ...state, check_tcp: event.target.checked }))} /> TCP</label><label><input type="checkbox" checked={serviceForm.enabled} onChange={(event) => setServiceForm((state) => ({ ...state, enabled: event.target.checked }))} /> Enabled</label></div><div className="editor-actions"><button onClick={() => setEditorOpen(false)}>Cancel</button><button className="primary-action" onClick={submitServiceForm}>Save</button></div></div></div> : null}
+      {editorOpen ? <div className="editor-backdrop" onClick={() => setEditorOpen(false)}><div className="editor-card network-shell" onClick={(event) => event.stopPropagation()}><h3>{editorMode === 'create' ? 'Add Service' : 'Edit Service'}</h3><div className="editor-grid"><input placeholder="Name" value={serviceForm.name} onChange={(event) => setServiceForm((state) => ({ ...state, name: event.target.value }))} /><input placeholder="Address / Hostname" value={serviceForm.address} onChange={(event) => setServiceForm((state) => ({ ...state, address: event.target.value }))} /><input placeholder="Port" value={serviceForm.port} onChange={(event) => setServiceForm((state) => ({ ...state, port: event.target.value }))} /><input placeholder="Environment" value={serviceForm.environment} onChange={(event) => setServiceForm((state) => ({ ...state, environment: event.target.value }))} /><input placeholder="Group" value={serviceForm.group_name} onChange={(event) => setServiceForm((state) => ({ ...state, group_name: event.target.value }))} /><input placeholder="Tags comma-separated" value={serviceForm.tags} onChange={(event) => setServiceForm((state) => ({ ...state, tags: event.target.value }))} /><input placeholder="Timeout ms" value={serviceForm.timeout_ms} onChange={(event) => setServiceForm((state) => ({ ...state, timeout_ms: event.target.value }))} /><input placeholder="Interval seconds" value={serviceForm.interval_seconds} onChange={(event) => setServiceForm((state) => ({ ...state, interval_seconds: event.target.value }))} /><textarea placeholder="Notes" value={serviceForm.notes} onChange={(event) => setServiceForm((state) => ({ ...state, notes: event.target.value }))} /><label><input type="checkbox" checked={serviceForm.check_icmp} onChange={(event) => setServiceForm((state) => ({ ...state, check_icmp: event.target.checked }))} /> ICMP</label><label><input type="checkbox" checked={serviceForm.check_tcp} onChange={(event) => setServiceForm((state) => ({ ...state, check_tcp: event.target.checked }))} /> TCP</label><label><input type="checkbox" checked={serviceForm.enabled} onChange={(event) => setServiceForm((state) => ({ ...state, enabled: event.target.checked }))} /> Enabled</label></div><div className="editor-actions"><button onClick={() => setEditorOpen(false)} disabled={saveBusy}>Cancel</button><button className="primary-action" onClick={submitServiceForm} disabled={saveBusy}>{saveBusy ? 'Saving...' : 'Save'}</button></div></div></div> : null}
       <PageGuide guide={pageGuides.networkSentinel} />
     </div>
   );

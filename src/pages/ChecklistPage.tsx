@@ -34,8 +34,7 @@ const ChecklistPage: React.FC = () => {
     completeInstance,
     updateItemStatus,
     updateSubitemStatus,
-    loading,
-    error
+    loading
   } = useChecklist();
 
   const [showHandover, setShowHandover] = useState(false);
@@ -404,35 +403,8 @@ const ChecklistPage: React.FC = () => {
     return <ChecklistPageSkeleton />;
   }
 
-  if (error) {
-    return (
-      <div className="checklist-error">
-        <FaExclamationTriangle size={48} />
-        <h3>Connection Error</h3>
-        <p>
-          {error.includes('Failed to load')
-            ? 'Unable to connect to server. Please check your connection and try again.'
-            : error}
-        </p>
-        <div className="error-actions">
-          <button onClick={() => navigate('/')} className="btn-primary">
-            <FaArrowLeft /> Return to Dashboard
-          </button>
-          <button onClick={() => window.location.reload()} className="btn-secondary">
-            Refresh Page
-          </button>
-          {id && (
-            <button onClick={() => loadInstance(id)} className="btn-secondary">
-              Retry Loading
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   if (!currentInstance) {
-    return null;
+    return <ChecklistPageSkeleton />;
   }
 
   const isUserParticipant = currentInstance.participants?.some((p: { id: string }) => p.id === user?.id) ?? false;
