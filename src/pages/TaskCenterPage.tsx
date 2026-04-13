@@ -2,12 +2,12 @@
 import React, { useState, useEffect, useCallback, useMemo, useDeferredValue, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { 
-  FaTasks, 
-  FaFilter, 
-  FaSearch, 
-  FaPlus, 
-  FaClock, 
+import {
+  FaTasks,
+  FaFilter,
+  FaSearch,
+  FaPlus,
+  FaClock,
   FaExclamationTriangle,
   FaCheckCircle,
   FaPlay,
@@ -40,7 +40,7 @@ import './TaskCenterPage.css';
 
 const TaskDetail = TaskDetailModule.default;
 
-interface TaskCenterPageProps {}
+interface TaskCenterPageProps { }
 
 type ViewMode = 'list' | 'detail';
 type TaskLaneFilter = 'my-tasks' | 'assigned-to-me' | 'assigned-by-me' | 'team-tasks' | 'department-tasks';
@@ -319,7 +319,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
         console.log('👤 User not available or auth loading, skipping task load', { user: !!user, authLoading });
         return;
       }
-      
+
       try {
         switch (activeFilter) {
           case 'my-tasks':
@@ -412,7 +412,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
     const date = new Date(dueDate);
     const now = new Date();
     const isOverdue = date < now;
-    
+
     return {
       date: date.toLocaleDateString(),
       time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -516,7 +516,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
       icon: <FaClock />
     }
   ];
-  
+
   // Render main content helper to avoid deeply nested JSX expressions
   const renderMainContent = () => {
     if (authLoading) {
@@ -540,7 +540,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
               </div>
               <div className="task-header">
                 <h1><FaTasks /> Task Center</h1>
-                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div className="header-stats">
                     <span className="stat-item">{filteredTasks.length} of {currentTasks.length} tasks</span>
                     {(statusFilter !== 'all' || priorityFilter !== 'all' || searchTerm) && (
@@ -608,13 +608,13 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
             </div>
           ) : (
             <div className="task-detail-pane">
-                <TaskDetail
-                  taskId={selectedTask.id}
-                  onClose={handleCloseDetail}
-                  onRefresh={() => refreshActiveTasks(true)}
-                  onRequestHistory={(entries: any[]) => {
-                    setHistoryEntries(entries || []);
-                    setHistoryModalOpen(true);
+              <TaskDetail
+                taskId={selectedTask.id}
+                onClose={handleCloseDetail}
+                onRefresh={() => refreshActiveTasks(true)}
+                onRequestHistory={(entries: any[]) => {
+                  setHistoryEntries(entries || []);
+                  setHistoryModalOpen(true);
                 }}
               />
             </div>
@@ -684,22 +684,22 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
 
                   <div className="card-footer">
                     <div className="task-actions">
-                      {task.status === 'ACTIVE' && (getAssignedId(task) === user?.id) &&  (
-                        <button className="tc-action-btn tc-start" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'IN_PROGRESS'); }} title="Start Task"><FaPlay className='tc-actn-icon'/></button>
+                      {task.status === 'ACTIVE' && (getAssignedId(task) === user?.id) && (
+                        <button className="tc-action-btn tc-start" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'IN_PROGRESS'); }} title="Start Task"><FaPlay className='tc-actn-icon' /></button>
                       )}
                       {task.status === 'IN_PROGRESS' && (getAssignedId(task) === user?.id) && (
                         <>
-                          <button className="tc-action-btn tc-complete" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'COMPLETED'); }} title="Complete Task"><FaCheckCircle className='tc-actn-icon'/></button>
-                          <button className="tc-action-btn tc-hold" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'ON_HOLD'); }} title="Put on Hold"><FaPause className='tc-actn-icon'/></button>
+                          <button className="tc-action-btn tc-complete" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'COMPLETED'); }} title="Complete Task"><FaCheckCircle className='tc-actn-icon' /></button>
+                          <button className="tc-action-btn tc-hold" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'ON_HOLD'); }} title="Put on Hold"><FaPause className='tc-actn-icon' /></button>
                         </>
                       )}
                       {(getAssignedId(task) === user?.id) && (
                         <>
-                          <button className="tc-action-btn tc-edit" onClick={(e) => { e.stopPropagation(); navigate(`/tasks/${task.id}/edit`); }} title="Edit Task"><FaEdit className='tc-actn-icon'/></button>
+                          <button className="tc-action-btn tc-edit" onClick={(e) => { e.stopPropagation(); navigate(`/tasks/${task.id}/edit`); }} title="Edit Task"><FaEdit className='tc-actn-icon' /></button>
                         </>
                       )}
                       {task.status === 'ON_HOLD' && (getAssignedId(task) === user?.id) && (
-                        <button className="tc-action-btn tc-resume" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'IN_PROGRESS'); }} title="Resume Task"><FaPlay className='tc-actn-icon'/></button>
+                        <button className="tc-action-btn tc-resume" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'IN_PROGRESS'); }} title="Resume Task"><FaPlay className='tc-actn-icon' /></button>
                       )}
                     </div>
                   </div>
@@ -725,12 +725,29 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
   return (
     <div className="task-center">
       <div className="task-center-layout">
-        
+
         {/* Left Sidebar - Filters - always visible */}
         <aside className="task-sidebar">
+          {/* Quick Actions */}
+          <div className="sidebar-section">
+            <h3><FaPlus /> Quick Actions</h3>
+            <button
+              className="quick-action-btn primary"
+              onClick={() => setShowCreateModal(true)}
+            >
+              <FaPlus /> Create Task
+            </button>
+            <button
+              className="quick-action-btn secondary"
+              onClick={() => refreshActiveTasks()}
+            >
+              <FaArrowRight /> Refresh
+            </button>
+          </div>
+
           <div className="sidebar-section">
             <h3><FaFilter /> Task Filters</h3>
-            
+
             <div className="filter-options">
               {filterOptions.map(option => (
                 <button
@@ -754,7 +771,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
 
           <div className="sidebar-section">
             <h3><FaSearch /> Search & Filter</h3>
-            
+
             <div className="tc-search-box">
               <FaSearch className="search-icon" />
               <input
@@ -769,8 +786,8 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
             <div className="filter-controls">
               <div className="filter-group">
                 <label>Status:</label>
-                <select 
-                  value={statusFilter} 
+                <select
+                  value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as TaskStatus | 'all')}
                   className="filter-select"
                 >
@@ -785,8 +802,8 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
 
               <div className="filter-group">
                 <label>Priority:</label>
-                <select 
-                  value={priorityFilter} 
+                <select
+                  value={priorityFilter}
                   onChange={(e) => setPriorityFilter(e.target.value as Priority | 'all')}
                   className="filter-select"
                 >
@@ -798,23 +815,6 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
                 </select>
               </div>
             </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="sidebar-section">
-            <h3><FaPlus /> Quick Actions</h3>
-            <button 
-              className="quick-action-btn primary"
-              onClick={() => setShowCreateModal(true)}
-            >
-              <FaPlus /> Create Task
-            </button>
-            <button 
-              className="quick-action-btn secondary"
-              onClick={() => refreshActiveTasks()}
-            >
-              <FaArrowRight /> Refresh
-            </button>
           </div>
         </aside>
 
@@ -937,7 +937,7 @@ const TaskCenterSkeleton: React.FC = () => (
                   <div className="skeleton-badge skeleton-shimmer" />
                 </div>
               </div>
-              
+
               {/* Card Body */}
               <div className="skeleton-card-body">
                 <div className="skeleton-title-line skeleton-shimmer" />
@@ -947,7 +947,7 @@ const TaskCenterSkeleton: React.FC = () => (
                   <div className="skeleton-meta-item skeleton-shimmer" />
                 </div>
               </div>
-              
+
               {/* Card Footer */}
               <div className="skeleton-card-footer">
                 <div className="skeleton-actions">
@@ -1128,24 +1128,24 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
 
   const validateForm = () => {
     const errors = [];
-    
+
     // Title validation
     if (!formData.title.trim()) {
       errors.push("Title is required");
     } else if (formData.title.length > 200) {
       errors.push("Title must be 200 characters or less");
     }
-    
+
     // Description validation
     if (formData.description && formData.description.length > 2000) {
       errors.push("Description must be 2000 characters or less");
     }
-    
+
     // Estimated hours validation
     if (formData.estimated_hours && (isNaN(parseFloat(formData.estimated_hours)) || parseFloat(formData.estimated_hours) <= 0)) {
       errors.push("Estimated hours must be a positive number");
     }
-    
+
     // Due date validation
     if (formData.due_date) {
       const dueDate = new Date(formData.due_date);
@@ -1155,29 +1155,29 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
         errors.push("Due date must be in the future");
       }
     }
-    
+
     // Recurrence pattern validation
     if (formData.is_recurring && !formData.recurrence_pattern.trim()) {
       errors.push("Recurrence pattern is required for recurring tasks");
     }
-    
+
     // Parent task validation
     if (formData.parent_task_id && !formData.parent_task_id.trim()) {
       errors.push("Invalid parent task ID");
     }
-    
+
     return errors;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const errors = validateForm();
     if (errors.length > 0) {
       alert(`Please fix the following errors:\n${errors.join('\n')}`);
       return;
     }
-    
+
     const submitData = {
       ...formData,
       assigned_by_id: user?.id || '',
@@ -1190,7 +1190,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
       parent_task_id: formData.parent_task_id || undefined,
       recurrence_pattern: formData.is_recurring ? formData.recurrence_pattern : undefined
     };
-    
+
     onSubmit(submitData);
   };
 
@@ -1208,14 +1208,14 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
             ×
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="create-task-form">
           <div className="create-task-form-group">
             <label>Title *</label>
             <input
               type="text"
               value={formData.title}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
               className="create-task-form-input"
               placeholder="Enter task title..."
@@ -1226,7 +1226,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
             <label>Description</label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="create-task-form-textarea"
               rows={3}
               placeholder="Enter task description..."
@@ -1238,7 +1238,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
               <label>Task Type *</label>
               <select
                 value={formData.task_type}
-                onChange={(e) => setFormData({...formData, task_type: e.target.value as TaskType})}
+                onChange={(e) => setFormData({ ...formData, task_type: e.target.value as TaskType })}
                 className="create-task-form-select"
                 required
               >
@@ -1249,35 +1249,35 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
               </select>
             </div>
 
-          <div className="create-task-form-group">
-            <label>Priority *</label>
-            <div className="create-task-priority-selection">
-              <div className="create-task-priority-options">
-                {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((priorityLevel, index) => {
-                  const priorityValue = index + 1;
-                  const isActive = formData.priority === priorityLevel;
-                  const priorityColors = {
-                    LOW: '#22c55e',
-                    MEDIUM: '#f59e0b', 
-                    HIGH: '#ef4444',
-                    CRITICAL: '#a855f7'
-                  };
-                  
-                  return (
-                    <button
-                      key={priorityLevel}
-                      type="button"
-                      className={`create-task-priority-option ${isActive ? 'active' : ''}`}
-                      onClick={() => setFormData({...formData, priority: priorityLevel as Priority})}
-                    >
-                      <div className="create-task-priority-label">{priorityLevel}</div>
-                      <div className="create-task-priority-indicator" style={{ backgroundColor: priorityColors[priorityLevel as keyof typeof priorityColors] }} />
-                    </button>
-                  );
-                })}
+            <div className="create-task-form-group">
+              <label>Priority *</label>
+              <div className="create-task-priority-selection">
+                <div className="create-task-priority-options">
+                  {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((priorityLevel, index) => {
+                    const priorityValue = index + 1;
+                    const isActive = formData.priority === priorityLevel;
+                    const priorityColors = {
+                      LOW: '#22c55e',
+                      MEDIUM: '#f59e0b',
+                      HIGH: '#ef4444',
+                      CRITICAL: '#a855f7'
+                    };
+
+                    return (
+                      <button
+                        key={priorityLevel}
+                        type="button"
+                        className={`create-task-priority-option ${isActive ? 'active' : ''}`}
+                        onClick={() => setFormData({ ...formData, priority: priorityLevel as Priority })}
+                      >
+                        <div className="create-task-priority-label">{priorityLevel}</div>
+                        <div className="create-task-priority-indicator" style={{ backgroundColor: priorityColors[priorityLevel as keyof typeof priorityColors] }} />
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
           </div>
 
           <div className="create-task-form-row">
@@ -1286,7 +1286,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
               <input
                 type="datetime-local"
                 value={formData.due_date}
-                onChange={(e) => setFormData({...formData, due_date: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                 className="create-task-form-input"
               />
             </div>
@@ -1298,7 +1298,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
                 step="0.1"
                 min="0.1"
                 value={formData.estimated_hours}
-                onChange={(e) => setFormData({...formData, estimated_hours: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, estimated_hours: e.target.value })}
                 className="create-task-form-input"
                 placeholder="e.g. 2.5"
               />
@@ -1343,7 +1343,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
                 <label>Assign To</label>
                 <select
                   value={formData.assigned_to_id ?? ''}
-                  onChange={(e) => setFormData({...formData, assigned_to_id: e.target.value || undefined})}
+                  onChange={(e) => setFormData({ ...formData, assigned_to_id: e.target.value || undefined })}
                   className="create-task-form-select"
                 >
                   <option value="">— Unassigned —</option>
@@ -1360,7 +1360,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
             <input
               type="text"
               value={formData.parent_task_id}
-              onChange={(e) => setFormData({...formData, parent_task_id: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, parent_task_id: e.target.value })}
               placeholder="Parent Task ID (optional)"
               className="create-task-form-input"
             />
@@ -1396,7 +1396,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
               <input
                 type="checkbox"
                 checked={formData.is_recurring}
-                onChange={(e) => setFormData({...formData, is_recurring: e.target.checked})}
+                onChange={(e) => setFormData({ ...formData, is_recurring: e.target.checked })}
                 className="create-task-form-checkbox"
               />
               Recurring Task
@@ -1409,14 +1409,14 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
               <input
                 type="text"
                 value={formData.recurrence_pattern}
-                onChange={(e) => setFormData({...formData, recurrence_pattern: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, recurrence_pattern: e.target.value })}
                 placeholder="e.g., 'weekly', 'monthly', 'daily'"
                 className="create-task-form-input"
               />
             </div>
           )}
 
-      <div className="create-task-form-actions">
+          <div className="create-task-form-actions">
             <button type="button" onClick={onClose} className="create-task-btn-secondary">
               <FaTimes /> Cancel
             </button>
@@ -1426,7 +1426,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
           </div>
         </form>
       </div>
-      
+
     </div>
   );
 };

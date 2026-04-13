@@ -21,10 +21,12 @@ const NotificationCenter: React.FC = () => {
     notifications,
     popupNotifications,
     unreadCount,
+    browserPermission,
     markAsRead,
     markAllAsRead,
     loadNotifications,
     removeNotification,
+    requestBrowserPermission,
   } = useNotifications();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -160,6 +162,14 @@ const NotificationCenter: React.FC = () => {
     await markAllAsRead();
   }, [markAllAsRead]);
 
+  const handleEnableDesktopAlerts = useCallback(async () => {
+    try {
+      await requestBrowserPermission();
+    } catch (error) {
+      console.error('Failed to request desktop notification permission:', error);
+    }
+  }, [requestBrowserPermission]);
+
   const getNotificationAction = useCallback(
     (notification: {
       relatedId?: string;
@@ -222,6 +232,9 @@ const NotificationCenter: React.FC = () => {
           const nextOpen = !isOpen;
           setIsOpen(nextOpen);
           if (nextOpen) {
+            if (browserPermission === 'default') {
+              void requestBrowserPermission();
+            }
             void loadNotifications();
           }
         }}
@@ -340,6 +353,16 @@ const NotificationCenter: React.FC = () => {
               <FaCheckCircle />
               Mark all read
             </button>
+            {browserPermission !== 'granted' && browserPermission !== 'unsupported' && (
+              <button
+                className="notification-action secondary"
+                onClick={() => void handleEnableDesktopAlerts()}
+                type="button"
+              >
+                <FaBell />
+                Enable desktop alerts
+              </button>
+            )}
           </div>
 
           <div className="notification-center-list">

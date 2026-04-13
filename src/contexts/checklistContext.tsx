@@ -143,6 +143,18 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (event.type === 'PARTICIPANT_PRESENCE_CHANGED') {
         const participantId = event.data.user_id;
         const isOnline = Boolean(event.data.is_online);
+        const participantRecord = (currentInstance.participants || []).find(
+          (participant: any) => participant.id === participantId
+        ) as any;
+        const participantName = (
+          participantRecord?.display_name ||
+          [participantRecord?.first_name, participantRecord?.last_name].filter(Boolean).join(' ').trim() ||
+          participantRecord?.username ||
+          event.data.display_name ||
+          [event.data.first_name, event.data.last_name].filter(Boolean).join(' ').trim() ||
+          event.data.username ||
+          'A participant'
+        );
 
         if (participantId) {
           setCurrentInstance(prev => {
@@ -164,7 +176,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (participantId && participantId !== user?.id) {
           addNotification({
             type: 'info',
-            message: `Participant is now ${isOnline ? 'online' : 'offline'}`,
+            message: `${participantName} is now ${isOnline ? 'online' : 'offline'}`,
             priority: 'low'
           });
         }
