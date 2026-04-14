@@ -1006,7 +1006,9 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // Update today instances to reflect completion
       await loadTodayInstances();
       
-      const statusLabel = withExceptions ? 'completed with exceptions' : 'completed';
+      const statusLabel = completedInstance.status === 'COMPLETED_WITH_EXCEPTIONS'
+        ? 'completed with exceptions'
+        : 'completed';
       addNotification({
         type: 'success',
         message: `Checklist ${statusLabel} successfully`,

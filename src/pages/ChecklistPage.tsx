@@ -37,10 +37,9 @@ const ChecklistPage: React.FC = () => {
     loading
   } = useChecklist();
 
-  const [showHandover, setShowHandover] = useState(false);
+  const [showHandover, setShowHandover] = useState(true);
   const [showParticipants, setShowParticipants] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
-  const [completeWithExceptions, setCompleteWithExceptions] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [showShareFeedback, setShowShareFeedback] = useState(false);
   const [showItemActionsModal, setShowItemActionsModal] = useState(false);
@@ -205,10 +204,15 @@ const ChecklistPage: React.FC = () => {
     }
   };
 
-  const handleCompleteItem = async () => {
+  const handleCompleteItem = async (completionNote?: string) => {
     try {
       if (selectedItem && id) {
-        await updateItemStatus(id, selectedItem.id, 'COMPLETED', 'All subitems completed');
+        await updateItemStatus(
+          id,
+          selectedItem.id,
+          'COMPLETED',
+          completionNote?.trim() || undefined
+        );
         setShowSubitemModal(false);
         setSelectedItem(null);
 
@@ -217,6 +221,7 @@ const ChecklistPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to complete item:', error);
+      throw error;
     }
   };
 
@@ -272,9 +277,8 @@ const ChecklistPage: React.FC = () => {
     if (!currentInstance || !id) return;
 
     try {
-      await completeInstance(id, completeWithExceptions);
+      await completeInstance(id);
       setShowCompleteDialog(false);
-      setCompleteWithExceptions(false);
     } catch (err) {
       console.error('Failed to complete checklist:', err);
     }
@@ -407,6 +411,19 @@ const ChecklistPage: React.FC = () => {
     return <ChecklistPageSkeleton />;
   }
 
+  const participants = currentInstance.participants || [];
+  const onlineParticipants = participants.filter((participant: any) => (
+    participant?.is_online || (user?.id && participant?.id === user.id)
+  )).length;
+  const checklistItems = currentInstance.items || [];
+  const completedItems = checklistItems.filter(item => item.status === 'COMPLETED').length;
+  const actionedItems = checklistItems.filter(item => ['COMPLETED', 'SKIPPED', 'FAILED'].includes(item.status)).length;
+  const itemExceptions = checklistItems.filter(item => ['SKIPPED', 'FAILED'].includes(item.status)).length;
+  const subitemExceptions = checklistItems.reduce((count, item: any) => (
+    count + (item.subitems || []).filter((subitem: any) => ['SKIPPED', 'FAILED'].includes(subitem.status)).length
+  ), 0);
+  const totalExceptions = itemExceptions + subitemExceptions;
+  const autoCompletionOutcome = totalExceptions > 0 ? 'COMPLETED_WITH_EXCEPTIONS' : 'COMPLETED';
   const isUserParticipant = currentInstance.participants?.some((p: { id: string }) => p.id === user?.id) ?? false;
   const canJoin = !isUserParticipant && (currentInstance.status === 'OPEN' || currentInstance.status === 'IN_PROGRESS');
 
@@ -535,11 +552,23 @@ const ChecklistPage: React.FC = () => {
               className="section-header collapsible"
               onClick={() => setShowParticipants(!showParticipants)}
             >
-              <h3><FaUsers /> Team Members ({currentInstance.participants?.length || 0})</h3>
+              <h3><FaUsers /> Team Members</h3>
+              {!showParticipants && (
+                <div className="sidebar-preview-stats" aria-label="Team member summary">
+                  <span className="sidebar-preview-pill">
+                    <strong>{participants.length}</strong>
+                    <span>Total</span>
+                  </span>
+                  <span className="sidebar-preview-pill is-online">
+                    <strong>{onlineParticipants}</strong>
+                    <span>Online now</span>
+                  </span>
+                </div>
+              )}
               {showParticipants ? <FaChevronUp /> : <FaChevronDown />}
             </div>
             {showParticipants && (
-              <ParticipantList participants={currentInstance.participants || []} />
+              <ParticipantList participants={participants} />
             )}
           </section>
         </div>
@@ -614,7 +643,6 @@ const ChecklistPage: React.FC = () => {
               <button
                 onClick={() => {
                   setShowCompleteDialog(false);
-                  setCompleteWithExceptions(false);
                 }}
                 className="reason-btn cancel"
               >
@@ -624,18 +652,21 @@ const ChecklistPage: React.FC = () => {
             <div className="reason-modal-content">
               <p>Are you sure you want to complete this checklist?</p>
               <div className="completion-stats">
-                <span>
-                  {currentInstance.items?.filter(item => item.status === 'COMPLETED').length || 0} / {currentInstance.items?.length || 0} items completed
-                </span>
+                <span>{actionedItems} / {checklistItems.length || 0} items actioned</span>
+                <span>{completedItems} items completed cleanly</span>
+                <span>{totalExceptions} exception{totalExceptions === 1 ? '' : 's'} detected</span>
               </div>
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={completeWithExceptions}
-                  onChange={(e) => setCompleteWithExceptions(e.target.checked)}
-                />
-                Complete with exceptions (allow skipped/failed items)
-              </label>
+              <div className={`completion-outcome ${totalExceptions > 0 ? 'has-exceptions' : 'is-clean'}`}>
+                <strong>
+                  Final status will be {autoCompletionOutcome === 'COMPLETED' ? 'Completed' : 'Completed With Exceptions'}.
+                </strong>
+                <p>
+                  SentinelOps now derives the review outcome from actual execution evidence.
+                  {totalExceptions > 0
+                    ? ' Skipped or reported items and subitems will automatically close this checklist with exceptions.'
+                    : ' No skipped or reported work has been detected, so this checklist will close normally.'}
+                </p>
+              </div>
             </div>
             <div className="reason-modal-actions">
               <button

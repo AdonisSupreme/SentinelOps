@@ -30,7 +30,7 @@ interface SmartSubitemModalProps {
   instanceId: string;
   subitems: Subitem[];
   onAction: (subitemId: string, action: 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'IN_PROGRESS', notes?: string) => Promise<void>;
-  onCompleteItem: () => void;
+  onCompleteItem: (completionNote?: string) => Promise<void>;
   onClose: () => void;
 }
 
@@ -50,6 +50,8 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
   const [reasonText, setReasonText] = useState('');
   const [forceUpdate, setForceUpdate] = useState(0); // Force re-render flag
   const [optimisticUpdates, setOptimisticUpdates] = useState<Map<string, { status: string; timestamp: number }>>(new Map()); // Track optimistic updates
+  const [completeItemNotes, setCompleteItemNotes] = useState('');
+  const [completeItemBusy, setCompleteItemBusy] = useState(false);
 
   // Calculate statistics including optimistic updates
   const stats = {
@@ -109,6 +111,8 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
       setCurrentSubitemIndex(firstPendingIndex >= 0 ? firstPendingIndex : 0);
       // Clear optimistic updates when opening modal
       setOptimisticUpdates(new Map());
+      setCompleteItemNotes('');
+      setCompleteItemBusy(false);
     }
   }, [isOpen, subitems]);
 
@@ -273,9 +277,15 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
     }
   };
 
-  const handleCompleteItem = () => {
-    onCompleteItem();
-    onClose();
+  const handleCompleteItem = async () => {
+    try {
+      setCompleteItemBusy(true);
+      await onCompleteItem(completeItemNotes.trim() || undefined);
+      setCompleteItemNotes('');
+      onClose();
+    } finally {
+      setCompleteItemBusy(false);
+    }
   };
 
 
@@ -419,11 +429,23 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
           <FaCheckCircle className="completion-icon" />
           <h3>All Subitems Completed</h3>
           <p>Great work! All subitems for this item have been actioned.</p>
+          <div className="complete-item-notes">
+            <label htmlFor={`complete-item-notes-${itemId}`}>Completion notes</label>
+            <textarea
+              id={`complete-item-notes-${itemId}`}
+              className="complete-item-textarea"
+              value={completeItemNotes}
+              onChange={(e) => setCompleteItemNotes(e.target.value)}
+              placeholder="Optional: capture final evidence, observations, or anything the reviewer should know..."
+              rows={4}
+            />
+          </div>
           <button
             className="complete-item-btn futuristic"
             onClick={handleCompleteItem}
+            disabled={completeItemBusy}
           >
-            <FaCheckCircle /> Complete Main Item
+            <FaCheckCircle /> {completeItemBusy ? 'Completing...' : 'Complete Main Item'}
           </button>
         </div>
       )}

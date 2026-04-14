@@ -416,8 +416,8 @@ class ChecklistApi {
   }
 
   async completeInstance(instanceId: string, withExceptions: boolean = false): Promise<ChecklistInstance> {
-    const params = withExceptions ? '?with_exceptions=true' : '';
-    const response = await api.post<{instance: ChecklistInstance, effects: any}>(`/api/v1/checklists/instances/${instanceId}/complete${params}`);
+    void withExceptions; // Legacy compatibility; backend derives the final outcome from checklist evidence.
+    const response = await api.post<{instance: ChecklistInstance, effects: any}>(`/api/v1/checklists/instances/${instanceId}/complete`);
     return response.data.instance; // Extract the instance from the response
   }
 
