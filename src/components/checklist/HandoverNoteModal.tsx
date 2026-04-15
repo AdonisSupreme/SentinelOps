@@ -186,8 +186,8 @@ const HandoverNoteModal: React.FC<HandoverNoteModalProps> = ({
           <div className="help-text">
             <FaFlag />
             <span>
-              Handover notes now notify both current and next shift participants.
-              If the next shift instance does not exist yet, SentinelOps initializes it automatically before routing the note.
+              You can add multiple handover notes for the same checklist.
+              SentinelOps may also add automatic exception handovers, and your manual notes will appear alongside them.
             </span>
           </div>
         </div>

@@ -82,6 +82,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
   const actionedCount = stats.completed + stats.skipped + stats.failed;
   const completionPercentage = stats.total > 0 ? Math.round((actionedCount / stats.total) * 100) : 0;
   const allActioned = stats.pending === 0 && stats.inProgress === 0;
+  const requiresCompletionNote = (stats.skipped + stats.failed) > 0;
   const currentSubitem = subitems[currentSubitemIndex];
 
   // Get current subitem with optimistic updates applied
@@ -428,9 +429,16 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
         <div className="no-subitems">
           <FaCheckCircle className="completion-icon" />
           <h3>All Subitems Completed</h3>
-          <p>Great work! All subitems for this item have been actioned.</p>
+          <p>
+            Great work! All subitems for this item have been actioned.
+            {requiresCompletionNote
+              ? ' A completion note is required because one or more subitems were skipped or reported.'
+              : ' Add any final context you want the next reviewer or shift to see.'}
+          </p>
           <div className="complete-item-notes">
-            <label htmlFor={`complete-item-notes-${itemId}`}>Completion notes</label>
+            <label htmlFor={`complete-item-notes-${itemId}`}>
+              Completion notes {requiresCompletionNote ? '(required)' : '(optional)'}
+            </label>
             <textarea
               id={`complete-item-notes-${itemId}`}
               className="complete-item-textarea"
@@ -443,7 +451,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
           <button
             className="complete-item-btn futuristic"
             onClick={handleCompleteItem}
-            disabled={completeItemBusy}
+            disabled={completeItemBusy || (requiresCompletionNote && !completeItemNotes.trim())}
           >
             <FaCheckCircle /> {completeItemBusy ? 'Completing...' : 'Complete Main Item'}
           </button>
