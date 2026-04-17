@@ -53,6 +53,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
   const [completeItemNotes, setCompleteItemNotes] = useState('');
   const [finalVerdictNotes, setFinalVerdictNotes] = useState('');
   const [completeItemBusy, setCompleteItemBusy] = useState(false);
+  const [showCompletionStep, setShowCompletionStep] = useState(false);
 
   // Calculate statistics including optimistic updates
   const stats = {
@@ -83,7 +84,6 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
   const actionedCount = stats.completed + stats.skipped + stats.failed;
   const completionPercentage = stats.total > 0 ? Math.round((actionedCount / stats.total) * 100) : 0;
   const allActioned = stats.pending === 0 && stats.inProgress === 0;
-  const requiresCompletionNote = (stats.skipped + stats.failed) > 0;
   const requiresFinalVerdict = stats.failed > 0;
   const currentSubitem = subitems[currentSubitemIndex];
 
@@ -117,8 +117,15 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
       setCompleteItemNotes('');
       setFinalVerdictNotes('');
       setCompleteItemBusy(false);
+      setShowCompletionStep(false);
     }
   }, [isOpen, subitems]);
+
+  useEffect(() => {
+    if (!allActioned && showCompletionStep) {
+      setShowCompletionStep(false);
+    }
+  }, [allActioned, showCompletionStep]);
 
   // Clean up optimistic updates when subitems prop changes (sync with server state)
   useEffect(() => {
@@ -281,6 +288,14 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
     }
   };
 
+  const handleContinueToCompletion = () => {
+    setShowCompletionStep(true);
+  };
+
+  const handleBackToSubitems = () => {
+    setShowCompletionStep(false);
+  };
+
   const handleCompleteItem = async () => {
     try {
       setCompleteItemBusy(true);
@@ -297,9 +312,70 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
   };
 
 
+  const renderCompletionStep = () => (
+    <div className="no-subitems">
+      <FaCheckCircle className="completion-icon" />
+      <h3>All Subitems Actioned</h3>
+      <p>
+        Great work! All subitems for this item have been actioned.
+        {' Add any final context you want the next reviewer or shift to see.'}
+        {requiresFinalVerdict
+          ? ' Because this item contains reported subitems, a final verdict is required before completing the main item.'
+          : ''}
+      </p>
+      <div className="complete-item-notes">
+        <label htmlFor={`complete-item-notes-${itemId}`}>
+          Completion notes (optional)
+        </label>
+        <textarea
+          id={`complete-item-notes-${itemId}`}
+          className="complete-item-textarea"
+          value={completeItemNotes}
+          onChange={(e) => setCompleteItemNotes(e.target.value)}
+          placeholder="Optional: capture final evidence, observations, or anything the reviewer should know..."
+          rows={4}
+        />
+      </div>
+      {requiresFinalVerdict && (
+        <div className="complete-item-notes">
+          <label htmlFor={`final-verdict-notes-${itemId}`}>
+            Final verdict (required)
+          </label>
+          <textarea
+            id={`final-verdict-notes-${itemId}`}
+            className="complete-item-textarea"
+            value={finalVerdictNotes}
+            onChange={(e) => setFinalVerdictNotes(e.target.value)}
+            placeholder="Summarize the outcome, what failed, and what the next shift should understand immediately..."
+            rows={4}
+          />
+        </div>
+      )}
+      <div className="subitem-actions">
+        <button
+          className="nav-btn"
+          onClick={handleBackToSubitems}
+          disabled={completeItemBusy}
+        >
+          <FaArrowLeft /> Back to Subitems
+        </button>
+        <button
+          className="complete-item-btn futuristic"
+          onClick={handleCompleteItem}
+          disabled={
+            completeItemBusy
+            || (requiresFinalVerdict && !finalVerdictNotes.trim())
+          }
+        >
+          <FaCheckCircle /> {completeItemBusy ? 'Completing...' : 'Complete Main Item'}
+        </button>
+      </div>
+    </div>
+  );
+
   const renderSequentialView = () => (
     <div className="sequential-view">
-      {currentSubitemWithOptimistic ? (
+      {!showCompletionStep && currentSubitemWithOptimistic ? (
         <>
           <div className="subitem-navigation">
             <button
@@ -324,20 +400,21 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
 
             <button
               className="nav-btn next"
-              onClick={handleNextSubitem}
-              disabled={currentSubitemIndex === subitems.length - 1}
+              onClick={allActioned ? handleContinueToCompletion : handleNextSubitem}
+              disabled={allActioned ? false : currentSubitemIndex === subitems.length - 1}
             >
-              <FaArrowRight /> Next
+              {allActioned ? <><FaCheckCircle /> Continue</> : <><FaArrowRight /> Next</>}
             </button>
 
-            {completionPercentage < 100 && (<button
-              className="nav-btn smart-next"
-              onClick={handleSmartNext}
-              disabled={getNextActionableItem() === -1}
-              title={getNextActionableItem() >= 0 ? `Jump to next actionable item (${getNextActionableItem() + 1})` : 'No more actionable items'}
-            >
-              <FaArrowRight /> {getNextActionableItem() >= 0 ? 'Continue' : 'End'}
-            </button>
+            {!allActioned && (
+              <button
+                className="nav-btn smart-next"
+                onClick={handleSmartNext}
+                disabled={getNextActionableItem() === -1}
+                title={getNextActionableItem() >= 0 ? `Jump to next actionable item (${getNextActionableItem() + 1})` : 'No more actionable items'}
+              >
+                <FaArrowRight /> {getNextActionableItem() >= 0 ? 'Continue' : 'End'}
+              </button>
             )}
           </div>
 
@@ -433,58 +510,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
           </div>
         </>
       ) : (
-        <div className="no-subitems">
-          <FaCheckCircle className="completion-icon" />
-          <h3>All Subitems Completed</h3>
-          <p>
-            Great work! All subitems for this item have been actioned.
-            {requiresCompletionNote
-              ? ' A completion note is required because one or more subitems were skipped or reported.'
-              : ' Add any final context you want the next reviewer or shift to see.'}
-            {requiresFinalVerdict
-              ? ' Because this item contains reported subitems, a final verdict is required to give the next shift operator clear direction.'
-              : ''}
-          </p>
-          <div className="complete-item-notes">
-            <label htmlFor={`complete-item-notes-${itemId}`}>
-              Completion notes {requiresCompletionNote ? '(required)' : '(optional)'}
-            </label>
-            <textarea
-              id={`complete-item-notes-${itemId}`}
-              className="complete-item-textarea"
-              value={completeItemNotes}
-              onChange={(e) => setCompleteItemNotes(e.target.value)}
-              placeholder="Optional: capture final evidence, observations, or anything the reviewer should know..."
-              rows={4}
-            />
-          </div>
-          {requiresFinalVerdict && (
-            <div className="complete-item-notes">
-              <label htmlFor={`final-verdict-notes-${itemId}`}>
-                Final verdict (required)
-              </label>
-              <textarea
-                id={`final-verdict-notes-${itemId}`}
-                className="complete-item-textarea"
-                value={finalVerdictNotes}
-                onChange={(e) => setFinalVerdictNotes(e.target.value)}
-                placeholder="Summarize the outcome, what failed, and what the next shift should understand immediately..."
-                rows={4}
-              />
-            </div>
-          )}
-          <button
-            className="complete-item-btn futuristic"
-            onClick={handleCompleteItem}
-            disabled={
-              completeItemBusy
-              || (requiresCompletionNote && !completeItemNotes.trim())
-              || (requiresFinalVerdict && !finalVerdictNotes.trim())
-            }
-          >
-            <FaCheckCircle /> {completeItemBusy ? 'Completing...' : 'Complete Main Item'}
-          </button>
-        </div>
+        renderCompletionStep()
       )}
     </div>
   );
@@ -522,8 +548,10 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
           <div className="footer-info">
             <FaClock />
             <span>
-              {allActioned
-                ? 'All subitems actioned - ready to complete main item'
+              {allActioned && !showCompletionStep
+                ? 'All subitems actioned - click Continue to add final verdict and complete'
+                : allActioned && showCompletionStep
+                ? 'Completion stage active - submit verdict and close the main item'
                 : `${stats.pending + stats.inProgress} subitem${(stats.pending + stats.inProgress) === 1 ? '' : 's'} remaining`
               }
             </span>
