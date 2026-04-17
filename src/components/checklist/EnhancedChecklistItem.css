@@ -56,6 +56,20 @@
   transition: all 0.3s ease;
 }
 
+.eci-card.eci-card--futuristic.eci-card--subitem-exceptions {
+  border-color: rgba(245, 158, 11, 0.34);
+  background:
+    radial-gradient(circle at top right, rgba(239, 68, 68, 0.08), transparent 34%),
+    linear-gradient(135deg, rgba(255, 251, 235, 0.96) 0%, rgba(255, 247, 237, 0.98) 42%, var(--bg-primary) 100%);
+}
+
+[data-theme="dark"] .eci-card.eci-card--futuristic.eci-card--subitem-exceptions {
+  border-color: rgba(248, 113, 113, 0.28);
+  background:
+    radial-gradient(circle at top right, rgba(239, 68, 68, 0.16), transparent 36%),
+    linear-gradient(135deg, rgba(69, 26, 3, 0.72) 0%, rgba(30, 41, 59, 0.96) 48%, rgba(15, 23, 42, 1) 100%);
+}
+
 .eci-card.eci-card--futuristic:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-xl);
@@ -91,8 +105,19 @@
   background: linear-gradient(180deg, rgba(148, 163, 184, 0.1) 0%, rgba(148, 163, 184, 0.04) 100%);
 }
 
+[data-theme="light"] .eci-header.eci-header--subitem-exceptions,
+.eci-header.eci-header--subitem-exceptions {
+  background:
+    linear-gradient(180deg, rgba(251, 191, 36, 0.16) 0%, rgba(239, 68, 68, 0.05) 100%);
+}
+
 [data-theme="dark"] .eci-header.eci-header--has-subitems {
   background: linear-gradient(180deg, rgba(51, 65, 85, 0.5) 0%, rgba(30, 41, 59, 0.25) 100%);
+}
+
+[data-theme="dark"] .eci-header.eci-header--subitem-exceptions {
+  background:
+    linear-gradient(180deg, rgba(120, 53, 15, 0.44) 0%, rgba(69, 26, 3, 0.14) 100%);
 }
 
 .eci-header.eci-header--pending {
@@ -338,6 +363,16 @@
   color: #0369a1;
 }
 
+.eci-type-badge--exception {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+
+[data-theme="dark"] .eci-type-badge--exception {
+  background: rgba(251, 191, 36, 0.16);
+  color: #fde68a;
+}
+
 .eci-severity-indicator {
   display: inline-flex;
   align-items: center;
@@ -369,6 +404,10 @@
   gap: 8px;
   position: relative;
   z-index: 3;
+}
+
+.eci-subitems-progress--exception .eci-progress-ring {
+  filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.16));
 }
 
 .eci-progress-ring {
@@ -418,6 +457,19 @@
   color: var(--text-quaternary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.eci-progress-alert {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #b45309;
+  letter-spacing: 0.03em;
+}
+
+[data-theme="dark"] .eci-progress-alert {
+  color: #fbbf24;
 }
 
 .eci-expand-btn {

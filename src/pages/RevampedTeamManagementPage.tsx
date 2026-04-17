@@ -88,6 +88,10 @@ const RevampedTeamManagementPage: React.FC = () => {
 
   // Computed values with memoization
   const isAdmin = useMemo(() => (currentUser?.role || '').toLowerCase() === 'admin', [currentUser]);
+  const canApproveDaysOff = useMemo(() => {
+    const role = (currentUser?.role || '').toLowerCase();
+    return role === 'admin' || role === 'manager' || role === 'supervisor';
+  }, [currentUser]);
   const userSectionId = useMemo(() => (currentUser as any)?.section_id || '', [currentUser]);
   
   const canManageTeam = useMemo(() => {
@@ -313,7 +317,7 @@ const RevampedTeamManagementPage: React.FC = () => {
         start_date: daysOffForm.start_date,
         end_date: daysOffForm.end_date,
         reason: daysOffForm.reason,
-        approved: isAdmin,
+        approved: canApproveDaysOff,
       });
 
       if (!result.success) {
@@ -336,7 +340,7 @@ const RevampedTeamManagementPage: React.FC = () => {
     } catch (err: any) {
       addNotification({
         type: 'error',
-        message: err.message || 'Failed to register days off',
+        message: err.response?.data?.detail || err.message || 'Failed to register days off',
         priority: 'high',
       });
     } finally {

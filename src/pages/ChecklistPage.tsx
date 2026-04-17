@@ -204,14 +204,16 @@ const ChecklistPage: React.FC = () => {
     }
   };
 
-  const handleCompleteItem = async (completionNote?: string) => {
+  const handleCompleteItem = async (completionNote?: string, finalVerdict?: string) => {
     try {
       if (selectedItem && id) {
         await updateItemStatus(
           id,
           selectedItem.id,
           'COMPLETED',
-          completionNote?.trim() || undefined
+          completionNote?.trim() || undefined,
+          undefined,
+          finalVerdict?.trim() || undefined,
         );
         setShowSubitemModal(false);
         setSelectedItem(null);

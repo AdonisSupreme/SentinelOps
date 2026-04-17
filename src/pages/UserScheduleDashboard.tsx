@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FaArrowLeft,
   FaArrowRight,
@@ -27,6 +28,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { pageGuides } from '../content/pageGuides';
 import { useNotifications } from '../contexts/NotificationContext';
+import { checklistApi, ChecklistInstance } from '../services/checklistApi';
 import { shiftSchedulingApi, UserSchedule, UserScheduleDay } from '../services/shiftSchedulingApi';
 import { taskApi, TaskSummary } from '../services/taskApi';
 import './UserScheduleDashboard.css';
@@ -70,7 +72,39 @@ const formatDeadlineTime = (value?: string) => {
   }
 };
 
+const resolveChecklistShift = (day?: UserScheduleDay): 'MORNING' | 'AFTERNOON' | 'NIGHT' | null => {
+  const candidates = [day?.shift_name, day?.status, day?.reason]
+    .filter(Boolean)
+    .map((value) => String(value).trim().toUpperCase());
+
+  for (const value of candidates) {
+    if (value.includes('MORNING')) return 'MORNING';
+    if (value.includes('AFTERNOON')) return 'AFTERNOON';
+    if (value.includes('NIGHT')) return 'NIGHT';
+  }
+
+  return null;
+};
+
+const rankChecklistInstance = (instance: ChecklistInstance) => {
+  switch ((instance.status || '').toUpperCase()) {
+    case 'IN_PROGRESS':
+      return 0;
+    case 'OPEN':
+      return 1;
+    case 'PENDING_REVIEW':
+      return 2;
+    case 'COMPLETED_WITH_EXCEPTIONS':
+      return 3;
+    case 'COMPLETED':
+      return 4;
+    default:
+      return 5;
+  }
+};
+
 const UserScheduleDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const { addNotification } = useNotifications();
 
@@ -80,6 +114,8 @@ const UserScheduleDashboard: React.FC = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [timelineNotice, setTimelineNotice] = useState<{ title: string; message: string } | null>(null);
+  const [shiftNavigationPending, setShiftNavigationPending] = useState(false);
 
   const today = new Date();
   const todayKey = format(today, 'yyyy-MM-dd');
@@ -240,6 +276,55 @@ const UserScheduleDashboard: React.FC = () => {
   const focusedDeadlineTasks = deadlineTasksByDate.get(selectedDate) || [];
   const focusedDateLabel = format(parseISO(selectedDate), 'EEEE, MMMM d');
   const userLabel = currentUser?.first_name || currentUser?.username || 'Operator';
+
+  const handleTaskDeadlineOpen = (taskId: string) => {
+    navigate(`/tasks?task=${taskId}`);
+  };
+
+  const handleShiftTimelineOpen = async () => {
+    if (!focusedDay || focusedDay.type !== 'SHIFT') {
+      return;
+    }
+
+    if (selectedDate > todayKey) {
+      setTimelineNotice({
+        title: 'Timeline Not Ready Yet',
+        message: `The ${focusedDay.shift_name || 'selected'} timeline for ${focusedDateLabel} has not been created yet. Future shifts become available once the day arrives and the checklist instance is initialized.`,
+      });
+      return;
+    }
+
+    try {
+      setShiftNavigationPending(true);
+      const instances = await checklistApi.getAllInstances(selectedDate, selectedDate);
+      const targetShift = resolveChecklistShift(focusedDay);
+      const matchingInstances = targetShift
+        ? instances.filter((instance) => (instance.shift || '').toUpperCase() === targetShift)
+        : instances;
+      const targetInstance = matchingInstances
+        .slice()
+        .sort((left, right) => rankChecklistInstance(left) - rankChecklistInstance(right))[0];
+
+      if (!targetInstance?.id) {
+        addNotification({
+          type: 'warning',
+          message: `No checklist timeline exists yet for ${focusedDateLabel}.`,
+          priority: 'medium',
+        });
+        return;
+      }
+
+      navigate(`/checklist/${targetInstance.id}`);
+    } catch (err: any) {
+      addNotification({
+        type: 'error',
+        message: err.response?.data?.detail || err.message || 'Failed to open the shift timeline',
+        priority: 'high',
+      });
+    } finally {
+      setShiftNavigationPending(false);
+    }
+  };
 
   const monthDays = useMemo(() => {
     const firstDayOffset = monthStart.getDay();
@@ -577,6 +662,14 @@ const UserScheduleDashboard: React.FC = () => {
                     <span>{focusedDay.status || 'Assigned'}</span>
                     <span>{focusedDay.reason || 'Mission-ready'}</span>
                   </div>
+                  <button
+                    type="button"
+                    className="focus-jump-btn"
+                    onClick={handleShiftTimelineOpen}
+                    disabled={shiftNavigationPending}
+                  >
+                    {shiftNavigationPending ? 'Opening timeline...' : 'Open shift timeline'}
+                  </button>
                 </>
               ) : focusedDay?.type === 'OFF_DAY' ? (
                 <>
@@ -614,13 +707,18 @@ const UserScheduleDashboard: React.FC = () => {
                   {focusedDeadlineTasks.slice(0, 4).map((task) => {
                     const overdue = Boolean(task.due_date && parseISO(task.due_date) < new Date());
                     return (
-                      <div key={task.id} className={`focus-deadline-item ${overdue ? 'overdue' : ''}`}>
+                      <button
+                        key={task.id}
+                        type="button"
+                        className={`focus-deadline-item ${overdue ? 'overdue' : ''}`}
+                        onClick={() => handleTaskDeadlineOpen(task.id)}
+                      >
                         <div>
                           <strong>{task.title}</strong>
                           <span>{formatDeadlineTime(task.due_date)} · {task.status.replace('_', ' ')}</span>
                         </div>
                         <em>{task.priority}</em>
-                      </div>
+                      </button>
                     );
                   })}
                   {focusedDeadlineTasks.length > 4 ? (
@@ -694,6 +792,30 @@ const UserScheduleDashboard: React.FC = () => {
           </div>
         </aside>
       </section>
+      {timelineNotice ? (
+        <div className="schedule-modal-overlay" onClick={() => setTimelineNotice(null)}>
+          <div
+            className="schedule-modal-card"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="schedule-timeline-notice-title"
+          >
+            <span className="schedule-modal-kicker">Timeline access</span>
+            <h3 id="schedule-timeline-notice-title">{timelineNotice.title}</h3>
+            <p>{timelineNotice.message}</p>
+            <div className="schedule-modal-actions">
+              <button
+                type="button"
+                className="schedule-modal-btn primary"
+                onClick={() => setTimelineNotice(null)}
+              >
+                Understood
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <PageGuide guide={pageGuides.userScheduleDashboard} />
     </div>
   );

@@ -90,6 +90,7 @@ const AdvancedTeamManagementPage: React.FC = () => {
 
   const role = (currentUser?.role || '').toLowerCase();
   const isAdmin = role === 'admin';
+  const canApproveDaysOff = role === 'admin' || role === 'manager' || role === 'supervisor';
   const canManageTeam = role === 'admin' || role === 'supervisor' || role === 'manager';
   const userSectionId = (currentUser as any)?.section_id || '';
 
@@ -445,14 +446,18 @@ const AdvancedTeamManagementPage: React.FC = () => {
         start_date: daysOffForm.start_date,
         end_date: daysOffForm.end_date,
         reason: daysOffForm.reason,
-        approved: isAdmin,
+        approved: canApproveDaysOff,
       });
       if (!result.success) throw new Error(result.message);
       setShowDaysOffModal(false);
       setDaysOffForm({ user_id: '', start_date: '', end_date: '', reason: 'Vacation' });
       addNotification({ type: 'success', message: result.message, priority: 'medium' });
     } catch (err: any) {
-      addNotification({ type: 'error', message: err.message || 'Failed to register time off', priority: 'high' });
+      addNotification({
+        type: 'error',
+        message: err.response?.data?.detail || err.message || 'Failed to register time off',
+        priority: 'high',
+      });
     } finally {
       setDaysOffSubmitting(false);
     }

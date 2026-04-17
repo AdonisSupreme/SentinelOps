@@ -105,6 +105,15 @@ export interface ChecklistItemActivity {
   created_at: string;
 }
 
+export interface AddChecklistItemCommentRequest {
+  action: 'COMMENTED';
+  comment: string;
+}
+
+export interface AddChecklistItemFinalVerdictRequest {
+  final_verdict: string;
+}
+
 export interface HandoverNote {
   id: string;
   content: string;
@@ -433,13 +442,37 @@ class ChecklistApi {
   async updateItemStatus(
     instanceId: string,
     itemId: string,
-    data: UpdateChecklistItemRequest
+    data: UpdateChecklistItemRequest & { final_verdict?: string }
   ): Promise<ChecklistInstance> {
     const response = await api.patch<{instance: ChecklistInstance, effects: any}>(
       `/api/v1/checklists/instances/${instanceId}/items/${itemId}`,
       data
     );
     // Return the full instance (source-of-truth) so callers can refresh local state
+    return response.data.instance;
+  }
+
+  async addItemComment(
+    instanceId: string,
+    itemId: string,
+    data: AddChecklistItemCommentRequest
+  ): Promise<ChecklistInstance> {
+    const response = await api.post<{instance: ChecklistInstance}>(
+      `/api/v1/checklists/instances/${instanceId}/items/${itemId}/comment`,
+      data
+    );
+    return response.data.instance;
+  }
+
+  async addItemFinalVerdict(
+    instanceId: string,
+    itemId: string,
+    data: AddChecklistItemFinalVerdictRequest
+  ): Promise<ChecklistInstance> {
+    const response = await api.post<{instance: ChecklistInstance}>(
+      `/api/v1/checklists/instances/${instanceId}/items/${itemId}/final-verdict`,
+      data
+    );
     return response.data.instance;
   }
 

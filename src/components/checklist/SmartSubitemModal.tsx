@@ -1,7 +1,7 @@
 // src/components/checklist/SmartSubitemModal.tsx
 import React, { useState, useEffect } from 'react';
-import { 
-  FaTimes, FaArrowLeft, FaArrowRight, FaCheckCircle, 
+import {
+  FaTimes, FaArrowLeft, FaArrowRight, FaCheckCircle,
   FaClock, FaPlay, FaBan, FaExclamationTriangle
 } from 'react-icons/fa';
 import './SmartSubitemModal.css';
@@ -30,7 +30,7 @@ interface SmartSubitemModalProps {
   instanceId: string;
   subitems: Subitem[];
   onAction: (subitemId: string, action: 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'IN_PROGRESS', notes?: string) => Promise<void>;
-  onCompleteItem: (completionNote?: string) => Promise<void>;
+  onCompleteItem: (completionNote?: string, finalVerdict?: string) => Promise<void>;
   onClose: () => void;
 }
 
@@ -51,6 +51,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
   const [forceUpdate, setForceUpdate] = useState(0); // Force re-render flag
   const [optimisticUpdates, setOptimisticUpdates] = useState<Map<string, { status: string; timestamp: number }>>(new Map()); // Track optimistic updates
   const [completeItemNotes, setCompleteItemNotes] = useState('');
+  const [finalVerdictNotes, setFinalVerdictNotes] = useState('');
   const [completeItemBusy, setCompleteItemBusy] = useState(false);
 
   // Calculate statistics including optimistic updates
@@ -83,13 +84,14 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
   const completionPercentage = stats.total > 0 ? Math.round((actionedCount / stats.total) * 100) : 0;
   const allActioned = stats.pending === 0 && stats.inProgress === 0;
   const requiresCompletionNote = (stats.skipped + stats.failed) > 0;
+  const requiresFinalVerdict = stats.failed > 0;
   const currentSubitem = subitems[currentSubitemIndex];
 
   // Get current subitem with optimistic updates applied
   const getCurrentSubitemWithOptimisticUpdates = () => {
     const baseSubitem = subitems[currentSubitemIndex];
     if (!baseSubitem) return null;
-    
+
     const optimisticUpdate = optimisticUpdates.get(baseSubitem.id);
     if (optimisticUpdate) {
       // Return a new object with the optimistic status
@@ -98,7 +100,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
         status: optimisticUpdate.status as Subitem['status']
       };
     }
-    
+
     return baseSubitem;
   };
 
@@ -113,6 +115,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
       // Clear optimistic updates when opening modal
       setOptimisticUpdates(new Map());
       setCompleteItemNotes('');
+      setFinalVerdictNotes('');
       setCompleteItemBusy(false);
     }
   }, [isOpen, subitems]);
@@ -128,7 +131,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
         confirmedUpdates.set(subitemId, update);
       }
     });
-    
+
     if (confirmedUpdates.size !== optimisticUpdates.size) {
       setOptimisticUpdates(confirmedUpdates);
     }
@@ -158,7 +161,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
       const newOptimisticUpdates = new Map(optimisticUpdates);
       newOptimisticUpdates.set(subitemId, { status: action, timestamp: Date.now() });
       setOptimisticUpdates(newOptimisticUpdates);
-      
+
       // Force re-render to show updated buttons immediately
       setForceUpdate(prev => prev + 1);
     }
@@ -166,7 +169,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
     // Direct action without race condition
     try {
       await onAction(subitemId, action, notes);
-      
+
       // For COMPLETED actions, handle smart auto-advance
       if (action === 'COMPLETED') {
         const nextActionableIndex = getNextActionableItem();
@@ -195,20 +198,20 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
     if (!pendingAction || !reasonText.trim()) {
       return;
     }
-    
+
     const { subitemId, action } = pendingAction;
-    
+
     // Apply optimistic update immediately for instant UI feedback
     const newOptimisticUpdates = new Map(optimisticUpdates);
     newOptimisticUpdates.set(subitemId, { status: action, timestamp: Date.now() });
     setOptimisticUpdates(newOptimisticUpdates);
-    
+
     // Force re-render to show updated status immediately
     setForceUpdate(prev => prev + 1);
-    
+
     try {
       await onAction(subitemId, action, reasonText.trim());
-      
+
       // Smart auto-advance: use smart navigation for skip/fail actions
       // Stay on current item for FAILED actions to show updated status
       const nextActionableIndex = getNextActionableItem();
@@ -232,7 +235,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
       setOptimisticUpdates(revertedUpdates);
       setForceUpdate(prev => prev + 1);
     }
-    
+
     // Close modal and reset state
     setShowReasonModal(false);
     setPendingAction(null);
@@ -281,8 +284,12 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
   const handleCompleteItem = async () => {
     try {
       setCompleteItemBusy(true);
-      await onCompleteItem(completeItemNotes.trim() || undefined);
+      await onCompleteItem(
+        completeItemNotes.trim() || undefined,
+        finalVerdictNotes.trim() || undefined,
+      );
       setCompleteItemNotes('');
+      setFinalVerdictNotes('');
       onClose();
     } finally {
       setCompleteItemBusy(false);
@@ -302,7 +309,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
             >
               <FaArrowLeft /> Previous
             </button>
-            
+
             <div className="si-progress-indicator">
               <span className="step-text">Step {currentSubitemIndex + 1} of {subitems.length}</span>
               <div className="step-dots">
@@ -314,7 +321,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
                 ))}
               </div>
             </div>
-            
+
             <button
               className="nav-btn next"
               onClick={handleNextSubitem}
@@ -347,11 +354,11 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
                 </span>
               </div>
             </div>
-            
+
             {currentSubitemWithOptimistic.description && (
               <p className="subitem-description">{currentSubitemWithOptimistic.description}</p>
             )}
-            
+
             <div className="subitem-actions">
               {currentSubitemWithOptimistic.status === 'PENDING' && (
                 <button
@@ -361,7 +368,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
                   <FaPlay /> Start Working
                 </button>
               )}
-              
+
               {currentSubitemWithOptimistic.status === 'IN_PROGRESS' && (
                 <>
                   <button
@@ -370,14 +377,14 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
                   >
                     <FaCheckCircle /> Mark Complete
                   </button>
-                  
+
                   <button
                     className="sub-action-btn skip"
                     onClick={() => handleSubitemAction(currentSubitemWithOptimistic.id, 'SKIPPED')}
                   >
                     <FaTimes /> Skip
                   </button>
-                  
+
                   <button
                     className="sub-action-btn fail"
                     onClick={() => handleSubitemAction(currentSubitemWithOptimistic.id, 'FAILED')}
@@ -386,7 +393,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
                   </button>
                 </>
               )}
-              
+
               {currentSubitemWithOptimistic.status === 'COMPLETED' && (
                 <div className="status-display completed">
                   <FaCheckCircle className="status-icon" />
@@ -398,7 +405,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
                   )}
                 </div>
               )}
-              
+
               {currentSubitemWithOptimistic.status === 'SKIPPED' && (
                 <div className="status-display skipped">
                   <FaBan className="status-icon" />
@@ -410,7 +417,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
                   )}
                 </div>
               )}
-              
+
               {currentSubitemWithOptimistic.status === 'FAILED' && (
                 <div className="status-display failed">
                   <FaExclamationTriangle className="status-icon" />
@@ -434,6 +441,9 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
             {requiresCompletionNote
               ? ' A completion note is required because one or more subitems were skipped or reported.'
               : ' Add any final context you want the next reviewer or shift to see.'}
+            {requiresFinalVerdict
+              ? ' Because this item contains reported subitems, a final verdict is required to give the next shift operator clear direction.'
+              : ''}
           </p>
           <div className="complete-item-notes">
             <label htmlFor={`complete-item-notes-${itemId}`}>
@@ -448,10 +458,29 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
               rows={4}
             />
           </div>
+          {requiresFinalVerdict && (
+            <div className="complete-item-notes">
+              <label htmlFor={`final-verdict-notes-${itemId}`}>
+                Final verdict (required)
+              </label>
+              <textarea
+                id={`final-verdict-notes-${itemId}`}
+                className="complete-item-textarea"
+                value={finalVerdictNotes}
+                onChange={(e) => setFinalVerdictNotes(e.target.value)}
+                placeholder="Summarize the outcome, what failed, and what the next shift should understand immediately..."
+                rows={4}
+              />
+            </div>
+          )}
           <button
             className="complete-item-btn futuristic"
             onClick={handleCompleteItem}
-            disabled={completeItemBusy || (requiresCompletionNote && !completeItemNotes.trim())}
+            disabled={
+              completeItemBusy
+              || (requiresCompletionNote && !completeItemNotes.trim())
+              || (requiresFinalVerdict && !finalVerdictNotes.trim())
+            }
           >
             <FaCheckCircle /> {completeItemBusy ? 'Completing...' : 'Complete Main Item'}
           </button>
@@ -473,7 +502,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
               <span className="completion-badge">{completionPercentage}%</span>
             </div></h2>
           </div>
-          
+
           <div className="header-controls">
             <button className="close-btn" onClick={onClose}>
               <FaTimes />
@@ -493,7 +522,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
           <div className="footer-info">
             <FaClock />
             <span>
-              {allActioned 
+              {allActioned
                 ? 'All subitems actioned - ready to complete main item'
                 : `${stats.pending + stats.inProgress} subitem${(stats.pending + stats.inProgress) === 1 ? '' : 's'} remaining`
               }
@@ -514,37 +543,37 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
                 <FaTimes />
               </button>
             </div>
-            
+
             <div className="reason-modal-content">
               <p>
-                {pendingAction?.action === 'SKIPPED' 
-                  ? 'Please provide a reason for skipping this subitem:' 
+                {pendingAction?.action === 'SKIPPED'
+                  ? 'Please provide a reason for skipping this subitem:'
                   : 'Please describe the issue with this subitem:'
                 }
               </p>
-              
+
               <textarea
                 className="reason-textarea"
                 value={reasonText}
                 onChange={(e) => setReasonText(e.target.value)}
                 placeholder={
-                  pendingAction?.action === 'SKIPPED' 
-                    ? 'Enter reason for skipping...' 
+                  pendingAction?.action === 'SKIPPED'
+                    ? 'Enter reason for skipping...'
                     : 'Describe the issue...'
                 }
                 rows={4}
                 autoFocus
               />
             </div>
-            
+
             <div className="reason-modal-actions">
-              <button 
-                className="reason-btn cancel"
+              <button
+                className="reason-btn act_cancel"
                 onClick={handleReasonCancel}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 className="reason-btn confirm"
                 onClick={handleReasonSubmit}
                 disabled={!reasonText.trim()}

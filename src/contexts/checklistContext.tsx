@@ -26,7 +26,18 @@ interface ChecklistContextType {
     itemId: string,
     status: string,
     comment?: string,
-    reason?: string
+    reason?: string,
+    finalVerdict?: string
+  ) => Promise<void>;
+  addItemComment: (
+    instanceId: string,
+    itemId: string,
+    comment: string
+  ) => Promise<void>;
+  addItemFinalVerdict: (
+    instanceId: string,
+    itemId: string,
+    finalVerdict: string
   ) => Promise<void>;
   updateSubitemStatus: (
     instanceId: string,
@@ -94,6 +105,81 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return null;
     }
   }, [applyInstanceSnapshot]);
+
+  const addItemComment = useCallback(async (
+    instanceId: string,
+    itemId: string,
+    comment: string
+  ) => {
+    const normalizedComment = comment.trim();
+    if (!normalizedComment) {
+      throw new Error('Comment is required');
+    }
+
+    setLoading(true);
+    try {
+      const updatedInstance = await checklistApi.addItemComment(instanceId, itemId, {
+        action: 'COMMENTED',
+        comment: normalizedComment,
+      });
+
+      setError(null);
+      applyInstanceSnapshot(updatedInstance);
+      addNotification({
+        type: 'success',
+        message: 'Item note added',
+        priority: 'low'
+      });
+    } catch (err: any) {
+      const message = getBackendErrorMessage(err, 'Failed to add item note');
+      setError(message);
+      addNotification({
+        type: 'error',
+        message,
+        priority: 'medium'
+      });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [addNotification, applyInstanceSnapshot, getBackendErrorMessage]);
+
+  const addItemFinalVerdict = useCallback(async (
+    instanceId: string,
+    itemId: string,
+    finalVerdict: string
+  ) => {
+    const normalizedVerdict = finalVerdict.trim();
+    if (!normalizedVerdict) {
+      throw new Error('Final verdict is required');
+    }
+
+    setLoading(true);
+    try {
+      const updatedInstance = await checklistApi.addItemFinalVerdict(instanceId, itemId, {
+        final_verdict: normalizedVerdict,
+      });
+
+      setError(null);
+      applyInstanceSnapshot(updatedInstance);
+      addNotification({
+        type: 'success',
+        message: 'Final verdict captured',
+        priority: 'low'
+      });
+    } catch (err: any) {
+      const message = getBackendErrorMessage(err, 'Failed to save final verdict');
+      setError(message);
+      addNotification({
+        type: 'error',
+        message,
+        priority: 'medium'
+      });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [addNotification, applyInstanceSnapshot, getBackendErrorMessage]);
 
   // Only open the checklist socket when an actual checklist is active.
   useEffect(() => {
@@ -552,7 +638,8 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     itemId: string,
     status: string,
     comment?: string,
-    reason?: string
+    reason?: string,
+    finalVerdict?: string
   ) => {
     setLoading(true);
     const operationId = `update_item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -689,6 +776,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return await checklistApi.updateItemStatus(instanceId, itemId, {
           status: status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'FAILED',
           notes: comment || reason || undefined,
+          final_verdict: finalVerdict || undefined,
           action_type: getActionType(status),
           reason: reason,
           metadata: {
@@ -1093,11 +1181,13 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       todayInstances,
       loading,
       error,
-      loadTodayInstances,
-      loadInstance,
-      joinInstance,
-      updateItemStatus,
-      updateSubitemStatus,
+    loadTodayInstances,
+    loadInstance,
+    joinInstance,
+    updateItemStatus,
+    addItemComment,
+    addItemFinalVerdict,
+    updateSubitemStatus,
       completeInstance,
       deleteInstance,
       createHandoverNote,

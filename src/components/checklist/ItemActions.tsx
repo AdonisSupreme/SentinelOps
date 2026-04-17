@@ -13,14 +13,22 @@ interface ItemActionsProps {
 }
 
 const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentStatus, onComplete }) => {
-  const { currentInstance, updateItemStatus, loading: contextLoading } = useChecklist();
+  const { currentInstance, updateItemStatus, addItemFinalVerdict, loading: contextLoading } = useChecklist();
   const [comment, setComment] = useState('');
   const [reason, setReason] = useState('');
   const [action, setAction] = useState<'START' | 'COMPLETE' | 'SKIP' | 'FAIL'>('START');
   const [loadingState, setLoading] = useState(false);
+  const [showFinalVerdictForm, setShowFinalVerdictForm] = useState(false);
 
   // Get the current item
   const currentItem = currentInstance?.items.find(item => item.id === itemId) as any;
+  const subitems = Array.isArray(currentItem?.subitems) ? currentItem.subitems : [];
+  const exceptionSubitems = subitems.filter((subitem: any) => subitem.status === 'SKIPPED' || subitem.status === 'FAILED');
+  const hasExceptionEvidence = exceptionSubitems.length > 0 || currentStatus === 'SKIPPED' || currentStatus === 'FAILED';
+  const existingFinalVerdict = typeof currentItem?.final_verdict === 'string'
+    ? currentItem.final_verdict.trim()
+    : '';
+  const canCaptureFinalVerdict = currentStatus === 'COMPLETED' && hasExceptionEvidence;
 
   const handleAction = async (status: 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'FAILED', notes?: string) => {
     try {
@@ -57,7 +65,73 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
     }
   };
 
+  const handleAddFinalVerdict = async () => {
+    const normalizedComment = comment.trim();
+    if (!normalizedComment) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await addItemFinalVerdict(instanceId, itemId, normalizedComment);
+      setComment('');
+      setShowFinalVerdictForm(false);
+      onComplete(currentStatus, Boolean(currentItem?.subitems?.length));
+    } catch (error) {
+      console.error('Failed to add item verdict note:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderForm = () => {
+    if (canCaptureFinalVerdict) {
+      if (existingFinalVerdict) {
+        return (
+          <div className="action-form action-form--readonly">
+            <div className="item-note-preview">
+              <div className="item-note-preview__label">
+                <FaComment /> Final verdict
+              </div>
+              <p>{existingFinalVerdict}</p>
+            </div>
+          </div>
+        );
+      }
+
+      if (!showFinalVerdictForm) {
+        return (
+          <div className="action-form action-form--readonly">
+            <button
+              onClick={() => setShowFinalVerdictForm(true)}
+              disabled={loadingState || contextLoading}
+              className="btn-action confirm"
+            >
+              <FaComment /> Add Final Verdict
+            </button>
+          </div>
+        );
+      }
+
+      return (
+        <div className="action-form">
+          <textarea
+            placeholder="Add the final verdict for this item and its exceptions..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            rows={4}
+          />
+          <button
+            onClick={handleAddFinalVerdict}
+            disabled={!comment.trim() || loadingState || contextLoading}
+            className="btn-action confirm"
+          >
+            Save Final Verdict
+          </button>
+        </div>
+      );
+    }
+
     switch (action) {
       case 'SKIP':
         return (
@@ -151,46 +225,49 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
   const canStart = isPending;
   const canComplete = isPending || isInProgress || canCompleteFromSkippedOrFailed;
   const canSkipOrFail = isPending || isInProgress;
+  const showStandardActions = !canCaptureFinalVerdict;
 
   return (
     <div className="item-actions">
-      <div className="action-buttons">
-        {canStart && (
-          <button
-            onClick={() => setAction('START')}
-            className={`btn-action ${action === 'START' ? 'active' : ''}`}
-          >
-            <FaPlay /> Start Working
-          </button>
-        )}
-        
-        {canComplete && (
-          <button
-            onClick={() => setAction('COMPLETE')}
-            className={`btn-action ${action === 'COMPLETE' ? 'active' : ''}`}
-          >
-            <FaCheckCircle /> {canCompleteFromSkippedOrFailed ? 'Resolve & Complete' : 'Mark Complete'}
-          </button>
-        )}
-        
-        {canSkipOrFail && (
-          <button
-            onClick={() => setAction('SKIP')}
-            className={`btn-action ${action === 'SKIP' ? 'active' : ''}`}
-          >
-            <FaBan /> Skip Item
-          </button>
-        )}
-        
-        {canSkipOrFail && (
-          <button
-            onClick={() => setAction('FAIL')}
-            className={`btn-action ${action === 'FAIL' ? 'active' : ''}`}
-          >
-            <FaExclamationTriangle /> Report Issue
-          </button>
-        )}
-      </div>
+      {showStandardActions && (
+        <div className="action-buttons">
+          {canStart && (
+            <button
+              onClick={() => setAction('START')}
+              className={`btn-action ${action === 'START' ? 'active' : ''}`}
+            >
+              <FaPlay /> Start Working
+            </button>
+          )}
+          
+          {canComplete && (
+            <button
+              onClick={() => setAction('COMPLETE')}
+              className={`btn-action ${action === 'COMPLETE' ? 'active' : ''}`}
+            >
+              <FaCheckCircle /> {canCompleteFromSkippedOrFailed ? 'Resolve & Complete' : 'Mark Complete'}
+            </button>
+          )}
+          
+          {canSkipOrFail && (
+            <button
+              onClick={() => setAction('SKIP')}
+              className={`btn-action ${action === 'SKIP' ? 'active' : ''}`}
+            >
+              <FaBan /> Skip Item
+            </button>
+          )}
+          
+          {canSkipOrFail && (
+            <button
+              onClick={() => setAction('FAIL')}
+              className={`btn-action ${action === 'FAIL' ? 'active' : ''}`}
+            >
+              <FaExclamationTriangle /> Report Issue
+            </button>
+          )}
+        </div>
+      )}
 
       {renderForm()}
 

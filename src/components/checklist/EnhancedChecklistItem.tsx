@@ -48,6 +48,11 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
   const completionPercentage = subitemStats.total > 0
     ? Math.round((actionedCount / subitemStats.total) * 100)
     : 0;
+  const hasSubitemExceptions = hasSubitems && (subitemStats.skipped > 0 || subitemStats.failed > 0);
+  const subitemExceptionSummary = [
+    subitemStats.failed > 0 ? `${subitemStats.failed} reported` : null,
+    subitemStats.skipped > 0 ? `${subitemStats.skipped} skipped` : null
+  ].filter(Boolean).join(' • ');
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -73,6 +78,12 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
       default: return '#6b7280';
     }
   };
+
+  const progressColor = subitemStats.failed > 0
+    ? '#ef4444'
+    : subitemStats.skipped > 0
+      ? '#f59e0b'
+      : getStatusColor(item.status);
 
   const formatScheduledTime = (value?: string | null) => {
     if (!value) {
@@ -207,9 +218,9 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
   };
 
   return (
-    <div className="eci-card eci-card--futuristic">
+    <div className={`eci-card eci-card--futuristic ${hasSubitemExceptions ? 'eci-card--subitem-exceptions' : ''}`}>
       <div
-        className={`eci-header eci-header--${item.status.toLowerCase()} ${hasSubitems ? 'eci-header--has-subitems' : ''}`}
+        className={`eci-header eci-header--${item.status.toLowerCase()} ${hasSubitems ? 'eci-header--has-subitems' : ''} ${hasSubitemExceptions ? 'eci-header--subitem-exceptions' : ''}`}
         onClick={handleItemClick}
       >
         <div className="eci-main-info">
@@ -243,6 +254,11 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
 
             <div className="eci-metadata">
               <span className="eci-type-badge">{itemType}</span>
+              {hasSubitemExceptions && (
+                <span className="eci-type-badge eci-type-badge--exception">
+                  Exceptions {subitemExceptionSummary}
+                </span>
+              )}
               {item.severity && (
                 <span className="eci-severity-indicator">{renderSeverity(item.severity)}</span>
               )}
@@ -282,7 +298,7 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
 
         <div className="eci-controls">
           {hasSubitems && (
-            <div className="eci-subitems-progress">
+            <div className={`eci-subitems-progress ${hasSubitemExceptions ? 'eci-subitems-progress--exception' : ''}`}>
               <div className="eci-progress-ring">
                 <svg width="40" height="40" viewBox="0 0 40 40">
                   <circle
@@ -298,7 +314,7 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
                     cy="20"
                     r="16"
                     fill="none"
-                    stroke={getStatusColor(item.status)}
+                    stroke={progressColor}
                     strokeWidth="3"
                     strokeDasharray={`${completionPercentage * 1.005} 100.5`}
                     transform="rotate(-90 20 20)"
@@ -310,6 +326,9 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
               <div className="eci-progress-stats">
                 <span className="eci-progress-stat">{subitemStats.completed}/{subitemStats.total}</span>
                 <span className="eci-progress-label">subitems</span>
+                {hasSubitemExceptions && (
+                  <span className="eci-progress-alert">{subitemExceptionSummary}</span>
+                )}
               </div>
             </div>
           )}
