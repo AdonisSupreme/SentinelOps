@@ -23,6 +23,11 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
   // Get the current item
   const currentItem = currentInstance?.items.find(item => item.id === itemId) as any;
   const subitems = Array.isArray(currentItem?.subitems) ? currentItem.subitems : [];
+  const unresolvedSubitems = subitems.filter(
+    (subitem: any) => subitem.status === 'PENDING' || subitem.status === 'IN_PROGRESS'
+  ).length;
+  const hasSubitems = subitems.length > 0;
+  const canCompleteWithSubitems = unresolvedSubitems === 0;
   const exceptionSubitems = subitems.filter((subitem: any) => subitem.status === 'SKIPPED' || subitem.status === 'FAILED');
   const hasExceptionEvidence = exceptionSubitems.length > 0 || currentStatus === 'SKIPPED' || currentStatus === 'FAILED';
   const existingFinalVerdict = typeof currentItem?.final_verdict === 'string'
@@ -31,6 +36,10 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
   const canCaptureFinalVerdict = currentStatus === 'COMPLETED' && hasExceptionEvidence;
 
   const handleAction = async (status: 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'FAILED', notes?: string) => {
+    if (status === 'COMPLETED' && hasSubitems && !canCompleteWithSubitems) {
+      return;
+    }
+
     try {
       console.log(' Item action triggered:', {
         instanceId,
@@ -176,6 +185,11 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
       case 'COMPLETE':
         return (
           <div className="action-form">
+            {hasSubitems && !canCompleteWithSubitems && (
+              <p className="action-blocked-note">
+                Complete all subitems first. {unresolvedSubitems} subitem{unresolvedSubitems === 1 ? '' : 's'} still pending or in progress.
+              </p>
+            )}
             <textarea
               placeholder="Add completion notes (optional)..."
               value={comment}
@@ -184,7 +198,7 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
             />
             <button
               onClick={() => handleAction('COMPLETED', comment)}
-              disabled={loadingState || contextLoading}
+              disabled={loadingState || contextLoading || (hasSubitems && !canCompleteWithSubitems)}
               className="btn-action confirm"
             >
               Mark as Complete
@@ -244,6 +258,8 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
             <button
               onClick={() => setAction('COMPLETE')}
               className={`btn-action ${action === 'COMPLETE' ? 'active' : ''}`}
+              disabled={hasSubitems && !canCompleteWithSubitems}
+              title={hasSubitems && !canCompleteWithSubitems ? 'Complete all subitems first' : undefined}
             >
               <FaCheckCircle /> {canCompleteFromSkippedOrFailed ? 'Resolve & Complete' : 'Mark Complete'}
             </button>

@@ -128,6 +128,17 @@
   margin-bottom: 1.5rem;
 }
 
+.action-blocked-note {
+  margin: 0 0 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.34);
+  background: rgba(146, 64, 14, 0.22);
+  color: #fde68a;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .action-form--readonly {
   display: flex;
   flex-direction: column;
