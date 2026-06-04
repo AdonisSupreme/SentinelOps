@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { FaCheck, FaChevronDown, FaChevronUp, FaClock, FaPlus, FaTimes, FaTrash } from 'react-icons/fa';
 import { checklistApi, type CreateChecklistTemplateRequest } from '../../services/checklistApi';
+import { teamApi } from '../../services/teamApi';
 import { useAuth } from '../../contexts/AuthContext';
 import { orgApi, type Section } from '../../services/orgApi';
+import { buildShiftOptions, normalizeShiftCode, type ShiftOption } from '../../utils/shiftUtils';
+import ShiftCreatorModal from './ShiftCreatorModal';
 import {
   ITEM_TYPE_OPTIONS,
   applyItemTypeRules,
@@ -32,7 +35,10 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
   const userSectionId = user?.section_id || '';
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [shift, setShift] = useState<'MORNING' | 'AFTERNOON' | 'NIGHT'>('MORNING');
+  const [shift, setShift] = useState<string>('');
+  const [shiftOptions, setShiftOptions] = useState<ShiftOption[]>([]);
+  const [shiftsLoading, setShiftsLoading] = useState(false);
+  const [showShiftCreator, setShowShiftCreator] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [selectedSectionId, setSelectedSectionId] = useState('');
   const [sections, setSections] = useState<Section[]>([]);
@@ -42,6 +48,44 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const applyShiftOptions = useCallback((options: ShiftOption[], preferredShift?: string) => {
+    const normalizedPreferred = normalizeShiftCode(preferredShift);
+    setShiftOptions(options);
+    setShift((current) => {
+      const normalizedCurrent = normalizeShiftCode(current);
+      if (normalizedPreferred && options.some((option) => option.code === normalizedPreferred)) {
+        return normalizedPreferred;
+      }
+      return options.some((option) => option.code === normalizedCurrent)
+        ? normalizedCurrent
+        : options[0]?.code || '';
+    });
+  }, []);
+
+  const refreshShiftOptions = useCallback(async (preferredShift?: string) => {
+    try {
+      setShiftsLoading(true);
+      const data = await teamApi.listShifts();
+      const includeCodes = preferredShift ? [preferredShift] : [];
+      applyShiftOptions(buildShiftOptions(data, includeCodes), preferredShift);
+    } catch (loadError) {
+      console.warn('Failed to load configured shifts for template builder:', loadError);
+      const includeCodes = preferredShift ? [preferredShift] : [];
+      applyShiftOptions(buildShiftOptions([], includeCodes), preferredShift);
+    } finally {
+      setShiftsLoading(false);
+    }
+  }, [applyShiftOptions]);
+
+  useEffect(() => {
+    void refreshShiftOptions();
+  }, [refreshShiftOptions]);
+
+  const handleShiftCreated = async (createdShift: string) => {
+    await refreshShiftOptions(createdShift);
+    setShowShiftCreator(false);
+  };
 
   useEffect(() => {
     if (!isAdmin) {
@@ -91,6 +135,10 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
       nextErrors.section_id = isAdmin
         ? 'Section is required for template creation'
         : 'Your profile is not assigned to a section';
+    }
+
+    if (!normalizeShiftCode(shift)) {
+      nextErrors.shift = 'Create or select a configured shift';
     }
 
     if (items.length === 0) {
@@ -256,7 +304,7 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
       const templateData: CreateChecklistTemplateRequest = {
         name: name.trim(),
         description: description.trim(),
-        shift,
+        shift: normalizeShiftCode(shift),
         is_active: isActive,
         section_id: effectiveSectionId,
         items: normalizeItems(items).map(serializeItemForRequest),
@@ -432,6 +480,7 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
   };
 
   return (
+    <>
     <form className="stb-template-builder" onSubmit={handleSubmit}>
       <div className="stb-builder-section">
         <h3 className="stb-section-title">Template Details</h3>
@@ -453,19 +502,36 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
 
         <div className="stb-form-row stb-two-cols">
           <div className="stb-form-group">
-            <label htmlFor="shift" className="stb-form-label">
-              Shift
-            </label>
+            <div className="stb-field-title-row">
+              <label htmlFor="shift" className="stb-form-label">
+                Shift *
+              </label>
+              {isAdmin && (
+                <button type="button" className="stb-inline-action" onClick={() => setShowShiftCreator(true)}>
+                  <FaPlus /> New shift
+                </button>
+              )}
+            </div>
             <select
               id="shift"
               value={shift}
-              onChange={(e) => setShift(e.target.value as 'MORNING' | 'AFTERNOON' | 'NIGHT')}
-              className="stb-form-select"
+              onChange={(e) => setShift(normalizeShiftCode(e.target.value))}
+              className={`stb-form-select ${errors.shift ? 'stb-error' : ''}`}
+              disabled={shiftsLoading}
             >
-              <option value="MORNING">Morning</option>
-              <option value="AFTERNOON">Afternoon</option>
-              <option value="NIGHT">Night</option>
+              <option value="">{shiftsLoading ? 'Loading configured shifts...' : 'Select a configured shift'}</option>
+              {shiftOptions.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.label}
+                </option>
+              ))}
             </select>
+            {errors.shift && <span className="stb-error-text">{errors.shift}</span>}
+            {!errors.shift && !shiftsLoading && shiftOptions.length === 0 && (
+              <span className="stb-field-hint">
+                No shifts are configured yet. Admins can create one here before saving the template.
+              </span>
+            )}
           </div>
 
           <div className="stb-form-group">
@@ -858,6 +924,12 @@ const TemplateBuilder: React.FC<TemplateBuilderProps> = ({ onSuccess, onCancel }
         </button>
       </div>
     </form>
+    <ShiftCreatorModal
+      open={showShiftCreator}
+      onClose={() => setShowShiftCreator(false)}
+      onCreated={handleShiftCreated}
+    />
+    </>
   );
 };
 

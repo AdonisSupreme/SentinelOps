@@ -17,6 +17,7 @@ export interface PageGuideDefinition {
   tipTitle?: string;
   tip: string;
   triggerLabel?: string;
+  variant?: 'default' | 'wide';
 }
 
 interface PageGuideProps {
@@ -26,6 +27,7 @@ interface PageGuideProps {
 const PageGuide: React.FC<PageGuideProps> = ({ guide }) => {
   const [open, setOpen] = useState(false);
   const headingId = useId();
+  const variantClass = guide.variant === 'wide' ? 'page-guide-panel--wide' : '';
 
   return (
     <>
@@ -49,14 +51,14 @@ const PageGuide: React.FC<PageGuideProps> = ({ guide }) => {
       {open && (
         <div className="page-guide-overlay" onClick={() => setOpen(false)}>
           <div
-            className="page-guide-panel"
+            className={`page-guide-panel ${variantClass}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby={headingId}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="page-guide-header">
-              <div>
+              <div className='fine-div'>
                 <span className="page-guide-eyebrow">{guide.eyebrow}</span>
                 <h3 id={headingId}>{guide.title}</h3>
               </div>

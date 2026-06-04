@@ -89,6 +89,10 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       return `/tasks?task=${notification.relatedId}`;
     }
 
+    if (notification.relatedId && relatedType === 'nexus_incident') {
+      return `/nexus?incident=${notification.relatedId}`;
+    }
+
     if (notification.relatedId && relatedType === 'network_service') {
       return `/network-sentinel?service=${notification.relatedId}&tab=timeline`;
     }

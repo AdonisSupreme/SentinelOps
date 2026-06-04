@@ -15,6 +15,7 @@ export interface Task {
   priority: Priority;
   status: TaskStatus;
   assigned_to_id?: string;
+  assigned_user_ids?: string[];
   assigned_by_id: string;
   department_id?: number | string;
   section_id?: string;
@@ -38,7 +39,16 @@ export interface Task {
     email: string;
     first_name: string;
     last_name: string;
+    role?: string;
   };
+  assignees?: Array<{
+    id: string;
+    username: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    role?: string;
+  }>;
   assigned_by?: {
     id: string;
     username: string;
@@ -62,6 +72,8 @@ export interface Task {
   comments_count: number;
   attachments_count: number;
   permissions: TaskPermissions;
+  can_act?: boolean;
+  can_assign?: boolean;
   
   // Optional nested arrays for detailed view
   history?: TaskHistory[];
@@ -77,6 +89,7 @@ export interface TaskPermissions {
   can_delete: boolean;
   can_comment: boolean;
   can_add_attachments: boolean;
+  can_join?: boolean;
 }
 
 export interface TaskSummary {
@@ -85,6 +98,22 @@ export interface TaskSummary {
   status: TaskStatus;
   priority: Priority;
   task_type: TaskType;
+  assigned_to_id?: string;
+  assigned_user_ids?: string[];
+  assignees?: Array<{
+    id: string;
+    username: string;
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    role?: string;
+  }>;
+  assigned_to_username?: string;
+  assigned_to_first_name?: string;
+  assigned_to_last_name?: string;
+  assigned_by_id?: string;
+  can_act?: boolean;
+  can_assign?: boolean;
   assigned_to?: {
     id: string;
     username: string;
@@ -162,6 +191,7 @@ export interface CreateTaskRequest {
   priority?: Priority;
   status?: TaskStatus;
   assigned_to_id?: string;
+  assigned_user_ids?: string[];
   department_id?: number | string;
   section_id?: string;
   due_date?: string;
@@ -179,6 +209,7 @@ export interface UpdateTaskRequest {
   priority?: Priority;
   status?: TaskStatus;
   assigned_to_id?: string;
+  assigned_user_ids?: string[];
   department_id?: number | string;
   section_id?: string;
   due_date?: string;
@@ -191,7 +222,8 @@ export interface UpdateTaskRequest {
 }
 
 export interface AssignTaskRequest {
-  assigned_to_id: string;
+  assigned_to_id?: string;
+  assigned_user_ids?: string[];
   assigned_by_id: string;
   notes?: string;
 }
@@ -263,6 +295,7 @@ export interface TaskMutationResponse {
   completed_at?: string;
   deleted_at?: string;
   assigned_to_id?: string;
+  assigned_user_ids?: string[];
   message: string;
 }
 
@@ -458,8 +491,8 @@ class TaskApi {
     
     const searchParams = new URLSearchParams();
     
-    // Set task_type to TEAM by default
-    searchParams.append('task_type', 'TEAM');
+    // Team collaboration uses DEPARTMENT task type with section scope
+    searchParams.append('task_type', 'DEPARTMENT');
     
     // Add array parameters properly
     if (params.status) {
@@ -520,6 +553,13 @@ class TaskApi {
     console.log('👤 Assigning task:', taskId, 'to:', data.assigned_to_id);
     const response = await api.post<TaskMutationResponse>(`/api/v1/tasks/${taskId}/assign`, data);
     console.log('📥 Task assignment response:', response.data);
+    return response.data;
+  }
+
+  async joinTask(taskId: string): Promise<TaskMutationResponse> {
+    console.log('🤝 Joining task:', taskId);
+    const response = await api.post<TaskMutationResponse>(`/api/v1/tasks/${taskId}/join`);
+    console.log('📥 Task join response:', response.data);
     return response.data;
   }
 

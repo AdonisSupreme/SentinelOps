@@ -15,6 +15,7 @@ import {
   FaSearch,
   FaSignal,
   FaTrash,
+  FaWrench,
 } from 'react-icons/fa';
 import {
   addDays,
@@ -28,6 +29,7 @@ import {
   subWeeks,
 } from 'date-fns';
 import { checklistApi } from '../services/checklistApi';
+import { teamApi } from '../services/teamApi';
 import centralizedWebSocketManager from '../services/centralizedWebSocketManager';
 import PageGuide from '../components/ui/PageGuide';
 import { useAuth } from '../contexts/AuthContext';
@@ -35,17 +37,20 @@ import { useChecklist } from '../contexts/checklistContext';
 import { ChecklistsSkeleton } from '../components/dashboard';
 import { pageGuides } from '../content/pageGuides';
 import type { ChecklistInstance, ChecklistInstanceQueryParams } from '../services/checklistApi';
+import {
+  DEFAULT_SHIFT_OPTIONS,
+  dedupeShiftOptions,
+  formatShiftLabel,
+  getShiftLabel,
+  getShiftSortValue,
+  normalizeShiftCode,
+  type ShiftOption,
+} from '../utils/shiftUtils';
 import './ChecklistsPage.css';
 import '../components/dashboard/ChecklistsSkeleton.css';
 
 type DateFilterMode = 'all' | 'week' | 'day' | 'range';
 const CHECKLIST_INIT_HOUR = 6;
-
-const shiftOrder: Record<string, number> = {
-  MORNING: 0,
-  AFTERNOON: 1,
-  NIGHT: 2,
-};
 
 const formatIsoDate = (date: Date) => format(date, 'yyyy-MM-dd');
 
@@ -84,15 +89,14 @@ const ChecklistsPage: React.FC = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [todayShiftCoverage, setTodayShiftCoverage] = useState<Record<'MORNING' | 'AFTERNOON' | 'NIGHT', number>>({
-    MORNING: 0,
-    AFTERNOON: 0,
-    NIGHT: 0,
-  });
+  const [shiftOptions, setShiftOptions] = useState<ShiftOption[]>(DEFAULT_SHIFT_OPTIONS);
+  const [todayShiftCoverage, setTodayShiftCoverage] = useState<Record<string, number>>({});
   const [clockTick, setClockTick] = useState(() => new Date());
   const hasLoadedRef = useRef(false);
   const realtimeRefreshTimerRef = useRef<number | null>(null);
   const coverageRefreshPendingRef = useRef(false);
+  const role = (user?.role || '').toLowerCase();
+  const canManageTemplates = role === 'admin' || role === 'manager';
 
   useEffect(() => {
     const timer = window.setInterval(() => setClockTick(new Date()), 30_000);
@@ -159,6 +163,53 @@ const ChecklistsPage: React.FC = () => {
     return params;
   }, [currentPage, instancesPerPage, resolvedWindow.end, resolvedWindow.start, searchTerm, shiftFilter, statusFilter]);
 
+  const timelineShiftOptions = useMemo(
+    () =>
+      dedupeShiftOptions([
+        ...shiftOptions,
+        ...Object.keys(todayShiftCoverage).map((code) => ({
+          code,
+          label: formatShiftLabel(code),
+        })),
+        ...instances.map((instance) => ({
+          code: instance.shift,
+          label: formatShiftLabel(instance.shift),
+        })),
+      ]),
+    [instances, shiftOptions, todayShiftCoverage],
+  );
+
+  useEffect(() => {
+    let mounted = true;
+    const loadConfiguredShifts = async () => {
+      try {
+        const configuredShifts = await teamApi.listShifts();
+        if (mounted) {
+          const options = dedupeShiftOptions([
+            ...configuredShifts.map((shift) => ({
+              code: shift.name,
+              label: shift.name || formatShiftLabel(shift.name),
+              color: shift.color,
+              startTime: shift.start_time,
+              endTime: shift.end_time,
+            })),
+          ]);
+          setShiftOptions(options.length ? options : DEFAULT_SHIFT_OPTIONS);
+        }
+      } catch (shiftError) {
+        console.warn('Failed to load configured shifts for checklist timeline:', shiftError);
+        if (mounted) {
+          setShiftOptions(DEFAULT_SHIFT_OPTIONS);
+        }
+      }
+    };
+
+    void loadConfiguredShifts();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const loadInstances = useCallback(async () => {
     if (hasLoadedRef.current) setRefreshing(true);
 
@@ -203,7 +254,7 @@ const ChecklistsPage: React.FC = () => {
         filtered.sort((left, right) => {
           const dateDiff = new Date(right.checklist_date).getTime() - new Date(left.checklist_date).getTime();
           if (dateDiff !== 0) return dateDiff;
-          return (shiftOrder[left.shift] ?? 9) - (shiftOrder[right.shift] ?? 9);
+          return getShiftSortValue(left.shift, shiftOptions) - getShiftSortValue(right.shift, shiftOptions);
         });
 
         total = filtered.length;
@@ -228,12 +279,15 @@ const ChecklistsPage: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [currentPage, instancesPerPage, queryParams]);
+  }, [currentPage, instancesPerPage, queryParams, shiftOptions]);
 
   const loadTodayShiftCoverage = useCallback(async () => {
     try {
       const coverage = await checklistApi.getTodayChecklistCoverage();
-      setTodayShiftCoverage(coverage);
+      const normalizedCoverage = Object.fromEntries(
+        Object.entries(coverage || {}).map(([shiftName, count]) => [normalizeShiftCode(shiftName), Number(count || 0)]),
+      );
+      setTodayShiftCoverage(normalizedCoverage);
     } catch (coverageError) {
       console.warn('Failed to fetch today shift coverage', coverageError);
     }
@@ -329,7 +383,7 @@ const ChecklistsPage: React.FC = () => {
     const sorted = [...instances].sort((left, right) => {
       const dateDiff = new Date(right.checklist_date).getTime() - new Date(left.checklist_date).getTime();
       if (dateDiff !== 0) return dateDiff;
-      return (shiftOrder[left.shift] ?? 9) - (shiftOrder[right.shift] ?? 9);
+      return getShiftSortValue(left.shift, timelineShiftOptions) - getShiftSortValue(right.shift, timelineShiftOptions);
     });
 
     sorted.forEach((instance) => {
@@ -339,7 +393,7 @@ const ChecklistsPage: React.FC = () => {
     });
 
     return Array.from(grouped.entries());
-  }, [instances]);
+  }, [instances, timelineShiftOptions]);
 
   const timelinePulse = useMemo(() => {
     if (!totalInstances) return 0;
@@ -364,8 +418,12 @@ const ChecklistsPage: React.FC = () => {
     const hoursUntil = Math.floor(msUntil / 3_600_000);
     const minsUntil = Math.floor((msUntil % 3_600_000) / 60_000);
 
-    const initializedShifts = Object.values(todayShiftCoverage).filter((count) => count > 0).length;
-    const readinessPct = Math.round((initializedShifts / 3) * 100);
+    const configuredShiftTotal = Math.max(timelineShiftOptions.length, 1);
+    const initializedShifts = timelineShiftOptions.filter((option) => (todayShiftCoverage[option.code] || 0) > 0).length;
+    const readinessPct = Math.round((initializedShifts / configuredShiftTotal) * 100);
+    const coverageSummary = timelineShiftOptions
+      .map((option) => `${option.label}: ${todayShiftCoverage[option.code] || 0}`)
+      .join(' | ');
 
     return {
       nextDeadline,
@@ -373,8 +431,10 @@ const ChecklistsPage: React.FC = () => {
       countdown: `${hoursUntil}h ${minsUntil}m`,
       readinessPct,
       initializedShifts,
+      configuredShiftTotal,
+      coverageSummary,
     };
-  }, [clockTick, todayShiftCoverage]);
+  }, [clockTick, timelineShiftOptions, todayShiftCoverage]);
 
   const handleInstanceClick = (instance: ChecklistInstance) => {
     if (instance.id) navigate(`/checklist/${instance.id}`);
@@ -513,6 +573,12 @@ const ChecklistsPage: React.FC = () => {
           <div className="hero-tags">
             <span>{resolvedWindow.label}</span>
             <span>{totalInstances} matched instance{totalInstances === 1 ? '' : 's'}</span>
+            {canManageTemplates ? (
+              <button type="button" className="hero-template-link" onClick={() => navigate('/templates')}>
+                <FaWrench />
+                Templates
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -565,7 +631,7 @@ const ChecklistsPage: React.FC = () => {
         <div className="init-radar-head">
           <div>
             <span>Instance Initialization Cadence</span>
-            <h3>Daily 06:00 system-trigger checkpoint</h3>
+            <h3 className='my-pic'>Daily 06:00 system-trigger checkpoint</h3>
           </div>
           <div className="init-radar-pill">{initializationTelemetry.readinessPct}% readiness</div>
         </div>
@@ -577,8 +643,8 @@ const ChecklistsPage: React.FC = () => {
           </article>
           <article className="init-radar-card">
             <span>Shift coverage today</span>
-            <strong>{initializationTelemetry.initializedShifts}/3 initialized</strong>
-            <small>M: {todayShiftCoverage.MORNING} | A: {todayShiftCoverage.AFTERNOON} | N: {todayShiftCoverage.NIGHT}</small>
+            <strong>{initializationTelemetry.initializedShifts}/{initializationTelemetry.configuredShiftTotal} initialized</strong>
+            <small>{initializationTelemetry.coverageSummary || 'No configured shift coverage yet'}</small>
           </article>
           <article className="init-radar-card wide">
             <span>Cycle progress</span>
@@ -616,9 +682,11 @@ const ChecklistsPage: React.FC = () => {
               </select>
               <select value={shiftFilter} onChange={(event) => { setShiftFilter(event.target.value); setCurrentPage(1); }}>
                 <option value="all">All Shifts</option>
-                <option value="MORNING">Morning</option>
-                <option value="AFTERNOON">Afternoon</option>
-                <option value="NIGHT">Night</option>
+                {timelineShiftOptions.map((option) => (
+                  <option key={option.code} value={option.code}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -765,7 +833,7 @@ const ChecklistsPage: React.FC = () => {
                         <div className="instance-card-glow" />
                         <div className="timeline-instance-head">
                           <div>
-                            <span className="instance-kicker">{instance.shift} shift</span>
+                            <span className="instance-kicker">{getShiftLabel(instance.shift, timelineShiftOptions)} shift</span>
                             <h3>{instance.template?.name || 'Unknown Checklist'}</h3>
                           </div>
                           <div className="instance-status-badge">

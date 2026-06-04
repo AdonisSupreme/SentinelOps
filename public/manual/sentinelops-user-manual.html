@@ -1,0 +1,884 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SentinelOps Guided Operator Manual</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: #172033;
+      background: #f3f7fb;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.48;
+    }
+
+    .page {
+      width: 100%;
+      min-height: 267mm;
+      page-break-after: always;
+      padding: 0;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+    }
+
+    .cover {
+      display: grid;
+      grid-template-rows: 1fr auto;
+      min-height: 267mm;
+      padding: 20mm 14mm;
+      color: #fff;
+      background: linear-gradient(135deg, #0f3d75, #0f766e 48%, #334155);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      border: 2px solid rgba(255, 255, 255, 0.82);
+      font-weight: 900;
+    }
+
+    .cover-title {
+      align-self: center;
+      max-width: 160mm;
+    }
+
+    .eyebrow,
+    .kicker {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #2563eb;
+    }
+
+    .cover .eyebrow {
+      color: #bff7ee;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.06;
+    }
+
+    h1 {
+      margin-top: 12px;
+      font-size: 44px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 25px;
+      color: #0f2742;
+    }
+
+    h3 {
+      font-size: 16px;
+      color: #142238;
+    }
+
+    p {
+      margin: 0;
+      color: #475569;
+    }
+
+    .cover p {
+      margin-top: 14px;
+      color: #e2f7f4;
+      font-size: 15px;
+      max-width: 138mm;
+    }
+
+    .cover-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .cover-tile {
+      min-height: 27mm;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .cover-tile span,
+    .cover-footer span {
+      display: block;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #bfdbfe;
+    }
+
+    .cover-tile strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 14px;
+    }
+
+    .cover-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.28);
+      padding-top: 12px;
+      font-size: 12px;
+    }
+
+    .content {
+      padding: 0;
+    }
+
+    .section {
+      background: #fff;
+      border: 1px solid #dbe5ef;
+      border-radius: 8px;
+      padding: 13mm;
+      margin-bottom: 8mm;
+      page-break-inside: avoid;
+    }
+
+    .section-header {
+      margin-bottom: 7mm;
+    }
+
+    .section-header p {
+      margin-top: 8px;
+      max-width: 168mm;
+    }
+
+    .principles,
+    .rules,
+    .modules,
+    .closeout {
+      display: grid;
+      gap: 8px;
+    }
+
+    .principles {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .principle,
+    .rule,
+    .module,
+    .closeout-item,
+    .journey-step {
+      border: 1px solid #dbe5ef;
+      border-radius: 8px;
+      background: #f8fbff;
+      padding: 10px;
+      page-break-inside: avoid;
+    }
+
+    .principle strong,
+    .rule strong,
+    .module strong,
+    .journey-step strong {
+      color: #13243a;
+    }
+
+    .principle p,
+    .rule p,
+    .module p {
+      margin-top: 5px;
+      font-size: 11px;
+    }
+
+    .journey-step {
+      display: grid;
+      grid-template-columns: 62mm 1fr;
+      gap: 10px;
+      margin-bottom: 7px;
+    }
+
+    .journey-copy {
+      display: grid;
+      gap: 6px;
+    }
+
+    .step-head {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .step-number {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      color: #fff;
+      background: #2563eb;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .location {
+      display: block;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .action {
+      display: inline-flex;
+      width: fit-content;
+      padding: 5px 8px;
+      border-radius: 999px;
+      color: #0f2742;
+      background: #e0f2fe;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    ol,
+    ul {
+      margin: 0;
+      padding-left: 17px;
+      color: #475569;
+      font-size: 11px;
+    }
+
+    li {
+      margin: 2px 0;
+    }
+
+    .safety {
+      border-left: 3px solid #f59e0b;
+      background: #fffbeb;
+      padding: 6px 8px;
+      color: #5f4210;
+      font-size: 10px;
+    }
+
+    .mini-screen {
+      min-height: 47mm;
+      border: 1px solid #c8d6e4;
+      border-radius: 8px;
+      background: #fff;
+      padding: 8px;
+      display: grid;
+      gap: 6px;
+      align-content: start;
+    }
+
+    .screen-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 7px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 6px;
+      font-size: 9px;
+      color: #64748b;
+      font-weight: 800;
+    }
+
+    .screen-panel,
+    .screen-line,
+    .screen-button,
+    .screen-note {
+      border-radius: 8px;
+      border: 1px solid #dbe5ef;
+      background: #f8fafc;
+    }
+
+    .screen-panel {
+      min-height: 13mm;
+      padding: 6px;
+      display: grid;
+      gap: 3px;
+      font-size: 9px;
+    }
+
+    .screen-panel b {
+      color: #172033;
+      font-size: 10px;
+    }
+
+    .screen-panel.blue {
+      border-color: #93c5fd;
+      background: #eff6ff;
+    }
+
+    .screen-panel.green {
+      border-color: #86efac;
+      background: #f0fdf4;
+    }
+
+    .screen-panel.amber {
+      border-color: #fcd34d;
+      background: #fffbeb;
+    }
+
+    .screen-panel.red {
+      border-color: #fca5a5;
+      background: #fef2f2;
+    }
+
+    .screen-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 5px;
+    }
+
+    .screen-grid.three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .screen-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .screen-button {
+      padding: 4px 6px;
+      font-size: 8.5px;
+      font-weight: 800;
+      color: #172033;
+      background: #fff;
+    }
+
+    .screen-button.primary {
+      color: #fff;
+      border-color: #2563eb;
+      background: #2563eb;
+    }
+
+    .screen-button.success {
+      color: #fff;
+      border-color: #16a34a;
+      background: #16a34a;
+    }
+
+    .screen-button.warning {
+      border-color: #f59e0b;
+      background: #f59e0b;
+    }
+
+    .screen-button.danger {
+      color: #fff;
+      border-color: #dc2626;
+      background: #dc2626;
+    }
+
+    .screen-list {
+      display: grid;
+      gap: 4px;
+    }
+
+    .screen-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 5px;
+      padding: 5px;
+      font-size: 8.5px;
+      color: #475569;
+    }
+
+    .screen-line b {
+      color: #172033;
+    }
+
+    .screen-note {
+      padding: 6px;
+      min-height: 15mm;
+      font-size: 9px;
+      color: #64748b;
+    }
+
+    .dots,
+    .pipeline {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .dots i {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+    }
+
+    .dots i.done,
+    .pipeline i.done {
+      background: #16a34a;
+      border-color: #16a34a;
+    }
+
+    .dots i.active,
+    .pipeline i.active {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+
+    .pipeline i {
+      flex: 1;
+      height: 8px;
+      border-radius: 999px;
+      background: #cbd5e1;
+    }
+
+    .rules {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .rule h3 {
+      margin-bottom: 6px;
+    }
+
+    .rule-label {
+      display: block;
+      margin-top: 6px;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+
+    .modules {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .module {
+      min-height: 40mm;
+    }
+
+    .closeout-item {
+      display: grid;
+      grid-template-columns: 16px 1fr;
+      gap: 7px;
+      font-size: 11px;
+      color: #475569;
+    }
+
+    .check {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      color: #fff;
+      background: #16a34a;
+      display: grid;
+      place-items: center;
+      font-size: 7px;
+      font-weight: 900;
+    }
+
+    .toc {
+      display: grid;
+      gap: 8px;
+    }
+
+    .toc-item {
+      display: grid;
+      grid-template-columns: 38px 1fr;
+      gap: 9px;
+      padding: 9px;
+      border: 1px solid #dbe5ef;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .toc-number {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      color: #fff;
+      background: #2563eb;
+      font-weight: 900;
+      font-size: 11px;
+    }
+
+    .footer-note {
+      margin-top: 7mm;
+      padding-top: 5mm;
+      border-top: 1px solid #dbe5ef;
+      color: #64748b;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+  <section class="page cover">
+    <div>
+      <div class="brand"><span class="brand-mark">SO</span><span>SentinelOps</span></div>
+      <div class="cover-title">
+        <span class="eyebrow">SentinelOps User Manual</span>
+        <h1>Guided Operator Manual</h1>
+        <p>A practical visual walkthrough for using SentinelOps without needing someone beside you. Start, join, work, skip, report, hand over, finalize, and download records with confidence.</p>
+        <div class="cover-grid">
+          <div class="cover-tile"><span>Start here</span><strong>Dashboard</strong></div>
+          <div class="cover-tile"><span>Work here</span><strong>Live Checklist</strong></div>
+          <div class="cover-tile"><span>Hand over here</span><strong>Handover Notes</strong></div>
+          <div class="cover-tile"><span>Close here</span><strong>Complete Checklist</strong></div>
+        </div>
+      </div>
+    </div>
+    <div class="cover-footer">
+      <div><span>Edition</span>Operator edition | June 2026</div>
+      <div><span>Audience</span>All SentinelOps users</div>
+      <div><span>Purpose</span>Training, onboarding, shift-room reference</div>
+    </div>
+  </section>
+
+  <main class="content">
+    <section class="page">
+      <div class="section">
+        <div class="section-header">
+          <span class="kicker">Read this first</span>
+          <h2>The path through SentinelOps</h2>
+          <p>This manual follows the real operator flow. If you are unsure where to begin, follow the list below from top to bottom.</p>
+        </div>
+        <div class="toc">
+          <div class="toc-item"><span class="toc-number">01</span><div><strong>Sign in and confirm your lane.</strong><p>Use Profile Settings when role, section, or schedule access looks wrong.</p></div></div>
+          <div class="toc-item"><span class="toc-number">02</span><div><strong>Read Dashboard before acting.</strong><p>Understand posture, shift pressure, command thread signals, and handover summary.</p></div></div>
+          <div class="toc-item"><span class="toc-number">03</span><div><strong>Open the right checklist.</strong><p>Use Dashboard for live work and Checklist Timeline for history, date, shift, or status review.</p></div></div>
+          <div class="toc-item"><span class="toc-number">04</span><div><strong>Join before you work.</strong><p>Click Join Checklist when you are actively participating.</p></div></div>
+          <div class="toc-item"><span class="toc-number">05</span><div><strong>Read handover before executing.</strong><p>Incoming notes explain risks and unfinished context from the previous shift.</p></div></div>
+          <div class="toc-item"><span class="toc-number">06</span><div><strong>Work each item honestly.</strong><p>Use Start Working, Mark Complete, Skip Item, or Report Issue.</p></div></div>
+          <div class="toc-item"><span class="toc-number">07</span><div><strong>Write manual handover and promote follow-up.</strong><p>Handover explains. Task Center owns durable work.</p></div></div>
+          <div class="toc-item"><span class="toc-number">08</span><div><strong>Finalize from evidence.</strong><p>Complete Checklist only when the execution record tells the truth.</p></div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="kicker">Operating truths</span>
+          <h2>The simple rules underneath the system</h2>
+        </div>
+        <div class="principles">
+          <div class="principle"><strong>One place for the truth</strong><p>Live execution belongs in the checklist. Longer follow-up belongs in Task Center. Coverage belongs in schedule tools.</p></div>
+          <div class="principle"><strong>Every exception needs a reason</strong><p>Skipping and reporting are allowed, but silence is not. The reason becomes audit trail and handover cue.</p></div>
+          <div class="principle"><strong>Handover is part of the work</strong><p>The next operator must inherit decisions, blockers, risks, and unfinished follow-up in writing.</p></div>
+          <div class="principle"><strong>Close from evidence</strong><p>A clean close and a close with exceptions mean different things. SentinelOps preserves both clearly.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page">
+      <div class="section">
+        <div class="section-header">
+          <span class="kicker">Operator checklist</span>
+          <h2>Start correctly</h2>
+          <p>Begin with orientation and presence. This prevents duplicated work, hidden access issues, and blind execution.</p>
+        </div>
+
+        <article class="journey-step">
+          <div class="mini-screen">
+            <div class="screen-top"><span>Profile Settings</span><b>Identity and access</b></div>
+            <div class="screen-grid"><div class="screen-panel"><span>Role</span><b>Operator</b></div><div class="screen-panel"><span>Section</span><b>Assigned</b></div></div>
+            <div class="screen-list"><div class="screen-line"><b>My Schedule</b><span>Open</span></div><div class="screen-line"><b>SentinelOps Manual</b><span>Available</span></div></div>
+          </div>
+          <div class="journey-copy">
+            <div class="step-head"><span class="step-number">01</span><div><span class="location">Login, profile menu, and Profile Settings</span><h3>Sign in and confirm your lane</h3></div></div>
+            <p>Confirm that SentinelOps recognizes your role, section, schedule access, and theme.</p>
+            <span class="action">Open Profile Settings if access looks wrong</span>
+            <ol><li>Confirm your name and role in the profile menu.</li><li>Open Profile Settings when section, role, or schedule information looks wrong.</li><li>Ask an admin to fix placement instead of working around missing access.</li></ol>
+            <div class="safety">If you cannot see a checklist, team, schedule, or user-management page you should own, stop and fix access first.</div>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div class="mini-screen">
+            <div class="screen-top"><span>Dashboard</span><b>Operational State</b></div>
+            <div class="screen-grid"><div class="screen-panel blue"><span>Command posture</span><b>Stable with watch items</b></div><div class="screen-panel amber"><span>Shift Radar</span><b>Afternoon pressure</b></div></div>
+            <div class="screen-actions"><span class="screen-button primary">Command thread</span><span class="screen-button">Handover Summary</span></div>
+          </div>
+          <div class="journey-copy">
+            <div class="step-head"><span class="step-number">02</span><div><span class="location">Dashboard</span><h3>Read the day before acting</h3></div></div>
+            <p>Dashboard tells you what kind of operational day you are entering.</p>
+            <span class="action">Start from Dashboard</span>
+            <ol><li>Scan operational state and critical signals first.</li><li>Check Shift Radar to see where pressure sits.</li><li>Open the command thread or checklist that matches the active pressure.</li></ol>
+            <div class="safety">Do not start in history when solving the current day. Dashboard points to live work faster.</div>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div class="mini-screen">
+            <div class="screen-top"><span>Checklist Timeline</span><b>Filters first</b></div>
+            <div class="screen-actions"><span class="screen-button primary">Week</span><span class="screen-button">Specific Day</span><span class="screen-button">Date Range</span></div>
+            <div class="screen-list"><div class="screen-line"><b>Morning Shift</b><span>Completed</span></div><div class="screen-line"><b>Afternoon Shift</b><span>In Progress</span></div><div class="screen-line"><b>Night Shift</b><span>Completed With Exceptions</span></div></div>
+          </div>
+          <div class="journey-copy">
+            <div class="step-head"><span class="step-number">03</span><div><span class="location">Checklist Timeline or Dashboard command card</span><h3>Open the right checklist</h3></div></div>
+            <p>Use the timeline for date, shift, status, and pattern review. Use Dashboard when the current live work already needs attention.</p>
+            <span class="action">Open Checklist Timeline when you need history</span>
+            <ol><li>Choose Day view for a known event.</li><li>Use Week or Date Range for repeated issues.</li><li>Open the exact checklist instance after filters narrow the story.</li></ol>
+            <div class="safety">If the goal is execution, move into the live checklist. If the goal is review, stay in the timeline until the record is clear.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="page">
+      <div class="section">
+        <div class="section-header">
+          <span class="kicker">Live execution</span>
+          <h2>Join, read handover, then work each item</h2>
+        </div>
+
+        <article class="journey-step">
+          <div class="mini-screen">
+            <div class="screen-top"><span>Live Checklist</span><b>Header controls</b></div>
+            <div class="screen-actions"><span class="screen-button primary">Join Checklist</span><span class="screen-button success">Complete Checklist</span><span class="screen-button">Download PDF</span></div>
+            <div class="screen-grid"><div class="screen-panel"><span>Progress</span><b>8 / 10 actioned</b></div><div class="screen-panel"><span>Team Members</span><b>3 online</b></div></div>
+          </div>
+          <div class="journey-copy">
+            <div class="step-head"><span class="step-number">04</span><div><span class="location">Live Checklist header</span><h3>Join before you work</h3></div></div>
+            <p>Join when you are taking part in shift work. This keeps participant presence accurate.</p>
+            <span class="action">Click Join Checklist</span>
+            <ol><li>Open the live checklist.</li><li>Click Join Checklist if visible.</li><li>Confirm the Team Members panel shows your presence.</li></ol>
+            <div class="safety">If you are only reviewing, you do not need to join. Join when your actions will change the record.</div>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div class="mini-screen">
+            <div class="screen-top"><span>Handover Notes</span><b>Priority and next action</b></div>
+            <div class="screen-panel amber"><span>Incoming</span><b>High priority note</b><span>Acknowledge before action.</span></div>
+            <div class="screen-note">Create Handover Note: what happened, what matters, what should happen next.</div>
+            <div class="screen-actions"><span class="screen-button primary">Add Handover Note</span></div>
+          </div>
+          <div class="journey-copy">
+            <div class="step-head"><span class="step-number">05</span><div><span class="location">Right sidebar, Handover Notes</span><h3>Read handover before executing</h3></div></div>
+            <p>Incoming notes explain what the previous shift left behind.</p>
+            <span class="action">Open Handover Notes</span>
+            <ol><li>Open Handover Notes in the right sidebar.</li><li>Acknowledge incoming notes for your shift.</li><li>Keep Team Members nearby when coordination matters.</li></ol>
+            <div class="safety">If a note describes unresolved risk, do not mark related work complete until the risk has been checked or promoted into Task Center.</div>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div class="mini-screen">
+            <div class="screen-top"><span>Item Actions</span><b>Choose truthfully</b></div>
+            <div class="screen-actions"><span class="screen-button primary">Start Working</span><span class="screen-button success">Mark Complete</span><span class="screen-button warning">Skip Item</span><span class="screen-button danger">Report Issue</span></div>
+            <div class="screen-note">Reason or completion notes.</div>
+          </div>
+          <div class="journey-copy">
+            <div class="step-head"><span class="step-number">06</span><div><span class="location">Item Actions modal</span><h3>Start the item you are actually working</h3></div></div>
+            <p>Open the item, select Start Working, add a note if useful, and confirm.</p>
+            <span class="action">Click Start Working</span>
+            <ol><li>Open the item card you intend to work.</li><li>Click Start Working.</li><li>Add start notes when another operator would benefit.</li></ol>
+            <div class="safety">Start means active work, not intention. Do not start several items just to reserve them.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="page">
+      <div class="section">
+        <div class="section-header">
+          <span class="kicker">Subitems and exceptions</span>
+          <h2>Complete, skip, and report with clarity</h2>
+        </div>
+
+        <article class="journey-step">
+          <div class="mini-screen">
+            <div class="screen-top"><span>Smart Subitem Modal</span><b>Step 3 of 6</b></div>
+            <div class="dots"><i class="done"></i><i class="done"></i><i class="active"></i><i></i><i></i><i></i></div>
+            <div class="screen-panel blue"><span>Current subitem</span><b>Validate evidence and action result</b></div>
+            <div class="screen-actions"><span class="screen-button success">Mark Complete</span><span class="screen-button warning">Skip</span><span class="screen-button danger">Report Issue</span></div>
+          </div>
+          <div class="journey-copy">
+            <div class="step-head"><span class="step-number">07</span><div><span class="location">Smart Subitem modal</span><h3>Work subitems in order</h3></div></div>
+            <p>Subitems are the guided path inside a detailed item.</p>
+            <span class="action">Use Start Working, Mark Complete, Skip, or Report Issue</span>
+            <ol><li>Use Next or Continue to move through actionable subitems.</li><li>Mark Complete only when the subitem is done.</li><li>Use Skip or Report Issue with a clear reason when normal completion is not possible.</li></ol>
+            <div class="safety">If any subitem is reported failed, SentinelOps requires a final verdict before the main item can be completed.</div>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div class="mini-screen">
+            <div class="screen-top"><span>Item Actions</span><b>Clean completion</b></div>
+            <div class="screen-panel green"><span>Completion notes</span><b>Optional evidence or timing</b></div>
+            <div class="screen-actions"><span class="screen-button success">Mark Complete</span></div>
+          </div>
+          <div class="journey-copy">
+            <div class="step-head"><span class="step-number">08</span><div><span class="location">Item Actions or subitem completion step</span><h3>Complete clean work cleanly</h3></div></div>
+            <p>Use Mark Complete when the item or subitem has been performed and no exception remains.</p>
+            <span class="action">Click Mark Complete</span>
+            <ol><li>Confirm the action was actually performed.</li><li>Add concise completion evidence when needed.</li><li>For items with subitems, complete all subitems before completing the main item.</li></ol>
+            <div class="safety">A completed item should not hide skipped, failed, or unresolved work.</div>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div class="mini-screen">
+            <div class="screen-top"><span>Skip reason</span><b>Exception record</b></div>
+            <div class="screen-note">Reason for skipping this item or subitem. Example: dependency unavailable, not applicable for this shift, deferred by process.</div>
+            <div class="screen-actions"><span class="screen-button warning">Confirm Skip</span></div>
+          </div>
+          <div class="journey-copy">
+            <div class="step-head"><span class="step-number">09</span><div><span class="location">Item Actions or subitem reason modal</span><h3>Skip only when it is valid to skip</h3></div></div>
+            <p>Skip when the step is not applicable, blocked by a valid condition, or deliberately deferred by the operating process.</p>
+            <span class="action">Click Skip Item or Skip</span>
+            <ol><li>Choose Skip only after deciding the step should not be completed now.</li><li>Write the reason in plain language.</li><li>If skipped work still matters later, add handover or create a task.</li></ol>
+            <div class="safety">Skipping is not the same as resolving. It is an exception record.</div>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div class="mini-screen">
+            <div class="screen-top"><span>Report Issue</span><b>Failure trail</b></div>
+            <div class="screen-note">Describe the issue: symptom, impact, evidence, timestamp, and immediate next action.</div>
+            <div class="screen-actions"><span class="screen-button danger">Report Issue</span><span class="screen-button success">Add Final Verdict</span></div>
+          </div>
+          <div class="journey-copy">
+            <div class="step-head"><span class="step-number">10</span><div><span class="location">Item Actions or subitem reason modal</span><h3>Report issues instead of hiding failure</h3></div></div>
+            <p>Report Issue when execution failed, evidence shows a real problem, the action is unsafe, or escalation is needed.</p>
+            <span class="action">Click Report Issue</span>
+            <ol><li>State what failed or what symptom was observed.</li><li>Include evidence, system names, timestamps, or impact.</li><li>After investigation, use Resolve & Complete or add final verdict when ready.</li></ol>
+            <div class="safety">Do not convert a failure into a skip just to finish faster.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="page">
+      <div class="section">
+        <div class="section-header">
+          <span class="kicker">Handover and ownership</span>
+          <h2>Keep the next shift from guessing</h2>
+        </div>
+
+        <article class="journey-step">
+          <div class="mini-screen">
+            <div class="screen-top"><span>Create Handover Note</span><b>Priority</b></div>
+            <div class="screen-actions"><span class="screen-button">Low</span><span class="screen-button warning">Medium</span><span class="screen-button danger">High</span></div>
+            <div class="screen-note">What happened, what still matters, and what should happen next.</div>
+            <div class="screen-actions"><span class="screen-button primary">Create Handover Note</span></div>
+          </div>
+          <div class="journey-copy">
+            <div class="step-head"><span class="step-number">11</span><div><span class="location">Handover Notes panel and modal</span><h3>Write manual handover while context is fresh</h3></div></div>
+            <p>Manual handover notes are for unresolved items, risks, dependencies, evidence pointers, or decisions the next shift must understand immediately.</p>
+            <span class="action">Click Add Handover Note</span>
+            <ol><li>Choose a priority that matches urgency.</li><li>Write what happened, what still matters, and what should happen next.</li><li>Keep notes short enough to act on.</li></ol>
+            <div class="safety">Use handover for shift context. Use Task Center when work needs a named owner, due date, or multi-day follow-through.</div>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div class="mini-screen">
+            <div class="screen-top"><span>Task Center</span><b>Durable ownership</b></div>
+            <div class="screen-actions"><span class="screen-button primary">Personal</span><span class="screen-button">Assigned</span><span class="screen-button">Team</span><span class="screen-button danger">Overdue</span></div>
+            <div class="screen-list"><div class="screen-line"><b>Follow up failed check</b><span>Due today</span></div><div class="screen-line"><b>Escalation evidence</b><span>Owner set</span></div></div>
+          </div>
+          <div class="journey-copy">
+            <div class="step-head"><span class="step-number">12</span><div><span class="location">Task Center</span><h3>Promote long-tail work into Task Center</h3></div></div>
+            <p>When a checklist item becomes a responsibility beyond the current run, put it in Task Center.</p>
+            <span class="action">Create or update a task</span>
+            <ol><li>Open the correct lane: personal, assigned, team, overdue, or completed.</li><li>Create or update owner, due date, and context.</li><li>Reference the checklist item or handover note.</li></ol>
+            <div class="safety">Handover explains; Task Center owns.</div>
+          </div>
+        </article>
+
+        <article class="journey-step">
+          <div class="mini-screen">
+            <div class="screen-top"><span>Complete Checklist</span><b>Final evidence check</b></div>
+            <div class="screen-grid three"><div class="screen-panel"><span>Actioned</span><b>10 / 10</b></div><div class="screen-panel green"><span>Clean</span><b>8</b></div><div class="screen-panel red"><span>Exceptions</span><b>2</b></div></div>
+            <div class="screen-panel amber"><span>Final status</span><b>Completed With Exceptions</b></div>
+            <div class="screen-actions"><span class="screen-button success">Confirm Complete</span></div>
+          </div>
+          <div class="journey-copy">
+            <div class="step-head"><span class="step-number">13</span><div><span class="location">Live Checklist header and Complete Checklist dialog</span><h3>Finalize the checklist honestly</h3></div></div>
+            <p>Managers and admins complete the checklist from the header once work is actioned.</p>
+            <span class="action">Click Complete Checklist</span>
+            <ol><li>Confirm every item is completed, skipped, failed, or otherwise actioned.</li><li>Review exception count in the dialog.</li><li>Confirm Complete, then download the checklist PDF if a record is needed.</li></ol>
+            <div class="safety">If exceptions exist, the checklist should close with exceptions. That is transparency.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="page">
+      <div class="section">
+        <div class="section-header">
+          <span class="kicker">Decision guide</span>
+          <h2>When to complete, skip, report, hand over, or finalize</h2>
+        </div>
+        <div class="rules">
+          <div class="rule"><h3>Start Working</h3><span class="rule-label">Use when</span><p>You are actively taking responsibility for an item now.</p><span class="rule-label">Do this</span><p>Open item actions, choose Start Working, and add a short note if context matters.</p><span class="rule-label">Evidence</span><p>The item moves out of pending state and participant engagement is visible.</p></div>
+          <div class="rule"><h3>Mark Complete</h3><span class="rule-label">Use when</span><p>The work was performed and no exception remains.</p><span class="rule-label">Do this</span><p>Choose Mark Complete and add concise notes when evidence or timing matters.</p><span class="rule-label">Evidence</span><p>The item or subitem shows Completed with completion metadata.</p></div>
+          <div class="rule"><h3>Skip Item</h3><span class="rule-label">Use when</span><p>The step is not applicable, blocked by a valid condition, or deliberately deferred.</p><span class="rule-label">Do this</span><p>Write the reason, then hand over or create a task if follow-up still matters.</p><span class="rule-label">Evidence</span><p>The reason remains visible and the checklist can close with exceptions if needed.</p></div>
+          <div class="rule"><h3>Report Issue</h3><span class="rule-label">Use when</span><p>Something failed, is unsafe, is unclear, or needs escalation.</p><span class="rule-label">Do this</span><p>Describe symptom, impact, evidence, and immediate next action.</p><span class="rule-label">Evidence</span><p>The issue is retained as an exception and can require final verdict.</p></div>
+          <div class="rule"><h3>Add Final Verdict</h3><span class="rule-label">Use when</span><p>An item had skipped or failed evidence but is now ready to close.</p><span class="rule-label">Do this</span><p>Summarize the outcome, what changed, and why the item can be considered complete.</p><span class="rule-label">Evidence</span><p>The verdict appears beside the completed item for audit and handover review.</p></div>
+          <div class="rule"><h3>Add Handover Note</h3><span class="rule-label">Use when</span><p>The next shift needs context, warning, dependency, evidence, or a decision trail.</p><span class="rule-label">Do this</span><p>Choose priority, write operational facts, and focus on what happens next.</p><span class="rule-label">Evidence</span><p>Incoming and outgoing notes appear with priority and author.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page">
+      <div class="section">
+        <div class="section-header">
+          <span class="kicker">Workspace map</span>
+          <h2>Use the right room for the right kind of work</h2>
+        </div>
+        <div class="modules">
+          <div class="module"><strong>Dashboard</strong><p><b>Question:</b> What is happening right now?</p><p>Read operational state, Shift Radar, command threads, and handover summary.</p></div>
+          <div class="module"><strong>Checklist Timeline</strong><p><b>Question:</b> Which run, date, shift, or pattern do I need to inspect?</p><p>Choose All Time, Week, Specific Day, or Date Range, then filter by shift and status.</p></div>
+          <div class="module"><strong>Live Checklist</strong><p><b>Question:</b> What work must be executed and recorded now?</p><p>Join, work items truthfully, keep handover notes and team presence current.</p></div>
+          <div class="module"><strong>Task Center</strong><p><b>Question:</b> What needs accountable follow-up beyond this shift?</p><p>Use personal, assigned, team, overdue, and completed lanes for durable ownership.</p></div>
+          <div class="module"><strong>Handover Notes</strong><p><b>Question:</b> What must the next operator know?</p><p>Acknowledge incoming notes, add outgoing notes with priority, resolve or promote notes as needed.</p></div>
+          <div class="module"><strong>Templates</strong><p><b>Question:</b> How do we make repeated work easier next time?</p><p>Order items the way work naturally happens and publish only after reviewing operator flow.</p></div>
+          <div class="module"><strong>Schedule and Team Management</strong><p><b>Question:</b> Who covers what, and when?</p><p>Choose planning horizon, read coverage, use patterns for recurring structure.</p></div>
+          <div class="module"><strong>Network Sentinel and TrustLink</strong><p><b>Question:</b> What evidence proves service or pipeline state?</p><p>Read Signal, Timeline, Evidence, and pipeline stage state before taking control action.</p></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <span class="kicker">Closeout checklist</span>
+          <h2>Before you leave the shift</h2>
+        </div>
+        <div class="closeout">
+          <div class="closeout-item"><span class="check">OK</span><span>All checklist items are completed, skipped, failed, or otherwise actioned.</span></div>
+          <div class="closeout-item"><span class="check">OK</span><span>Skipped items have reasons that a reviewer can understand.</span></div>
+          <div class="closeout-item"><span class="check">OK</span><span>Reported issues include symptoms, impact, and evidence pointers.</span></div>
+          <div class="closeout-item"><span class="check">OK</span><span>Failed subitems have final verdicts before the main item is closed.</span></div>
+          <div class="closeout-item"><span class="check">OK</span><span>Manual handover notes exist for unresolved risk, dependencies, or next-shift action.</span></div>
+          <div class="closeout-item"><span class="check">OK</span><span>Durable follow-up work is captured in Task Center with an owner and due date.</span></div>
+          <div class="closeout-item"><span class="check">OK</span><span>The Complete Checklist dialog outcome matches the real execution record.</span></div>
+          <div class="closeout-item"><span class="check">OK</span><span>The checklist PDF is downloaded only after the checklist is closed.</span></div>
+        </div>
+        <p class="footer-note">SentinelOps gets easier when the record is truthful. Completed means done. Skipped means valid exception. Reported means issue trail. Handover means the next operator can continue without guessing.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

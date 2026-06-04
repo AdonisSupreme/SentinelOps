@@ -4,12 +4,10 @@ import { useAuth } from '../contexts/AuthContext';
 import taskApi, { 
   Task, 
   TaskSummary, 
-  TaskFilters, 
   TaskQueryParams, 
   CreateTaskRequest, 
   UpdateTaskRequest, 
   AssignTaskRequest,
-  TaskListResponse,
   TaskMutationResponse,
   BulkTaskOperation,
   BulkTaskResponse,
@@ -254,26 +252,15 @@ export const useTasks = (): TasksState & TasksActions => {
     }
   }, [user, fetchWithLoading, updateState]);
 
-  // Fetch department tasks (manager/admin only)
+  // Fetch team tasks scoped to section visibility
   const fetchDepartmentTasks = useCallback(async (params: Omit<TaskQueryParams, 'task_type'> & { department_id?: number | string } = {}) => {
     if (!user) return;
 
-    // Check if user has permission to view department tasks
-    const userRole = user.role?.toLowerCase();
-    if (!['admin', 'manager'].includes(userRole || '')) {
-      console.warn('⚠️ User does not have permission to view department tasks');
-      updateState({ 
-        error: 'Insufficient permissions to view department tasks',
-        loading: false 
-      });
-      return;
-    }
-
-    console.log('🏢 fetchDepartmentTasks called with params:', params);
+    console.log('Fetching team tasks with params:', params);
 
     const result = await fetchWithLoading(
       () => taskApi.getDepartmentTasks(params),
-      'fetch department tasks'
+      'fetch team tasks'
     );
 
     if (result) {
@@ -324,7 +311,7 @@ export const useTasks = (): TasksState & TasksActions => {
       }
     } else if (taskType === 'DEPARTMENT') {
       if (!['admin', 'manager'].includes(userRole || '')) {
-        throw new Error('Only managers and admins can create department tasks');
+        throw new Error('Only managers and admins can create team tasks');
       }
     } else if (taskType === 'SYSTEM') {
       if (!['admin', 'manager'].includes(userRole || '')) {

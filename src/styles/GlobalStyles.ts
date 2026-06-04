@@ -405,8 +405,8 @@ export const GlobalStyles = createGlobalStyle`
   /* Notification System */
   .notification-container {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: calc(var(--app-safe-top, 0px) + 20px);
+    right: max(20px, calc(env(safe-area-inset-right, 0px) + 20px));
     z-index: var(--z-index-modal);
     max-width: 350px;
   }
@@ -887,10 +887,25 @@ export const GlobalStyles = createGlobalStyle`
     .section-title {
       font-size: var(--font-size-xl);
     }
+
+    .notification-container {
+      top: calc(var(--app-safe-top, 0px) + 72px);
+      left: max(10px, calc(env(safe-area-inset-left, 0px) + 10px));
+      right: max(10px, calc(env(safe-area-inset-right, 0px) + 10px));
+      max-width: none;
+    }
     
     .footer-links {
       flex-wrap: wrap;
       gap: var(--spacing-md);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .notification-container {
+      top: calc(var(--app-safe-top, 0px) + 64px);
+      left: max(8px, calc(env(safe-area-inset-left, 0px) + 8px));
+      right: max(8px, calc(env(safe-area-inset-right, 0px) + 8px));
     }
   }
 `;

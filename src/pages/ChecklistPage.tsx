@@ -341,45 +341,24 @@ const ChecklistPage: React.FC = () => {
     );
   };
 
-  const getShiftTime = (shift: string) => {
-    switch (shift) {
-      case 'MORNING': return '07:00 - 15:00';
-      case 'AFTERNOON': return '15:00 - 23:00';
-      case 'NIGHT': return '23:00 - 07:00';
-      default: return '';
-    }
+  const formatInstanceTime = (value?: string | null) => {
+    if (!value) return '--';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return '--';
+    return parsed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  };
+
+  const getShiftTime = (instance: any) => {
+    if (!instance?.shift_start || !instance?.shift_end) return '';
+    return `${formatInstanceTime(instance.shift_start)} - ${formatInstanceTime(instance.shift_end)}`;
   };
 
   const calculateTimeRemaining = (instance: any) => {
     if (!instance) return 0;
 
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    // Get shift end time based on shift type
-    let shiftEndTime;
-    switch (instance.shift) {
-      case 'MORNING':
-        shiftEndTime = '15:00';
-        break;
-      case 'AFTERNOON':
-        shiftEndTime = '23:00';
-        break;
-      case 'NIGHT':
-        // For night shift, if it's before midnight, end time is today, else tomorrow
-        if (now.getHours() >= 23) {
-          shiftEndTime = '07:00';
-          // Add one day to target date
-          today.setDate(today.getDate() + 1);
-        } else {
-          shiftEndTime = '07:00';
-        }
-        break;
-      default:
-        shiftEndTime = '23:00';
-    }
-
-    const shiftEndDateTime = new Date(today.toDateString() + ' ' + shiftEndTime);
+    const shiftEndDateTime = new Date(instance.shift_end);
+    if (Number.isNaN(shiftEndDateTime.getTime())) return 0;
     const timeDiff = shiftEndDateTime.getTime() - now.getTime();
     const minutesRemaining = Math.floor(timeDiff / (1000 * 60));
 
@@ -443,7 +422,7 @@ const ChecklistPage: React.FC = () => {
             <div className="checklist-meta">
               <span><FaCalendarAlt /> {currentInstance?.checklist_date || 'Unknown Date'}</span>
               <span className="meta-divider">•</span>
-              <span>{currentInstance?.shift || 'UNKNOWN'} SHIFT ({getShiftTime(currentInstance?.shift || '')})</span>
+              <span>{currentInstance?.shift || 'UNKNOWN'} SHIFT ({getShiftTime(currentInstance)})</span>
               <span className="meta-divider">•</span>
               {getStatusBadge(currentInstance?.status || 'UNKNOWN')}
             </div>

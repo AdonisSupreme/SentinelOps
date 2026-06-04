@@ -127,6 +127,7 @@
 }
 
 .hero-tags span,
+.hero-template-link,
 .day-badges span,
 .instance-chip-row span,
 .temporal-all-time,
@@ -137,6 +138,22 @@
   background: rgba(15, 23, 42, 0.3);
   color: var(--text-secondary);
   font-size: 0.82rem;
+}
+
+.hero-template-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--primary) 16%, rgba(15, 23, 42, 0.32));
+  border-color: color-mix(in srgb, var(--primary) 38%, rgba(148, 163, 184, 0.18));
+}
+
+.hero-template-link:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--primary) 58%, rgba(148, 163, 184, 0.18));
 }
 
 .hero-pulse-panel {
@@ -949,6 +966,7 @@
 }
 
 [data-theme='light'] .hero-tags span,
+[data-theme='light'] .hero-template-link,
 [data-theme='light'] .day-badges span,
 [data-theme='light'] .instance-chip-row span,
 [data-theme='light'] .init-radar-card,
@@ -968,6 +986,12 @@
 [data-theme='light'] .instance-metrics-grid > div {
   background: rgba(255, 255, 255, 0.72);
   border-color: rgba(37, 99, 235, 0.1);
+}
+
+[data-theme='light'] .hero-template-link {
+  color: #1d4ed8;
+  background: rgba(219, 234, 254, 0.82);
+  border-color: rgba(37, 99, 235, 0.24);
 }
 
 [data-theme='light'] .timeline-instance-card {
@@ -1108,5 +1132,42 @@
 
   .temporal-nav-label {
     min-width: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .checklists-page {
+    padding: 10px;
+    gap: 14px;
+  }
+
+  .checklists-hero,
+  .command-bar,
+  .timeline-shell,
+  .checklists-state-card {
+    border-radius: 22px;
+    padding: 16px;
+  }
+
+  .hero-copy h1 {
+    font-size: 1.7rem;
+  }
+
+  .summary-card strong {
+    font-size: 1.7rem;
+  }
+
+  .timeline-day-cluster {
+    padding: 14px;
+    border-radius: 22px;
+  }
+
+  .timeline-day-rail {
+    padding-left: 14px;
+  }
+
+  .timeline-instance-card {
+    padding: 14px;
+    border-radius: 18px;
   }
 }

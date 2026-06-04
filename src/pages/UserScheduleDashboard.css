@@ -19,6 +19,20 @@
   overflow: hidden;
 }
 
+.schedule-hero-panel,
+.schedule-workspace,
+.schedule-command-panel,
+.schedule-insight-panel,
+.schedule-surface,
+.schedule-calendar-shell,
+.schedule-hero-copy,
+.schedule-hero-telemetry,
+.schedule-next-card,
+.focus-state,
+.focus-deadline-block {
+  min-width: 0;
+}
+
 .schedule-ambient {
   position: absolute;
   inset: 0;
@@ -373,11 +387,14 @@
     linear-gradient(135deg, rgba(56, 189, 248, 0.03), transparent);
   padding: 18px;
   overflow: hidden;
+  width: 100%;
 }
 
 .schedule-calendar-shell {
   display: grid;
   gap: 12px;
+  width: 100%;
+  min-width: 0;
 }
 
 .schedule-calendar-weekdays,
@@ -1186,6 +1203,7 @@
   .schedule-calendar-shell {
     overflow-x: auto;
     padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -1264,5 +1282,144 @@
   .upcoming-shift-item {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .user-schedule-dashboard {
+    padding: 10px;
+    gap: 14px;
+  }
+
+  .schedule-hero-panel,
+  .schedule-command-panel,
+  .schedule-insight-panel .insight-card {
+    border-radius: 22px;
+    padding: 14px;
+  }
+
+  .schedule-hero-copy {
+    gap: 12px;
+  }
+
+  .schedule-kicker {
+    letter-spacing: 0.1em;
+  }
+
+  .schedule-hero-copy p {
+    font-size: 0.92rem;
+  }
+
+  .schedule-pulse-ring {
+    width: 140px;
+    height: 140px;
+    padding: 14px;
+  }
+
+  .schedule-toolbar {
+    gap: 12px;
+  }
+
+  .schedule-toolbar-meta {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+  }
+
+  .schedule-surface {
+    padding: 12px;
+    border-radius: 20px;
+  }
+
+  .schedule-calendar-shell {
+    margin-right: -2px;
+  }
+
+  .schedule-calendar-weekdays,
+  .schedule-calendar-grid {
+    min-width: 700px;
+    gap: 10px;
+  }
+
+  .schedule-cell-badge-stack {
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+
+  .focus-jump-btn,
+  .schedule-modal-btn.primary {
+    width: 100%;
+  }
+
+  .focus-deadline-item,
+  .upcoming-shift-item {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  .user-schedule-dashboard {
+    padding: 8px;
+  }
+
+  .schedule-hero-panel,
+  .schedule-command-panel,
+  .schedule-insight-panel .insight-card,
+  .overview-stat-card {
+    border-radius: 20px;
+    padding: 12px;
+  }
+
+  .schedule-hero-highlights {
+    gap: 8px;
+  }
+
+  .hero-chip {
+    width: 100%;
+    justify-content: flex-start;
+    min-height: 42px;
+    padding: 9px 12px;
+  }
+
+  .schedule-toggle-group {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-toolbar-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-nav-btn {
+    display: none;
+  }
+
+  .schedule-toolbar-label {
+    width: 100%;
+  }
+
+  .schedule-calendar-weekdays,
+  .schedule-calendar-grid {
+    min-width: 620px;
+    gap: 8px;
+  }
+
+  .schedule-calendar-cell {
+    min-height: 132px;
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .schedule-day-copy strong,
+  .focus-title-row h3,
+  .agenda-card-head h3,
+  .schedule-legend-item strong {
+    font-size: 0.88rem;
+  }
+
+  .focus-deadline-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .focus-deadline-item em {
+    align-self: flex-start;
   }
 }

@@ -125,7 +125,7 @@ export interface HandoverNote {
 
 export interface PerformanceMetrics {
   shift_date: string;
-  shift_type: 'MORNING' | 'AFTERNOON' | 'NIGHT';
+  shift_type: string;
   total_instances: number;
   completed_on_time: number;
   completed_with_exceptions: number;
@@ -165,13 +165,9 @@ export interface ChecklistDateChangeResponse {
   }>;
 }
 
-export interface TodayChecklistCoverage {
-  MORNING: number;
-  AFTERNOON: number;
-  NIGHT: number;
-}
+export type TodayChecklistCoverage = Record<string, number>;
 
-export type DashboardShiftName = 'MORNING' | 'AFTERNOON' | 'NIGHT';
+export type DashboardShiftName = string;
 
 export interface DashboardCommandMetrics {
   active_instances: number;

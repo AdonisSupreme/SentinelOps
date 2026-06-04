@@ -1065,3 +1065,34 @@
     font-size: 1.3rem;
   }
 }
+
+@media (max-width: 420px) {
+  .command-hero {
+    padding: 0 0.5rem;
+  }
+
+  .command-hero::before {
+    inset: 0 0.5rem;
+    border-radius: 24px;
+  }
+
+  .command-hero-copy,
+  .command-hero-aside {
+    padding: 1rem;
+  }
+
+  .sentinel-dashboard-command .dashboard-grid {
+    padding: 0 0.5rem 0.5rem;
+  }
+
+  .command-panel,
+  .command-side .quick-actions {
+    padding: 0.95rem;
+    border-radius: 18px;
+  }
+
+  .command-topbar,
+  .command-status-header {
+    gap: 0.75rem;
+  }
+}

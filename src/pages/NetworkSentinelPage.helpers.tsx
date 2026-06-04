@@ -1,5 +1,10 @@
 import React from 'react';
 import { NetworkSample, NetworkServiceCard, ServiceHistoryRow } from '../services/networkSentinelApi';
+import {
+  formatDateTimeInApplicationTimeZone,
+  formatTimeInApplicationTimeZone,
+  parseSentinelTimestamp,
+} from '../utils/time';
 
 export type Status = 'UNKNOWN' | 'UP' | 'DEGRADED' | 'DOWN';
 
@@ -20,22 +25,17 @@ const healthScore: Record<Status, number> = {
 export const statusClass = (status?: string | null) => (status || 'UNKNOWN').toLowerCase();
 
 export const formatDateTime = (value?: string | null) => {
-  if (!value) return '--';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '--';
-  return date.toLocaleString();
+  return formatDateTimeInApplicationTimeZone(value, '--');
 };
 
 export const formatTime = (value?: string | null) => {
-  if (!value) return '--';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '--';
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return formatTimeInApplicationTimeZone(value, '--');
 };
 
 export const formatSince = (value?: string | null) => {
   if (!value) return '--';
-  const diff = Date.now() - new Date(value).getTime();
+  const parsed = parseSentinelTimestamp(value);
+  const diff = parsed ? Date.now() - parsed.getTime() : Number.NaN;
   if (Number.isNaN(diff) || diff < 0) return '--';
   const seconds = Math.floor(diff / 1000);
   const hours = Math.floor(seconds / 3600);

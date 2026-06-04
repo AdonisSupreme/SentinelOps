@@ -44,7 +44,7 @@ export interface ChecklistTemplate {
   id: string;
   name: string;
   description: string;
-  shift: 'MORNING' | 'AFTERNOON' | 'NIGHT';
+  shift: string;
   is_active: boolean;
   version: number;
   created_at: string;
@@ -71,7 +71,7 @@ export interface ChecklistScheduledEvent {
 export interface CreateChecklistTemplateRequest {
   name: string;
   description: string;
-  shift: 'MORNING' | 'AFTERNOON' | 'NIGHT';
+  shift: string;
   is_active: boolean;
   section_id?: string;
   items?: CreateTemplateItemRequest[];
@@ -80,7 +80,7 @@ export interface CreateChecklistTemplateRequest {
 export interface UpdateChecklistTemplateRequest {
   name?: string;
   description?: string;
-  shift?: 'MORNING' | 'AFTERNOON' | 'NIGHT';
+  shift?: string;
   is_active?: boolean;
   section_id?: string;
   items?: CreateTemplateItemRequest[];
@@ -212,7 +212,7 @@ export interface ChecklistInstance {
   id: string;
   template: ChecklistTemplate;
   checklist_date: string;
-  shift: 'MORNING' | 'AFTERNOON' | 'NIGHT';
+  shift: string;
   shift_start: string;
   shift_end: string;
   status: 'OPEN' | 'IN_PROGRESS' | 'PENDING_REVIEW' | 'COMPLETED' | 'COMPLETED_WITH_EXCEPTIONS' | 'INCOMPLETE';
@@ -245,7 +245,7 @@ export interface ChecklistInstance {
 export interface CreateChecklistInstanceRequest {
   template_id: string;
   checklist_date: string;
-  shift: 'MORNING' | 'AFTERNOON' | 'NIGHT';
+  shift: string;
   section_id?: string;
 }
 
@@ -253,7 +253,7 @@ export interface UpdateChecklistItemRequest {
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'SKIPPED' | 'FAILED';
   notes?: string;
   attachments?: string[];
-  action_type?: 'STARTED' | 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'ESCALATED' | 'UPDATED';
+  action_type?: 'STARTED' | 'COMPLETED' | 'SKIPPED' | 'ESCALATED' | 'UPDATED';
   reason?: string;
   metadata?: {
     previous_status?: string;
@@ -417,13 +417,13 @@ export interface HandoverNote {
     username: string;
   };
   created_at: string;
-  shift: 'MORNING' | 'AFTERNOON' | 'NIGHT';
+  shift: string;
 }
 
 export interface CreateHandoverNoteRequest {
   content: string;
   priority?: number;
-  to_shift?: 'MORNING' | 'AFTERNOON' | 'NIGHT';
+  to_shift?: string;
   from_instance_id?: string;
 }
 

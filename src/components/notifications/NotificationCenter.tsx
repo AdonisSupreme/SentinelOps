@@ -327,11 +327,6 @@ const NotificationCenter: React.FC = () => {
               <strong>{unreadCount}</strong>
               <span className="summary-copy">Awaiting acknowledgement</span>
             </div>
-            <div className="notification-summary-card">
-              <span className="summary-label">Visible</span>
-              <strong>{sortedNotifications.length}</strong>
-              <span className="summary-copy">Active in this session</span>
-            </div>
           </div>
 
           <div className="notification-center-actions">

@@ -16,7 +16,6 @@ import {
   FaCalendarAlt,
   FaUser,
   FaUsers,
-  FaBuilding,
   FaCog,
   FaEye,
   FaThLarge,
@@ -36,6 +35,7 @@ import { pageGuides } from '../content/pageGuides';
 import { TaskSummary, TaskStatus, Priority, TaskType } from '../services/taskApi';
 import { orgApi, Department, Section } from '../services/orgApi';
 import { userApi, UserListItem } from '../services/userApi';
+import centralizedWebSocketManager from '../services/centralizedWebSocketManager';
 import './TaskCenterPage.css';
 
 const TaskDetail = TaskDetailModule.default;
@@ -43,13 +43,12 @@ const TaskDetail = TaskDetailModule.default;
 interface TaskCenterPageProps { }
 
 type ViewMode = 'list' | 'detail';
-type TaskLaneFilter = 'my-tasks' | 'assigned-to-me' | 'assigned-by-me' | 'team-tasks' | 'department-tasks';
+type TaskLaneFilter = 'my-tasks' | 'assigned-to-me' | 'assigned-by-me' | 'department-tasks';
 
 const TASK_LANE_FILTERS: TaskLaneFilter[] = [
   'my-tasks',
   'assigned-to-me',
   'assigned-by-me',
-  'team-tasks',
   'department-tasks'
 ];
 
@@ -63,14 +62,12 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
     myTasks,
     assignedByMeTasks,
     assignedToMeTasks,
-    teamTasks,
     departmentTasks,
     loading,
     error,
     fetchMyTasks,
     fetchTasksAssignedByMe,
     fetchAssignedToMe,
-    fetchTeamTasks,
     fetchDepartmentTasks,
     createTask,
     changeTaskStatus,
@@ -84,13 +81,16 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
   const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskSummary | null>(null);
+  const [taskDetailRefreshSignal, setTaskDetailRefreshSignal] = useState(0);
   const loadedTaskLanesRef = useRef<Record<TaskLaneFilter, boolean>>({
     'my-tasks': false,
     'assigned-to-me': false,
     'assigned-by-me': false,
-    'team-tasks': false,
     'department-tasks': false
   });
+  const realtimeRefreshTimerRef = useRef<number | null>(null);
+  const taskDetailRefreshPendingRef = useRef(false);
+  const selectedTaskIdRef = useRef<string | null>(null);
   const deferredSearchTerm = useDeferredValue(searchTerm.trim().toLowerCase());
 
   // History modal state lifted to page so it can render above everything
@@ -126,8 +126,38 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
   const isAdmin = userRole === 'admin';
 
   // Helpers to support both nested and flat API shapes
-  const getAssignedId = (t: any) => t?.assigned_to?.id || t?.assigned_to_id || t?.assigned_to_id?.toString();
+  const getAssignedIds = (t: any): string[] => {
+    const fromAssignees = Array.isArray(t?.assignees)
+      ? t.assignees.map((assignee: any) => String(assignee?.id || '')).filter(Boolean)
+      : [];
+    const fromAssignedUserIds = Array.isArray(t?.assigned_user_ids)
+      ? t.assigned_user_ids.map((id: any) => String(id || '')).filter(Boolean)
+      : [];
+    const legacyAssigned = t?.assigned_to?.id || t?.assigned_to_id || t?.assigned_to_id?.toString();
+
+    const merged = [...fromAssignees, ...fromAssignedUserIds, ...(legacyAssigned ? [String(legacyAssigned)] : [])];
+    return Array.from(new Set(merged.filter(Boolean)));
+  };
+
+  const isUserAssigned = (t: any) => {
+    if (!user?.id) return false;
+    return getAssignedIds(t).includes(user.id);
+  };
+
+  const canUserAct = (t: any) => {
+    if (typeof t?.can_act === 'boolean') return t.can_act;
+    return isUserAssigned(t);
+  };
+
   const getAssignedName = (t: any) => {
+    if (Array.isArray(t?.assignees) && t.assignees.length > 0) {
+      const names = t.assignees
+        .map((assignee: any) =>
+          `${assignee?.first_name || ''} ${assignee?.last_name || ''}`.trim() || assignee?.username || ''
+        )
+        .filter(Boolean);
+      return names.join(', ');
+    }
     if (t?.assigned_to) return `${t.assigned_to.first_name || ''} ${t.assigned_to.last_name || ''}`.trim();
     if (t?.assigned_to_first_name || t?.assigned_to_last_name) return `${t.assigned_to_first_name || ''} ${t.assigned_to_last_name || ''}`.trim();
     if (t?.assigned_to_username) return t.assigned_to_username;
@@ -135,31 +165,37 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
   };
 
   // View management functions
-  const handleShowList = () => {
+  const handleShowList = useCallback(() => {
+    selectedTaskIdRef.current = null;
     setViewMode('list');
     setSelectedTask(null);
     setSearchParams({}, { replace: true });
-  };
+  }, [setSearchParams]);
 
-  const handleShowDetail = (task: TaskSummary) => {
+  const handleShowDetail = useCallback((task: TaskSummary) => {
+    selectedTaskIdRef.current = task.id;
     setSelectedTask(task);
     setViewMode('detail');
     setSearchParams({ task: task.id }, { replace: true });
-  };
+  }, [setSearchParams]);
 
-  const handleCloseDetail = () => {
+  const handleCloseDetail = useCallback(() => {
+    selectedTaskIdRef.current = null;
     setViewMode('list');
     setSelectedTask(null);
     setSearchParams({}, { replace: true });
-  };
+  }, [setSearchParams]);
+
+  useEffect(() => {
+    selectedTaskIdRef.current = selectedTask?.id ?? null;
+  }, [selectedTask]);
 
   // Filter options based on user role
   const filterOptions = [
     { id: 'my-tasks', label: 'My Private Tasks', icon: <FaUser />, available: true },
     { id: 'assigned-to-me', label: 'Assigned To Me', icon: <FaUserCheck />, available: true },
     { id: 'assigned-by-me', label: 'Tasks I Assigned', icon: <FaUsers />, available: isManager },
-    { id: 'team-tasks', label: 'Team Tasks', icon: <FaUsers />, available: isManager },
-    { id: 'department-tasks', label: 'Department Tasks', icon: <FaBuilding />, available: isManager },
+    { id: 'department-tasks', label: 'Team Tasks', icon: <FaUsers />, available: true },
     { id: 'overdue', label: 'Overdue', icon: <FaExclamationTriangle />, available: true },
     { id: 'completed', label: 'Completed', icon: <FaCheckCircle />, available: true }
   ];
@@ -169,7 +205,6 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
       ...myTasks,
       ...assignedToMeTasks,
       ...assignedByMeTasks,
-      ...teamTasks,
       ...departmentTasks
     ];
     const seen = new Set<string>();
@@ -178,7 +213,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
       seen.add(task.id);
       return true;
     });
-  }, [assignedByMeTasks, assignedToMeTasks, departmentTasks, myTasks, teamTasks]);
+  }, [assignedByMeTasks, assignedToMeTasks, departmentTasks, myTasks]);
 
   // Get current tasks based on active filter
   const getCurrentTasks = useCallback(() => {
@@ -186,18 +221,16 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
       case 'my-tasks':
         // My Private Tasks: personal tasks created by the user for themself
         return myTasks.filter((task: any) => {
-          const assignedId = getAssignedId(task);
+          const assignedIds = getAssignedIds(task);
           const assignedById = task?.assigned_by?.id || task?.assigned_by_id || (task?.assigned_by_id ? task.assigned_by_id.toString() : undefined);
           const isPersonal = task.task_type === 'PERSONAL';
-          return isPersonal && assignedId === user?.id && (assignedById ? String(assignedById) === user?.id : true);
+          return isPersonal && !!user?.id && assignedIds.includes(user.id) && (assignedById ? String(assignedById) === user?.id : true);
         });
       case 'assigned-to-me':
         // Assigned To Me: tasks fetched specifically for assignments to current user
         return assignedToMeTasks;
       case 'assigned-by-me':
         return assignedByMeTasks;
-      case 'team-tasks':
-        return teamTasks;
       case 'department-tasks':
         return departmentTasks;
       case 'overdue':
@@ -207,7 +240,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
       default:
         return myTasks;
     }
-  }, [activeFilter, myTasks, allVisibleTasks, assignedByMeTasks, assignedToMeTasks, teamTasks, departmentTasks, user?.id]);
+  }, [activeFilter, myTasks, allVisibleTasks, assignedByMeTasks, assignedToMeTasks, departmentTasks, user?.id]);
 
   const setTaskLanesLoaded = useCallback((lanes: TaskLaneFilter[], loaded: boolean) => {
     lanes.forEach((lane) => {
@@ -227,8 +260,6 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
         return ['assigned-to-me'];
       case 'assigned-by-me':
         return ['assigned-by-me'];
-      case 'team-tasks':
-        return ['team-tasks'];
       case 'department-tasks':
         return ['department-tasks'];
       default:
@@ -264,17 +295,9 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
             setTaskLanesLoaded(['assigned-by-me'], true);
           }
           break;
-        case 'team-tasks':
-          if (isManager) {
-            await fetchTeamTasks();
-            setTaskLanesLoaded(['team-tasks'], true);
-          }
-          break;
         case 'department-tasks':
-          if (isManager) {
-            await fetchDepartmentTasks();
-            setTaskLanesLoaded(['department-tasks'], true);
-          }
+          await fetchDepartmentTasks();
+          setTaskLanesLoaded(['department-tasks'], true);
           break;
         case 'overdue':
         case 'completed':
@@ -292,7 +315,6 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
     fetchDepartmentTasks,
     fetchMyTasks,
     fetchTasksAssignedByMe,
-    fetchTeamTasks,
     getTaskLanesForFilter,
     isManager,
     setTaskLanesLoaded,
@@ -308,6 +330,79 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
 
     await loadActiveTaskLane(activeFilter, { force: true });
   }, [activeFilter, getTaskLanesForFilter, invalidateTaskLaneCache, loadActiveTaskLane]);
+
+  const refreshLoadedTaskLanes = useCallback(async () => {
+    if (!user || authLoading) {
+      return;
+    }
+
+    const loadedLanes = TASK_LANE_FILTERS.filter((lane) => loadedTaskLanesRef.current[lane]);
+
+    if (loadedLanes.length === 0) {
+      await loadActiveTaskLane(activeFilter, { force: true });
+      return;
+    }
+
+    try {
+      for (const lane of loadedLanes) {
+        switch (lane) {
+          case 'my-tasks':
+            await fetchMyTasks();
+            break;
+          case 'assigned-to-me':
+            await fetchAssignedToMe();
+            break;
+          case 'assigned-by-me':
+            if (isManager) {
+              await fetchTasksAssignedByMe();
+            }
+            break;
+          case 'department-tasks':
+            await fetchDepartmentTasks();
+            break;
+          default:
+            break;
+        }
+      }
+
+      setTaskLanesLoaded(loadedLanes, true);
+    } catch (refreshError) {
+      console.error('Failed to refresh task lanes from realtime event:', refreshError);
+    }
+  }, [
+    activeFilter,
+    authLoading,
+    fetchAssignedToMe,
+    fetchDepartmentTasks,
+    fetchMyTasks,
+    fetchTasksAssignedByMe,
+    isManager,
+    loadActiveTaskLane,
+    setTaskLanesLoaded,
+    user
+  ]);
+
+  const scheduleRealtimeRefresh = useCallback(() => {
+    if (selectedTaskIdRef.current) {
+      taskDetailRefreshPendingRef.current = true;
+    }
+
+    if (realtimeRefreshTimerRef.current !== null) {
+      return;
+    }
+
+    realtimeRefreshTimerRef.current = window.setTimeout(() => {
+      realtimeRefreshTimerRef.current = null;
+      const shouldRefreshTaskDetail = taskDetailRefreshPendingRef.current && !!selectedTaskIdRef.current;
+      taskDetailRefreshPendingRef.current = false;
+
+      if (shouldRefreshTaskDetail) {
+        setTaskDetailRefreshSignal((current) => current + 1);
+      }
+
+      void refreshLoadedTaskLanes();
+    }, 220);
+  }, [refreshLoadedTaskLanes]);
 
   // Load tasks based on active filter
   useEffect(() => {
@@ -333,15 +428,8 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
               await fetchTasksAssignedByMe();
             }
             break;
-          case 'team-tasks':
-            if (isManager) {
-              await fetchTeamTasks();
-            }
-            break;
           case 'department-tasks':
-            if (isManager) {
-              await fetchDepartmentTasks();
-            }
+            await fetchDepartmentTasks();
             break;
           default:
             await fetchMyTasks();
@@ -372,6 +460,53 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
     setViewMode('detail');
   }, [searchParams]);
 
+  useEffect(() => {
+    const unsubscribe = centralizedWebSocketManager.subscribe('tasks', (event: any) => {
+      const eventType = event?.type;
+      const payload = event?.data || {};
+      const taskId = payload?.task_id;
+
+      if (!eventType) {
+        return;
+      }
+
+      const realtimeTypes = new Set([
+        'TASK_CREATED',
+        'TASK_UPDATED',
+        'TASK_ASSIGNED',
+        'TASK_JOINED',
+        'TASK_COMMENT_ADDED',
+        'TASK_ATTACHMENT_UPLOADED',
+        'TASK_COMPLETED',
+        'TASK_DELETED',
+      ]);
+
+      if (!realtimeTypes.has(eventType)) {
+        return;
+      }
+
+      if (eventType === 'TASK_DELETED' && taskId && selectedTaskIdRef.current === taskId) {
+        handleCloseDetail();
+      }
+
+      if (taskId && selectedTaskIdRef.current === taskId && eventType !== 'TASK_DELETED') {
+        taskDetailRefreshPendingRef.current = true;
+      }
+
+      scheduleRealtimeRefresh();
+    });
+
+    return unsubscribe;
+  }, [handleCloseDetail, scheduleRealtimeRefresh]);
+
+  useEffect(() => {
+    return () => {
+      if (realtimeRefreshTimerRef.current !== null) {
+        window.clearTimeout(realtimeRefreshTimerRef.current);
+      }
+    };
+  }, []);
+
   // Get status badge color
   const getStatusColor = (status: TaskStatus) => {
     switch (status) {
@@ -401,7 +536,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
     switch (taskType) {
       case 'PERSONAL': return <FaUser />;
       case 'TEAM': return <FaUsers />;
-      case 'DEPARTMENT': return <FaBuilding />;
+      case 'DEPARTMENT': return <FaUsers />;
       case 'SYSTEM': return <FaCog />;
       default: return <FaTasks />;
     }
@@ -612,6 +747,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
                 taskId={selectedTask.id}
                 onClose={handleCloseDetail}
                 onRefresh={() => refreshActiveTasks(true)}
+                refreshSignal={taskDetailRefreshSignal}
                 onRequestHistory={(entries: any[]) => {
                   setHistoryEntries(entries || []);
                   setHistoryModalOpen(true);
@@ -684,21 +820,21 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
 
                   <div className="card-footer">
                     <div className="task-actions">
-                      {task.status === 'ACTIVE' && (getAssignedId(task) === user?.id) && (
+                      {task.status === 'ACTIVE' && canUserAct(task) && (
                         <button className="tc-action-btn tc-start" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'IN_PROGRESS'); }} title="Start Task"><FaPlay className='tc-actn-icon' /></button>
                       )}
-                      {task.status === 'IN_PROGRESS' && (getAssignedId(task) === user?.id) && (
+                      {task.status === 'IN_PROGRESS' && canUserAct(task) && (
                         <>
                           <button className="tc-action-btn tc-complete" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'COMPLETED'); }} title="Complete Task"><FaCheckCircle className='tc-actn-icon' /></button>
                           <button className="tc-action-btn tc-hold" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'ON_HOLD'); }} title="Put on Hold"><FaPause className='tc-actn-icon' /></button>
                         </>
                       )}
-                      {(getAssignedId(task) === user?.id) && (
+                      {canUserAct(task) && (
                         <>
                           <button className="tc-action-btn tc-edit" onClick={(e) => { e.stopPropagation(); navigate(`/tasks/${task.id}/edit`); }} title="Edit Task"><FaEdit className='tc-actn-icon' /></button>
                         </>
                       )}
-                      {task.status === 'ON_HOLD' && (getAssignedId(task) === user?.id) && (
+                      {task.status === 'ON_HOLD' && canUserAct(task) && (
                         <button className="tc-action-btn tc-resume" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'IN_PROGRESS'); }} title="Resume Task"><FaPlay className='tc-actn-icon' /></button>
                       )}
                     </div>
@@ -979,6 +1115,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
     priority: 'MEDIUM' as Priority,
     due_date: '',
     assigned_to_id: undefined as string | undefined,
+    assigned_user_ids: [] as string[],
     department_id: undefined as number | undefined,
     section_id: undefined as string | undefined,
     estimated_hours: '',
@@ -1077,7 +1214,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
       const id = deptId === undefined || deptId === '' ? undefined : Number(deptId);
       const isAdmin = (user?.role || '').toLowerCase() === 'admin';
       // department change
-      setFormData(fd => ({ ...fd, department_id: id, section_id: undefined, assigned_to_id: undefined }));
+      setFormData(fd => ({ ...fd, department_id: id, section_id: undefined, assigned_to_id: undefined, assigned_user_ids: [] }));
       setAssignees([]);
       if (id) {
         const sects = await orgApi.listSections(id);
@@ -1089,7 +1226,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
         }
       } else {
         // If no department selected and user wants a TEAM task, load all sections to allow selecting a section
-        if (formData.task_type === 'TEAM' || formData.task_type === 'SYSTEM') {
+        if (formData.task_type === 'DEPARTMENT' || formData.task_type === 'SYSTEM') {
           const sects = await orgApi.listSections(undefined);
           if (!isAdmin && effectiveScope.section_id) {
             setSections((sects || []).filter(section => section.id === effectiveScope.section_id));
@@ -1108,7 +1245,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
   const handleSectionChange = async (sectionId?: string) => {
     try {
       // section change
-      setFormData(fd => ({ ...fd, section_id: sectionId, assigned_to_id: undefined }));
+      setFormData(fd => ({ ...fd, section_id: sectionId, assigned_to_id: undefined, assigned_user_ids: [] }));
       setAssignees([]);
       if (sectionId) {
         const users = await userApi.listUsersBySection(sectionId);
@@ -1161,6 +1298,10 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
       errors.push("Recurrence pattern is required for recurring tasks");
     }
 
+    if (formData.task_type === 'DEPARTMENT' && formData.assigned_user_ids.length === 0) {
+      errors.push("Select at least one collaborator for Team tasks");
+    }
+
     // Parent task validation
     if (formData.parent_task_id && !formData.parent_task_id.trim()) {
       errors.push("Invalid parent task ID");
@@ -1183,7 +1324,8 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
       assigned_by_id: user?.id || '',
       estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : undefined,
       due_date: formData.due_date || undefined,
-      assigned_to_id: formData.assigned_to_id || undefined,
+      assigned_user_ids: formData.assigned_user_ids,
+      assigned_to_id: formData.assigned_user_ids.length > 0 ? formData.assigned_user_ids[0] : (formData.assigned_to_id || undefined),
       // department_id should be numeric to align with DB schema
       department_id: formData.department_id ? parseInt(String(formData.department_id), 10) : undefined,
       section_id: formData.section_id || undefined,
@@ -1195,7 +1337,6 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
   };
 
   const userRole = user?.role?.toLowerCase() || '';
-  const canCreateTeamTasks = ['admin', 'manager'].includes(userRole);
   const canCreateDepartmentTasks = ['admin', 'manager'].includes(userRole);
   const canCreateSystemTasks = ['admin', 'manager'].includes(userRole);
 
@@ -1243,8 +1384,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
                 required
               >
                 <option value="PERSONAL">Personal</option>
-                {canCreateTeamTasks && <option value="TEAM">Team</option>}
-                {canCreateDepartmentTasks && <option value="DEPARTMENT">Department</option>}
+                {canCreateDepartmentTasks && <option value="DEPARTMENT">Team</option>}
                 {canCreateSystemTasks && <option value="SYSTEM">System</option>}
               </select>
             </div>
@@ -1305,7 +1445,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
             </div>
           </div>
 
-          {(formData.task_type === 'TEAM' || formData.task_type === 'DEPARTMENT' || formData.task_type === 'SYSTEM') && (
+          {(formData.task_type === 'DEPARTMENT' || formData.task_type === 'SYSTEM') && (
             <div className="create-task-form-row">
               {(formData.task_type === 'DEPARTMENT' || formData.task_type === 'SYSTEM') && (
                 <div className="create-task-form-group">
@@ -1323,7 +1463,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
                 </div>
               )}
 
-              {(formData.task_type === 'TEAM' || formData.task_type === 'DEPARTMENT' || formData.task_type === 'SYSTEM') && (
+              {(formData.task_type === 'DEPARTMENT' || formData.task_type === 'SYSTEM') && (
                 <div className="create-task-form-group">
                   <label>Section</label>
                   <select
@@ -1340,10 +1480,19 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
               )}
 
               <div className="create-task-form-group">
-                <label>Assign To</label>
+                <label>Collaborators</label>
                 <select
-                  value={formData.assigned_to_id ?? ''}
-                  onChange={(e) => setFormData({ ...formData, assigned_to_id: e.target.value || undefined })}
+                  multiple
+                  size={Math.min(6, Math.max(3, assignees.length || 3))}
+                  value={formData.assigned_user_ids}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions).map(option => option.value).filter(Boolean);
+                    setFormData({
+                      ...formData,
+                      assigned_user_ids: selected,
+                      assigned_to_id: selected.length > 0 ? selected[0] : undefined
+                    });
+                  }}
                   className="create-task-form-select"
                 >
                   <option value="">— Unassigned —</option>
@@ -1351,6 +1500,12 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
                     <option key={u.id} value={u.id}>{u.first_name} {u.last_name} — {u.username}</option>
                   ))}
                 </select>
+                <small className="create-task-field-hint">
+                  Selected collaborators: {formData.assigned_user_ids.length}
+                </small>
+                <small className="create-task-field-hint">
+                  Only selected collaborators can act on this Team task. Other section members can view progress only.
+                </small>
               </div>
             </div>
           )}

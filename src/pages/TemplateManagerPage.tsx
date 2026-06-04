@@ -7,6 +7,7 @@ import TemplateEditor from '../components/checklist/TemplateEditor';
 import PageGuide from '../components/ui/PageGuide';
 import { pageGuides } from '../content/pageGuides';
 import { checklistApi, type ChecklistTemplate } from '../services/checklistApi';
+import { formatShiftLabel } from '../utils/shiftUtils';
 import './TemplateManagerPage.css';
 
 type View = 'list' | 'create' | 'edit' | 'view';
@@ -46,6 +47,7 @@ const SentinelTemplateManagerPage: React.FC = () => {
   const heroSignals = [
     { label: 'Template flow', value: view === 'list' ? 'Library' : view === 'create' ? 'Authoring' : view === 'edit' ? 'Editing' : 'Inspecting', icon: <FaLayerGroup /> },
     { label: 'Structure', value: selectedTemplate?.items?.length ? `${selectedTemplate.items.length} items` : 'Reusable', icon: <FaStream /> },
+    { label: 'Shift scope', value: selectedTemplate?.shift ? formatShiftLabel(selectedTemplate.shift) : 'Configurable', icon: <FaClipboardList /> },
     { label: 'SentinelOps fit', value: 'Aligned', icon: <FaShieldAlt /> },
   ];
 
@@ -148,9 +150,9 @@ const SentinelTemplateManagerPage: React.FC = () => {
       <div className="stm-page-content">
         {/* Breadcrumb Navigation */}
         <div className="stm-breadcrumb">
-          <a href="#" onClick={handleShowList} className={view === 'list' ? 'stm-active' : ''}>
+          <button type="button" onClick={handleShowList} className={view === 'list' ? 'stm-active' : ''}>
             Templates
-          </a>
+          </button>
           {view === 'create' && (
             <>
               <span className="stm-breadcrumb-sep">/</span>
@@ -220,7 +222,7 @@ const SentinelTemplateManagerPage: React.FC = () => {
             <div className="stm-view-view">
               <div className="stm-view-header">
                 <h2>{selectedTemplate.name}</h2>
-                <p className="stm-view-shift">Shift: {selectedTemplate.shift}</p>
+                <p className="stm-view-shift">Shift: {formatShiftLabel(selectedTemplate.shift)}</p>
               </div>
 
               <div className="stm-template-details">

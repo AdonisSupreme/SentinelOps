@@ -2,6 +2,7 @@ import api from './api';
 
 export type NetworkStatus = 'UNKNOWN' | 'UP' | 'DEGRADED' | 'DOWN';
 export type NetworkEventSeverity = 'INFO' | 'WARN' | 'CRITICAL';
+export type NetworkTargetKind = 'SERVICE' | 'CHANNEL' | 'VPN' | 'NETWORK';
 
 export interface NetworkStatusSnapshot {
   last_checked_at: string | null;
@@ -25,6 +26,8 @@ export interface NetworkService {
   enabled: boolean;
   check_icmp: boolean;
   check_tcp: boolean;
+  target_kind: NetworkTargetKind;
+  allow_ttl_expired: boolean;
   timeout_ms: number;
   interval_seconds: number;
   environment?: string | null;

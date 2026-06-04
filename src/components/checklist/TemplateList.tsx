@@ -2,6 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { FaEdit, FaTrash, FaEye, FaFilter, FaSearch } from 'react-icons/fa';
 import { checklistApi, type ChecklistTemplate } from '../../services/checklistApi';
+import { teamApi } from '../../services/teamApi';
+import {
+  DEFAULT_SHIFT_OPTIONS,
+  buildShiftOptions,
+  getShiftColor,
+  getShiftLabel,
+  normalizeShiftCode,
+  type ShiftOption,
+} from '../../utils/shiftUtils';
 import TemplateManagerSkeleton from './TemplateManagerSkeleton';
 import './TemplateList-New.css';
 import './TextVisibilityFix.css';
@@ -19,6 +28,7 @@ const TemplateList: React.FC<TemplateListProps> = ({ onEdit, onDelete, onView })
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [shiftFilter, setShiftFilter] = useState<string>('all');
+  const [shiftOptions, setShiftOptions] = useState<ShiftOption[]>(DEFAULT_SHIFT_OPTIONS);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -27,24 +37,6 @@ const TemplateList: React.FC<TemplateListProps> = ({ onEdit, onDelete, onView })
   }, []);
 
   useEffect(() => {
-    filterTemplates();
-  }, [templates, searchTerm, shiftFilter]);
-
-  const loadTemplates = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await checklistApi.getTemplates();
-      setTemplates(data);
-    } catch (err) {
-      console.error('Failed to load templates:', err);
-      setError('Failed to load templates');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterTemplates = () => {
     let filtered = [...templates];
 
     if (searchTerm) {
@@ -55,10 +47,31 @@ const TemplateList: React.FC<TemplateListProps> = ({ onEdit, onDelete, onView })
     }
 
     if (shiftFilter !== 'all') {
-      filtered = filtered.filter(t => t.shift === shiftFilter);
+      filtered = filtered.filter(t => normalizeShiftCode(t.shift) === shiftFilter);
     }
 
     setFilteredTemplates(filtered);
+  }, [templates, searchTerm, shiftFilter]);
+
+  const loadTemplates = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [data, configuredShifts] = await Promise.all([
+        checklistApi.getTemplates(),
+        teamApi.listShifts().catch((shiftError) => {
+          console.warn('Failed to load configured shifts for template list:', shiftError);
+          return [];
+        }),
+      ]);
+      setTemplates(data);
+      setShiftOptions(buildShiftOptions(configuredShifts, data.map((template) => template.shift)));
+    } catch (err) {
+      console.error('Failed to load templates:', err);
+      setError('Failed to load templates');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -81,19 +94,6 @@ const TemplateList: React.FC<TemplateListProps> = ({ onEdit, onDelete, onView })
       month: 'short',
       day: 'numeric',
     });
-  };
-
-  const getShiftColor = (shift: string) => {
-    switch (shift) {
-      case 'MORNING':
-        return '#FFD700';
-      case 'AFTERNOON':
-        return '#FF8C00';
-      case 'NIGHT':
-        return '#4B0082';
-      default:
-        return '#00d9ff';
-    }
   };
 
   if (loading) {
@@ -123,9 +123,11 @@ const TemplateList: React.FC<TemplateListProps> = ({ onEdit, onDelete, onView })
             className="sentinel-filter-select-field"
           >
             <option value="all">All Shifts</option>
-            <option value="MORNING">Morning</option>
-            <option value="AFTERNOON">Afternoon</option>
-            <option value="NIGHT">Night</option>
+            {shiftOptions.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -143,8 +145,8 @@ const TemplateList: React.FC<TemplateListProps> = ({ onEdit, onDelete, onView })
             <div key={template.id} className="sentinel-template-card">
               <div className="sentinel-card-header-wrapper">
                 <h3 className="sentinel-template-name-text">{template.name}</h3>
-                <div className="sentinel-shift-type-badge" style={{ borderColor: getShiftColor(template.shift) }}>
-                  {template.shift}
+                <div className="sentinel-shift-type-badge" style={{ borderColor: getShiftColor(template.shift, shiftOptions) }}>
+                  {getShiftLabel(template.shift, shiftOptions)}
                 </div>
               </div>
 

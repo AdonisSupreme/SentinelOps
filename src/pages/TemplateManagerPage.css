@@ -40,7 +40,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 30px;
+  border-radius: 8px;
   background: linear-gradient(135deg, var(--stm-surface-strong), var(--stm-surface));
   border: 1px solid var(--stm-border-soft);
   box-shadow: var(--stm-shadow);
@@ -111,7 +111,7 @@
 
 .stm-command-signals {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 0.9rem;
   margin-top: 1.5rem;
 }
@@ -121,7 +121,7 @@
   align-items: flex-start;
   gap: 0.9rem;
   padding: 1rem;
-  border-radius: 18px;
+  border-radius: 8px;
   border: 1px solid var(--stm-border-soft);
   background: color-mix(in srgb, var(--bg-card) 78%, transparent);
   backdrop-filter: blur(12px);
@@ -132,7 +132,7 @@
   place-items: center;
   width: 2.8rem;
   height: 2.8rem;
-  border-radius: 14px;
+  border-radius: 8px;
   background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
   color: var(--text-secondary);
 }
@@ -203,7 +203,7 @@
   padding: 2rem;
   background: var(--bg-card);
   border: 1px solid var(--border-primary);
-  border-radius: 20px;
+  border-radius: 8px;
   backdrop-filter: blur(20px);
   box-shadow: var(--shadow-xl);
   position: relative;
@@ -290,7 +290,7 @@
   padding: 1rem 1.5rem;
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);
-  border-radius: 12px;
+  border-radius: 8px;
   color: var(--text-secondary);
   font-size: 0.95rem;
   font-weight: 600;
@@ -361,7 +361,8 @@
   box-shadow: var(--shadow-sm);
 }
 
-.stm-breadcrumb a {
+.stm-breadcrumb a,
+.stm-breadcrumb button {
   color: var(--primary);
   text-decoration: none;
   cursor: pointer;
@@ -369,18 +370,24 @@
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
   font-weight: 500;
+  border: 0;
+  background: transparent;
+  font: inherit;
 }
 
-.stm-breadcrumb a:hover {
+.stm-breadcrumb a:hover,
+.stm-breadcrumb button:hover {
   background: var(--primary-50);
   text-decoration: underline;
 }
 
-[data-theme="dark"] .stm-breadcrumb a:hover {
+[data-theme="dark"] .stm-breadcrumb a:hover,
+[data-theme="dark"] .stm-breadcrumb button:hover {
   background: var(--primary-100);
 }
 
-.stm-breadcrumb a.stm-active {
+.stm-breadcrumb a.stm-active,
+.stm-breadcrumb button.stm-active {
   color: var(--text-muted);
   cursor: default;
   pointer-events: none;
@@ -431,7 +438,7 @@
   padding: 1.5rem;
   background: var(--bg-card);
   border: 1px solid var(--border-primary);
-  border-radius: 16px;
+  border-radius: 8px;
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-md);
 }
@@ -454,7 +461,7 @@
   background: var(--primary-gradient);
   color: var(--text-inverse);
   border: none;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
@@ -483,8 +490,8 @@
 }
 
 .stm-btn-create:hover {
-  box-shadow: var(--shadow-xl);
-  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
 }
 
 .stm-btn-create:active {
@@ -506,7 +513,7 @@
   padding: 2rem;
   background: var(--bg-card);
   border: 1px solid var(--border-primary);
-  border-radius: 16px;
+  border-radius: 8px;
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-md);
 }
@@ -549,7 +556,7 @@
   padding: 2.5rem;
   background: var(--bg-card);
   border: 1px solid var(--border-primary);
-  border-radius: 20px;
+  border-radius: 8px;
   backdrop-filter: blur(20px);
   box-shadow: var(--shadow-xl);
   position: relative;
@@ -598,7 +605,7 @@
   padding: 0.75rem 1.5rem;
   background: var(--success-bg);
   border: 1px solid var(--success-border);
-  border-radius: 12px;
+  border-radius: 8px;
   color: var(--success);
   font-weight: 700;
   font-size: 0.9rem;
@@ -618,7 +625,7 @@
   padding: 2rem;
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);
-  border-radius: 16px;
+  border-radius: 8px;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-sm);
@@ -626,8 +633,8 @@
 
 .stm-item-view:hover {
   border-color: var(--primary);
-  box-shadow: var(--shadow-glow);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 
 .stm-item-header-view {

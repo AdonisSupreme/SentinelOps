@@ -743,6 +743,7 @@
 
 .roster-item,
 .analytics-item,
+.shift-config-item,
 .pattern-list-item {
   padding: 12px;
   border-radius: 16px;
@@ -751,6 +752,7 @@
 
 [data-theme='light'] .roster-item,
 [data-theme='light'] .analytics-item,
+[data-theme='light'] .shift-config-item,
 [data-theme='light'] .pattern-list-item {
   background: var(--team-soft-bg);
 }
@@ -784,6 +786,87 @@
 .analytics-item em {
   font-style: normal;
   color: var(--text-primary);
+  font-weight: 700;
+}
+
+.shift-config-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.shift-config-item {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.shift-config-item strong,
+.shift-config-item span {
+  display: block;
+}
+
+.shift-config-item strong {
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.shift-config-item span {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.shift-color-dot {
+  width: 12px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--text-primary) 16%, transparent);
+}
+
+.shift-color-input {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.shift-color-input input[type='color'] {
+  width: 48px;
+  height: 48px;
+  padding: 4px;
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  background: var(--bg-card);
+  cursor: pointer;
+}
+
+.pattern-shift-source {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border-primary);
+  background: var(--team-soft-bg);
+  color: var(--text-secondary);
+}
+
+.pattern-shift-source svg {
+  color: var(--primary);
+}
+
+.pattern-shift-source span {
+  flex: 1;
+  min-width: 180px;
+}
+
+.pattern-shift-source button {
+  border: 1px solid var(--border-primary);
+  background: rgba(14, 165, 233, 0.12);
+  color: var(--text-primary);
+  padding: 0.55rem 0.75rem;
+  cursor: pointer;
+  font: inherit;
   font-weight: 700;
 }
 
@@ -1032,6 +1115,7 @@
 .insight-panel,
 .assignment-card,
 .pattern-list-item,
+.shift-config-item,
 .analytics-item,
 .roster-item,
 .day-cluster,
@@ -1127,6 +1211,14 @@
 
   .assignment-grid {
     grid-template-columns: 1fr;
+  }
+
+  .shift-config-item {
+    grid-template-columns: 14px minmax(0, 1fr);
+  }
+
+  .shift-config-item .pattern-actions {
+    grid-column: 2;
   }
 
   .schedule-pagination {

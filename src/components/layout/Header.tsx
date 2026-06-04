@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
+  FaArrowDown,
   FaBars,
   FaBook,
-  FaChartLine,
+  FaBroadcastTower,
   FaClipboardList,
-  FaDatabase,
-  FaNetworkWired,
   FaRoute,
   FaShieldAlt,
   FaSignal,
@@ -15,7 +14,6 @@ import {
   FaUserCircle,
   FaUsers,
   FaUserShield,
-  FaWrench,
 } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 import { SECTION_MANUAL_ID } from '../../content/sentinelManual';
@@ -43,19 +41,29 @@ interface MenuShellConfig {
   hoverKicker: string;
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+}
+
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const [navMenuOpen, setNavMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [hoveredNavItem, setHoveredNavItem] = useState<MenuItem | null>(null);
   const [hoveredProfileItem, setHoveredProfileItem] = useState<MenuItem | null>(null);
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isStandalone, setIsStandalone] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
   const isAdmin = user?.role?.toLowerCase() === 'admin';
   const isManager = ['admin', 'manager', 'supervisor'].includes((user?.role || '').toLowerCase());
-  const hasSectionManual = user?.section_id === SECTION_MANUAL_ID;
+  const hasNexusAccess = user?.section_id === SECTION_MANUAL_ID;
 
   const isActiveItem = (item: MenuItem) => {
     if (!item.path) return false;
@@ -72,15 +80,6 @@ const Header: React.FC = () => {
         label: 'Dashboard',
         icon: <FaTachometerAlt />,
         description: 'Live mission overview with the pulse of active operations, system health, and critical momentum.',
-        caption: 'Open module',
-        activeCaption: 'Current command view',
-      },
-      {
-        id: 'database-stats',
-        path: '/database-stats',
-        label: 'Stats',
-        icon: <FaDatabase />,
-        description: 'Deep telemetry for data flow, storage health, and the numbers driving every operational decision.',
         caption: 'Open module',
         activeCaption: 'Current command view',
       },
@@ -113,29 +112,11 @@ const Header: React.FC = () => {
         activeCaption: 'Current command view',
       },
       {
-        id: 'network-sentinel',
-        path: '/network-sentinel',
-        label: 'Network Sentinel',
-        icon: <FaNetworkWired />,
-        description: 'Network visibility deck where anomalies surface fast and infrastructure signals turn into action.',
-        caption: 'Open module',
-        activeCaption: 'Current command view',
-      },
-      {
-        id: 'templates',
-        path: '/templates',
-        label: 'Templates',
-        icon: <FaWrench />,
-        description: 'Blueprint vault for reusable workflows, standardized checklists, and repeatable operational excellence.',
-        caption: 'Open module',
-        activeCaption: 'Current command view',
-      },
-      {
-        id: 'performance',
-        path: '/performance',
-        label: 'Performance',
-        icon: <FaChartLine />,
-        description: 'Performance intelligence hub for streaks, efficiency patterns, and the signals behind top-tier teams.',
+        id: 'nexus',
+        path: '/nexus',
+        label: 'Sentinel Nexus',
+        icon: <FaBroadcastTower />,
+        description: 'Incident intelligence deck for graph-aware correlation, log evidence, ranked causes, and controlled action approval.',
         caption: 'Open module',
         activeCaption: 'Current command view',
       },
@@ -144,8 +125,8 @@ const Header: React.FC = () => {
   );
 
   const navItems: MenuItem[] = useMemo(
-    () => baseNavItems,
-    [baseNavItems],
+    () => baseNavItems.filter((item) => item.id !== 'nexus' || hasNexusAccess),
+    [baseNavItems, hasNexusAccess],
   );
 
   const profileItems: MenuItem[] = useMemo(
@@ -159,19 +140,15 @@ const Header: React.FC = () => {
         caption: 'Open personal controls',
         activeCaption: 'Current user hub',
       },
-      ...(hasSectionManual
-        ? [
-            {
-              id: 'manual',
-              path: '/manual',
-              label: 'SentinelOps Manual',
-              icon: <FaBook />,
-              description: 'A section-ready playbook for what to do, where to go, and how to move through SentinelOps without wasting clicks.',
-              caption: 'Open the section playbook',
-              activeCaption: 'Manual is open',
-            } satisfies MenuItem,
-          ]
-        : []),
+      {
+        id: 'manual',
+        path: '/manual',
+        label: 'SentinelOps Manual',
+        icon: <FaBook />,
+        description: 'A guided operator manual with visual landmarks, checklist flow, exception rules, handover guidance, and a downloadable PDF.',
+        caption: 'Open the user manual',
+        activeCaption: 'Manual is open',
+      },
       {
         id: 'schedule',
         path: '/schedule',
@@ -208,7 +185,7 @@ const Header: React.FC = () => {
           ]
         : []),
     ],
-    [hasSectionManual, isAdmin, isManager],
+    [isAdmin, isManager],
   );
 
   useEffect(() => {
@@ -230,6 +207,35 @@ const Header: React.FC = () => {
     const currentItem = profileItems.find((item) => isActiveItem(item)) ?? profileItems[0] ?? null;
     setHoveredProfileItem(currentItem);
   }, [location.pathname, profileItems, profileMenuOpen]);
+
+  useEffect(() => {
+    const detectStandalone = () => {
+      const standaloneMode =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+      setIsStandalone(standaloneMode);
+    };
+
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setDeferredInstallPrompt(event as BeforeInstallPromptEvent);
+    };
+
+    const handleAppInstalled = () => {
+      setDeferredInstallPrompt(null);
+      detectStandalone();
+    };
+
+    detectStandalone();
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -274,6 +280,19 @@ const Header: React.FC = () => {
       setProfileMenuOpen(false);
       return next;
     });
+  };
+
+  const handleInstallApp = async () => {
+    if (!deferredInstallPrompt) {
+      return;
+    }
+
+    await deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+
+    if (outcome === 'accepted') {
+      setDeferredInstallPrompt(null);
+    }
   };
 
   const renderMenuItem = (item: MenuItem, hoveredItemSetter: React.Dispatch<React.SetStateAction<MenuItem | null>>) => (
@@ -387,6 +406,20 @@ const Header: React.FC = () => {
           </div>
 
           <div className="header-utility-cluster">
+            {!isStandalone && deferredInstallPrompt ? (
+              <button
+                type="button"
+                className="install-app-btn"
+                onClick={() => {
+                  void handleInstallApp();
+                }}
+                aria-label="Install SentinelOps"
+              >
+                <FaArrowDown />
+                <span>Install App</span>
+              </button>
+            ) : null}
+
             <React.Suspense fallback={<div>Loading...</div>}>
               <NotificationCenter />
             </React.Suspense>

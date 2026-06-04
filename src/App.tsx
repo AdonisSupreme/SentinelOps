@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ChecklistProvider } from './contexts/checklistContext';
+import { AppConfigProvider } from './contexts/AppConfigContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import DatabaseStatsPage from './pages/DatabaseStatsPage';
@@ -21,6 +22,7 @@ import SentinelManualPage from './pages/SentinelManualPage';
 import TemplateManagerPage from './pages/TemplateManagerPage';
 import TrustlinkOperationsPage from './pages/TrustlinkOperationsPage';
 import NetworkSentinelPage from './pages/NetworkSentinelPage';
+import NexusPage from './pages/NexusPage';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import ScrollToTop from './components/ui/ScrollToTop';
@@ -36,8 +38,9 @@ function App() {
       <Router>
         <ThemeProvider>
           <AuthProvider>
-            <NotificationProvider>
-              <ChecklistProvider>
+            <AppConfigProvider>
+              <NotificationProvider>
+                <ChecklistProvider>
                 <GlobalStyles />
                 
                 <div className="app-layout">
@@ -58,6 +61,7 @@ function App() {
                           <Route path="/templates" element={<TemplateManagerPage />} />
                           <Route path="/trustlink" element={<TrustlinkOperationsPage />} />
                           <Route path="/network-sentinel" element={<NetworkSentinelPage />} />
+                          <Route path="/nexus" element={<NexusPage />} />
                           <Route path="/performance" element={<PerformancePage />} />
                           <Route path="/users" element={<UserManagementPage />} />
                           <Route path="/team" element={<AdvancedTeamManagementPage />} />
@@ -75,8 +79,9 @@ function App() {
                 </div>
 
                 <ScrollToTop />
-              </ChecklistProvider>
-            </NotificationProvider>
+                </ChecklistProvider>
+              </NotificationProvider>
+            </AppConfigProvider>
           </AuthProvider>
         </ThemeProvider>
       </Router>

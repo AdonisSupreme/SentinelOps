@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FaCalendarAlt,
   FaChartLine,
@@ -80,6 +80,17 @@ const AdvancedTeamManagementPage: React.FC = () => {
   });
   const [showPatternModal, setShowPatternModal] = useState(false);
   const [patternSubmitting, setPatternSubmitting] = useState(false);
+  const [showShiftModal, setShowShiftModal] = useState(false);
+  const [shiftSubmitting, setShiftSubmitting] = useState(false);
+  const [resumePatternAfterShift, setResumePatternAfterShift] = useState(false);
+  const [shiftForm, setShiftForm] = useState({
+    id: null as number | null,
+    name: '',
+    start_time: '07:00',
+    end_time: '15:00',
+    timezone: 'Africa/Johannesburg',
+    color: '#2563eb',
+  });
   const [patternForm, setPatternForm] = useState({
     id: '',
     name: '',
@@ -90,6 +101,7 @@ const AdvancedTeamManagementPage: React.FC = () => {
 
   const role = (currentUser?.role || '').toLowerCase();
   const isAdmin = role === 'admin';
+  const canManageShifts = isAdmin;
   const canApproveDaysOff = role === 'admin' || role === 'manager' || role === 'supervisor';
   const canManageTeam = role === 'admin' || role === 'supervisor' || role === 'manager';
   const userSectionId = (currentUser as any)?.section_id || '';
@@ -110,7 +122,13 @@ const AdvancedTeamManagementPage: React.FC = () => {
     return { start: startOfMonth(today), end: endOfMonth(today) };
   }, [viewPreset]);
 
-  const loadScheduledShifts = async (mode: 'skeleton' | 'refresh' = 'refresh') => {
+  const loadShifts = async () => {
+    const shiftData = await teamApi.listShifts();
+    setShifts(shiftData);
+    return shiftData;
+  };
+
+  const loadScheduledShifts = useCallback(async (mode: 'skeleton' | 'refresh' = 'refresh') => {
     if (!canManageTeam || !effectiveSectionId) return;
     if (mode === 'skeleton') setScheduleLoading(true);
     else setScheduleRefreshing(true);
@@ -125,14 +143,13 @@ const AdvancedTeamManagementPage: React.FC = () => {
       setScheduleLoading(false);
       setScheduleRefreshing(false);
     }
-  };
+  }, [canManageTeam, dateRange.end, dateRange.start, effectiveSectionId]);
 
   useEffect(() => {
     const load = async () => {
       if (!canManageTeam) return;
       try {
-        const [shiftData, sectionData] = await Promise.all([teamApi.listShifts(), orgApi.listSections()]);
-        setShifts(shiftData);
+        const [, sectionData] = await Promise.all([loadShifts(), orgApi.listSections()]);
         setSections(sectionData);
         const nextSection = isAdmin ? sectionData[0]?.id || '' : userSectionId;
         if (nextSection) {
@@ -181,13 +198,13 @@ const AdvancedTeamManagementPage: React.FC = () => {
     const loadSchedule = async () => {
       if (!canManageTeam || !effectiveSectionId) return setScheduledShifts([]);
       try {
-        await loadScheduledShifts(scheduledShifts.length ? 'refresh' : 'skeleton');
+        await loadScheduledShifts('skeleton');
       } catch {
         setScheduledShifts([]);
       }
     };
     void loadSchedule();
-  }, [canManageTeam, effectiveSectionId, dateRange]);
+  }, [canManageTeam, effectiveSectionId, loadScheduledShifts]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -284,6 +301,38 @@ const AdvancedTeamManagementPage: React.FC = () => {
     setShowPatternModal(true);
   };
 
+  const openCreateShift = () => {
+    setShiftForm({
+      id: null,
+      name: '',
+      start_time: '07:00',
+      end_time: '15:00',
+      timezone: shifts[0]?.timezone || 'Africa/Johannesburg',
+      color: '#2563eb',
+    });
+    setShowShiftModal(true);
+  };
+
+  const closeShiftModal = () => {
+    setShowShiftModal(false);
+    if (resumePatternAfterShift) {
+      setShowPatternModal(true);
+      setResumePatternAfterShift(false);
+    }
+  };
+
+  const openEditShift = (shift: Shift) => {
+    setShiftForm({
+      id: shift.id,
+      name: shift.name || '',
+      start_time: (shift.start_time || '').slice(0, 5),
+      end_time: (shift.end_time || '').slice(0, 5),
+      timezone: shift.timezone || shifts[0]?.timezone || 'Africa/Johannesburg',
+      color: shift.color || '#2563eb',
+    });
+    setShowShiftModal(true);
+  };
+
   const openEditPattern = async (pattern: ShiftPattern) => {
     try {
       const details = await shiftSchedulingApi.getPatternDetails(pattern.id);
@@ -371,6 +420,62 @@ const AdvancedTeamManagementPage: React.FC = () => {
       });
     } finally {
       setPatternSubmitting(false);
+    }
+  };
+
+  const handleSaveShift = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!canManageShifts || !shiftForm.name.trim() || !shiftForm.start_time || !shiftForm.end_time) return;
+
+    setShiftSubmitting(true);
+    try {
+      const payload = {
+        name: shiftForm.name.trim(),
+        start_time: shiftForm.start_time,
+        end_time: shiftForm.end_time,
+        timezone: shiftForm.timezone.trim() || 'Africa/Johannesburg',
+        color: shiftForm.color || null,
+        metadata: {},
+      };
+
+      if (shiftForm.id) {
+        await teamApi.updateShift(shiftForm.id, payload);
+        addNotification({ type: 'success', message: 'Shift updated.', priority: 'medium' });
+      } else {
+        await teamApi.createShift(payload);
+        addNotification({ type: 'success', message: 'Shift created. It is now available for patterns and templates.', priority: 'medium' });
+      }
+
+      await loadShifts();
+      closeShiftModal();
+    } catch (err: any) {
+      addNotification({
+        type: 'error',
+        message: err.response?.data?.detail || err.message || 'Failed to save shift',
+        priority: 'high',
+      });
+    } finally {
+      setShiftSubmitting(false);
+    }
+  };
+
+  const handleDeleteShift = async (shift: Shift) => {
+    if (!canManageShifts) return;
+    if (!window.confirm(`Delete shift "${shift.name}"? This is only allowed when no schedule, pattern, or exception uses it.`)) {
+      return;
+    }
+
+    try {
+      await teamApi.deleteShift(shift.id);
+      await loadShifts();
+      await loadPatterns(effectiveSectionId);
+      addNotification({ type: 'success', message: 'Shift deleted.', priority: 'medium' });
+    } catch (err: any) {
+      addNotification({
+        type: 'error',
+        message: err.response?.data?.detail || err.message || 'Failed to delete shift',
+        priority: 'high',
+      });
     }
   };
 
@@ -683,6 +788,39 @@ const AdvancedTeamManagementPage: React.FC = () => {
 
           <div className="insight-panel glass-panel">
             <div className="panel-head compact">
+              <div><span className="panel-kicker"><FaClock /> Shift Configuration</span><h3>Operational shifts</h3></div>
+              {canManageShifts ? (
+                <button className="btn-secondary" type="button" onClick={openCreateShift}>
+                  <FaPlus /> New Shift
+                </button>
+              ) : null}
+            </div>
+            <div className="shift-config-list">
+              {shifts.map((shift) => (
+                <div key={shift.id} className="shift-config-item">
+                  <span className="shift-color-dot" style={{ backgroundColor: shift.color || '#2563eb' }} />
+                  <div>
+                    <strong>{shift.name}</strong>
+                    <span>{shift.start_time} - {shift.end_time} / {shift.timezone || 'UTC'}</span>
+                  </div>
+                  {canManageShifts ? (
+                    <div className="pattern-actions">
+                      <button type="button" className="btn-icon" onClick={() => openEditShift(shift)} title="Edit shift">
+                        <FaEdit />
+                      </button>
+                      <button type="button" className="btn-icon danger" onClick={() => void handleDeleteShift(shift)} title="Delete shift">
+                        <FaTrash />
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+              {!shifts.length ? <p className="insight-empty">No shifts configured yet. Create shifts before building patterns.</p> : null}
+            </div>
+          </div>
+
+          <div className="insight-panel glass-panel">
+            <div className="panel-head compact">
               <div><span className="panel-kicker"><FaWrench /> Pattern Deck</span><h3>Available smart patterns</h3></div>
               <button className="btn-secondary" type="button" onClick={openCreatePattern} disabled={!effectiveSectionId}>
                 <FaPlus /> New Pattern
@@ -802,6 +940,90 @@ const AdvancedTeamManagementPage: React.FC = () => {
         </div>
       ) : null}
 
+      {showShiftModal ? (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <div>
+                <span className="panel-kicker">Shift Configuration</span>
+                <h2>{shiftForm.id ? 'Edit operational shift' : 'Create operational shift'}</h2>
+              </div>
+              <button className="btn-close" onClick={closeShiftModal}><FaTimes /></button>
+            </div>
+            <form onSubmit={handleSaveShift} className="assignment-form">
+              <div className="form-group">
+                <label>Shift name</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={shiftForm.name}
+                  onChange={(event) => setShiftForm((previous) => ({ ...previous, name: event.target.value }))}
+                  placeholder="e.g., Early Support, Weekend Core, IDC Night"
+                  required
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Start time</label>
+                  <input
+                    type="time"
+                    className="form-input"
+                    value={shiftForm.start_time}
+                    onChange={(event) => setShiftForm((previous) => ({ ...previous, start_time: event.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>End time</label>
+                  <input
+                    type="time"
+                    className="form-input"
+                    value={shiftForm.end_time}
+                    onChange={(event) => setShiftForm((previous) => ({ ...previous, end_time: event.target.value }))}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Timezone</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={shiftForm.timezone}
+                    onChange={(event) => setShiftForm((previous) => ({ ...previous, timezone: event.target.value }))}
+                    placeholder="Africa/Johannesburg"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Color</label>
+                  <div className="shift-color-input">
+                    <input
+                      type="color"
+                      value={shiftForm.color}
+                      onChange={(event) => setShiftForm((previous) => ({ ...previous, color: event.target.value }))}
+                      aria-label="Shift color"
+                    />
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={shiftForm.color}
+                      onChange={(event) => setShiftForm((previous) => ({ ...previous, color: event.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="form-actions">
+                <button type="button" className="btn-secondary" onClick={closeShiftModal}>Cancel</button>
+                <button type="submit" className="btn-primary-glow" disabled={shiftSubmitting || !canManageShifts}>
+                  {shiftSubmitting ? 'Saving...' : shiftForm.id ? 'Update Shift' : 'Create Shift'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
       {showPatternModal ? (
         <div className="modal-overlay">
           <div className="modal-content large">
@@ -846,6 +1068,22 @@ const AdvancedTeamManagementPage: React.FC = () => {
                   onChange={(event) => setPatternForm((previous) => ({ ...previous, description: event.target.value }))}
                   placeholder="Optional details for planners"
                 />
+              </div>
+              <div className="pattern-shift-source">
+                <FaClock />
+                <span>{shifts.length} configured shift{shifts.length === 1 ? '' : 's'} available for this pattern.</span>
+                {canManageShifts ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResumePatternAfterShift(true);
+                      setShowPatternModal(false);
+                      openCreateShift();
+                    }}
+                  >
+                    Add shift
+                  </button>
+                ) : null}
               </div>
               <div className="pattern-editor-grid">
                 {patternForm.schedule_days.map((day) => (

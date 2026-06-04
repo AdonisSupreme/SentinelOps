@@ -222,6 +222,59 @@
   display: inline-flex;
 }
 
+.settings-timezone-control {
+  display: grid;
+  gap: 1rem;
+  margin-top: 18px;
+}
+
+.settings-timezone-control label {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.settings-timezone-control label span,
+.settings-readonly-note,
+.settings-timezone-message {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.settings-timezone-control input {
+  width: 100%;
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  padding: 0.85rem 1rem;
+  outline: none;
+}
+
+[data-theme='light'] .settings-timezone-control input {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.settings-save-btn {
+  justify-self: flex-start;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2563eb, #22c55e);
+  color: #fff;
+  padding: 0.85rem 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 16px 32px rgba(37, 99, 235, 0.24);
+}
+
+.settings-save-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.settings-highlight-list.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .settings-link-grid {
   display: grid;
   gap: 12px;

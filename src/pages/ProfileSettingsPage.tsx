@@ -4,7 +4,9 @@ import {
   FaArrowRight,
   FaBook,
   FaCalendarAlt,
+  FaChartLine,
   FaCompass,
+  FaClock,
   FaIdBadge,
   FaShieldAlt,
   FaSignOutAlt,
@@ -13,9 +15,10 @@ import {
 } from 'react-icons/fa';
 import ThemeToggle from '../components/ui/ThemeToggle';
 import { useAuth } from '../contexts/AuthContext';
+import { useAppConfig } from '../contexts/AppConfigContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { DEFAULT_APPLICATION_TIMEZONE, isValidTimeZone } from '../utils/time';
 import { orgApi } from '../services/orgApi';
-import { SECTION_MANUAL_ID } from '../content/sentinelManual';
 import './ProfileSettingsPage.css';
 
 const describeAccess = (role?: string) => {
@@ -35,12 +38,15 @@ const describeAccess = (role?: string) => {
 const ProfileSettingsPage: React.FC = () => {
   const { user, logout } = useAuth();
   const { theme, resolvedTheme } = useTheme();
+  const { applicationTimeZone, setting: timezoneSetting, updateApplicationTimeZone } = useAppConfig();
   const [sectionName, setSectionName] = useState<string>('');
+  const [timeZoneDraft, setTimeZoneDraft] = useState(applicationTimeZone);
+  const [timeZoneBusy, setTimeZoneBusy] = useState(false);
+  const [timeZoneMessage, setTimeZoneMessage] = useState<string | null>(null);
 
   const role = (user?.role || '').toLowerCase();
   const isAdmin = role === 'admin';
   const canManageTeam = ['admin', 'manager', 'supervisor'].includes(role);
-  const hasSectionManual = user?.section_id === SECTION_MANUAL_ID;
 
   useEffect(() => {
     const loadSectionName = async () => {
@@ -62,6 +68,10 @@ const ProfileSettingsPage: React.FC = () => {
     void loadSectionName();
   }, [user?.section_id]);
 
+  useEffect(() => {
+    setTimeZoneDraft(applicationTimeZone);
+  }, [applicationTimeZone]);
+
   const initials = `${user?.first_name?.[0] ?? 'S'}${user?.last_name?.[0] ?? 'O'}`.toUpperCase();
 
   const quickLinks = useMemo(
@@ -72,6 +82,13 @@ const ProfileSettingsPage: React.FC = () => {
           description: 'Confirm your next assignment, open days, and near-term deadlines before the shift starts moving.',
           to: '/schedule',
           icon: <FaCalendarAlt />,
+          visible: true,
+        },
+        {
+          title: 'Performance',
+          description: 'Open your performance intelligence view for streaks, score signals, and team momentum.',
+          to: '/performance',
+          icon: <FaChartLine />,
           visible: true,
         },
         {
@@ -90,14 +107,39 @@ const ProfileSettingsPage: React.FC = () => {
         },
         {
           title: 'SentinelOps Manual',
-          description: 'Open the section playbook for the fastest way to work the platform with confidence.',
+          description: 'Open the guided user manual with visual landmarks, checklist flow, handover rules, and PDF download.',
           to: '/manual',
           icon: <FaBook />,
-          visible: hasSectionManual,
+          visible: true,
         },
       ].filter((item) => item.visible),
-    [canManageTeam, hasSectionManual, isAdmin],
+    [canManageTeam, isAdmin],
   );
+
+  const recommendedTimeZones = timezoneSetting?.recommended_timezones?.length
+    ? timezoneSetting.recommended_timezones
+    : [DEFAULT_APPLICATION_TIMEZONE, 'Africa/Johannesburg', 'UTC'];
+
+  const saveApplicationTimezone = async () => {
+    if (!isAdmin) {
+      return;
+    }
+    const nextTimeZone = timeZoneDraft.trim();
+    if (!isValidTimeZone(nextTimeZone)) {
+      setTimeZoneMessage('Use a valid IANA timezone such as Africa/Harare or UTC.');
+      return;
+    }
+    setTimeZoneBusy(true);
+    setTimeZoneMessage(null);
+    try {
+      await updateApplicationTimeZone(nextTimeZone);
+      setTimeZoneMessage(`SentinelOps display timezone updated to ${nextTimeZone}.`);
+    } catch (error: any) {
+      setTimeZoneMessage(error?.response?.data?.detail || error?.message || 'Timezone update failed.');
+    } finally {
+      setTimeZoneBusy(false);
+    }
+  };
 
   return (
     <div className="profile-settings-page">
@@ -171,7 +213,7 @@ const ProfileSettingsPage: React.FC = () => {
             </div>
             <div>
               <label>Manual availability</label>
-              <strong>{hasSectionManual ? 'Published for your section' : 'Not available for your section'}</strong>
+              <strong>Available to every SentinelOps user</strong>
             </div>
             <div>
               <label>Control rule</label>
@@ -193,6 +235,54 @@ const ProfileSettingsPage: React.FC = () => {
 
           <div className="settings-theme-toggle">
             <ThemeToggle />
+          </div>
+        </article>
+
+        <article className="settings-panel">
+          <div className="settings-panel-heading">
+            <FaClock />
+            <span>Application Timezone</span>
+          </div>
+
+          <p className="settings-panel-copy">
+            SentinelOps stores operational timestamps in UTC, then renders them in the configured application timezone.
+            The default is Harare, Zimbabwe time so Nexus and Network Sentinel incidents show the operator-facing clock correctly.
+          </p>
+
+          <div className="settings-timezone-control">
+            <label>
+              <span>Display timezone</span>
+              <input
+                list="sentinelops-timezone-options"
+                value={timeZoneDraft}
+                onChange={(event) => setTimeZoneDraft(event.target.value)}
+                disabled={!isAdmin}
+                placeholder="Africa/Harare"
+              />
+              <datalist id="sentinelops-timezone-options">
+                {recommendedTimeZones.map((timeZone) => (
+                  <option key={timeZone} value={timeZone} />
+                ))}
+              </datalist>
+            </label>
+            <div className="settings-highlight-list compact">
+              <div>
+                <label>Current display</label>
+                <strong>{applicationTimeZone}</strong>
+              </div>
+              <div>
+                <label>Last updated</label>
+                <strong>{timezoneSetting?.updated_by || 'Default'}</strong>
+              </div>
+            </div>
+            {isAdmin ? (
+              <button type="button" className="settings-save-btn" onClick={() => void saveApplicationTimezone()} disabled={timeZoneBusy}>
+                {timeZoneBusy ? 'Saving timezone...' : 'Save timezone'}
+              </button>
+            ) : (
+              <span className="settings-readonly-note">Only administrators can change the application timezone.</span>
+            )}
+            {timeZoneMessage ? <p className="settings-timezone-message">{timeZoneMessage}</p> : null}
           </div>
         </article>
 
@@ -228,12 +318,10 @@ const ProfileSettingsPage: React.FC = () => {
         </div>
 
         <div className="settings-footer-actions">
-          {hasSectionManual && (
-            <Link to="/manual" className="settings-footer-link">
-              <FaBook />
-              <span>Open SentinelOps Manual</span>
-            </Link>
-          )}
+          <Link to="/manual" className="settings-footer-link">
+            <FaBook />
+            <span>Open SentinelOps Manual</span>
+          </Link>
 
           <button
             type="button"

@@ -535,12 +535,12 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return allowedTransitions[currentStatus]?.includes(newStatus) || false;
   }, []);
 
-  const getActionType = useCallback((newStatus: string): 'STARTED' | 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'ESCALATED' | 'UPDATED' => {
+  const getActionType = useCallback((newStatus: string): 'STARTED' | 'COMPLETED' | 'SKIPPED' | 'ESCALATED' | 'UPDATED' => {
     switch (newStatus) {
       case 'IN_PROGRESS': return 'STARTED';
       case 'COMPLETED': return 'COMPLETED';
       case 'SKIPPED': return 'SKIPPED';
-      case 'FAILED': return 'FAILED';
+      case 'FAILED': return 'ESCALATED';
       default: return 'UPDATED';
     }
   }, []);

@@ -1,8 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { FaCheck, FaChevronDown, FaChevronUp, FaClock, FaPlus, FaTimes, FaTrash } from 'react-icons/fa';
 import { checklistApi, type ChecklistTemplate, type UpdateChecklistTemplateRequest } from '../../services/checklistApi';
+import { teamApi } from '../../services/teamApi';
 import { useAuth } from '../../contexts/AuthContext';
 import { orgApi, type Section } from '../../services/orgApi';
+import { buildShiftOptions, normalizeShiftCode, type ShiftOption } from '../../utils/shiftUtils';
+import ShiftCreatorModal from './ShiftCreatorModal';
 import {
   ITEM_TYPE_OPTIONS,
   applyItemTypeRules,
@@ -34,7 +37,10 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
   const userSectionId = user?.section_id || '';
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [shift, setShift] = useState<'MORNING' | 'AFTERNOON' | 'NIGHT'>('MORNING');
+  const [shift, setShift] = useState<string>('');
+  const [shiftOptions, setShiftOptions] = useState<ShiftOption[]>([]);
+  const [shiftsLoading, setShiftsLoading] = useState(false);
+  const [showShiftCreator, setShowShiftCreator] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [selectedSectionId, setSelectedSectionId] = useState('');
   const [sections, setSections] = useState<Section[]>([]);
@@ -49,12 +55,49 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
   useEffect(() => {
     setName(template.name);
     setDescription(template.description || '');
-    setShift(template.shift);
+    setShift(normalizeShiftCode(template.shift));
     setIsActive(template.is_active);
     setSelectedSectionId(isAdmin ? template.section_id || '' : userSectionId || template.section_id || '');
     setItems(normalizeItems((template.items || []).map(mapTemplateItemToForm)));
     setLoading(false);
   }, [template, isAdmin, userSectionId]);
+
+  const applyShiftOptions = useCallback((options: ShiftOption[], preferredShift?: string) => {
+    const normalizedPreferred = normalizeShiftCode(preferredShift);
+    setShiftOptions(options);
+    setShift((current) => {
+      const normalizedCurrent = normalizeShiftCode(current || template.shift);
+      if (normalizedPreferred && options.some((option) => option.code === normalizedPreferred)) {
+        return normalizedPreferred;
+      }
+      return options.some((option) => option.code === normalizedCurrent)
+        ? normalizedCurrent
+        : options[0]?.code || '';
+    });
+  }, [template.shift]);
+
+  const refreshShiftOptions = useCallback(async (preferredShift?: string) => {
+    const includeCodes = [preferredShift || template.shift].filter(Boolean);
+    try {
+      setShiftsLoading(true);
+      const data = await teamApi.listShifts();
+      applyShiftOptions(buildShiftOptions(data, includeCodes), preferredShift || template.shift);
+    } catch (loadError) {
+      console.warn('Failed to load configured shifts for template editor:', loadError);
+      applyShiftOptions(buildShiftOptions([], includeCodes), preferredShift || template.shift);
+    } finally {
+      setShiftsLoading(false);
+    }
+  }, [applyShiftOptions, template.shift]);
+
+  useEffect(() => {
+    void refreshShiftOptions(template.shift);
+  }, [refreshShiftOptions, template.shift]);
+
+  const handleShiftCreated = async (createdShift: string) => {
+    await refreshShiftOptions(createdShift);
+    setShowShiftCreator(false);
+  };
 
   useEffect(() => {
     if (!isAdmin) {
@@ -103,6 +146,10 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
       nextErrors.section_id = isAdmin
         ? 'Section is required for template updates'
         : 'Your profile is not assigned to a section';
+    }
+
+    if (!normalizeShiftCode(shift)) {
+      nextErrors.shift = 'Create or select a configured shift';
     }
 
     if (items.length === 0) {
@@ -268,7 +315,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
       const updateData: UpdateChecklistTemplateRequest = {
         name: name.trim(),
         description: description.trim(),
-        shift,
+        shift: normalizeShiftCode(shift),
         is_active: isActive,
         section_id: effectiveSectionId,
         items: normalizeItems(items).map(serializeItemForRequest),
@@ -446,6 +493,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
   }
 
   return (
+    <>
     <form className="template-editor" onSubmit={handleSubmit}>
       <div className="editor-section">
         <h3 className="section-title">Template Details</h3>
@@ -465,17 +513,34 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
 
         <div className="form-row two-cols">
           <div className="form-group">
-            <label htmlFor="shift">Shift</label>
+            <div className="field-title-row">
+              <label htmlFor="shift">Shift *</label>
+              {isAdmin && (
+                <button type="button" className="inline-action" onClick={() => setShowShiftCreator(true)}>
+                  <FaPlus /> New shift
+                </button>
+              )}
+            </div>
             <select
               id="shift"
               value={shift}
-              onChange={(e) => setShift(e.target.value as 'MORNING' | 'AFTERNOON' | 'NIGHT')}
-              className="form-select"
+              onChange={(e) => setShift(normalizeShiftCode(e.target.value))}
+              className={`form-select ${errors.shift ? 'error' : ''}`}
+              disabled={shiftsLoading}
             >
-              <option value="MORNING">Morning</option>
-              <option value="AFTERNOON">Afternoon</option>
-              <option value="NIGHT">Night</option>
+              <option value="">{shiftsLoading ? 'Loading configured shifts...' : 'Select a configured shift'}</option>
+              {shiftOptions.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.label}
+                </option>
+              ))}
             </select>
+            {errors.shift && <span className="error-text">{errors.shift}</span>}
+            {!errors.shift && !shiftsLoading && shiftOptions.length === 0 && (
+              <span className="field-hint">
+                No shifts are configured yet. Admins can create one here before saving this template.
+              </span>
+            )}
           </div>
 
           <div className="form-group">
@@ -830,6 +895,12 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({ template, onSuccess, on
         </button>
       </div>
     </form>
+    <ShiftCreatorModal
+      open={showShiftCreator}
+      onClose={() => setShowShiftCreator(false)}
+      onCreated={handleShiftCreated}
+    />
+    </>
   );
 };
 

@@ -11,6 +11,8 @@
   background: var(--dbstats-bg-primary);
   color: var(--text-primary);
   transition: background 0.3s ease, color 0.3s ease;
+  width: 100%;
+  overflow-x: clip;
 }
 
 .main-content {
@@ -20,6 +22,26 @@
   margin-top: 0; /* Removed margin to eliminate gap */
   min-height: calc(100vh - 70px); /* Full height minus header */
   background: transparent; /* No background - uses app background */
+  width: 100%;
+  min-width: 0;
+  padding-bottom: max(1rem, var(--app-safe-bottom));
+}
+
+.main-content > * {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    min-height: calc(100vh - 74px);
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    min-height: calc(100vh - 66px);
+  }
 }
 
 /* Legacy App Components */

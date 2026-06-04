@@ -3,7 +3,7 @@
 
 import { ChecklistUpdateEvent } from './websocketService';
 
-type WebSocketEndpoint = 'checklists' | 'notifications';
+type WebSocketEndpoint = 'checklists' | 'notifications' | 'tasks';
 type ConnectionState = 'CONNECTING' | 'OPEN' | 'CLOSING' | 'CLOSED';
 
 interface CentralizedEvent {
@@ -72,7 +72,7 @@ class CentralizedWebSocketManager {
 
   private cleanupExistingConnections() {
     console.log('🧹 Cleaning up existing WebSocket connections for HMR');
-    const endpoints: WebSocketEndpoint[] = ['checklists', 'notifications'];
+    const endpoints: WebSocketEndpoint[] = ['checklists', 'notifications', 'tasks'];
     endpoints.forEach(endpoint => {
       const existingWs = this.connections.get(endpoint);
       if (existingWs) {
@@ -90,7 +90,7 @@ class CentralizedWebSocketManager {
   }
 
   private initializeConnectionStates() {
-    const endpoints: WebSocketEndpoint[] = ['checklists', 'notifications'];
+    const endpoints: WebSocketEndpoint[] = ['checklists', 'notifications', 'tasks'];
     endpoints.forEach(endpoint => {
       this.connections.set(endpoint, null);
       this.connectionStates.set(endpoint, 'CLOSED');
@@ -99,6 +99,27 @@ class CentralizedWebSocketManager {
       this.heartbeatTimers.set(endpoint, null);
       this.reconnectAttempts.set(endpoint, 0);
     });
+  }
+
+  private ensureEndpointState(endpoint: WebSocketEndpoint) {
+    if (!this.connections.has(endpoint)) {
+      this.connections.set(endpoint, null);
+    }
+    if (!this.connectionStates.has(endpoint)) {
+      this.connectionStates.set(endpoint, 'CLOSED');
+    }
+    if (!this.subscribers.has(endpoint)) {
+      this.subscribers.set(endpoint, new Set());
+    }
+    if (!this.reconnectTimers.has(endpoint)) {
+      this.reconnectTimers.set(endpoint, null);
+    }
+    if (!this.heartbeatTimers.has(endpoint)) {
+      this.heartbeatTimers.set(endpoint, null);
+    }
+    if (!this.reconnectAttempts.has(endpoint)) {
+      this.reconnectAttempts.set(endpoint, 0);
+    }
   }
 
   private loadAuthToken() {
@@ -122,6 +143,8 @@ class CentralizedWebSocketManager {
    * Connect to specific WebSocket endpoint
    */
   async connect(endpoint: WebSocketEndpoint): Promise<void> {
+    this.ensureEndpointState(endpoint);
+
     if (!this.authToken) {
       throw new Error('No authentication token available');
     }
@@ -210,6 +233,8 @@ class CentralizedWebSocketManager {
    * Disconnect from specific endpoint
    */
   disconnect(endpoint: WebSocketEndpoint) {
+    this.ensureEndpointState(endpoint);
+
     const reconnectTimer = this.reconnectTimers.get(endpoint);
     if (reconnectTimer) {
       clearTimeout(reconnectTimer);
@@ -242,6 +267,7 @@ class CentralizedWebSocketManager {
    * Subscribe to events from specific endpoint
    */
   subscribe(endpoint: WebSocketEndpoint, callback: (event: any) => void): () => void {
+    this.ensureEndpointState(endpoint);
     const subscribers = this.subscribers.get(endpoint)!;
     subscribers.add(callback);
 
@@ -262,6 +288,7 @@ class CentralizedWebSocketManager {
    * Send message to specific endpoint
    */
   send(endpoint: WebSocketEndpoint, message: any) {
+    this.ensureEndpointState(endpoint);
     const ws = this.connections.get(endpoint);
     const state = this.connectionStates.get(endpoint);
 
@@ -281,6 +308,7 @@ class CentralizedWebSocketManager {
    * Check if specific endpoint is connected
    */
   isConnected(endpoint: WebSocketEndpoint): boolean {
+    this.ensureEndpointState(endpoint);
     return this.connectionStates.get(endpoint) === 'OPEN';
   }
 
@@ -288,6 +316,7 @@ class CentralizedWebSocketManager {
    * Get connection state for specific endpoint
    */
   getConnectionState(endpoint: WebSocketEndpoint): string {
+    this.ensureEndpointState(endpoint);
     return this.connectionStates.get(endpoint) || 'CLOSED';
   }
 
@@ -297,7 +326,8 @@ class CentralizedWebSocketManager {
   getAllConnectionStates(): Record<WebSocketEndpoint, string> {
     return {
       checklists: this.connectionStates.get('checklists') || 'CLOSED',
-      notifications: this.connectionStates.get('notifications') || 'CLOSED'
+      notifications: this.connectionStates.get('notifications') || 'CLOSED',
+      tasks: this.connectionStates.get('tasks') || 'CLOSED'
     };
   }
 
@@ -315,7 +345,8 @@ class CentralizedWebSocketManager {
 
     const endpointPaths = {
       checklists: '/api/v1/checklists/ws',
-      notifications: '/api/v1/notifications/ws'
+      notifications: '/api/v1/notifications/ws',
+      tasks: '/api/v1/tasks/ws'
     };
 
     const wsUrl = `${baseUrl}${endpointPaths[endpoint]}?token=${encodeURIComponent(this.authToken!)}`;
@@ -333,6 +364,8 @@ class CentralizedWebSocketManager {
     } else if (endpoint === 'notifications') {
       // Handle notification-specific events
       this.handleNotificationMessage(normalizedData);
+    } else if (endpoint === 'tasks') {
+      this.handleTaskMessage(normalizedData);
     }
 
     // Notify general subscribers
@@ -354,6 +387,14 @@ class CentralizedWebSocketManager {
       console.log('🔔 Unread notifications received');
     } else if (data.type === 'new_notification') {
       console.log('📬 New notification received');
+    }
+  }
+
+  private handleTaskMessage(data: any) {
+    if (data.type === 'CONNECTION_ESTABLISHED') {
+      console.log('📡 Task connection established');
+    } else if (String(data.type || '').startsWith('TASK_')) {
+      console.log('🧭 Task realtime update received');
     }
   }
 

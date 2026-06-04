@@ -1,31 +1,107 @@
-.scroll-to-top {
+.scroll-navigator {
   position: fixed;
-  bottom: 30px;
-  right: 30px;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background-color: red;
-  color: white;
-  border: none;
-  cursor: pointer;
+  right: max(16px, calc(env(safe-area-inset-right, 0px) + 16px));
+  bottom: max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px));
   display: flex;
+  flex-direction: column-reverse;
+  gap: 0.7rem;
+  z-index: 1120;
+  pointer-events: none;
+}
+
+.scroll-nav-btn {
+  width: 3.1rem;
+  height: 3.1rem;
+  border-radius: 1.1rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 249, 0.94));
+  color: var(--text-primary);
+  box-shadow:
+    0 18px 36px rgba(15, 23, 42, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  opacity: 0;
-  visibility: hidden;
-  transition: var(--transition);
-  z-index: 10000;
+  font-size: 1rem;
+  pointer-events: auto;
+  cursor: pointer;
+  opacity: 0.58;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    background 0.22s ease,
+    border-color 0.22s ease,
+    color 0.22s ease,
+    opacity 0.22s ease;
 }
 
-.scroll-to-top.visible {
+.scroll-nav-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  border-color: rgba(59, 130, 246, 0.28);
+  box-shadow:
+    0 22px 40px rgba(15, 23, 42, 0.18),
+    0 0 0 1px rgba(59, 130, 246, 0.08);
   opacity: 1;
-  visibility: visible;
 }
 
-.scroll-to-top:hover {
-  background-color: var(--secondary-color);
-  transform: translateY(-3px);
+.scroll-nav-btn:active {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.scroll-nav-btn-bottom {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(224, 242, 254, 0.94));
+}
+
+.scroll-nav-btn-top {
+  background:
+    linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+  color: #f8fafc;
+  border-color: rgba(29, 78, 216, 0.24);
+}
+
+.scroll-nav-btn-top:hover {
+  border-color: rgba(59, 130, 246, 0.34);
+  box-shadow:
+    0 22px 40px rgba(29, 78, 216, 0.24),
+    0 0 0 1px rgba(59, 130, 246, 0.12);
+}
+
+[data-theme="dark"] .scroll-nav-btn {
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(2, 6, 23, 0.96));
+  color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.18);
+  box-shadow:
+    0 22px 40px rgba(2, 6, 23, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .scroll-nav-btn-bottom {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(3, 105, 161, 0.28));
+}
+
+[data-theme="dark"] .scroll-nav-btn-top {
+  background:
+    linear-gradient(135deg, rgba(14, 165, 233, 0.96), rgba(37, 99, 235, 0.86));
+  color: #eff6ff;
+}
+
+@media (max-width: 768px) {
+  .scroll-navigator {
+    right: max(12px, calc(env(safe-area-inset-right, 0px) + 12px));
+    bottom: max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px));
+    gap: 0.6rem;
+  }
+
+  .scroll-nav-btn {
+    width: 2.9rem;
+    height: 2.9rem;
+    border-radius: 1rem;
+    font-size: 0.92rem;
+  }
 }

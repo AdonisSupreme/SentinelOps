@@ -24,9 +24,33 @@ export interface ScheduledShift {
   status: string;
 }
 
+export interface ShiftPayload {
+  name: string;
+  start_time: string;
+  end_time: string;
+  timezone?: string;
+  color?: string | null;
+  metadata?: Record<string, unknown>;
+}
+
 class TeamApi {
   async listShifts(): Promise<Shift[]> {
     const response = await api.get<Shift[]>('/api/v1/checklists/shifts');
+    return response.data;
+  }
+
+  async createShift(payload: ShiftPayload): Promise<{ id: number }> {
+    const response = await api.post<{ id: number }>('/api/v1/checklists/shifts', payload);
+    return response.data;
+  }
+
+  async updateShift(id: number, payload: ShiftPayload): Promise<Shift> {
+    const response = await api.put<Shift>(`/api/v1/checklists/shifts/${id}`, payload);
+    return response.data;
+  }
+
+  async deleteShift(id: number): Promise<{ deleted: boolean; id: number }> {
+    const response = await api.delete<{ deleted: boolean; id: number }>(`/api/v1/checklists/shifts/${id}`);
     return response.data;
   }
 

@@ -1,32 +1,53 @@
 export const SECTION_MANUAL_ID = '7bd4144d-68d8-4ac3-897d-245941612daf';
+export const SENTINEL_MANUAL_PDF_PATH = '/manual/SentinelOps_User_Manual.pdf';
+
+export type ManualVisualType =
+  | 'dashboard'
+  | 'timeline'
+  | 'checklistHeader'
+  | 'itemActions'
+  | 'subitems'
+  | 'handover'
+  | 'taskCenter'
+  | 'finalize'
+  | 'templates'
+  | 'schedule'
+  | 'network'
+  | 'trustlink'
+  | 'settings';
 
 export interface ManualPrinciple {
   title: string;
   body: string;
 }
 
-export interface ManualLoop {
+export interface ManualJourneyStep {
+  step: string;
   title: string;
-  summary: string;
-  steps: string[];
-  outcome: string;
+  location: string;
+  actionLabel: string;
+  body: string;
+  checklist: string[];
+  safety: string;
+  visual: ManualVisualType;
+}
+
+export interface ManualDecisionRule {
+  title: string;
+  useWhen: string;
+  doThis: string;
+  evidence: string;
 }
 
 export interface ManualModule {
   title: string;
   route: string;
   routeLabel: string;
+  visual: ManualVisualType;
+  question: string;
   when: string;
-  why: string;
-  steps: string[];
-  shortcut: string;
-  watchFor: string;
-  permissions: string;
-}
-
-export interface ManualShortcut {
-  title: string;
-  body: string;
+  checklist: string[];
+  avoid: string;
 }
 
 export interface ManualHabit {
@@ -35,356 +56,462 @@ export interface ManualHabit {
 }
 
 export const sentinelManual = {
-  eyebrow: 'Section Field Manual',
-  title: 'SentinelOps Operator Playbook',
+  eyebrow: 'SentinelOps User Manual',
+  title: 'Guided Operator Manual',
+  edition: 'Operator edition | June 2026',
   intro:
-    'This manual is written for the SentinelOps crews working under section 7bd4144d-68d8-4ac3-897d-245941612daf. It is not a screen tour. It is the fastest way to understand where to start, how to move through the system, and which habits keep operations clean, auditable, and easy to hand over.',
+    'A practical, visual walkthrough for using SentinelOps without needing someone beside you. It shows where to begin, which button to press, what to write, when to skip, when to report, how to hand over, and how to close work cleanly.',
+  downloadLabel: 'Download PDF manual',
+  heroStats: [
+    { label: 'Start here', value: 'Dashboard' },
+    { label: 'Work here', value: 'Live Checklist' },
+    { label: 'Hand over here', value: 'Handover Notes' },
+    { label: 'Close here', value: 'Complete Checklist' },
+  ],
   openingSequence: [
-    'Read posture first on Dashboard before you touch live work.',
-    'Open the command thread or checklist that owns the issue instead of chasing information across pages.',
-    'Use Task Center for work that must survive the shift, and use checklists for work that must be executed now.',
-    'Capture handover notes, exceptions, and evidence where the next operator will actually look for them.',
+    'Read the Dashboard before touching live work.',
+    'Join the checklist when you are actively participating.',
+    'Work every item from Start Working through Complete, Skip, or Report Issue.',
+    'Write handover notes before context leaves your head.',
+    'Finalize only when the checklist record tells the truth.',
   ],
   principles: [
     {
-      title: 'Start with posture, not guesswork',
+      title: 'One place for the truth',
       body:
-        'Dashboard is the command lens. Before you open a queue, read the day: posture, exceptions, critical containment, coverage gaps, and which command thread is carrying the operational heat.',
+        'Live execution belongs in the checklist. Longer follow-up belongs in Task Center. Coverage belongs in schedule tools. Keeping work in the right place is what makes SentinelOps easy to trust.',
     },
     {
-      title: 'Work inside the source of truth',
+      title: 'Every exception needs a reason',
       body:
-        'If the work is happening now, it belongs in the live checklist. If it needs ownership and follow-through beyond a shift, it belongs in Task Center. If it changes staffing, it belongs in the schedule workspace.',
+        'Skipping or reporting an issue is allowed, but silence is not. The reason becomes the audit trail, the handover cue, and the clue the next operator needs.',
     },
     {
-      title: 'Promote signal into evidence fast',
+      title: 'Handover is part of the work',
       body:
-        'Network Sentinel and TrustLink are not there for decoration. Use them when you need proof, timelines, retained events, or the exact stage where a run went wrong.',
+        'A shift is not clean just because items are clicked. The next operator must inherit decisions, blockers, risks, and unfinished follow-up in writing.',
     },
     {
-      title: 'Prefer repeatable structure over memory',
+      title: 'Close from evidence',
       body:
-        'Templates, shift patterns, and saved operating flows are the force multipliers in this app. When a routine repeats, improve the structure once instead of fixing it manually every day.',
+        'SentinelOps derives the final checklist outcome from actual item and subitem evidence. A clean close and a close with exceptions mean different things, and the manual teaches both.',
     },
   ] as ManualPrinciple[],
-  loops: [
+  operatorJourney: [
     {
-      title: 'Start-of-shift loop',
-      summary:
-        'Use this loop when you are coming on duty and need a fast, reliable operational picture before touching live work.',
-      steps: [
-        'Open Dashboard and read command posture, critical containment, and coverage gaps first.',
-        'Open the command thread that matches your shift or the area showing pressure.',
-        'Join the live checklist if you are participating, then read the latest handover notes before executing anything.',
-        'Open Schedule only if your own coverage or the next handoff is unclear.',
+      step: '01',
+      title: 'Sign in and confirm your lane',
+      location: 'Login, profile menu, and Profile Settings',
+      actionLabel: 'Open Profile Settings if your access looks wrong',
+      body:
+        'After signing in, confirm that SentinelOps recognizes your role, section, schedule access, and theme. Your role decides whether you mainly execute, supervise, or administer.',
+      checklist: [
+        'Confirm your name and role in the profile menu.',
+        'Open Profile Settings when section, role, or schedule information looks wrong.',
+        'Ask an admin to fix role or section placement instead of working around missing access.',
       ],
-      outcome:
-        'You begin with context, not assumptions, and you avoid duplicating work the previous operator already captured.',
+      safety:
+        'If you cannot see a checklist, team, schedule, or user-management page you should own, stop and fix access first.',
+      visual: 'settings',
     },
     {
-      title: 'Mid-shift triage loop',
-      summary:
-        'Use this when the operation feels noisy and you need to separate symptoms from the real next action.',
-      steps: [
-        'Return to Dashboard to confirm whether the issue is execution pressure, a coverage gap, or a system signal.',
-        'Move into the live checklist if the problem is blocked execution or an unresolved exception.',
-        'Move into Task Center if the issue needs explicit ownership, a due date, or cross-shift follow-up.',
-        'Move into Network Sentinel or TrustLink if the problem needs technical evidence, timeline review, or run-stage analysis.',
+      step: '02',
+      title: 'Read the day before acting',
+      location: 'Dashboard',
+      actionLabel: 'Start from Dashboard',
+      body:
+        'Dashboard is the quickest answer to what kind of day the operation is having. Read posture, shift pressure, command threads, and handover summary before opening detailed work.',
+      checklist: [
+        'Scan operational state and critical signals first.',
+        'Check Shift Radar to see which shift has pressure.',
+        'Open the command thread or checklist that matches the active pressure.',
       ],
-      outcome:
-        'You spend less time bouncing between pages and more time inside the workspace that can actually resolve the issue.',
+      safety:
+        'Do not start in history when you are trying to solve the current day. The Dashboard points you to the live source faster.',
+      visual: 'dashboard',
     },
     {
-      title: 'Manager planning loop',
-      summary:
-        'Use this when you are shaping future coverage, handling leave, or cleaning up who owns what.',
-      steps: [
-        'Open Team Management and choose the right horizon before making any schedule edits.',
-        'Read the current coverage picture first so you know whether this is a pattern problem or a one-off exception.',
-        'Use saved patterns for repeatable structures and single assignments or time off for the dates that need judgment.',
-        'Open User Management only after the staffing shape is clear and you need to fix the people, roles, or access behind it.',
+      step: '03',
+      title: 'Open the right checklist',
+      location: 'Checklist Timeline or Dashboard command card',
+      actionLabel: 'Open Checklist Timeline when you need history',
+      body:
+        'Use the timeline to find a checklist by date, shift, status, or pattern. Use Dashboard when you already know the current live work needs attention.',
+      checklist: [
+        'Choose Day view for a known event.',
+        'Use Week or Date Range when you are studying repeated issues.',
+        'Open the exact checklist instance only after filters tell a narrow story.',
       ],
-      outcome:
-        'You protect the schedule from ad-hoc drift and keep people structure aligned with the real plan.',
+      safety:
+        'If the goal is execution, move into the live checklist. If the goal is review, stay in the timeline until the record is clear.',
+      visual: 'timeline',
     },
     {
-      title: 'End-of-shift handover loop',
-      summary:
-        'Use this before you leave so the next operator inherits a clean board instead of a puzzle.',
-      steps: [
-        'Finish or update checklist items where the work actually progressed.',
-        'Write handover notes for what is unresolved, risky, or dependent on the next shift.',
-        'Move unfinished long-tail work into Task Center if it must remain owned beyond the checklist run.',
-        'Check your personal schedule if the next assignment, recovery day, or deadline needs confirmation.',
+      step: '04',
+      title: 'Join before you work',
+      location: 'Live Checklist header',
+      actionLabel: 'Click Join Checklist',
+      body:
+        'Join the checklist when you are taking part in the shift work. This keeps participant presence accurate and tells supervisors who is actually involved.',
+      checklist: [
+        'Open the live checklist.',
+        'Click Join Checklist if the button is visible.',
+        'Confirm the Team Members panel shows your presence.',
       ],
-      outcome:
-        'The next shift can continue the operation immediately without recreating context from memory.',
+      safety:
+        'If you are only reviewing, you do not need to join. Join when your actions will change the operational record.',
+      visual: 'checklistHeader',
     },
-  ] as ManualLoop[],
+    {
+      step: '05',
+      title: 'Read handover before executing',
+      location: 'Right sidebar, Handover Notes',
+      actionLabel: 'Open Handover Notes',
+      body:
+        'Before touching items, read incoming handover notes. They explain what the previous shift left behind, what is risky, and what must not be repeated blindly.',
+      checklist: [
+        'Open Handover Notes in the right sidebar.',
+        'Acknowledge incoming notes when the note is for your shift.',
+        'Keep the Team Members panel nearby when coordination matters.',
+      ],
+      safety:
+        'If a note describes unresolved risk, do not mark related work complete until the risk has been checked or moved into Task Center.',
+      visual: 'handover',
+    },
+    {
+      step: '06',
+      title: 'Start the item you are actually working',
+      location: 'Item Actions modal',
+      actionLabel: 'Click Start Working',
+      body:
+        'Open the item, select Start Working, add a short note if useful, and confirm. Items with subitems will move into the guided subitem flow.',
+      checklist: [
+        'Open the item card you intend to work.',
+        'Click Start Working.',
+        'Add start notes when another operator would benefit from context.',
+      ],
+      safety:
+        'Do not start several items just to reserve them. Start means active work, not intention.',
+      visual: 'itemActions',
+    },
+    {
+      step: '07',
+      title: 'Work subitems in order',
+      location: 'Smart Subitem modal',
+      actionLabel: 'Use Start Working, Mark Complete, Skip, or Report Issue',
+      body:
+        'Subitems are the guided path inside a detailed item. The modal shows step count, progress, actionable buttons, and final completion notes when all subitems are actioned.',
+      checklist: [
+        'Use Next or Continue to move through actionable subitems.',
+        'Mark Complete only when the subitem is genuinely done.',
+        'Use Skip or Report Issue with a clear reason when the work cannot be completed normally.',
+      ],
+      safety:
+        'If any subitem is reported as failed, SentinelOps requires a final verdict before the main item can be completed.',
+      visual: 'subitems',
+    },
+    {
+      step: '08',
+      title: 'Complete clean work cleanly',
+      location: 'Item Actions or Smart Subitem completion step',
+      actionLabel: 'Click Mark Complete',
+      body:
+        'Use Mark Complete when the item or subitem has been performed and no exception remains. Add completion notes when evidence, timing, or a decision would help review.',
+      checklist: [
+        'Confirm the action was actually performed.',
+        'Add concise completion evidence when needed.',
+        'For items with subitems, complete all subitems before completing the main item.',
+      ],
+      safety:
+        'A completed item should not hide skipped, failed, or unresolved work. Use the exception path when the truth is messier.',
+      visual: 'itemActions',
+    },
+    {
+      step: '09',
+      title: 'Skip only when it is valid to skip',
+      location: 'Item Actions or subitem reason modal',
+      actionLabel: 'Click Skip Item or Skip',
+      body:
+        'Skip when the step is not applicable, cannot be performed because a required condition is absent, or is deliberately deferred by the operating process. Skipping still needs a reason.',
+      checklist: [
+        'Choose Skip only after deciding the step should not be completed now.',
+        'Write the reason in plain language.',
+        'If the skipped work still matters later, add a handover note or create a task.',
+      ],
+      safety:
+        'Skipping is not the same as resolving. It is an exception record. Use Task Center when follow-up must survive the shift.',
+      visual: 'itemActions',
+    },
+    {
+      step: '10',
+      title: 'Report issues instead of hiding failure',
+      location: 'Item Actions or subitem reason modal',
+      actionLabel: 'Click Report Issue',
+      body:
+        'Report Issue when execution failed, evidence shows a real problem, the action is unsafe, or the result needs escalation. Describe the issue so the next person can act without guessing.',
+      checklist: [
+        'State what failed or what symptom was observed.',
+        'Include evidence, system names, timestamps, or impact where possible.',
+        'After investigation, use Resolve & Complete or add the required final verdict when the item can be closed.',
+      ],
+      safety:
+        'Do not convert a failure into a skip just to finish faster. Reported issues are the trail supervisors and the next shift need.',
+      visual: 'subitems',
+    },
+    {
+      step: '11',
+      title: 'Write manual handover while context is fresh',
+      location: 'Handover Notes panel and Create Handover Note modal',
+      actionLabel: 'Click Add Handover Note',
+      body:
+        'Manual handover notes are for unresolved items, risks, dependencies, evidence pointers, or decisions the next shift must understand immediately.',
+      checklist: [
+        'Click Add Handover Note.',
+        'Choose a priority that matches operational urgency.',
+        'Write what happened, what still matters, and what should happen next.',
+      ],
+      safety:
+        'Use handover for shift context. Use Task Center when the work needs a named owner, due date, or multi-day follow-through.',
+      visual: 'handover',
+    },
+    {
+      step: '12',
+      title: 'Promote long-tail work into Task Center',
+      location: 'Task Center',
+      actionLabel: 'Create or update a task',
+      body:
+        'When a checklist item becomes a responsibility beyond the current run, put it in Task Center. That gives it ownership, status, due date, and history.',
+      checklist: [
+        'Open the correct task lane: personal, assigned, team, overdue, or completed.',
+        'Create or update the task with owner, due date, and enough context.',
+        'Reference the checklist item or handover note so the trail stays connected.',
+      ],
+      safety:
+        'Do not leave durable work only in a handover note. Handover explains; Task Center owns.',
+      visual: 'taskCenter',
+    },
+    {
+      step: '13',
+      title: 'Finalize the checklist honestly',
+      location: 'Live Checklist header and Complete Checklist dialog',
+      actionLabel: 'Click Complete Checklist',
+      body:
+        'Managers and admins complete the checklist from the header once work is actioned. SentinelOps calculates whether the final state is Completed or Completed With Exceptions.',
+      checklist: [
+        'Confirm every item is completed, skipped, failed, or otherwise actioned.',
+        'Review exception count in the Complete Checklist dialog.',
+        'Confirm Complete, then download the checklist PDF if a record is needed.',
+      ],
+      safety:
+        'If exceptions exist, the checklist should close with exceptions. That is not failure; that is transparency.',
+      visual: 'finalize',
+    },
+  ] as ManualJourneyStep[],
+  decisionRules: [
+    {
+      title: 'Start Working',
+      useWhen: 'You are actively taking responsibility for an item now.',
+      doThis: 'Open the item actions, choose Start Working, and add a short note if context matters.',
+      evidence: 'The item moves out of pending state and the participant record shows live engagement.',
+    },
+    {
+      title: 'Mark Complete',
+      useWhen: 'The work was performed and no exception remains.',
+      doThis: 'Choose Mark Complete and add concise completion notes when evidence or timing matters.',
+      evidence: 'The item or subitem shows Completed with completion metadata.',
+    },
+    {
+      title: 'Skip Item',
+      useWhen: 'The step is not applicable, blocked by a valid condition, or deliberately deferred.',
+      doThis: 'Choose Skip Item, write the reason, then hand over or create a task if follow-up still matters.',
+      evidence: 'The reason is visible on the record and the checklist can close with exceptions if needed.',
+    },
+    {
+      title: 'Report Issue',
+      useWhen: 'Something failed, is unsafe, is unclear, or needs escalation.',
+      doThis: 'Choose Report Issue and describe the symptom, impact, evidence, and immediate next action.',
+      evidence: 'The issue is retained as an exception and can require final verdict before closure.',
+    },
+    {
+      title: 'Add Final Verdict',
+      useWhen: 'An item had skipped or failed evidence but is now ready to be resolved and closed.',
+      doThis: 'Summarize the outcome, what changed, and why the item can now be considered complete.',
+      evidence: 'The final verdict appears beside the completed item for audit and handover review.',
+    },
+    {
+      title: 'Add Handover Note',
+      useWhen: 'The next shift needs context, warning, dependency, evidence, or a decision trail.',
+      doThis: 'Choose priority, write the operational facts, and keep the note focused on what happens next.',
+      evidence: 'Incoming and outgoing notes appear in the Handover Notes panel with priority and author.',
+    },
+  ] as ManualDecisionRule[],
   modules: [
     {
       title: 'Dashboard',
       route: '/',
       routeLabel: 'Open Dashboard',
-      when:
-        'Use Dashboard whenever you need the quickest answer to “What kind of day are we having?” or “Where should I intervene first?”',
-      why:
-        'It compresses the operational day into posture, shift pressure, active command threads, attention signals, and handover context. It is the shortest path from uncertainty to direction.',
-      steps: [
-        'Read command posture and containment first. Those tell you whether the day is calm, unstable, or slipping.',
-        'Scan Shift Radar next so you can see whether pressure belongs to one shift or the whole board.',
-        'Open the relevant command thread card once you know where the heat is. That is the handoff into execution detail.',
+      visual: 'dashboard',
+      question: 'What is happening right now?',
+      when: 'Use this as the first stop after login and whenever the operation feels noisy.',
+      checklist: [
+        'Read operational state and critical signals.',
+        'Scan Shift Radar and handover summary.',
+        'Open the live command thread or checklist that needs action.',
       ],
-      shortcut:
-        'Do not start in checklist history when you are troubleshooting the current day. Dashboard already tells you which live thread deserves your attention.',
-      watchFor:
-        'Coverage gaps and pending review counts are often early warnings that the day looks stable on the surface but is quietly starting to drift.',
-      permissions:
-        'All authenticated users rely on this page, but managers and admins should treat it as the opening move for supervision.',
+      avoid:
+        'Avoid jumping into history first when the current day already has an active signal.',
     },
     {
-      title: 'Operational Day Checklists',
+      title: 'Checklist Timeline',
       route: '/checklists',
       routeLabel: 'Open Checklist Timeline',
-      when:
-        'Use Checklists when you need to trace what happened across time, compare runs, or move from broad history into one exact instance.',
-      why:
-        'This page turns checklist history into a readable timeline instead of a flat archive. It is best when you know the date, shift, or status pattern you want to inspect.',
-      steps: [
-        'Set the time window first. Day view is for a known incident. Week and custom range are for pattern reading.',
-        'Apply search, shift, or status filters until the history tells a narrower story.',
-        'Open the checklist instance you care about only after the timeline is clean enough to explain itself.',
+      visual: 'timeline',
+      question: 'Which run, date, shift, or pattern do I need to inspect?',
+      when: 'Use this for history review, date filtering, status filtering, and pattern investigation.',
+      checklist: [
+        'Choose All Time, Week, Specific Day, or Date Range.',
+        'Filter by shift and status.',
+        'Open only the instance that matches your investigation.',
       ],
-      shortcut:
-        'If you are analyzing a single live issue, skip this page and jump straight from Dashboard into the active command thread instead.',
-      watchFor:
-        'Week and range views are where repeat failures, repeated exceptions, and weak handovers become obvious.',
-      permissions:
-        'Operators use it to review runs; leaders use it to compare operational quality over time.',
+      avoid:
+        'Avoid reading every checklist one by one. Filter until the timeline tells a narrow story.',
     },
     {
-      title: 'Live Checklist Workspace',
+      title: 'Live Checklist',
       route: '/checklist/:id',
-      routeLabel: 'Open Active Checklist',
-      when:
-        'Use the live checklist when the work is happening right now and every action, note, and exception needs to stay attached to the shift record.',
-      why:
-        'This is the execution source of truth. It keeps items, substeps, participation, progress, and handover together so the team can trust the record after the fact.',
-      steps: [
-        'Join the checklist when you are actively working inside the shift so presence stays accurate.',
-        'Work item by item. Open substeps when the detail matters more than speed.',
-        'Capture handover notes before you leave the page, especially when the next operator would otherwise need verbal reconstruction.',
+      routeLabel: 'Open from a live checklist card',
+      visual: 'checklistHeader',
+      question: 'What work must be executed and recorded now?',
+      when: 'Use this as the source of truth for live shift execution.',
+      checklist: [
+        'Join when you are participating.',
+        'Work items through Start, Complete, Skip, or Report Issue.',
+        'Keep handover notes and team presence current.',
       ],
-      shortcut:
-        'If a task belongs to the shift only, keep it in the checklist. Promote it to Task Center only when it needs formal ownership beyond the run.',
-      watchFor:
-        'Unwritten exceptions are invisible debt. If the checklist does not show it, the next shift cannot act on it confidently.',
-      permissions:
-        'This is the primary operator workspace and the main supervision record during live execution.',
+      avoid:
+        'Avoid closing the checklist before every item is actioned and handover context is written.',
     },
     {
       title: 'Task Center',
       route: '/tasks',
       routeLabel: 'Open Task Center',
-      when:
-        'Use Task Center when the work needs a durable owner, due date, history trail, or follow-through outside the life of a single checklist.',
-      why:
-        'Task Center protects important work from vanishing at shift boundary. It is where operational loose ends become accountable work with visibility.',
-      steps: [
-        'Choose the right lane first so you are reading the right queue: personal, assigned, overdue, team, or completed.',
-        'Filter until the task list is actually saying something useful instead of forcing you to scan noise.',
-        'Open the detail view before changing status so you understand the task history, urgency, and previous movement.',
+      visual: 'taskCenter',
+      question: 'What needs accountable follow-up beyond this shift?',
+      when: 'Use this when work needs an owner, due date, status trail, or cross-shift accountability.',
+      checklist: [
+        'Choose the correct lane before scanning.',
+        'Open details before changing status.',
+        'Promote unresolved checklist work into a task when it must survive the shift.',
       ],
-      shortcut:
-        'When a checklist item becomes a multi-day responsibility, create or update the task immediately instead of relying on handover notes alone.',
-      watchFor:
-        'An overloaded overdue lane usually means the team is using checklists to discover work but not promoting the long-tail follow-up into owned tasks.',
-      permissions:
-        'Useful to all roles, but especially important for managers coordinating follow-up across multiple shifts.',
+      avoid:
+        'Avoid using handover notes as a substitute for owned tasks.',
     },
     {
-      title: 'TrustLink Operations',
-      route: '/trustlink',
-      routeLabel: 'Open TrustLink Ops',
-      when:
-        'Use TrustLink when you need to understand extraction pipeline state, run readiness, failure stage, or whether the output is safe to deliver.',
-      why:
-        'The page keeps technical pipeline detail readable. It shows what stage the run is in, what succeeded, what stalled, and whether the export can be acted on.',
-      steps: [
-        'Read the run-state metrics first to understand whether today is active, complete, or blocked.',
-        'Use the pipeline timeline to find the exact stage where movement stopped or succeeded.',
-        'Open the run detail and history only after you know which run or failure pattern you are investigating.',
+      title: 'Handover Notes',
+      route: '/checklist/:id',
+      routeLabel: 'Open inside a live checklist',
+      visual: 'handover',
+      question: 'What must the next operator know?',
+      when: 'Use this before and during shift transition, or whenever a decision needs to be preserved.',
+      checklist: [
+        'Acknowledge incoming notes.',
+        'Add outgoing notes with priority.',
+        'Resolve or promote notes that become durable follow-up work.',
       ],
-      shortcut:
-        'When a run fails, the timeline usually explains the failure faster than the history list alone. Start there.',
-      watchFor:
-        'Do not download, overwrite, or delete files before the state and evidence panel agree that the run is complete and the output is the one you actually want.',
-      permissions:
-        'Best used by operators and leads who own pipeline visibility, delivery readiness, or failure response.',
+      avoid:
+        'Avoid vague handover like checked later. Say what was checked, what remains, and what to do next.',
     },
     {
-      title: 'Network Sentinel',
-      route: '/network-sentinel',
-      routeLabel: 'Open Network Sentinel',
-      when:
-        'Use Network Sentinel when the question is about infrastructure state, service degradation, outage proof, or retained evidence around a technical event.',
-      why:
-        'It separates detection from diagnosis. The left side tells you what is sick. The right side tells you why it matters and what the timeline says happened.',
-      steps: [
-        'Scan the fleet view for assets marked degraded or down before opening deep detail.',
-        'Select the affected service and start in Signal, then move into Timeline and Evidence once the behavior is clear.',
-        'Use filters only after you understand whether you are narrowing by environment, status, or ownership.',
-      ],
-      shortcut:
-        'Treat the service grid as the radar sweep and the right-side deck as the evidence room. Keeping that discipline makes investigation much faster.',
-      watchFor:
-        'A service that looks stable now may still show an important event sequence in Timeline or retained Evidence. Do not judge only from the latest sample.',
-      permissions:
-        'Most valuable to teams diagnosing systems and proving what changed during an incident.',
-    },
-    {
-      title: 'Template Manager',
+      title: 'Templates',
       route: '/templates',
       routeLabel: 'Open Templates',
-      when:
-        'Use Templates whenever the team repeats a process often enough that memory, chat, or informal routines are no longer good enough.',
-      why:
-        'Templates decide how future checklist runs feel under pressure. A clean template removes hesitation, reduces skipped work, and makes handover more consistent.',
-      steps: [
-        'Start in the library and decide whether this should be a new template, an edited template, or a reused one.',
-        'Structure the item order the way the work naturally happens on shift, not the way it was discussed in a meeting.',
-        'Review the operator-facing result before publishing so the live run feels obvious the first time someone opens it.',
+      visual: 'templates',
+      question: 'How do we make repeated work easier next time?',
+      when: 'Use this when a process repeats often enough that operators should not rely on memory.',
+      checklist: [
+        'Start from the library.',
+        'Order items the way work naturally happens.',
+        'Review the operator-facing sequence before publishing.',
       ],
-      shortcut:
-        'If operators keep improvising the same extra step, the fix is usually a better template, not a reminder in chat.',
-      watchFor:
-        'A template that looks complete but feels confusing in sequence will fail in the field. Order matters as much as content.',
-      permissions:
-        'Mostly a manager and admin space, but operators should feed back what makes execution smoother or heavier.',
+      avoid:
+        'Avoid adding reminders in chat when the real fix is a clearer template.',
     },
     {
       title: 'Schedule and Team Management',
       route: '/team',
       routeLabel: 'Open Team Management',
-      when:
-        'Use Team Management when the question is about coverage, repeatable schedules, exceptions, leave, staffing patterns, or upcoming planning strain.',
-      why:
-        'It is the planning deck for future coverage. Patterns create speed, single assignments create precision, and horizon controls stop managers from planning blind.',
-      steps: [
-        'Choose the right horizon before editing anything so you are solving the correct window.',
-        'Read the existing coverage summary first. Do not start assigning people until you understand whether the board is balanced or already strained.',
-        'Use patterns for recurring structure and reserve one-off edits for genuine exceptions.',
+      visual: 'schedule',
+      question: 'Who covers what, and when?',
+      when: 'Use this for coverage, patterns, leave, exceptions, and future roster pressure.',
+      checklist: [
+        'Choose the correct planning horizon.',
+        'Read coverage before editing assignments.',
+        'Use patterns for recurring structure and one-off edits for true exceptions.',
       ],
-      shortcut:
-        'If you are making the same manual assignment more than once, stop and ask whether it should be a saved pattern instead.',
-      watchFor:
-        'Heavy exception editing is often a sign that the base pattern is wrong, not that the week is unusually messy.',
-      permissions:
-        'Primarily for managers and admins. Operators usually consume the result through their personal schedule.',
+      avoid:
+        'Avoid repeated manual assignment when a saved pattern would remove the friction.',
     },
     {
-      title: 'User Management',
-      route: '/users',
-      routeLabel: 'Open User Management',
-      when:
-        'Use User Management when access, roles, department placement, section placement, or account activation needs to change.',
-      why:
-        'This is the identity control room. Clean access structure protects the operation from confusion, over-permission, and misrouted ownership.',
-      steps: [
-        'Find the user first and review their current role, department, section, and active state before changing anything.',
-        'Change only the fields that reflect real responsibility. Do not use role changes as a shortcut for process issues.',
-        'Create new accounts with the correct placement from the start so the user lands in the right operational context immediately.',
+      title: 'Network Sentinel',
+      route: '/network-sentinel',
+      routeLabel: 'Open Network Sentinel',
+      visual: 'network',
+      question: 'Is this a real service or infrastructure signal?',
+      when: 'Use this when you need service health, timeline evidence, retained events, or technical proof.',
+      checklist: [
+        'Scan the service board for degraded or down assets.',
+        'Select the affected service.',
+        'Read Signal, Timeline, and Evidence before taking action.',
       ],
-      shortcut:
-        'Fixing access at the source is faster than working around a misconfigured user everywhere else in the app.',
-      watchFor:
-        'Bad section placement quietly breaks schedule, team, and ownership workflows even when the account can still log in.',
-      permissions:
-        'Admin-focused. Managers should usually escalate placement or role changes rather than improvising them outside this flow.',
+      avoid:
+        'Avoid judging only from the latest sample. Timeline and evidence can show what happened earlier.',
     },
     {
-      title: 'Personal Schedule and Performance',
-      route: '/schedule',
-      routeLabel: 'Open My Schedule',
-      when:
-        'Use your personal schedule when you need to verify upcoming duty, recovery windows, open days, or task deadlines tied to your calendar.',
-      why:
-        'It keeps your operational life readable at a glance. You can confirm what is next, what is due, and where your own workload starts to bunch up.',
-      steps: [
-        'Read the summary and your next assignment first so immediate expectations are obvious.',
-        'Switch between month and week based on whether you are planning ahead or managing the next few days.',
-        'Open specific dates when you need exact timing, deadline context, or to confirm that a day is still open.',
+      title: 'TrustLink Operations',
+      route: '/trustlink',
+      routeLabel: 'Open TrustLink Ops',
+      visual: 'trustlink',
+      question: 'Where is the extraction or delivery run in its pipeline?',
+      when: 'Use this for run readiness, pipeline stage failures, export availability, and delivery control.',
+      checklist: [
+        'Read run-state metrics first.',
+        'Find the stage where movement stopped or completed.',
+        'Download, overwrite, or delete only after the evidence panel agrees.',
       ],
-      shortcut:
-        'Check this page before asking whether you are covered, off, or due for work. It is faster than piecing the answer together from multiple places.',
-      watchFor:
-        'Open days are not automatically errors. They only become a problem when they conflict with expected coverage or task ownership.',
-      permissions:
-        'Every user should use this page. It is the cleanest view of your own near-term operational rhythm.',
+      avoid:
+        'Avoid control actions before checking the pipeline timeline and current file state.',
     },
   ] as ManualModule[],
-  shortcuts: [
-    {
-      title: 'Dashboard to action',
-      body:
-        'When the board looks wrong, open the command thread card from Dashboard instead of browsing checklist history. That is the shortest route from signal into the live source of truth.',
-    },
-    {
-      title: 'Checklist to accountability',
-      body:
-        'If an unresolved checklist item will survive the shift, move it into Task Center before handover. That prevents operational debt from dissolving into memory.',
-    },
-    {
-      title: 'Pattern before manual assignment',
-      body:
-        'If the same staffing layout keeps coming back, create or fix the pattern. Manual scheduling should be the exception, not the operating model.',
-    },
-    {
-      title: 'Timeline before control action',
-      body:
-        'In TrustLink and Network Sentinel, read the timeline and evidence before you refresh, rerun, overwrite, or delete anything. Evidence first, action second.',
-    },
-    {
-      title: 'Template before reminder',
-      body:
-        'When a team repeatedly forgets a step, the durable fix is almost always a better template rather than another reminder message.',
-    },
-    {
-      title: 'Identity cleanup before workaround',
-      body:
-        'If a user cannot see the right team, schedule, or responsibility lane, fix their role or section placement instead of teaching a workaround.',
-    },
-  ] as ManualShortcut[],
+  closeoutChecklist: [
+    'All checklist items are completed, skipped, failed, or otherwise actioned.',
+    'Skipped items have reasons that a reviewer can understand.',
+    'Reported issues include symptoms, impact, and evidence pointers.',
+    'Failed subitems have final verdicts before the main item is closed.',
+    'Manual handover notes exist for unresolved risk, dependencies, or next-shift action.',
+    'Durable follow-up work is captured in Task Center with an owner and due date.',
+    'The Complete Checklist dialog outcome matches the real execution record.',
+    'The checklist PDF is downloaded only after the checklist is closed.',
+  ],
   habits: [
     {
-      title: 'Leave a cleaner board than the one you inherited',
+      title: 'Write for the person who was not in the room',
       body:
-        'Update statuses, close what is truly done, and capture handover context before you move on. SentinelOps gets stronger when every shift reduces ambiguity.',
+        'A good note says what happened, what changed, what still matters, and what should happen next.',
     },
     {
-      title: 'Do not hide operational debt inside chat',
+      title: 'Use the narrowest workspace that can solve the question',
       body:
-        'If work needs ownership, put it in the task or checklist system. Chat is fine for coordination, but it is a weak memory system.',
+        'Dashboard for posture, checklist for live execution, Task Center for owned follow-up, schedule for coverage, and technical decks for evidence.',
     },
     {
-      title: 'Use the narrowest page that can answer the question',
+      title: 'Treat exceptions as transparency, not embarrassment',
       body:
-        'Dashboard for posture, checklist for live execution, Task Center for follow-through, Team Management for coverage, and technical decks for evidence.',
+        'Skipped and failed work can be handled professionally. The danger is hiding it from the record.',
     },
     {
-      title: 'Write for the next operator, not for yourself',
+      title: 'Fix repeated confusion at the system level',
       body:
-        'The best notes explain what changed, what still matters, and what should happen next. Assume the next reader was not in the room.',
-    },
-    {
-      title: 'Treat role boundaries as safety rails',
-      body:
-        'Admins shape access, managers shape coverage and templates, and operators shape execution truth. Respecting those lanes keeps the system coherent.',
-    },
-    {
-      title: 'Fix the system when the same friction repeats',
-      body:
-        'Recurring confusion is a design signal. Improve the template, task flow, pattern, or placement so the next shift moves faster with less effort.',
+        'If the same question keeps coming back, improve the template, task flow, access placement, or schedule pattern.',
     },
   ] as ManualHabit[],
 };

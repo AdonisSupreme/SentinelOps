@@ -31,6 +31,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { checklistApi, ChecklistInstance } from '../services/checklistApi';
 import { shiftSchedulingApi, UserSchedule, UserScheduleDay } from '../services/shiftSchedulingApi';
 import { taskApi, TaskSummary } from '../services/taskApi';
+import { normalizeShiftCode } from '../utils/shiftUtils';
 import './UserScheduleDashboard.css';
 
 type ViewMode = 'month' | 'week';
@@ -72,18 +73,9 @@ const formatDeadlineTime = (value?: string) => {
   }
 };
 
-const resolveChecklistShift = (day?: UserScheduleDay): 'MORNING' | 'AFTERNOON' | 'NIGHT' | null => {
-  const candidates = [day?.shift_name, day?.status, day?.reason]
-    .filter(Boolean)
-    .map((value) => String(value).trim().toUpperCase());
-
-  for (const value of candidates) {
-    if (value.includes('MORNING')) return 'MORNING';
-    if (value.includes('AFTERNOON')) return 'AFTERNOON';
-    if (value.includes('NIGHT')) return 'NIGHT';
-  }
-
-  return null;
+const resolveChecklistShift = (day?: UserScheduleDay): string | null => {
+  const shiftName = normalizeShiftCode(day?.shift_name);
+  return shiftName || null;
 };
 
 const rankChecklistInstance = (instance: ChecklistInstance) => {
@@ -299,7 +291,7 @@ const UserScheduleDashboard: React.FC = () => {
       const instances = await checklistApi.getAllInstances(selectedDate, selectedDate);
       const targetShift = resolveChecklistShift(focusedDay);
       const matchingInstances = targetShift
-        ? instances.filter((instance) => (instance.shift || '').toUpperCase() === targetShift)
+        ? instances.filter((instance) => normalizeShiftCode(instance.shift) === targetShift)
         : instances;
       const targetInstance = matchingInstances
         .slice()

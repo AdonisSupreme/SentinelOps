@@ -1201,3 +1201,47 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+@media (max-width: 520px) {
+  .performance-command-page {
+    padding: 10px;
+    gap: 14px;
+  }
+
+  .performance-hero,
+  .summary-window-card,
+  .signal-card,
+  .performance-panel,
+  .performance-loading-card {
+    border-radius: 22px;
+    padding: 16px;
+  }
+
+  .hero-copy h1 {
+    font-size: 1.85rem;
+    max-width: none;
+  }
+
+  .window-switcher {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .window-switcher button {
+    justify-content: center;
+  }
+
+  .trend-chart {
+    grid-template-columns: 1fr;
+  }
+
+  .badge-earned-grid,
+  .badge-ready-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .command-orb {
+    max-width: 240px;
+  }
+}

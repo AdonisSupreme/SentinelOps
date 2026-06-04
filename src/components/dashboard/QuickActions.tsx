@@ -5,6 +5,7 @@ import { useNotifications } from '../../contexts/NotificationContext';
 import type { ChecklistTemplate, DashboardChecklistThread } from '../../services/checklistApi';
 import { checklistApi } from '../../services/checklistApi';
 import { FaPlus, FaFileAlt, FaUsers, FaCog, FaBell, FaSyncAlt } from 'react-icons/fa';
+import { normalizeShiftCode } from '../../utils/shiftUtils';
 import './QuickActions.css';
 import TemplateListSkeleton from './TemplateListSkeleton';
 import '../checklist/ChecklistPageSkeleton.css';
@@ -86,9 +87,13 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefresh, existingThreads 
         return;
       }
 
-      const templateShift = selectedTemplate.shift || 'MORNING';
+      const templateShift = normalizeShiftCode(selectedTemplate.shift);
+      if (!templateShift) {
+        addNotification({ type: 'error', message: 'Template has no shift configured', priority: 'high' });
+        return;
+      }
       const cachedExistingInstance = existingThreads.find(
-        (thread) => thread.template_id === selectedTemplateId && thread.shift === templateShift
+        (thread) => thread.template_id === selectedTemplateId && normalizeShiftCode(thread.shift) === templateShift
       );
 
       if (cachedExistingInstance) {
@@ -100,7 +105,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefresh, existingThreads 
 
       const todayInstances = await checklistApi.getTodayInstances();
       const existingInstance = todayInstances.find(
-        (instance: any) => instance.template_id === selectedTemplateId && instance.shift === templateShift
+        (instance: any) => instance.template_id === selectedTemplateId && normalizeShiftCode(instance.shift) === templateShift
       );
 
       if (existingInstance) {

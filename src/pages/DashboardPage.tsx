@@ -22,10 +22,10 @@ import { OperationalDashboardSummary } from '../services/checklistApi';
 import './DashboardPage.css';
 import '../components/dashboard/DashboardSkeleton.css';
 
-type ShiftName = 'MORNING' | 'AFTERNOON' | 'NIGHT';
+type ShiftName = string;
 
 const SHIFT_ORDER: ShiftName[] = ['MORNING', 'AFTERNOON', 'NIGHT'];
-const SHIFT_WINDOWS: Record<ShiftName, string> = {
+const SHIFT_WINDOWS: Record<string, string> = {
   MORNING: '07:00 - 15:00',
   AFTERNOON: '15:00 - 23:00',
   NIGHT: '23:00 - 07:00'

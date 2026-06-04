@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { taskApi, Task } from '../../services/taskApi';
 import api from '../../services/api';
-import { useAuth } from '../../contexts/AuthContext';
-import { FaThLarge, FaComment, FaHistory, FaTimes } from 'react-icons/fa';
+import { FaThLarge, FaUserPlus } from 'react-icons/fa';
 import './TaskDetail.css';
 
 interface Props {
@@ -10,26 +9,45 @@ interface Props {
   onClose: () => void;
   onRefresh?: () => void;
   onRequestHistory?: (historyEntries: any[]) => void;
+  refreshSignal?: number;
 }
 
 const statusLabel = (s?: string) => s || 'Unknown';
 
-const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHistory }) => {
+const getFilenameFromDisposition = (disposition?: string) => {
+  if (!disposition) return null;
+  const utfMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utfMatch?.[1]) {
+    try {
+      return decodeURIComponent(utfMatch[1].trim().replace(/^"|"$/g, ''));
+    } catch (error) {
+      return utfMatch[1].trim().replace(/^"|"$/g, '');
+    }
+  }
+
+  const plainMatch = disposition.match(/filename="?([^";]+)"?/i);
+  return plainMatch?.[1]?.trim() || null;
+};
+
+const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHistory, refreshSignal = 0 }) => {
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
   const [commentText, setCommentText] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const data = await taskApi.getTask(taskId);
       setTask(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load task detail', err);
+      setTask(null);
+      setLoadError(err?.response?.data?.detail || err?.message || 'Task details could not be loaded.');
     } finally {
       setLoading(false);
     }
@@ -37,13 +55,21 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
 
   const getAssignedName = (t: any) => {
     if (!t) return '';
+    if (Array.isArray(t.assignees) && t.assignees.length > 0) {
+      return t.assignees
+        .map((assignee: any) =>
+          `${assignee?.first_name || ''} ${assignee?.last_name || ''}`.trim() || assignee?.username || ''
+        )
+        .filter(Boolean)
+        .join(', ');
+    }
     if (t.assigned_to) return `${t.assigned_to.first_name || ''} ${t.assigned_to.last_name || ''}`.trim();
     if (t.assigned_to_first_name || t.assigned_to_last_name) return `${t.assigned_to_first_name || ''} ${t.assigned_to_last_name || ''}`.trim();
     if (t.assigned_to_username) return t.assigned_to_username;
     return '';
   };
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); }, [load, refreshSignal]);
 
   const TaskDetailSkeleton: React.FC = () => (
     <div className="ts-td-modal-backdrop" onClick={onClose}>
@@ -117,6 +143,19 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
     }
   };
 
+  const handleJoinTask = async () => {
+    if (!task) return;
+    try {
+      setLoading(true);
+      await taskApi.joinTask(task.id);
+      await Promise.all([load(), Promise.resolve(onRefresh?.())]);
+    } catch (err) {
+      console.error('Failed to join task', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAddComment = async () => {
     if (!task || task.status !== 'IN_PROGRESS') {
       console.warn('Comments are disabled unless task is IN_PROGRESS');
@@ -159,39 +198,19 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
 
   const handleDownloadAttachment = async (att: any) => {
     try {
-      const rawUrl = att.url || att.file_path || att.fileUrl;
-      let downloadUrl = rawUrl;
-
-      // If the backend stored a local filesystem path (Windows or file://), use backend proxy
-      // Always route downloads through backend proxy to avoid client-side file:// issues
-      if (task?.id && att.id) {
-        const base = (api.defaults && api.defaults.baseURL) ? api.defaults.baseURL.replace(/\/$/, '') : '';
-        downloadUrl = `${base}/api/v1/tasks/${task.id}/attachments/${att.id}/download`;
-        console.log('Using backend proxy for attachment', { rawUrl, proxy: downloadUrl });
-      }
-
-      if (!downloadUrl) {
-        console.warn('No URL available for attachment', att);
+      if (!task?.id || !att?.id) {
+        console.warn('Attachment download needs a task id and attachment id', att);
         return;
       }
 
-      console.log('Downloading attachment', { att, downloadUrl });
-
-      // Always fetch via XHR/fetch so we can include Authorization header and handle responses
-      const token = localStorage.getItem('token');
-      const headers: any = {};
-      if (token) headers.Authorization = `Bearer ${token}`;
-
-      const resp = await fetch(downloadUrl, { credentials: 'include', headers });
-      if (!resp.ok) {
-        const txt = await resp.text().catch(() => null);
-        throw new Error(`Failed to fetch attachment: ${resp.status} ${resp.statusText} ${txt || ''}`);
-      }
-      const blob = await resp.blob();
+      const response = await api.get(`/api/v1/tasks/${task.id}/attachments/${att.id}/download`, {
+        responseType: 'blob',
+      });
+      const blob = response.data instanceof Blob ? response.data : new Blob([response.data]);
       const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = att.filename || (downloadUrl.split('/').pop() || 'attachment');
+      a.download = getFilenameFromDisposition(response.headers?.['content-disposition']) || att.filename || 'attachment';
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -218,10 +237,70 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
       }
     };
 
-    const fmtVal = (val: any) => {
+    const userDisplayById = new Map<string, string>();
+    const registerUser = (candidate: any) => {
+      if (!candidate) return;
+      const id = String(candidate.id || '').trim();
+      if (!id) return;
+      const username = String(candidate.username || '').trim();
+      const first = String(candidate.first_name || '').trim();
+      const last = String(candidate.last_name || '').trim();
+      const fullName = `${first} ${last}`.trim();
+      const display = username || fullName || id;
+      userDisplayById.set(id, display);
+    };
+
+    if (Array.isArray(task?.assignees)) {
+      task?.assignees?.forEach(registerUser);
+    }
+    registerUser(task?.assigned_to);
+    const flatAssignedToUsername = (task as any)?.assigned_to_username;
+    if (task?.assigned_to_id && flatAssignedToUsername) {
+      userDisplayById.set(String(task.assigned_to_id), String(flatAssignedToUsername));
+    }
+
+    const normalizeIdList = (value: any): string[] => {
+      if (Array.isArray(value)) {
+        return value.map((item) => String(item || '').trim()).filter(Boolean);
+      }
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) return [];
+        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+              return parsed.map((item) => String(item || '').trim()).filter(Boolean);
+            }
+          } catch (e) {
+            // Fall back to plain split.
+          }
+        }
+        return trimmed.split(',').map((item) => item.trim()).filter(Boolean);
+      }
+      return [];
+    };
+
+    const formatUserId = (value: any) => {
+      const id = String(value || '').trim();
+      if (!id) return '—';
+      return userDisplayById.get(id) || id;
+    };
+
+    const fmtVal = (val: any, fieldKey?: string) => {
       if (val === null || val === undefined) return '—';
+      if (fieldKey === 'assigned_user_ids') {
+        const ids = normalizeIdList(val);
+        if (!ids.length) return 'none';
+        return ids.map(formatUserId).join(', ');
+      }
+      if (fieldKey === 'assigned_to_id' || fieldKey === 'assigned_by_id') {
+        return formatUserId(val);
+      }
       const isoDate = typeof val === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(val);
       if (isoDate) return new Date(val).toLocaleString();
+      if (Array.isArray(val)) return val.map((item) => String(item)).join(', ');
+      if (typeof val === 'object') return JSON.stringify(val);
       return String(val);
     };
 
@@ -279,12 +358,12 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
         const newV = parsedNew ? parsedNew[k] : undefined;
         if (oldV !== undefined && newV !== undefined) {
           if (String(oldV) !== String(newV)) {
-            changes.push(`Changed ${k.replace(/_/g, ' ')} from ${fmtVal(oldV)} to ${fmtVal(newV)}`);
+            changes.push(`Changed ${k.replace(/_/g, ' ')} from ${fmtVal(oldV, k)} to ${fmtVal(newV, k)}`);
           }
         } else if (newV !== undefined) {
-          changes.push(`Set ${k.replace(/_/g, ' ')} to ${fmtVal(newV)}`);
+          changes.push(`Set ${k.replace(/_/g, ' ')} to ${fmtVal(newV, k)}`);
         } else if (oldV !== undefined) {
-          changes.push(`Removed ${k.replace(/_/g, ' ')} (${fmtVal(oldV)})`);
+          changes.push(`Removed ${k.replace(/_/g, ' ')} (${fmtVal(oldV, k)})`);
         }
       });
 
@@ -340,25 +419,30 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
         <div className="td-header">
           <div className="td-title">
             <div>
-              <h2>{task?.title || 'Task'}</h2>
+              <h2>{task?.title || (loadError ? 'Task unavailable' : 'Task')}</h2>
               <div className="td-sub">{task?.id ? `#${task.id}` : ''}</div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <div className={`td-pill td-status`}>{statusLabel(task?.status)}</div>
-            {/* Action buttons: show based on status and permissions */}
+            {task?.permissions?.can_join && (
+              <button className="tc-action-btn tc-start" onClick={handleJoinTask} disabled={loading}>
+                <FaUserPlus /> {loading ? 'Joining...' : 'Join Task'}
+              </button>
+            )}
+            {/* Action buttons: show based on status and server permissions */}
             {task?.permissions && (task.permissions.can_edit || task.permissions.can_complete) && (
               <div style={{ display: 'flex', gap: 8 }}>
-                {task.status === 'ACTIVE' && task.assigned_to_id === user?.id && (
+                {task.status === 'ACTIVE' && (task.permissions.can_edit || task.permissions.can_complete) && (
                   <button className="tc-action-btn tc-start" onClick={() => handleStatusAction('IN_PROGRESS')} disabled={loading}>Start</button>
                 )}
-                {task.status === 'IN_PROGRESS' && task.assigned_to_id === user?.id && (
+                {task.status === 'IN_PROGRESS' && (task.permissions.can_edit || task.permissions.can_complete) && (
                   <>
                     <button className="tc-action-btn tc-complete" onClick={() => handleStatusAction('COMPLETED')} disabled={loading}>Complete</button>
                     <button className="tc-action-btn tc-hold" onClick={() => handleStatusAction('ON_HOLD')} disabled={loading}>Hold</button>
                   </>
                 )}
-                {task.status === 'ON_HOLD' && task.assigned_to_id === user?.id && (
+                {task.status === 'ON_HOLD' && (task.permissions.can_edit || task.permissions.can_complete) && (
                   <button className="tc-action-btn tc-resume" onClick={() => handleStatusAction('IN_PROGRESS')} disabled={loading}>Resume</button>
                 )}
               </div>
@@ -367,6 +451,14 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
           </div>
         </div>
 
+        {loadError && !task ? (
+          <div className="td-body">
+            <div className="td-card td-desc">
+              <h4>Task could not be opened</h4>
+              <p>{loadError}</p>
+            </div>
+          </div>
+        ) : (
         <div className="td-body">
           <div className="td-left">
             <div className="td-card td-meta">
@@ -383,7 +475,7 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
           </div>
 
           <div className="td-right">
-            {task?.status === 'IN_PROGRESS' && (
+            {task?.status === 'IN_PROGRESS' && task?.permissions?.can_comment && (
               <div className="td-card td-interact">
                 <textarea
                   value={commentText}
@@ -477,6 +569,7 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
             </div>
           </div>
         </div>
+        )}
       </div>
       {showHistory && (() => {
         const { historyEntries } = computeFormattedEntries();

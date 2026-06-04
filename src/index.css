@@ -1,6 +1,14 @@
 /* src/index.css - SentinelOps Global Styles */
 @import './styles/variables.css';
 
+:root {
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-right: env(safe-area-inset-right, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-safe-left: env(safe-area-inset-left, 0px);
+  --app-shell-gutter: clamp(0.75rem, 1vw + 0.6rem, 1.5rem);
+}
+
 /* Global Reset & Base Styles */
 *,
 *::before,
@@ -14,6 +22,7 @@ html {
   font-size: 15px;
   scroll-behavior: smooth;
   min-height: 100%;
+  width: 100%;
 }
 
 body {
@@ -28,10 +37,25 @@ body {
   transition: background-color var(--transition-normal), color var(--transition-normal);
   min-height: 100%;
   overflow-x: hidden;
+  width: 100%;
 }
 
 #root {
   min-height: 100%;
+  width: 100%;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+input,
+textarea,
+select {
+  min-width: 0;
 }
 
 /* Code Typography */
@@ -146,4 +170,10 @@ body {
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
   background: var(--border-secondary);
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
 }

@@ -1,0 +1,52 @@
+<svg width="360" height="360" viewBox="0 0 360 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Sentinel Nexus</title>
+  <desc id="desc">A futuristic Sentinel Nexus service-fabric logo with a shield, neural orbit, and dependency nodes.</desc>
+  <defs>
+    <radialGradient id="aura" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(180 170) rotate(90) scale(150)">
+      <stop stop-color="#38BDF8" stop-opacity="0.42"/>
+      <stop offset="0.55" stop-color="#22C55E" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#020617" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="82" y1="66" x2="284" y2="292" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DFFBFF"/>
+      <stop offset="0.34" stop-color="#38BDF8"/>
+      <stop offset="0.7" stop-color="#22C55E"/>
+      <stop offset="1" stop-color="#FBBF24"/>
+    </linearGradient>
+    <linearGradient id="core" x1="114" y1="90" x2="246" y2="266" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A"/>
+      <stop offset="0.48" stop-color="#07111F"/>
+      <stop offset="1" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="nexus" x1="122" y1="108" x2="236" y2="246" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7DD3FC"/>
+      <stop offset="0.48" stop-color="#34D399"/>
+      <stop offset="1" stop-color="#FACC15"/>
+    </linearGradient>
+    <filter id="glow" x="44" y="40" width="272" height="280" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="12"/>
+      <feGaussianBlur stdDeviation="18"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.125 0 0 0 0 0.784 0 0 0 0 0.933 0 0 0 0.32 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+    </filter>
+  </defs>
+  <rect width="360" height="360" rx="88" fill="url(#aura)"/>
+  <path d="M180 45C229.706 45 270 85.2944 270 135C270 184.706 229.706 225 180 225C130.294 225 90 184.706 90 135C90 85.2944 130.294 45 180 45Z" stroke="#38BDF8" stroke-opacity="0.16" stroke-width="2"/>
+  <path d="M76 204C120.99 142.27 206.964 126.018 272 166" stroke="#7DD3FC" stroke-opacity="0.34" stroke-width="2" stroke-linecap="round" stroke-dasharray="9 12"/>
+  <path d="M89 113C153 179.5 234.5 207.5 296 187" stroke="#22C55E" stroke-opacity="0.28" stroke-width="2" stroke-linecap="round" stroke-dasharray="7 11"/>
+  <g filter="url(#glow)">
+    <path d="M180 61L272 101.2V166.8C272 228.1 231.3 283.4 180 301C128.7 283.4 88 228.1 88 166.8V101.2L180 61Z" fill="url(#core)" stroke="url(#rim)" stroke-width="4"/>
+    <path d="M180 84L249 114.1V164.5C249 211.7 219.1 253.4 180 270C140.9 253.4 111 211.7 111 164.5V114.1L180 84Z" fill="#020617" fill-opacity="0.58" stroke="#E0F2FE" stroke-opacity="0.14" stroke-width="2"/>
+    <path d="M132 220V128L158 139L202 213V150C202 137.85 211.85 128 224 128H229V220L203 209L159 135V198C159 210.15 149.15 220 137 220H132Z" fill="url(#nexus)"/>
+    <path d="M132 220V128L158 139L202 213V150C202 137.85 211.85 128 224 128H229V220L203 209L159 135V198C159 210.15 149.15 220 137 220H132Z" stroke="#F8FAFC" stroke-opacity="0.5" stroke-width="1.2"/>
+  </g>
+  <circle cx="76" cy="204" r="9" fill="#0F172A" stroke="#7DD3FC" stroke-width="3"/>
+  <circle cx="89" cy="113" r="7" fill="#0F172A" stroke="#FBBF24" stroke-width="3"/>
+  <circle cx="272" cy="166" r="8" fill="#0F172A" stroke="#22C55E" stroke-width="3"/>
+  <circle cx="296" cy="187" r="6" fill="#0F172A" stroke="#A7F3D0" stroke-width="2.5"/>
+  <circle cx="180" cy="61" r="5" fill="#F8FAFC"/>
+  <path d="M128 286C143 300 160.333 310 180 316C199.667 310 217 300 232 286" stroke="#38BDF8" stroke-opacity="0.28" stroke-width="3" stroke-linecap="round"/>
+</svg>

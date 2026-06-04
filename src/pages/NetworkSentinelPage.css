@@ -82,6 +82,12 @@
   align-content: start;
 }
 
+.my-div {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .eyebrow {
   display: inline-flex;
   align-items: center;
@@ -226,11 +232,11 @@
 }
 
 .metric-tile,
-.strip-card > div,
-.service-node-head > div,
-.detail-head > div,
-.list-row > div,
-.detail-metrics > div {
+.strip-card>div,
+.service-node-head>div,
+.detail-head>div,
+.list-row>div,
+.detail-metrics>div {
   display: grid;
   gap: 6px;
   min-width: 0;
@@ -269,7 +275,7 @@
 .timeline-panel,
 .subpanel,
 .service-node,
-.detail-metrics > div,
+.detail-metrics>div,
 .timeline-entry,
 .evidence-row,
 .list-row,
@@ -285,7 +291,7 @@
 [data-theme='light'] .timeline-panel,
 [data-theme='light'] .subpanel,
 [data-theme='light'] .service-node,
-[data-theme='light'] .detail-metrics > div,
+[data-theme='light'] .detail-metrics>div,
 [data-theme='light'] .timeline-entry,
 [data-theme='light'] .evidence-row,
 [data-theme='light'] .list-row,
@@ -321,9 +327,60 @@
   padding: 14px;
 }
 
+.group-focus-band {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px;
+  align-items: center;
+}
+
+.group-focus-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.group-focus-copy strong {
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+}
+
+.group-focus-copy small {
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.group-focus-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.group-focus-pills button {
+  min-height: 42px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.3);
+  color: var(--text-secondary);
+  transition: transform var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+}
+
+.group-focus-pills button.active {
+  border-color: rgba(56, 189, 248, 0.34);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.22), rgba(20, 184, 166, 0.16));
+  color: var(--text-primary);
+}
+
+.group-focus-pills button.subtle {
+  opacity: 0.84;
+}
+
 .toolbar-search,
 .network-toolbar select,
 .editor-grid input,
+.editor-grid select,
 .editor-grid textarea {
   width: 100%;
   min-height: 46px;
@@ -337,6 +394,7 @@
 [data-theme='light'] .toolbar-search,
 [data-theme='light'] .network-toolbar select,
 [data-theme='light'] .editor-grid input,
+[data-theme='light'] .editor-grid select,
 [data-theme='light'] .editor-grid textarea {
   border-color: rgba(59, 130, 246, 0.14);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
@@ -351,6 +409,7 @@
 .toolbar-search input,
 .network-toolbar select,
 .editor-grid input,
+.editor-grid select,
 .editor-grid textarea {
   border: none;
   outline: none;
@@ -360,6 +419,12 @@
 
 .toolbar-search.compact {
   margin-bottom: 12px;
+}
+
+.editor-helper {
+  margin: 6px 0 16px;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
 .network-layout {
@@ -493,7 +558,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.detail-metrics > div {
+.detail-metrics>div {
   padding: 12px 14px;
 }
 
@@ -551,10 +616,21 @@
   background: rgba(148, 163, 184, 0.2);
 }
 
-.signal-cell.up { background: linear-gradient(90deg, #10b981, #34d399); }
-.signal-cell.degraded { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-.signal-cell.down { background: linear-gradient(90deg, #ef4444, #f87171); }
-.signal-cell.unknown { background: linear-gradient(90deg, #64748b, #94a3b8); }
+.signal-cell.up {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.signal-cell.degraded {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.signal-cell.down {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+.signal-cell.unknown {
+  background: linear-gradient(90deg, #64748b, #94a3b8);
+}
 
 .signal-empty,
 .list-empty,
@@ -671,13 +747,29 @@
   gap: 12px;
 }
 
-.event-row.critical em { color: #fca5a5; }
-.event-row.warn em { color: #fbbf24; }
-.event-row.info em { color: #6ee7b7; }
+.event-row.critical em {
+  color: #fca5a5;
+}
 
-[data-theme='light'] .event-row.critical em { color: #dc2626; }
-[data-theme='light'] .event-row.warn em { color: #d97706; }
-[data-theme='light'] .event-row.info em { color: #059669; }
+.event-row.warn em {
+  color: #fbbf24;
+}
+
+.event-row.info em {
+  color: #6ee7b7;
+}
+
+[data-theme='light'] .event-row.critical em {
+  color: #dc2626;
+}
+
+[data-theme='light'] .event-row.warn em {
+  color: #d97706;
+}
+
+[data-theme='light'] .event-row.info em {
+  color: #059669;
+}
 
 .editor-backdrop {
   position: fixed;
@@ -754,7 +846,17 @@
   gap: 8px;
 }
 
+.wide-toggle {
+  grid-column: 1 / -1;
+}
+
+[data-theme='light'] .group-focus-pills button {
+  background: rgba(255, 255, 255, 0.84);
+  border-color: rgba(59, 130, 246, 0.14);
+}
+
 @media (max-width: 1400px) {
+
   .network-hero-panel,
   .network-layout,
   .two-column {
@@ -773,9 +875,11 @@
 }
 
 @media (max-width: 1100px) {
+
   .top-strip,
   .detail-metrics,
-  .network-toolbar {
+  .network-toolbar,
+  .group-focus-band {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -788,11 +892,16 @@
   .hero-metrics,
   .top-strip,
   .network-toolbar,
+  .group-focus-band,
   .detail-metrics,
   .editor-grid,
   .service-node-meta,
   .evidence-row {
     grid-template-columns: 1fr;
+  }
+
+  .group-focus-pills {
+    justify-content: flex-start;
   }
 
   .hero-copy h1 {
@@ -822,5 +931,61 @@
     top: auto;
     max-height: none;
     overflow: visible;
+  }
+}
+
+@media (max-width: 560px) {
+  .network-sentinel-page {
+    padding: 10px;
+    gap: 12px;
+  }
+
+  .network-hero-panel,
+  .network-toolbar,
+  .detail-column,
+  .metric-tile,
+  .strip-card,
+  .signal-panel,
+  .timeline-panel,
+  .subpanel {
+    padding: 14px;
+  }
+
+  .network-shell {
+    border-radius: 20px;
+  }
+
+  .hero-copy h1 {
+    font-size: 1.7rem;
+    line-height: 1.06;
+  }
+
+  .top-strip,
+  .detail-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-tabs {
+    display: grid;
+    width: 100%;
+  }
+
+  .detail-tabs button,
+  .timeline-focus-button {
+    width: 100%;
+  }
+
+  .service-node-footer,
+  .panel-head,
+  .subpanel-head {
+    grid-template-columns: 1fr;
+  }
+
+  .service-node-head,
+  .detail-head,
+  .subpanel-head,
+  .panel-head {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

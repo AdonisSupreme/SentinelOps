@@ -159,6 +159,34 @@
   transform: translateY(-1px);
 }
 
+.stb-field-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.stb-inline-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 34px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--stb-border-strong);
+  border-radius: 9px;
+  background: var(--stb-accent-wash);
+  color: var(--primary);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.stb-field-hint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
 .stb-template-builder .stb-form-input.stb-error,
 .stb-template-builder .stb-form-textarea.stb-error,
 .stb-template-builder .stb-form-select.stb-error {
