@@ -517,9 +517,13 @@ export interface NexusLogTailLine {
   index: number;
   message: string;
   raw?: string;
+  header?: string | null;
+  body?: string | null;
   timestamp?: string | null;
   level?: string | null;
   severity?: NexusSeverity | string | null;
+  physical_line_count?: number;
+  continuation_count?: number;
 }
 
 export interface NexusServiceLogTail {
@@ -536,6 +540,9 @@ export interface NexusServiceLogTail {
   bytes_read?: number;
   max_lines?: number;
   new_line_count?: number;
+  physical_line_count?: number;
+  event_count?: number;
+  line_grouping?: string;
   newest_first?: boolean;
   rotated?: boolean;
   truncated?: boolean;
@@ -1160,15 +1167,6 @@ class NexusApi {
       challenge_id: challengeId,
       otp_code: otpCode,
       reason,
-    });
-    return response.data;
-  }
-
-  async handleRestart(incidentId: string, requestedBy: string, approve: boolean, notes?: string) {
-    const response = await nexusApiClient.post<RestartExecution>(`/api/v1/nexus/incidents/${incidentId}/actions/restart`, {
-      requested_by: requestedBy,
-      approve,
-      notes,
     });
     return response.data;
   }

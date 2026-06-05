@@ -924,6 +924,7 @@ const NexusPage: React.FC = () => {
   const bootPreviewStartedAtRef = useRef(Date.now());
   const liveRefreshInFlightRef = useRef(false);
   const logTailRefreshInFlightRef = useRef(false);
+  const serviceControlAutoSubmitRef = useRef<string | null>(null);
   const editorDirtyRef = useRef<NexusEditorDirtyState>(createCleanEditorDirty());
   const editorHydrationRef = useRef<Record<NexusEditorKind, string | null>>({
     service: null,
@@ -1002,11 +1003,6 @@ const NexusPage: React.FC = () => {
     const networkServiceId = mappedService?.observation_config.network_service_id;
     return networkServiceId ? `/network-sentinel?service=${networkServiceId}&tab=evidence` : null;
   }, [selectedIncident?.suspected_root_service, serviceMap]);
-
-  const selectedRootRecommendation = useMemo(
-    () => selectedIncident?.recommendations.find((recommendation) => recommendation.action_type === 'safe_restart') || null,
-    [selectedIncident],
-  );
 
   const workspaceLabel = workspaceLabels[activeWorkspace] || 'Incidents';
 
@@ -2254,6 +2250,35 @@ const NexusPage: React.FC = () => {
     setSearchParams(nextParams, { replace: true });
   };
 
+  const openIncidentServiceControl = () => {
+    if (!selectedIncident) {
+      return;
+    }
+    const serviceId = selectedIncident.suspected_root_service || selectedIncident.affected_services[0] || null;
+    if (!serviceId || !serviceMap[serviceId]) {
+      addNotification({
+        type: 'warning',
+        message: 'Nexus could not map this incident to a service control contract.',
+        priority: 'high',
+      });
+      return;
+    }
+    resetEditorHydration('service');
+    setCreatingService(false);
+    setSelectedServiceId(serviceId);
+    setTimelineServiceId(serviceId);
+    setServicePanelMode('overview');
+    setServiceLiveState(null);
+    setServiceControlError(null);
+    setServiceControlChallenge(null);
+    setServiceControlCode('');
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.set('workspace', 'services');
+    nextParams.delete('incident');
+    nextParams.delete('tab');
+    setSearchParams(nextParams, { replace: true });
+  };
+
   const closeServiceModal = () => {
     resetEditorHydration('service');
     setCreatingService(false);
@@ -2645,24 +2670,6 @@ const NexusPage: React.FC = () => {
     });
   };
 
-  const handleRestart = async (approve: boolean) => {
-    if (!selectedIncident) {
-      return;
-    }
-    await runAction(approve ? 'restart-approve' : 'restart-reject', async () => {
-      const execution = await nexusApi.handleRestart(selectedIncident.incident_id, actor, approve);
-      addNotification({
-        type: execution.status === 'BLOCKED' || execution.status === 'REJECTED' ? 'warning' : 'success',
-        message:
-          execution.result_summary ||
-          (approve
-            ? `Safe restart moved to ${execution.status.toLowerCase()} for ${selectedIncident.suspected_root_service_name || 'the root candidate'}.`
-            : 'Safe restart recommendation rejected.'),
-        priority: approve ? 'high' : 'medium',
-      });
-    });
-  };
-
   const requestSelectedServiceDiagnostics = async () => {
     if (!selectedService) return;
     await runAction('service-diagnostics', async () => {
@@ -2698,7 +2705,12 @@ const NexusPage: React.FC = () => {
 
   const normalizeLogTail = useCallback((tail: NexusServiceLogTail): NexusServiceLogTail => ({
     ...tail,
-    lines: [...(tail.lines || [])].sort((left, right) => Number(right.index || 0) - Number(left.index || 0)),
+    lines: [...(tail.lines || [])].sort((left, right) => {
+      const rightTime = timestampMs(right.timestamp);
+      const leftTime = timestampMs(left.timestamp);
+      if (rightTime !== leftTime) return rightTime - leftTime;
+      return Number(right.index || 0) - Number(left.index || 0);
+    }),
   }), []);
 
   const mergeLogTailWindow = useCallback((
@@ -2773,6 +2785,7 @@ const NexusPage: React.FC = () => {
   const openServiceControlGate = async (operation: NexusServiceControlOperation) => {
     if (!selectedService) return;
     setServiceControlCode('');
+    serviceControlAutoSubmitRef.current = null;
     setServiceControlError(null);
     setServiceControlBusy(operation);
     try {
@@ -2796,7 +2809,16 @@ const NexusPage: React.FC = () => {
     }
   };
 
-  const executeServiceControl = async () => {
+  const handleServiceControlCodeChange = (value: string) => {
+    const sanitized = value.replace(/\D/g, '').slice(0, 6);
+    if (sanitized.length < 6) {
+      serviceControlAutoSubmitRef.current = null;
+    }
+    setServiceControlError(null);
+    setServiceControlCode(sanitized);
+  };
+
+  const executeServiceControl = useCallback(async () => {
     if (!selectedService || !serviceControlChallenge) return;
     setServiceControlBusy(`execute-${serviceControlChallenge.operation}`);
     setServiceControlError(null);
@@ -2836,7 +2858,32 @@ const NexusPage: React.FC = () => {
     } finally {
       setServiceControlBusy(null);
     }
-  };
+  }, [
+    addNotification,
+    loadWorkspace,
+    refreshServiceLiveState,
+    scheduleControlBurstRefresh,
+    selectedService,
+    serviceControlChallenge,
+    serviceControlCode,
+    serviceControlReason,
+  ]);
+
+  useEffect(() => {
+    serviceControlAutoSubmitRef.current = null;
+  }, [serviceControlChallenge?.challenge_id]);
+
+  useEffect(() => {
+    if (!selectedService || !serviceControlChallenge || serviceControlCode.length !== 6 || serviceControlBusy) {
+      return;
+    }
+    const submitKey = `${serviceControlChallenge.challenge_id}:${serviceControlCode}`;
+    if (serviceControlAutoSubmitRef.current === submitKey) {
+      return;
+    }
+    serviceControlAutoSubmitRef.current = submitKey;
+    void executeServiceControl();
+  }, [executeServiceControl, selectedService, serviceControlChallenge, serviceControlCode, serviceControlBusy]);
 
   const submitVerdict = async () => {
     if (!selectedIncident) {
@@ -4375,14 +4422,11 @@ const NexusPage: React.FC = () => {
               <button
                 type="button"
                 className="approve"
-                onClick={() => void handleRestart(true)}
-                disabled={actionBusy === 'restart-approve' || !selectedRootRecommendation?.eligible}
-                title={selectedRootRecommendation?.blocked_reasons?.join(' ') || 'Approve controlled safe restart'}
+                onClick={openIncidentServiceControl}
+                disabled={!selectedIncident.suspected_root_service && !selectedIncident.affected_services.length}
+                title="Open the OTP-gated Service Control Gate for START, STOP, and RESTART."
               >
-                <FaCheckCircle /> {actionBusy === 'restart-approve' ? 'Approving...' : 'Approve Restart'}
-              </button>
-              <button type="button" className="reject" onClick={() => void handleRestart(false)} disabled={actionBusy === 'restart-reject'}>
-                <FaTimesCircle /> {actionBusy === 'restart-reject' ? 'Working...' : 'Reject Restart'}
+                <FaShieldAlt /> Service Control
               </button>
             </div>
 
@@ -4397,12 +4441,10 @@ const NexusPage: React.FC = () => {
               </div>
             )}
 
-            {selectedRootRecommendation && !selectedRootRecommendation.eligible ? (
-              <div className="nexus-banner warning">
-                <strong>Safe restart is currently blocked.</strong>
-                <span>{selectedRootRecommendation.blocked_reasons.join(' ')}</span>
-              </div>
-            ) : null}
+            <div className="nexus-banner warning">
+              <strong>Restart execution is only available inside the Service Control Gate.</strong>
+              <span>Use Service Control to open the live operations cockpit and run OTP-gated START, STOP, or RESTART with current runtime evidence.</span>
+            </div>
           </div>
 
           <div className="nexus-tabs-shell nexus-shell">
@@ -4594,14 +4636,11 @@ const NexusPage: React.FC = () => {
                 <button
                   type="button"
                   className="approve"
-                  onClick={() => void handleRestart(true)}
-                  disabled={actionBusy === 'restart-approve' || !selectedRootRecommendation?.eligible}
-                  title={selectedRootRecommendation?.blocked_reasons?.join(' ') || 'Approve controlled safe restart'}
+                  onClick={openIncidentServiceControl}
+                  disabled={!selectedIncident.suspected_root_service && !selectedIncident.affected_services.length}
+                  title="Open the OTP-gated Service Control Gate for START, STOP, and RESTART."
                 >
-                  <FaCheckCircle /> {actionBusy === 'restart-approve' ? 'Approving...' : 'Approve Restart'}
-                </button>
-                <button type="button" className="reject" onClick={() => void handleRestart(false)} disabled={actionBusy === 'restart-reject'}>
-                  <FaTimesCircle /> {actionBusy === 'restart-reject' ? 'Working...' : 'Reject Restart'}
+                  <FaShieldAlt /> Service Control
                 </button>
               </div>
 
@@ -4616,12 +4655,10 @@ const NexusPage: React.FC = () => {
                 </div>
               )}
 
-              {selectedRootRecommendation && !selectedRootRecommendation.eligible ? (
-                <div className="nexus-banner warning">
-                  <strong>Safe restart is currently blocked.</strong>
-                  <span>{selectedRootRecommendation.blocked_reasons.join(' ')}</span>
-                </div>
-              ) : null}
+              <div className="nexus-banner warning">
+                <strong>Restart execution is only available inside the Service Control Gate.</strong>
+                <span>Use Service Control to open the live operations cockpit and run OTP-gated START, STOP, or RESTART with current runtime evidence.</span>
+              </div>
             </div>
 
             <div className="nexus-tabs-shell nexus-shell">
@@ -4768,7 +4805,8 @@ const NexusPage: React.FC = () => {
           {tail && !tail.available ? <div className="nexus-banner warning">{tail.reason || 'Live log tail is not available.'}</div> : null}
           <div className="log-tail-meta">
             <span>{tail ? formatRelativeMinutes(tail.generated_at) : 'Loading'}</span>
-            <span>{tail?.lines.length || 0} line(s)</span>
+            <span>{tail?.lines.length || 0} event(s)</span>
+            <span>{tail?.line_grouping === 'timestamp_event' ? 'timestamp grouped' : 'raw line mode'}</span>
             <span>{tail?.tail_mode ? String(tail.tail_mode).replace(/_/g, ' ') : 'latest first'}</span>
             <span>{tail?.bytes_read ? `${tail.bytes_read} bytes read` : 'bounded read'}</span>
             <span>{tail?.truncated ? 'window truncated' : 'full window'}</span>
@@ -4776,9 +4814,12 @@ const NexusPage: React.FC = () => {
           <div className="log-tail-console">
             {(tail?.lines || []).map((line) => (
               <div key={`${line.index}-${line.message}`} className={`log-tail-row severity-${String(line.severity || 'info').toLowerCase()}`}>
-                <span>{line.timestamp || `#${line.index}`}</span>
+                <span className="log-tail-timestamp">{line.timestamp || `#${line.index}`}</span>
                 <strong>{line.level || 'LOG'}</strong>
                 <code>{line.message}</code>
+                {Number(line.physical_line_count || 0) > 1 ? (
+                  <em>{line.physical_line_count} physical lines</em>
+                ) : null}
               </div>
             ))}
             {logTailLoading ? <div className="empty-state compact">Reading bounded log tail from the light agent...</div> : null}
@@ -6837,13 +6878,16 @@ const NexusPage: React.FC = () => {
                   <span>One-time code</span>
                   <input
                     value={serviceControlCode}
-                    onChange={(event) => setServiceControlCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                    onChange={(event) => handleServiceControlCodeChange(event.target.value)}
                     placeholder="000000"
                     inputMode="numeric"
+                    autoComplete="one-time-code"
                     autoFocus
                   />
                 </label>
-                <small>Expires {formatRelativeMinutes(serviceControlChallenge.expires_at)}. Codes are single-use and bound to this service/action.</small>
+                <small>
+                  Expires {formatRelativeMinutes(serviceControlChallenge.expires_at)}. Nexus verifies automatically when six digits are entered.
+                </small>
               </div>
               <div className="service-control-otp-summary">
                 <span>Service</span>
@@ -6863,7 +6907,7 @@ const NexusPage: React.FC = () => {
                 disabled={serviceControlCode.length < 6 || Boolean(serviceControlBusy)}
                 onClick={() => void executeServiceControl()}
               >
-                <FaShieldAlt /> {serviceControlBusy?.startsWith('execute') ? 'Verifying...' : `Confirm ${serviceControlChallenge.operation.toUpperCase()}`}
+                <FaShieldAlt /> {serviceControlBusy?.startsWith('execute') ? 'Verifying...' : `Verify ${serviceControlChallenge.operation.toUpperCase()}`}
               </button>
             </div>
           </section>
