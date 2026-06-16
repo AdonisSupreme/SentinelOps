@@ -15,6 +15,7 @@ import {
 } from 'react-icons/fa';
 import PageGuide from '../components/ui/PageGuide';
 import { dashboardApi, DashboardSummary } from '../services/dashboardApi';
+import { DATABASE_TELEMETRY_ENDPOINT_LABEL } from '../config/env';
 import { DatabaseStatsSkeleton } from '../components/dashboard';
 import { pageGuides } from '../content/pageGuides';
 import './DatabaseStatsPage.css';
@@ -634,7 +635,7 @@ const DatabaseStatsPage: React.FC = () => {
           <div className="footer-content">
             <FaServer className="footer-icon" />
             <span className="footer-text">
-              Telemetry endpoint: 192.168.1.167:3030 | Source mode: {data?.timestamp ? 'Cached fallback' : 'Direct connection'}
+              Telemetry endpoint: {DATABASE_TELEMETRY_ENDPOINT_LABEL} | Source mode: {data?.timestamp ? 'Cached fallback' : 'Direct connection'}
             </span>
           </div>
         </footer>

@@ -54,6 +54,15 @@ const CHECKLIST_INIT_HOUR = 6;
 
 const formatIsoDate = (date: Date) => format(date, 'yyyy-MM-dd');
 
+const getInstanceStatusClass = (status?: string | null) => {
+  const normalized = String(status || 'OPEN')
+    .toLowerCase()
+    .replace(/_/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+
+  return `status-${normalized || 'unknown'}`;
+};
+
 const formatRangeLabel = (start?: string, end?: string) => {
   if (!start && !end) return 'All recorded time';
   if (start && end && start === end) return format(parseISO(start), 'EEEE, MMM d, yyyy');
@@ -827,7 +836,7 @@ const ChecklistsPage: React.FC = () => {
                       <button
                         key={instance.id}
                         type="button"
-                        className={`timeline-instance-card ${getShiftTone(instance.shift)} ${instance.status.toLowerCase()}`}
+                        className={`timeline-instance-card ${getShiftTone(instance.shift)} ${getInstanceStatusClass(instance.status)}`}
                         onClick={() => handleInstanceClick(instance)}
                       >
                         <div className="instance-card-glow" />

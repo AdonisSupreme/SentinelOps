@@ -1,0 +1,1274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sentinel Nexus Operator Manual</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: #172033;
+      background: #f4f7fb;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.46;
+    }
+
+    .page {
+      width: 100%;
+      min-height: 267mm;
+      page-break-after: always;
+      padding: 0;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+    }
+
+    .cover {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 267mm;
+      padding: 20mm 14mm;
+      color: #fff;
+      background: linear-gradient(135deg, #0b2450, #0f766e 46%, #3f2f12);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      border: 2px solid rgba(255, 255, 255, 0.82);
+      font-weight: 900;
+    }
+
+    .cover-title {
+      align-self: center;
+      max-width: 170mm;
+    }
+
+    .eyebrow,
+    .kicker {
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #2563eb;
+    }
+
+    .cover .eyebrow {
+      color: #bff7ee;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.06;
+    }
+
+    h1 {
+      margin-top: 12px;
+      font-size: 45px;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 25px;
+      color: #0f2742;
+    }
+
+    h3 {
+      font-size: 16px;
+      color: #142238;
+    }
+
+    p {
+      margin: 0;
+      color: #475569;
+    }
+
+    .cover p {
+      margin-top: 14px;
+      color: #e5f7f3;
+      font-size: 15px;
+      max-width: 150mm;
+    }
+
+    .cover-grid,
+    .stat-grid,
+    .tree-grid,
+    .rule-grid,
+    .example-grid,
+    .two-col {
+      display: grid;
+      gap: 9px;
+    }
+
+    .cover-grid {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .cover-card,
+    .stat-card {
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      border-radius: 8px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .cover-card span,
+    .stat-card span {
+      display: block;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      opacity: 0.82;
+    }
+
+    .cover-card strong,
+    .stat-card strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 15px;
+    }
+
+    .sheet {
+      padding: 0;
+    }
+
+    .page-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #dbeafe;
+    }
+
+    .page-number {
+      border-radius: 8px;
+      background: #0f3d75;
+      color: #fff;
+      font-weight: 900;
+      padding: 8px 11px;
+      min-width: 38px;
+      text-align: center;
+    }
+
+    .intro {
+      margin-top: 7px;
+      max-width: 168mm;
+    }
+
+    .section {
+      margin-top: 13px;
+    }
+
+    .stat-grid {
+      grid-template-columns: repeat(5, 1fr);
+      margin-top: 12px;
+    }
+
+    .stat-card {
+      border-color: #cbd5e1;
+      background: #fff;
+      color: #172033;
+    }
+
+    .stat-card span {
+      color: #64748b;
+      opacity: 1;
+    }
+
+    .stat-card strong {
+      color: #0f2742;
+    }
+
+    .manual-card,
+    .visual,
+    .rule-card,
+    .tree-card,
+    .example-card,
+    .check-card {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 5px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    .manual-card,
+    .rule-card,
+    .tree-card,
+    .example-card,
+    .check-card {
+      padding: 12px;
+    }
+
+    .two-col {
+      grid-template-columns: 0.92fr 1.08fr;
+      align-items: stretch;
+    }
+
+    .two-col.even {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .manual-card h3,
+    .rule-card h3,
+    .tree-card h3,
+    .example-card h3,
+    .check-card h3 {
+      margin-bottom: 7px;
+    }
+
+    ul,
+    ol {
+      margin: 8px 0 0;
+      padding-left: 18px;
+      color: #475569;
+    }
+
+    li + li {
+      margin-top: 5px;
+    }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .visual {
+      overflow: hidden;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 12px;
+      min-height: 70mm;
+    }
+
+    .visual.light {
+      background: #f8fafc;
+      color: #172033;
+    }
+
+    .visual-topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding-bottom: 9px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+      margin-bottom: 10px;
+    }
+
+    .visual-topbar span {
+      color: #93c5fd;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .visual-topbar strong {
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .visual.light .visual-topbar strong {
+      color: #0f2742;
+    }
+
+    .tabs,
+    .pill-row,
+    .action-row,
+    .flow,
+    .graph,
+    .rollover {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .tabs span,
+    .pill-row span,
+    .action-row span {
+      border: 1px solid rgba(148, 163, 184, 0.36);
+      border-radius: 8px;
+      padding: 7px 9px;
+      background: rgba(15, 23, 42, 0.8);
+      color: #e2e8f0;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .tabs .active,
+    .action-row .primary {
+      background: #2563eb;
+      border-color: #60a5fa;
+      color: #fff;
+    }
+
+    .action-row .success {
+      background: #16a34a;
+      border-color: #86efac;
+      color: #fff;
+    }
+
+    .action-row .warning {
+      background: #f59e0b;
+      border-color: #fde68a;
+      color: #111827;
+    }
+
+    .action-row .danger {
+      background: #7f1d1d;
+      border-color: #fecaca;
+      color: #fecaca;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .metric-grid.three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .metric {
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      border-radius: 8px;
+      padding: 10px;
+      min-height: 52px;
+      background: rgba(15, 23, 42, 0.74);
+    }
+
+    .metric span,
+    .row-list em,
+    .contract em {
+      display: block;
+      color: #cbd5e1;
+      font-size: 10px;
+      font-style: normal;
+    }
+
+    .metric strong {
+      display: block;
+      color: #fff;
+      margin-top: 4px;
+      font-size: 13px;
+    }
+
+    .metric.blue {
+      border-color: rgba(59, 130, 246, 0.62);
+      background: rgba(37, 99, 235, 0.24);
+    }
+
+    .metric.green {
+      border-color: rgba(22, 163, 74, 0.62);
+      background: rgba(22, 163, 74, 0.2);
+    }
+
+    .metric.amber {
+      border-color: rgba(245, 158, 11, 0.62);
+      background: rgba(245, 158, 11, 0.18);
+    }
+
+    .metric.red {
+      border-color: rgba(239, 68, 68, 0.62);
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .row-list,
+    .contract {
+      display: grid;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .row-list span,
+    .contract span {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.26);
+      border-radius: 8px;
+      padding: 8px 9px;
+      background: rgba(15, 23, 42, 0.68);
+    }
+
+    .row-list b,
+    .contract b {
+      color: #fff;
+      font-size: 11px;
+    }
+
+    .visual.light .row-list span,
+    .visual.light .contract span {
+      background: #fff;
+      border-color: #cbd5e1;
+    }
+
+    .visual.light .row-list b,
+    .visual.light .contract b {
+      color: #0f2742;
+    }
+
+    .visual.light .row-list em,
+    .visual.light .contract em {
+      color: #64748b;
+    }
+
+    .graph,
+    .flow,
+    .rollover {
+      min-height: 45mm;
+      justify-content: center;
+      background: rgba(2, 6, 23, 0.28);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 8px;
+      margin-top: 10px;
+      padding: 10px;
+    }
+
+    .graph span,
+    .flow span,
+    .rollover span {
+      min-width: 25mm;
+      min-height: 13mm;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.8);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .graph i,
+    .flow i,
+    .rollover i {
+      width: 14mm;
+      height: 2px;
+      background: #60a5fa;
+    }
+
+    .graph .root {
+      background: #7f1d1d;
+      border-color: #fecaca;
+    }
+
+    .graph .impact {
+      background: #78350f;
+      border-color: #fde68a;
+    }
+
+    .tree-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .rule-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .example-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .tree-card ul,
+    .rule-card ul,
+    .check-card ul {
+      font-size: 11px;
+    }
+
+    .rule-card {
+      border-top: 4px solid #2563eb;
+    }
+
+    .rule-card.warning {
+      border-top-color: #f59e0b;
+    }
+
+    .rule-card.danger {
+      border-top-color: #ef4444;
+    }
+
+    .note {
+      margin-top: 10px;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      padding: 10px;
+      background: #eff6ff;
+      color: #1e3a8a;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .danger-note {
+      margin-top: 10px;
+      border: 1px solid #fed7aa;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fffbeb;
+      color: #92400e;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .mini-title {
+      margin: 12px 0 6px;
+      color: #0f2742;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .footer-line {
+      margin-top: 12px;
+      padding-top: 9px;
+      border-top: 1px solid #cbd5e1;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+  </style>
+</head>
+<body>
+  <section class="page cover">
+    <div class="brand"><span class="brand-mark">SN</span><span>SentinelOps</span></div>
+    <div class="cover-title">
+      <span class="eyebrow">Sentinel Nexus Operator Manual</span>
+      <h1>Absolute guidance for the Nexus intelligence fabric</h1>
+      <p>Nexus is the operating intelligence layer for SentinelOps. It connects incidents, services, databases, dependency topology, business flows, light agents, SOPs, AI interpretation, safe diagnostics, guarded restart, rollover, and operator verdicts into one transparent command experience.</p>
+    </div>
+    <div class="cover-grid">
+      <div class="cover-card"><span>Start</span><strong>Incidents</strong></div>
+      <div class="cover-card"><span>Define</span><strong>Services</strong></div>
+      <div class="cover-card"><span>Model</span><strong>Flows</strong></div>
+      <div class="cover-card"><span>Act</span><strong>Diagnostics</strong></div>
+      <div class="cover-card"><span>Teach</span><strong>Verdicts</strong></div>
+    </div>
+  </section>
+
+  <section class="page sheet">
+    <div class="page-head">
+      <div>
+        <span class="kicker">Operator map</span>
+        <h2>What Sentinel Nexus is and how to enter it</h2>
+        <p class="intro">Nexus is not a normal monitoring page. Network Sentinel proves reachability. Nexus decides what the reachability means by combining service contracts, runtime evidence, dependencies, databases, business flows, SOPs, and operator outcomes.</p>
+      </div>
+      <span class="page-number">01</span>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card"><span>Incidents</span><strong>Live work</strong></div>
+      <div class="stat-card"><span>Services</span><strong>Truth units</strong></div>
+      <div class="stat-card"><span>Databases</span><strong>Root causes</strong></div>
+      <div class="stat-card"><span>Actions</span><strong>Safe lanes</strong></div>
+      <div class="stat-card"><span>Outcome</span><strong>Learning</strong></div>
+    </div>
+
+    <div class="section two-col">
+      <div class="manual-card">
+        <span class="label">First thing to read</span>
+        <h3>Nexus command map</h3>
+        <p>Start by reading fabric pulse, sync health, mapped service count, database contracts, active incidents, diagnostics-ready services, restart-ready services, and current workspace tab.</p>
+        <ul>
+          <li>Use Incidents when production is actively noisy.</li>
+          <li>Use Services when Nexus seems to misunderstand a service.</li>
+          <li>Use Databases when the evidence mentions sessions, pools, locks, ORA, TNS, SQLSTATE, JDBC, storage, or replication.</li>
+          <li>Use Agents when runtime evidence is missing, stale, or mapped to the wrong service.</li>
+          <li>Use SOPs when operators need governed procedure guidance.</li>
+        </ul>
+        <div class="danger-note">Rule: If the catalog is wrong, Nexus will reason from the wrong world. Fix catalog truth before blaming the engine.</div>
+      </div>
+      <div class="visual">
+        <div class="visual-topbar"><span>Nexus workspace</span><strong>Command map</strong></div>
+        <div class="tabs">
+          <span class="active">Incidents</span><span>Services</span><span>Agents</span><span>Databases</span><span>Rollover</span><span>SOPs</span>
+        </div>
+        <div class="metric-grid">
+          <div class="metric blue"><span>Mapped services</span><strong>28 / 31</strong></div>
+          <div class="metric green"><span>Diagnostics lane</span><strong>12 ready</strong></div>
+          <div class="metric amber"><span>Business flows</span><strong>9 active</strong></div>
+          <div class="metric"><span>Database contracts</span><strong>7 modeled</strong></div>
+        </div>
+        <div class="row-list">
+          <span><b>Fabric pulse</b><em>Sync success</em></span>
+          <span><b>Linked consoles</b><em>Network, telemetry, evidence</em></span>
+          <span><b>Operator loop</b><em>Observe, correlate, decide, act, learn</em></span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-line">Sentinel Nexus manual | command orientation</div>
+  </section>
+
+  <section class="page sheet">
+    <div class="page-head">
+      <div>
+        <span class="kicker">Incidents</span>
+        <h2>Investigate from risk, not noise</h2>
+        <p class="intro">The Incidents workspace is where Nexus turns signals into an operational story. Open the highest-risk active incident first, then move through overview, topology, evidence, actions, procedure, and outcome.</p>
+      </div>
+      <span class="page-number">02</span>
+    </div>
+
+    <div class="section two-col">
+      <div class="visual">
+        <div class="visual-topbar"><span>Incident detail</span><strong>Risk and root candidates</strong></div>
+        <div class="pill-row">
+          <span style="background:#dc2626;color:#fff;border-color:#fecaca;">CRITICAL</span>
+          <span>Risk 91</span>
+          <span>IDC access flow</span>
+          <span>Status OPEN</span>
+        </div>
+        <div class="metric-grid three">
+          <div class="metric red"><span>Affected</span><strong>IDC Gateway</strong></div>
+          <div class="metric amber"><span>Suspected root</span><strong>ARX Auth</strong></div>
+          <div class="metric blue"><span>Confidence</span><strong>0.82</strong></div>
+        </div>
+        <div class="row-list">
+          <span><b>01 ARX Auth</b><em>Upstream, auth failures, strong fit</em></span>
+          <span><b>02 IDC Gateway</b><em>Symptomatic, runtime healthy</em></span>
+          <span><b>03 Core DB</b><em>Low evidence fit</em></span>
+        </div>
+      </div>
+      <div class="manual-card">
+        <span class="label">Checklist</span>
+        <h3>How to triage the incident</h3>
+        <ol>
+          <li>Read title, risk level, risk score, business impact score, status, affected services, and suspected root.</li>
+          <li>Confirm which business flows and clusters are attached. This tells you who is affected, not just what is noisy.</li>
+          <li>Open Overview first for the story, then Topology for direction, Evidence for proof, Actions for safe moves, Procedure for SOP guidance, and Outcome for verdict.</li>
+          <li>Use status honestly: OPEN for active work, MONITORING for watch state, AWAITING_VERDICT after action, RESOLVED only after outcome is recorded.</li>
+        </ol>
+        <div class="note">Example: An ARX problem can explain IDC user access without explaining IDC transaction posting if the ARX dependency is flow-scoped to access only.</div>
+      </div>
+    </div>
+
+    <div class="section rule-grid">
+      <div class="rule-card">
+        <h3>Read before action</h3>
+        <p>Risk, affected services, suspected root, confidence, blast radius, evidence timeline, signatures, recent changes, and recommendations must agree enough to justify the next move.</p>
+      </div>
+      <div class="rule-card warning">
+        <h3>Do not chase alerts blindly</h3>
+        <p>The newest alert is not always the root. Nexus ranks by graph, business flow, evidence diversity, upstream explanation, and business impact.</p>
+      </div>
+    </div>
+    <div class="footer-line">Sentinel Nexus manual | incident triage</div>
+  </section>
+
+  <section class="page sheet">
+    <div class="page-head">
+      <div>
+        <span class="kicker">Evidence and AI</span>
+        <h2>Use iNterpret for speed, evidence for authority</h2>
+        <p class="intro">The Nexus AI brief translates evidence into operator language. It is valuable, but deterministic correlation and cited evidence remain the control plane. The operator must separate known facts, inference, uncertainty, and unsafe action.</p>
+      </div>
+      <span class="page-number">03</span>
+    </div>
+
+    <div class="section two-col even">
+      <div class="visual">
+        <div class="visual-topbar"><span>Evidence lane</span><strong>Timeline before action</strong></div>
+        <div class="row-list">
+          <span><b>10:01</b><em>external_network timeout</em></span>
+          <span><b>10:03</b><em>agent heartbeat healthy</em></span>
+          <span><b>10:05</b><em>ORA-00020 sessions high</em></span>
+          <span><b>10:07</b><em>pool used/max critical</em></span>
+          <span><b>10:09</b><em>slow query count rising</em></span>
+        </div>
+        <div class="metric-grid three">
+          <div class="metric blue"><span>Source</span><strong>Network Sentinel</strong></div>
+          <div class="metric green"><span>Source</span><strong>Light agent</strong></div>
+          <div class="metric amber"><span>Source</span><strong>DB probe</strong></div>
+        </div>
+      </div>
+      <div class="visual">
+        <div class="visual-topbar"><span>Nexus AI brief</span><strong>Explain, cite, constrain</strong></div>
+        <div class="row-list">
+          <span><b>Known</b><em>External checks fail on gateway.</em></span>
+          <span><b>Known</b><em>Runtime heartbeat is healthy.</em></span>
+          <span><b>Inferred</b><em>Database pool pressure explains timeouts.</em></span>
+          <span><b>Unsafe</b><em>Restart blocked until diagnostics.</em></span>
+        </div>
+        <div class="note" style="background:#172554;color:#bfdbfe;border-color:#60a5fa;">Ask precise questions: procedure, validation, rollback, escalation, or risk. Avoid vague "what is wrong?" questions when the incident already has structured evidence.</div>
+      </div>
+    </div>
+
+    <div class="section two-col">
+      <div class="manual-card">
+        <span class="label">Evidence metadata</span>
+        <h3>Every signal must carry meaning</h3>
+        <ul>
+          <li>service_id, service.name, environment, instance_id when known.</li>
+          <li>timestamp, severity, source, vantage_point, observation_layer.</li>
+          <li>failure_domain_hint when known: network, runtime, database, dependency, auth, integration, storage, change.</li>
+          <li>Log signature fields: error class, exception name, timeout type, OOM flag, DB code, first seen, last seen, count, representative snippets.</li>
+        </ul>
+      </div>
+      <div class="manual-card">
+        <span class="label">Database evidence</span>
+        <h3>Preserve the codes</h3>
+        <ul>
+          <li>Oracle: ORA, TNS, sessions, locks, blocking sessions, listener, tablespace, replication, slow queries.</li>
+          <li>PostgreSQL: SQLSTATE, connection errors, lock waits, replication lag, storage pressure, slow query count.</li>
+          <li>JDBC and pool evidence: pool used/max, max pool size, connection timeout, statement timeout, transaction state.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-line">Sentinel Nexus manual | evidence and AI interpretation</div>
+  </section>
+
+  <section class="page sheet">
+    <div class="page-head">
+      <div>
+        <span class="kicker">Safe action</span>
+        <h2>Diagnostics first, task handoff when humans must own it, restart only through the gate</h2>
+        <p class="intro">Nexus action lanes are built for safety. They give operators a clear path without turning the page into arbitrary remote control.</p>
+      </div>
+      <span class="page-number">04</span>
+    </div>
+
+    <div class="section two-col">
+      <div class="manual-card">
+        <span class="label">Action decision</span>
+        <h3>Choose the truthful move</h3>
+        <ul>
+          <li><strong>Request diagnostics</strong> when the target is plausible but more safe evidence is needed.</li>
+          <li><strong>Create response task</strong> when a person or team needs accountable follow-up.</li>
+          <li><strong>Approve restart</strong> only when Nexus policy gates, evidence, and service certification all line up.</li>
+          <li><strong>Reject restart</strong> when the recommendation is unsafe, premature, stateful, low confidence, or dependency-driven.</li>
+        </ul>
+        <div class="danger-note">Never restart db, cache, queue, auth, infra, shared databases, core banking failover paths, or config-change paths from Nexus.</div>
+      </div>
+      <div class="visual">
+        <div class="visual-topbar"><span>Actions tab</span><strong>Evidence-gated control</strong></div>
+        <div class="action-row">
+          <span class="primary">Request diagnostics</span>
+          <span class="success">Create task</span>
+          <span class="danger">Restart locked</span>
+        </div>
+        <div class="metric-grid three">
+          <div class="metric green"><span>Required</span><strong>diagnostics_ready</strong></div>
+          <div class="metric green"><span>Required</span><strong>stateless</strong></div>
+          <div class="metric amber"><span>Required</span><strong>cooldown clear</strong></div>
+        </div>
+        <div class="row-list">
+          <span><b>Restart policy</b><em>allow_restart true</em></span>
+          <span><b>Allowed type</b><em>app or gateway only</em></span>
+          <span><b>Approval</b><em>human challenge complete</em></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section rule-grid">
+      <div class="rule-card">
+        <h3>Diagnostics checklist</h3>
+        <ul>
+          <li>Service is diagnostics_ready or restart_ready.</li>
+          <li>Agent or diagnostics URL is configured.</li>
+          <li>Output is bounded and read-only.</li>
+          <li>Result explains host, logs, sockets, memory, disk, dependencies, and DB probes where safe.</li>
+        </ul>
+      </div>
+      <div class="rule-card danger">
+        <h3>Restart checklist</h3>
+        <ul>
+          <li>Service is restart_ready and stateless.</li>
+          <li>Policy allows restart for this service type.</li>
+          <li>No maintenance block or cooldown is active.</li>
+          <li>Confidence is high enough and evidence supports restart as safer than waiting.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-line">Sentinel Nexus manual | safe action lanes</div>
+  </section>
+
+  <section class="page sheet">
+    <div class="page-head">
+      <div>
+        <span class="kicker">Service onboarding</span>
+        <h2>Build the service contract before you expect intelligence</h2>
+        <p class="intro">A service is the smallest unit Nexus can reason about. The service contract is where identity, ownership, evidence, policy, and certification become explicit.</p>
+      </div>
+      <span class="page-number">05</span>
+    </div>
+
+    <div class="section two-col">
+      <div class="visual light">
+        <div class="visual-topbar"><span>Services workspace</span><strong>Service contract</strong></div>
+        <div class="contract">
+          <span><b>service_id</b><em>idc-gateway-prod</em></span>
+          <span><b>service_type</b><em>gateway</em></span>
+          <span><b>environment</b><em>production</em></span>
+          <span><b>owner_team</b><em>Digital Core</em></span>
+          <span><b>criticality</b><em>critical</em></span>
+          <span><b>network_service_id</b><em>net-idc-gateway</em></span>
+          <span><b>agent_id</b><em>agent-prod-02</em></span>
+          <span><b>certification</b><em>diagnostics_ready</em></span>
+        </div>
+      </div>
+      <div class="manual-card">
+        <span class="label">Required fields</span>
+        <h3>What to configure</h3>
+        <ul>
+          <li>Stable ID, clear name, environment, service type, owner team, criticality, description, tags.</li>
+          <li>Cluster IDs and legacy cluster label where applicable.</li>
+          <li>Endpoint config: healthcheck, metrics, logs, traces, diagnostics, restart, extraction, formatting, shipping, dashboard.</li>
+          <li>Observation config: Network Sentinel mapping, agent ID, systemd unit, host group, log selector, metrics namespace, trace service name, preferred source, analysis profile.</li>
+          <li>Restart policy: allow_restart, requires_human_approval, cooldown minutes, allowed service types.</li>
+        </ul>
+        <div class="note">Certification stages: catalog_only, observe_only, correlate_ready, diagnostics_ready, restart_ready. Do not skip stages.</div>
+      </div>
+    </div>
+
+    <div class="section rule-grid">
+      <div class="rule-card warning">
+        <h3>What to avoid</h3>
+        <p>Do not add vague services like "IDC stuff" or "Core systems." Vague objects create vague incidents, false correlation, and unsafe recommendations.</p>
+      </div>
+      <div class="rule-card">
+        <h3>Operator trick</h3>
+        <p>When Nexus feels wrong, compare service_id, Network Sentinel mapping, agent ID, cluster membership, flow steps, and dependency edges before changing incident logic.</p>
+      </div>
+    </div>
+    <div class="footer-line">Sentinel Nexus manual | service onboarding</div>
+  </section>
+
+  <section class="page sheet">
+    <div class="page-head">
+      <div>
+        <span class="kicker">Database fabric</span>
+        <h2>Databases are operational citizens, not notes on an app</h2>
+        <p class="intro">A database can be the root cause, a shared dependency, a blast-radius multiplier, or a restart blocker. Model it explicitly so Nexus can distinguish app failure from data-store pressure.</p>
+      </div>
+      <span class="page-number">06</span>
+    </div>
+
+    <div class="section two-col">
+      <div class="manual-card">
+        <span class="label">Database contract</span>
+        <h3>Fields Nexus expects</h3>
+        <ul>
+          <li>enabled, platform, host, database_name, instance_name, service_name, username, JDBC URL, connection type.</li>
+          <li>role, host group, port, schemas, connection pool, max pool size.</li>
+          <li>replication group, failover group, read-only state, shared dependency, data classification.</li>
+          <li>expected evidence and safe diagnostics.</li>
+          <li>metadata for local realities that do not fit normal fields.</li>
+        </ul>
+        <div class="danger-note">If a database is shared or operationally important, add it as its own db service and connect dependent apps to it with db edges.</div>
+      </div>
+      <div class="visual">
+        <div class="visual-topbar"><span>Database profile</span><strong>Oracle PROD</strong></div>
+        <div class="metric-grid three">
+          <div class="metric green"><span>Evidence</span><strong>sessions</strong></div>
+          <div class="metric amber"><span>Evidence</span><strong>locks</strong></div>
+          <div class="metric red"><span>Evidence</span><strong>ORA/TNS</strong></div>
+        </div>
+        <div class="contract">
+          <span><b>Schemas</b><em>IDC, AUDIT</em></span>
+          <span><b>Pool</b><em>Hikari, max 60</em></span>
+          <span><b>Safe probes</b><em>connectivity, sessions, locks, lag</em></span>
+          <span><b>Do not</b><em>restart from Nexus</em></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section two-col even">
+      <div class="check-card">
+        <h3>DB edge details</h3>
+        <ul>
+          <li>access_mode, schema_names, operation_types.</li>
+          <li>connection_pool, max_connections, statement_timeout_ms.</li>
+          <li>expected_error_codes: SQLSTATE, ORA, TNS, JDBC.</li>
+          <li>query_fingerprint_scope and transactional state.</li>
+        </ul>
+      </div>
+      <div class="check-card">
+        <h3>How to read DB evidence</h3>
+        <ul>
+          <li>High sessions plus pool saturation means pressure may be below the app.</li>
+          <li>Locks and deadlocks point to contention, not necessarily service death.</li>
+          <li>Replication lag can cause stale reads or failover symptoms.</li>
+          <li>Tablespace or storage pressure can look like random application failure.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-line">Sentinel Nexus manual | database fabric</div>
+  </section>
+
+  <section class="page sheet">
+    <div class="page-head">
+      <div>
+        <span class="kicker">Flows and topology</span>
+        <h2>Model real journeys and directional dependencies</h2>
+        <p class="intro">Clusters group operational fabrics. Business flows describe user and transaction journeys. Dependency edges explain direction, purpose, scope, failure domain, expected evidence, and timeout budget.</p>
+      </div>
+      <span class="page-number">07</span>
+    </div>
+
+    <div class="section two-col even">
+      <div class="visual">
+        <div class="visual-topbar"><span>Business flow</span><strong>IDC User Access</strong></div>
+        <div class="flow">
+          <span>Channel</span><i></i><span>ARX auth</span><i></i><span>IDC gateway</span><i></i><span>Session</span>
+        </div>
+        <div class="row-list">
+          <span><b>Entry service</b><em>digital-channel-prod</em></span>
+          <span><b>Required steps</b><em>ARX auth, IDC gateway</em></span>
+          <span><b>Failure indicators</b><em>auth denial, timeout, session error</em></span>
+        </div>
+      </div>
+      <div class="visual">
+        <div class="visual-topbar"><span>Topology</span><strong>Directional graph</strong></div>
+        <div class="graph">
+          <span class="root">ARX</span><i></i><span class="impact">IDC Access</span><i></i><span>LMS</span>
+        </div>
+        <div class="metric-grid three">
+          <div class="metric red"><span>Root</span><strong>ARX</strong></div>
+          <div class="metric amber"><span>Blast</span><strong>Access flow</strong></div>
+          <div class="metric"><span>Scope</span><strong>flow only</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section tree-grid">
+      <div class="tree-card">
+        <h3>Cluster</h3>
+        <p>Use for operational fabrics: IDC core, LMS processing, ARX access, Postilion card flow, digital channels, infrastructure.</p>
+        <ul><li>Entry services</li><li>Service IDs</li><li>Routing URLs</li><li>Owner and criticality</li></ul>
+      </div>
+      <div class="tree-card">
+        <h3>Business flow</h3>
+        <p>Use for real journeys. A service can appear in multiple flows with different meaning.</p>
+        <ul><li>Flow ID and name</li><li>Ordered steps</li><li>Required roles</li><li>Success and failure indicators</li></ul>
+      </div>
+      <div class="tree-card">
+        <h3>Dependency edge</h3>
+        <p>Use for directional truth. Edges drive root cause, blast radius, and recommendations.</p>
+        <ul><li>From and to service</li><li>Type and purpose</li><li>Global or flow-scoped</li><li>Expected evidence</li></ul>
+      </div>
+    </div>
+    <div class="danger-note">Trick: Use flow_scoped edges when the dependency is true only inside a specific journey. Use global only when the dependency truly applies everywhere.</div>
+    <div class="footer-line">Sentinel Nexus manual | flows and topology</div>
+  </section>
+
+  <section class="page sheet">
+    <div class="page-head">
+      <div>
+        <span class="kicker">Light agents</span>
+        <h2>Runtime evidence and control must stay bounded</h2>
+        <p class="intro">Light agents are the bridge between Nexus and host-local reality. They report state, logs, diagnostics readiness, service mapping, and command capability. They must never become arbitrary remote shell.</p>
+      </div>
+      <span class="page-number">08</span>
+    </div>
+
+    <div class="section two-col">
+      <div class="visual">
+        <div class="visual-topbar"><span>Agents workspace</span><strong>agent-prod-02</strong></div>
+        <div class="metric-grid three">
+          <div class="metric green"><span>Heartbeat</span><strong>14s ago</strong></div>
+          <div class="metric blue"><span>Configured</span><strong>7 services</strong></div>
+          <div class="metric amber"><span>Reporting</span><strong>6 services</strong></div>
+        </div>
+        <div class="row-list">
+          <span><b>Capabilities</b><em>logs, diagnostics, metrics</em></span>
+          <span><b>Missing</b><em>idc-worker-prod</em></span>
+          <span><b>Unexpected</b><em>old-api-prod</em></span>
+          <span><b>Command surface</b><em>allowlisted only</em></span>
+        </div>
+      </div>
+      <div class="manual-card">
+        <span class="label">Agent checklist</span>
+        <h3>Before trusting runtime evidence</h3>
+        <ul>
+          <li>Confirm token status, heartbeat age, host, resource, command server, and service list.</li>
+          <li>Compare configured service count with reporting service count.</li>
+          <li>Fix missing service IDs and unexpected service IDs before using evidence for decisions.</li>
+          <li>Confirm command output is bounded and service-specific.</li>
+          <li>Never accept arbitrary commands from operators, incident notes, log lines, prompts, or request payloads.</li>
+        </ul>
+        <div class="note">Agent presence is not restart permission. Restart readiness is separate certification plus policy gate.</div>
+      </div>
+    </div>
+
+    <div class="section two-col even">
+      <div class="check-card">
+        <h3>Service live state</h3>
+        <ul>
+          <li>Status, agent, network, signals.</li>
+          <li>Dependencies and diagnostics state.</li>
+          <li>Recent actions and control readiness.</li>
+          <li>Source explorer and log tail for focused evidence.</li>
+        </ul>
+      </div>
+      <div class="check-card">
+        <h3>What to avoid</h3>
+        <ul>
+          <li>Do not attach one generic agent identity to multiple unrelated services without mapping.</li>
+          <li>Do not use manual local server knowledge as a substitute for Nexus service contracts.</li>
+          <li>Do not run undocumented commands outside the guarded control lane.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-line">Sentinel Nexus manual | light agents</div>
+  </section>
+
+  <section class="page sheet">
+    <div class="page-head">
+      <div>
+        <span class="kicker">SOPs and procedure</span>
+        <h2>Govern the procedures that Copilot can cite</h2>
+        <p class="intro">Nexus procedure guidance works best when SOPs are accurate, scoped, validated, approved, and attached to real services and failure modes.</p>
+      </div>
+      <span class="page-number">09</span>
+    </div>
+
+    <div class="section two-col">
+      <div class="manual-card">
+        <span class="label">Two SOP planes</span>
+        <h3>Indexed corpus and managed registry</h3>
+        <ul>
+          <li><strong>Indexed Copilot Corpus:</strong> procedures retrieval can cite today, including legacy/manual SOPs.</li>
+          <li><strong>Managed Registry:</strong> database-owned procedures admins can edit, validate, approve, deprecate, and re-index.</li>
+          <li>If Copilot cites an indexed-only SOP, adopt it into the managed registry before editing and governing it.</li>
+        </ul>
+        <div class="note">Ask Copilot from a real incident so it can use affected services, root candidates, evidence timeline, business flow, failure domain, and recommendations.</div>
+      </div>
+      <div class="visual">
+        <div class="visual-topbar"><span>SOP workspace</span><strong>Governed procedure</strong></div>
+        <div class="metric-grid">
+          <div class="metric blue"><span>Indexed corpus</span><strong>Copilot can cite</strong></div>
+          <div class="metric green"><span>Managed registry</span><strong>Admin can approve</strong></div>
+        </div>
+        <div class="row-list">
+          <span><b>Scope</b><em>IDC gateway, production</em></span>
+          <span><b>Preconditions</b><em>incident open, evidence confirmed</em></span>
+          <span><b>Unsafe actions</b><em>no restart for DB pressure</em></span>
+          <span><b>Validation</b><em>auth test, gateway health, verdict</em></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section rule-grid">
+      <div class="rule-card">
+        <h3>SOP approval checklist</h3>
+        <ul>
+          <li>Owner, service scope, environment, and affected business flows.</li>
+          <li>Preconditions, checks, action steps, rollback, escalation, and validation.</li>
+          <li>Unsafe-action warnings and when to stop.</li>
+          <li>Retrieval citations and confidence tested from a real incident.</li>
+        </ul>
+      </div>
+      <div class="rule-card warning">
+        <h3>Operator trick</h3>
+        <p>A SOP that tells operators what to do but not when to avoid it is incomplete. Add unsafe-action warnings before approval.</p>
+      </div>
+    </div>
+    <div class="footer-line">Sentinel Nexus manual | SOP governance</div>
+  </section>
+
+  <section class="page sheet">
+    <div class="page-head">
+      <div>
+        <span class="kicker">Rollover</span>
+        <h2>Environment rollover is a governed change, not a hidden edit</h2>
+        <p class="intro">The rollover workspace controls environment profile movement, replacement rules, assessments, execution, OTP approval, and reminders. Use it when services, connections, or environments are being replaced in a controlled way.</p>
+      </div>
+      <span class="page-number">10</span>
+    </div>
+
+    <div class="section two-col">
+      <div class="visual">
+        <div class="visual-topbar"><span>Rollover workspace</span><strong>Assess, test, approve, execute</strong></div>
+        <div class="rollover">
+          <span>PROD-A</span><i></i><span>PROD-B</span><span style="background:#2563eb;border-color:#93c5fd;">OTP</span>
+        </div>
+        <div class="metric-grid three">
+          <div class="metric blue"><span>Rule match</span><strong>12 services</strong></div>
+          <div class="metric green"><span>Preflight</span><strong>Passed</strong></div>
+          <div class="metric amber"><span>Reminder</span><strong>Set</strong></div>
+        </div>
+      </div>
+      <div class="manual-card">
+        <span class="label">Rollover checklist</span>
+        <h3>How to move safely</h3>
+        <ol>
+          <li>Confirm source and target environment profiles.</li>
+          <li>Review replacement rules and assessment output.</li>
+          <li>Inspect impacted services, endpoints, connection profiles, and agent mapping.</li>
+          <li>Run preflight tests and record approval reason.</li>
+          <li>Complete OTP challenge and execute only after evidence is ready.</li>
+          <li>Monitor execution result and set reminders for follow-up verification.</li>
+        </ol>
+        <div class="danger-note">Do not use rollover as a shortcut for undocumented config changes. It must leave an operational record.</div>
+      </div>
+    </div>
+
+    <div class="section two-col even">
+      <div class="check-card">
+        <h3>Common failure after rollover</h3>
+        <p>Old connection profiles remain in an agent, service endpoint, or dependency edge. Nexus then sees false runtime or dependency failures.</p>
+      </div>
+      <div class="check-card">
+        <h3>Correct operator move</h3>
+        <p>Run assessment again, compare old and new profile references, verify light-agent service config, and record the final state in the incident or change notes.</p>
+      </div>
+    </div>
+    <div class="footer-line">Sentinel Nexus manual | rollover governance</div>
+  </section>
+
+  <section class="page sheet">
+    <div class="page-head">
+      <div>
+        <span class="kicker">Examples</span>
+        <h2>How experienced operators read Nexus</h2>
+        <p class="intro">The same alert can mean different things depending on service contract, topology, evidence source, flow scope, and database context. These examples show the reading pattern.</p>
+      </div>
+      <span class="page-number">11</span>
+    </div>
+
+    <div class="example-grid">
+      <div class="example-card">
+        <h3>IDC access issue with ARX</h3>
+        <p><strong>Scenario:</strong> IDC login failures appear, ARX auth errors spike, IDC runtime is healthy.</p>
+        <p><strong>Read:</strong> ARX is likely for access if the edge is flow-scoped to IDC User Access.</p>
+        <p><strong>Move:</strong> Diagnose ARX, create task for auth owner, do not blame ARX for unrelated transaction posting.</p>
+      </div>
+      <div class="example-card">
+        <h3>DB session exhaustion</h3>
+        <p><strong>Scenario:</strong> App timeouts rise, external checks are green, database sessions and pool usage are critical.</p>
+        <p><strong>Read:</strong> App may be symptomatic; database pressure is probable root.</p>
+        <p><strong>Move:</strong> Request DB-safe diagnostics and alert database owner instead of restarting apps repeatedly.</p>
+      </div>
+      <div class="example-card">
+        <h3>Network path outage</h3>
+        <p><strong>Scenario:</strong> External timeout appears but local agent reports healthy process and clean logs.</p>
+        <p><strong>Read:</strong> Reachability may be failing outside runtime: VIP, DNS, route, firewall, load balancer, or monitoring path.</p>
+        <p><strong>Move:</strong> Create a network response task and avoid restart until runtime evidence supports it.</p>
+      </div>
+      <div class="example-card">
+        <h3>USSD session expiry burst</h3>
+        <p><strong>Scenario:</strong> Compact multi-carrier session expiry bursts appear on txn-mobile-ussd.</p>
+        <p><strong>Read:</strong> With the correct service-specific profile, this can be channel_tunnel evidence. Isolated expiries can be normal inactivity.</p>
+        <p><strong>Move:</strong> Verify the profile is attached only to USSD and correlate with carrier and gateway evidence.</p>
+      </div>
+      <div class="example-card">
+        <h3>Postilion card chain</h3>
+        <p><strong>Scenario:</strong> Direct Channel, Postilion, and IDC all show card transaction symptoms.</p>
+        <p><strong>Read:</strong> Earliest compatible signature and graph direction decide root versus downstream symptom.</p>
+        <p><strong>Move:</strong> Read topology before assigning owner. Create task for the earliest supported failure point.</p>
+      </div>
+      <div class="example-card">
+        <h3>Rollover drift</h3>
+        <p><strong>Scenario:</strong> PROD-A was replaced by PROD-B, but an agent or service still references old profiles.</p>
+        <p><strong>Read:</strong> False dependency failures may appear after an incomplete rollover.</p>
+        <p><strong>Move:</strong> Re-run assessment, verify services and agents, then record final state.</p>
+      </div>
+    </div>
+    <div class="footer-line">Sentinel Nexus manual | applied examples</div>
+  </section>
+
+  <section class="page sheet">
+    <div class="page-head">
+      <div>
+        <span class="kicker">Final operator checklist</span>
+        <h2>The Nexus discipline</h2>
+        <p class="intro">The best Nexus operator does not click fastest. The best Nexus operator keeps truth aligned: catalog truth, graph truth, evidence truth, procedure truth, action safety, and outcome truth.</p>
+      </div>
+      <span class="page-number">12</span>
+    </div>
+
+    <div class="section rule-grid">
+      <div class="rule-card">
+        <h3>Before investigation</h3>
+        <ul>
+          <li>Read fabric pulse and sync health.</li>
+          <li>Check mapped service coverage.</li>
+          <li>Confirm the incident has correct services, flows, and clusters.</li>
+          <li>Open the highest-risk business impact first.</li>
+        </ul>
+      </div>
+      <div class="rule-card">
+        <h3>Before action</h3>
+        <ul>
+          <li>Read topology direction and flow scope.</li>
+          <li>Compare external_network, runtime, log, trace, and DB evidence.</li>
+          <li>Use diagnostics when the story is plausible but incomplete.</li>
+          <li>Create tasks for owned follow-up.</li>
+        </ul>
+      </div>
+      <div class="rule-card danger">
+        <h3>Before restart</h3>
+        <ul>
+          <li>Target is exact, stateless, restart_ready, and policy allowed.</li>
+          <li>No maintenance or cooldown blocks exist.</li>
+          <li>Evidence supports restart as safer than waiting or escalation.</li>
+          <li>Human approval is complete.</li>
+        </ul>
+      </div>
+      <div class="rule-card warning">
+        <h3>Before closing</h3>
+        <ul>
+          <li>Record actual root service.</li>
+          <li>Record action taken and whether it worked.</li>
+          <li>Mark false positive, duplicate, early warning, confirmed, or wrong root cause.</li>
+          <li>Write notes that the next operator can understand.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section two-col">
+      <div class="manual-card">
+        <span class="label">Golden rule</span>
+        <h3>A smaller verified topology is better than a large confident lie</h3>
+        <p>Build Nexus one verified service, one verified flow, and one verified dependency at a time. Every correct record makes Nexus sharper. Every vague record makes it louder.</p>
+      </div>
+      <div class="manual-card">
+        <span class="label">Download and use</span>
+        <h3>Keep this guide next to the page</h3>
+        <p>Use the in-app Nexus Guide for quick help while operating. Use this PDF for onboarding new operators, training admins, and reviewing the complete Nexus operating model.</p>
+      </div>
+    </div>
+    <div class="footer-line">Sentinel Nexus manual | final checklist</div>
+  </section>
+</body>
+</html>

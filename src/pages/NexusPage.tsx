@@ -156,7 +156,7 @@ const bootPreviewSteps = [
   'Preparing operator guidance and safe actions',
 ];
 
-const NEXUS_BOOT_PREVIEW_MIN_MS = 1000;
+const NEXUS_BOOT_PREVIEW_MIN_MS = 500;
 
 const serviceVisuals: Record<string, { label: string; signal: string; icon: React.ReactNode }> = {
   app: { label: 'Application Runtime', signal: 'request fabric', icon: <FaServer /> },

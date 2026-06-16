@@ -646,18 +646,56 @@
 }
 
 .timeline-instance-card {
+  --status-rgb: 100, 116, 139;
+  --status-accent: #94a3b8;
+  --status-accent-2: #64748b;
+  --status-accent-deep: #475569;
+  --status-ink: #e2e8f0;
+  --status-muted: rgba(226, 232, 240, 0.76);
+  --status-surface: rgba(15, 23, 42, 0.28);
   position: relative;
   padding: 16px;
   border-radius: 22px;
   background:
-    linear-gradient(180deg, rgba(8, 14, 28, 0.95), rgba(12, 21, 37, 0.82)),
-    linear-gradient(135deg, rgba(56, 189, 248, 0.05), transparent);
+    linear-gradient(135deg, rgba(var(--status-rgb), 0.2), rgba(2, 6, 23, 0.04) 36%, rgba(2, 6, 23, 0.12)),
+    linear-gradient(180deg, rgba(8, 14, 28, 0.96), rgba(12, 21, 37, 0.86));
   display: grid;
   gap: 14px;
   text-align: left;
   color: inherit;
   overflow: hidden;
   max-width: 650px;
+  border-color: rgba(var(--status-rgb), 0.34);
+  box-shadow:
+    0 18px 42px rgba(2, 6, 23, 0.24),
+    inset 0 0 0 1px rgba(var(--status-rgb), 0.12);
+}
+
+.timeline-instance-card::before,
+.timeline-instance-card::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.timeline-instance-card::before {
+  inset: 0 auto 0 0;
+  width: 6px;
+  background: linear-gradient(180deg, var(--status-accent), var(--status-accent-2));
+  box-shadow: 0 0 24px rgba(var(--status-rgb), 0.36);
+}
+
+.timeline-instance-card::after {
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(var(--status-rgb), 0.18), transparent 34%),
+    linear-gradient(135deg, transparent 58%, rgba(var(--status-rgb), 0.12));
+  opacity: 0.86;
+}
+
+.timeline-instance-card > :not(.instance-card-glow) {
+  position: relative;
+  z-index: 1;
 }
 
 .timeline-instance-card:hover,
@@ -670,7 +708,11 @@
 }
 
 .timeline-instance-card:hover {
-  box-shadow: 0 22px 48px rgba(2, 6, 23, 0.28), 0 0 0 1px rgba(125, 211, 252, 0.1);
+  border-color: rgba(var(--status-rgb), 0.54);
+  box-shadow:
+    0 24px 54px rgba(2, 6, 23, 0.3),
+    0 0 0 1px rgba(var(--status-rgb), 0.16),
+    0 0 34px rgba(var(--status-rgb), 0.16);
 }
 
 .timeline-instance-card.morning {
@@ -687,12 +729,14 @@
 
 .instance-card-glow {
   position: absolute;
-  right: -24px;
-  bottom: -40px;
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.18), transparent 70%);
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: inherit;
+  background:
+    linear-gradient(110deg, rgba(var(--status-rgb), 0.18), transparent 32%),
+    linear-gradient(180deg, transparent 64%, rgba(var(--status-rgb), 0.11));
+  opacity: 0.86;
   pointer-events: none;
 }
 
@@ -704,7 +748,7 @@
 }
 
 .instance-kicker {
-  color: var(--text-secondary);
+  color: var(--status-accent);
 }
 
 .timeline-instance-head h3 {
@@ -718,12 +762,14 @@
   gap: 8px;
   padding: 8px 10px;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.1);
-  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(var(--status-rgb), 0.16);
+  border: 1px solid rgba(var(--status-rgb), 0.34);
+  color: var(--status-ink);
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .instance-status-icon.completed {
@@ -748,6 +794,12 @@
   flex-wrap: wrap;
 }
 
+.timeline-instance-card .instance-chip-row span {
+  background: rgba(var(--status-rgb), 0.1);
+  border-color: rgba(var(--status-rgb), 0.22);
+  color: var(--status-muted);
+}
+
 .instance-metrics-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -757,8 +809,8 @@
 .instance-metrics-grid > div {
   padding: 12px 14px;
   border-radius: 16px;
-  background: rgba(15, 23, 42, 0.24);
-  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: var(--status-surface);
+  border: 1px solid rgba(var(--status-rgb), 0.18);
 }
 
 .instance-metrics-grid label {
@@ -767,7 +819,7 @@
   font-size: 0.72rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-secondary);
+  color: var(--status-muted);
 }
 
 .instance-metrics-grid strong {
@@ -779,10 +831,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding-top: 2px;
+  border-top: 1px solid rgba(var(--status-rgb), 0.16);
 }
 
 .footer-hint {
-  color: var(--primary);
+  color: var(--status-accent);
   font-size: 0.84rem;
   font-weight: 600;
 }
@@ -1035,6 +1089,163 @@
 
 [data-theme='light'] .temporal-range-inputs input::-webkit-calendar-picker-indicator {
   filter: none;
+}
+
+.timeline-instance-card.status-open {
+  --status-rgb: 245, 158, 11;
+  --status-accent: #fbbf24;
+  --status-accent-2: #f97316;
+  --status-accent-deep: #92400e;
+  --status-ink: #fef3c7;
+}
+
+.timeline-instance-card.status-in-progress {
+  --status-rgb: 14, 165, 233;
+  --status-accent: #38bdf8;
+  --status-accent-2: #2563eb;
+  --status-accent-deep: #075985;
+  --status-ink: #e0f2fe;
+}
+
+.timeline-instance-card.status-pending-review {
+  --status-rgb: 168, 85, 247;
+  --status-accent: #c084fc;
+  --status-accent-2: #22d3ee;
+  --status-accent-deep: #6b21a8;
+  --status-ink: #f3e8ff;
+}
+
+.timeline-instance-card.status-completed {
+  --status-rgb: 16, 185, 129;
+  --status-accent: #34d399;
+  --status-accent-2: #22c55e;
+  --status-accent-deep: #047857;
+  --status-ink: #d1fae5;
+}
+
+.timeline-instance-card.status-completed-with-exceptions {
+  --status-rgb: 249, 115, 22;
+  --status-accent: #fb923c;
+  --status-accent-2: #facc15;
+  --status-accent-deep: #9a3412;
+  --status-ink: #ffedd5;
+}
+
+.timeline-instance-card.status-incomplete,
+.timeline-instance-card.status-closed-by-exception,
+.timeline-instance-card.status-failed {
+  --status-rgb: 239, 68, 68;
+  --status-accent: #f87171;
+  --status-accent-2: #f43f5e;
+  --status-accent-deep: #991b1b;
+  --status-ink: #fee2e2;
+}
+
+.timeline-instance-card.status-unknown {
+  --status-rgb: 100, 116, 139;
+  --status-accent: #94a3b8;
+  --status-accent-2: #64748b;
+  --status-accent-deep: #475569;
+  --status-ink: #e2e8f0;
+}
+
+.timeline-instance-card.status-open,
+.timeline-instance-card.status-in-progress,
+.timeline-instance-card.status-pending-review,
+.timeline-instance-card.status-completed,
+.timeline-instance-card.status-completed-with-exceptions,
+.timeline-instance-card.status-incomplete,
+.timeline-instance-card.status-closed-by-exception,
+.timeline-instance-card.status-failed,
+.timeline-instance-card.status-unknown {
+  border-color: rgba(var(--status-rgb), 0.38);
+}
+
+.timeline-instance-card:focus-visible {
+  outline: 3px solid rgba(var(--status-rgb), 0.4);
+  outline-offset: 3px;
+}
+
+.timeline-instance-card .instance-status-icon,
+.timeline-instance-card .instance-kicker,
+.timeline-instance-card .footer-hint {
+  color: var(--status-accent);
+}
+
+.timeline-instance-card.status-completed .timeline-instance-head h3 {
+  color: #ecfdf5;
+}
+
+.timeline-instance-card.status-completed-with-exceptions .timeline-instance-head h3,
+.timeline-instance-card.status-incomplete .timeline-instance-head h3,
+.timeline-instance-card.status-closed-by-exception .timeline-instance-head h3,
+.timeline-instance-card.status-failed .timeline-instance-head h3 {
+  color: #fff7ed;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .timeline-instance-card.status-in-progress::before {
+    animation: checklistStatusRailPulse 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes checklistStatusRailPulse {
+  0%,
+  100% {
+    opacity: 0.78;
+    box-shadow: 0 0 18px rgba(var(--status-rgb), 0.28);
+  }
+
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 34px rgba(var(--status-rgb), 0.48);
+  }
+}
+
+[data-theme='light'] .timeline-instance-card {
+  --status-muted: #475569;
+  --status-surface: rgba(255, 255, 255, 0.62);
+  background:
+    linear-gradient(135deg, rgba(var(--status-rgb), 0.2), rgba(255, 255, 255, 0.82) 42%, rgba(var(--status-rgb), 0.08)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 249, 0.88));
+  border-color: rgba(var(--status-rgb), 0.36);
+  box-shadow:
+    0 18px 42px rgba(15, 23, 42, 0.1),
+    inset 0 0 0 1px rgba(var(--status-rgb), 0.14);
+}
+
+[data-theme='light'] .timeline-instance-card:hover {
+  border-color: rgba(var(--status-rgb), 0.54);
+  box-shadow:
+    0 22px 54px rgba(15, 23, 42, 0.13),
+    0 0 0 1px rgba(var(--status-rgb), 0.16),
+    0 0 28px rgba(var(--status-rgb), 0.14);
+}
+
+[data-theme='light'] .timeline-instance-card .instance-status-badge {
+  background: rgba(var(--status-rgb), 0.13);
+  border-color: rgba(var(--status-rgb), 0.32);
+  color: var(--status-accent-deep);
+}
+
+[data-theme='light'] .timeline-instance-card .instance-status-icon,
+[data-theme='light'] .timeline-instance-card .instance-kicker,
+[data-theme='light'] .timeline-instance-card .footer-hint {
+  color: var(--status-accent-deep);
+}
+
+[data-theme='light'] .timeline-instance-card .instance-chip-row span,
+[data-theme='light'] .timeline-instance-card .instance-metrics-grid > div {
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(var(--status-rgb), 0.2);
+}
+
+[data-theme='light'] .timeline-instance-card.status-completed .timeline-instance-head h3,
+[data-theme='light'] .timeline-instance-card.status-completed-with-exceptions .timeline-instance-head h3,
+[data-theme='light'] .timeline-instance-card.status-incomplete .timeline-instance-head h3,
+[data-theme='light'] .timeline-instance-card.status-closed-by-exception .timeline-instance-head h3,
+[data-theme='light'] .timeline-instance-card.status-failed .timeline-instance-head h3 {
+  color: var(--text-primary);
 }
 
 @media (max-width: 1380px) {

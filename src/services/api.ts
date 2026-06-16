@@ -7,9 +7,10 @@ import {
   LogoutResponse,
   BackendError,
 } from '../contracts/generated/api.types';
+import { API_BASE_URL } from '../config/env';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000',
+  baseURL: API_BASE_URL,
 });
 
 let unauthorizedDispatched = false;

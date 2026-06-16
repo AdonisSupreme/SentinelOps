@@ -2,6 +2,7 @@
 // Centralized WebSocket manager that handles multiple endpoints with shared connection infrastructure
 
 import { ChecklistUpdateEvent } from './websocketService';
+import { resolveWebSocketBaseUrl } from '../config/env';
 
 type WebSocketEndpoint = 'checklists' | 'notifications' | 'tasks';
 type ConnectionState = 'CONNECTING' | 'OPEN' | 'CLOSING' | 'CLOSED';
@@ -332,16 +333,7 @@ class CentralizedWebSocketManager {
   }
 
   private buildWebSocketUrl(endpoint: WebSocketEndpoint): string {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    let baseUrl: string;
-
-    if (window.location.hostname === 'localhost' && window.location.port === '3000') {
-      // Development: React dev server on 3000, backend on 8000
-      baseUrl = `${protocol}//localhost:8000`;
-    } else {
-      // Production: same host as the frontend
-      baseUrl = `${protocol}//${window.location.host}`;
-    }
+    const baseUrl = resolveWebSocketBaseUrl();
 
     const endpointPaths = {
       checklists: '/api/v1/checklists/ws',

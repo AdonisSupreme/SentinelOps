@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { NEXUS_API_BASE_URL } from '../config/env';
 
 export type NexusSeverity = 'INFO' | 'WARN' | 'CRITICAL';
 export type NexusRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
@@ -873,21 +874,8 @@ export interface NexusAgentTokenGenerateResponse extends NexusAgentTokenStatus {
   rotated: boolean;
 }
 
-const resolveNexusApiBaseUrl = () => {
-  const explicitBaseUrl = process.env.REACT_APP_NEXUS_API_BASE_URL?.trim();
-  if (explicitBaseUrl) {
-    return explicitBaseUrl;
-  }
-
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://127.0.0.1:8010';
-  }
-
-  return '';
-};
-
 const nexusApiClient = axios.create({
-  baseURL: resolveNexusApiBaseUrl(),
+  baseURL: NEXUS_API_BASE_URL,
 });
 
 let nexusUnauthorizedDispatched = false;

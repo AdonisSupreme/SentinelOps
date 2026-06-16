@@ -3,14 +3,27 @@ const cors = require('cors');
 const cron = require('node-cron');
 const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
-require('dotenv').config();
+const path = require('path');
+const dotenv = require('dotenv');
+
+const rootDir = path.resolve(__dirname, '..');
+
+dotenv.config({ path: path.resolve(rootDir, '.env') });
+dotenv.config({ path: path.resolve(rootDir, '.env.local') });
+dotenv.config({ path: path.resolve(rootDir, '.env.development') });
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8000;
+const FRONTEND_URL = process.env.FRONTEND_URL;
+
+if (!FRONTEND_URL) {
+  throw new Error('FRONTEND_URL is required. Set it in .env or the deployment environment.');
+}
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: FRONTEND_URL,
   credentials: true
 }));
 app.use(express.json());

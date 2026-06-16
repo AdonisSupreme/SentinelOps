@@ -19,6 +19,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAppConfig } from '../contexts/AppConfigContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { getApplicationDateBucket, parseSentinelTimestamp } from '../utils/time';
+import { resolveWebSocketBaseUrl } from '../config/env';
 import {
   NetworkCommandCenterResponse,
   NetworkEvent,
@@ -242,9 +243,7 @@ const NetworkSentinelPage: React.FC = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.hostname === 'localhost' && window.location.port === '3000' ? 'localhost:8000' : window.location.host;
-    const socket = new WebSocket(`${protocol}//${host}/api/v1/network-sentinel/ws?token=${encodeURIComponent(token)}&min_interval_seconds=0.6`);
+    const socket = new WebSocket(`${resolveWebSocketBaseUrl()}/api/v1/network-sentinel/ws?token=${encodeURIComponent(token)}&min_interval_seconds=0.6`);
 
     socket.onmessage = (event) => {
       const message = JSON.parse(event.data);

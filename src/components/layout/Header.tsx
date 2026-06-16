@@ -63,7 +63,7 @@ const Header: React.FC = () => {
 
   const isAdmin = user?.role?.toLowerCase() === 'admin';
   const isManager = ['admin', 'manager', 'supervisor'].includes((user?.role || '').toLowerCase());
-  const hasNexusAccess = user?.section_id === SECTION_MANUAL_ID;
+  const hasNexusAccess = user?.section_id === SECTION_MANUAL_ID && isAdmin;
 
   const isActiveItem = (item: MenuItem) => {
     if (!item.path) return false;
