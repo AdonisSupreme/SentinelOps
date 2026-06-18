@@ -48,6 +48,7 @@ interface ChecklistContextType {
     reason?: string
   ) => Promise<void>;
   completeInstance: (instanceId: string, withExceptions?: boolean) => Promise<void>;
+  oneTimeCompleteInstance: (instanceId: string) => Promise<void>;
   deleteInstance: (instanceId: string) => Promise<void>;
   createHandoverNote: (content: string, priority: number, instanceId?: string) => Promise<void>;
   refreshInstance: () => Promise<void>;
@@ -1135,6 +1136,34 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [addNotification, applyInstanceSnapshot, loadTodayInstances]);
 
+  const oneTimeCompleteInstance = useCallback(async (instanceId: string) => {
+    setLoading(true);
+    try {
+      const updatedInstance = await checklistApi.oneTimeCompleteInstance(instanceId);
+
+      applyInstanceSnapshot(updatedInstance);
+      setError(null);
+      await loadTodayInstances();
+
+      addNotification({
+        type: 'success',
+        message: 'Checklist work completed and moved to pending review',
+        priority: 'high'
+      });
+    } catch (err: any) {
+      const errorMessage = getBackendErrorMessage(err, 'Failed to apply one-time completion.');
+      setError(errorMessage);
+      addNotification({
+        type: 'error',
+        message: errorMessage,
+        priority: 'high'
+      });
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [addNotification, applyInstanceSnapshot, getBackendErrorMessage, loadTodayInstances]);
+
   const deleteInstance = useCallback(async (instanceId: string) => {
     setLoading(true);
     try {
@@ -1189,6 +1218,7 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     addItemFinalVerdict,
     updateSubitemStatus,
       completeInstance,
+      oneTimeCompleteInstance,
       deleteInstance,
       createHandoverNote,
       refreshInstance

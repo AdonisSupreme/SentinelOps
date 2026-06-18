@@ -1,5 +1,5 @@
 ﻿// src/pages/ChecklistPage.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useChecklist } from '../contexts/checklistContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,7 +7,7 @@ import {
   FaArrowLeft, FaPlay, FaCheckCircle, FaClock,
   FaExclamationTriangle, FaBan, FaTimes,
   FaUsers, FaCalendarAlt, FaFlag, FaShareAlt,
-  FaChevronDown, FaChevronUp, FaFilePdf, FaHistory, FaSearch
+  FaChevronDown, FaChevronUp, FaFilePdf, FaHistory, FaSearch, FaBolt
 } from 'react-icons/fa';
 import {
   ChecklistStats, HandoverNotes, ItemActions,
@@ -32,6 +32,7 @@ const ChecklistPage: React.FC = () => {
     loadInstance,
     joinInstance,
     completeInstance,
+    oneTimeCompleteInstance,
     updateItemStatus,
     updateSubitemStatus,
     loading
@@ -55,6 +56,9 @@ const ChecklistPage: React.FC = () => {
   const [dateShiftValue, setDateShiftValue] = useState('');
   const [dateShiftError, setDateShiftError] = useState('');
   const [dateShiftBusy, setDateShiftBusy] = useState(false);
+  const [showOneTimeCompletionModal, setShowOneTimeCompletionModal] = useState(false);
+  const [oneTimeCompletionBusy, setOneTimeCompletionBusy] = useState(false);
+  const [oneTimeCompletionError, setOneTimeCompletionError] = useState('');
   const [inspectionMode, setInspectionMode] = useState(false);
   const [timelineNow, setTimelineNow] = useState(() => Date.now());
 
@@ -317,10 +321,49 @@ const ChecklistPage: React.FC = () => {
     }
   };
 
+  const openOneTimeCompletion = useCallback(() => {
+    setOneTimeCompletionError('');
+    setShowOneTimeCompletionModal(true);
+  }, []);
+
+  const handleOneTimeCompletion = async () => {
+    if (!id || oneTimeCompletionBusy) return;
+    setOneTimeCompletionBusy(true);
+    setOneTimeCompletionError('');
+
+    try {
+      await oneTimeCompleteInstance(id);
+      setShowOneTimeCompletionModal(false);
+    } catch (error: any) {
+      const message = error?.response?.data?.detail || error?.message || 'Failed to apply one-time completion.';
+      setOneTimeCompletionError(message);
+    } finally {
+      setOneTimeCompletionBusy(false);
+    }
+  };
+
   const userRole = (user?.role || '').toLowerCase();
   const canCompleteChecklist = userRole === 'manager' || userRole === 'admin';
   const isChecklistActive = currentInstance?.status === 'OPEN' || currentInstance?.status === 'IN_PROGRESS' || currentInstance?.status === 'PENDING_REVIEW';
   const canApproveChecklist = canCompleteChecklist && currentInstance?.status === 'PENDING_REVIEW';
+  const canUseOneTimeCompletion = Boolean(currentInstance && ['OPEN', 'IN_PROGRESS', 'PENDING_REVIEW'].includes(currentInstance.status));
+
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (!canUseOneTimeCompletion || showOneTimeCompletionModal || oneTimeCompletionBusy) return;
+      if (!event.ctrlKey || !event.shiftKey || event.key !== 'Enter' || event.repeat) return;
+
+      const target = event.target as HTMLElement | null;
+      const targetTag = target?.tagName?.toLowerCase();
+      if (target?.isContentEditable || ['input', 'textarea', 'select', 'button'].includes(targetTag || '')) return;
+
+      event.preventDefault();
+      openOneTimeCompletion();
+    };
+
+    window.addEventListener('keydown', handleShortcut);
+    return () => window.removeEventListener('keydown', handleShortcut);
+  }, [canUseOneTimeCompletion, oneTimeCompletionBusy, openOneTimeCompletion, showOneTimeCompletionModal]);
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; tone: string; icon: React.ReactNode }> = {
@@ -400,6 +443,12 @@ const ChecklistPage: React.FC = () => {
   const completedItems = checklistItems.filter(item => item.status === 'COMPLETED').length;
   const actionedItems = checklistItems.filter(item => ['COMPLETED', 'SKIPPED', 'FAILED'].includes(item.status)).length;
   const itemExceptions = checklistItems.filter(item => ['SKIPPED', 'FAILED'].includes(item.status)).length;
+  const totalSubitems = checklistItems.reduce((count, item: any) => count + (item.subitems || []).length, 0);
+  const completedSubitems = checklistItems.reduce((count, item: any) => (
+    count + (item.subitems || []).filter((subitem: any) => subitem.status === 'COMPLETED').length
+  ), 0);
+  const remainingItems = Math.max(0, checklistItems.length - completedItems);
+  const remainingSubitems = Math.max(0, totalSubitems - completedSubitems);
   const subitemExceptions = checklistItems.reduce((count, item: any) => (
     count + (item.subitems || []).filter((subitem: any) => ['SKIPPED', 'FAILED'].includes(subitem.status)).length
   ), 0);
@@ -613,6 +662,80 @@ const ChecklistPage: React.FC = () => {
           onClose={() => setShowHandoverNoteModal(false)}
           instanceId={currentInstance.id}
         />
+      )}
+
+      {showOneTimeCompletionModal && (
+        <div className="reason-modal-backdrop one-time-completion-backdrop">
+          <div
+            className="reason-modal one-time-completion-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="one-time-completion-title"
+          >
+            <div className="reason-modal-header one-time-completion-header">
+              <div>
+                <span className="one-time-kicker">SentinelOps Fast Path</span>
+                <h3 id="one-time-completion-title"><FaBolt /> One-Time Completion</h3>
+              </div>
+              <button
+                onClick={() => setShowOneTimeCompletionModal(false)}
+                className="reason-btn cancel"
+                type="button"
+                aria-label="Close one-time completion"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="reason-modal-content one-time-completion-content">
+              <div className="one-time-command-surface">
+                <span>Rapid closeout protocol</span>
+                <strong>Complete every item and subitem in this checklist.</strong>
+                <p>
+                  SentinelOps will record the completion under your account, convert unfinished or exception-marked
+                  work into completed evidence, and move this checklist to Pending Review. Final approval still remains
+                  with the existing checklist completion control.
+                </p>
+              </div>
+
+              <div className="one-time-impact-grid">
+                <div>
+                  <span>Items remaining</span>
+                  <strong>{remainingItems}</strong>
+                </div>
+                <div>
+                  <span>Subitems remaining</span>
+                  <strong>{remainingSubitems}</strong>
+                </div>
+                <div>
+                  <span>Next status</span>
+                  <strong>Pending Review</strong>
+                </div>
+              </div>
+
+              {oneTimeCompletionError ? (
+                <p className="one-time-completion-error">{oneTimeCompletionError}</p>
+              ) : null}
+            </div>
+            <div className="reason-modal-actions one-time-completion-actions">
+              <button
+                onClick={() => setShowOneTimeCompletionModal(false)}
+                className="btn-secondary"
+                type="button"
+                disabled={oneTimeCompletionBusy}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleOneTimeCompletion}
+                className="reason-btn confirm one-time-confirm"
+                disabled={oneTimeCompletionBusy || loading}
+                type="button"
+              >
+                {oneTimeCompletionBusy ? 'Completing Work...' : 'Confirm One-Time Completion'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Complete Checklist Dialog */}

@@ -426,6 +426,14 @@ class ChecklistApi {
     return response.data.instance; // Extract the instance from the response
   }
 
+  async oneTimeCompleteInstance(instanceId: string, comment?: string): Promise<ChecklistInstance> {
+    const response = await api.post<{instance: ChecklistInstance, effects: any}>(
+      `/api/v1/checklists/instances/${instanceId}/one-time-completion`,
+      { comment }
+    );
+    return response.data.instance;
+  }
+
   async changeInstanceDate(instanceId: string, targetDate: string): Promise<ChecklistDateChangeResponse> {
     const response = await api.post<ChecklistDateChangeResponse>(
       `/api/v1/checklists/instances/${instanceId}/change-date`,
