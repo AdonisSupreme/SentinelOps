@@ -167,3 +167,55 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* SentinelOps command skeleton alignment */
+.checklists-skeleton-page .checklists-skeleton-hero,
+.checklists-skeleton-page .checklists-skeleton-card,
+.checklists-skeleton-page .checklists-skeleton-command,
+.checklists-skeleton-page .checklists-skeleton-timeline,
+.checklists-skeleton-page .checklists-skeleton-day,
+.checklists-skeleton-page .checklists-skeleton-instance {
+  border-radius: 8px;
+  border-color: var(--checklists-line, rgba(146, 169, 177, 0.2));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.046), transparent 58%),
+    var(--checklists-surface, rgba(12, 18, 22, 0.92));
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.12);
+}
+
+.checklists-skeleton-page .checklists-skeleton-hero,
+.checklists-skeleton-page .checklists-skeleton-command,
+.checklists-skeleton-page .checklists-skeleton-timeline {
+  padding: 1rem;
+}
+
+.checklists-skeleton-page .checklists-skeleton-card,
+.checklists-skeleton-page .checklists-skeleton-day,
+.checklists-skeleton-page .checklists-skeleton-instance {
+  padding: 0.9rem;
+}
+
+.checklists-skeleton-page .skel-line,
+.checklists-skeleton-page .skel-chip,
+.checklists-skeleton-page .skel-input,
+.checklists-skeleton-page .skel-segment,
+.checklists-skeleton-page .skel-panel,
+.checklists-skeleton-page .skel-dot {
+  background: color-mix(in srgb, var(--checklists-cyan, #12b8cf) 12%, transparent);
+}
+
+.checklists-skeleton-page .skel-title,
+.checklists-skeleton-page .skel-value {
+  border-radius: 6px;
+}
+
+.checklists-skeleton-page .skel-input,
+.checklists-skeleton-page .skel-segment,
+.checklists-skeleton-page .skel-panel,
+.checklists-skeleton-page .skel-chip {
+  border-radius: 8px;
+}
+
+.checklists-skeleton-page .checklists-skeleton-day {
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+}

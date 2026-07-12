@@ -96,6 +96,14 @@ const TemplateList: React.FC<TemplateListProps> = ({ onEdit, onDelete, onView })
     });
   };
 
+  const getSubitemCount = (template: ChecklistTemplate) =>
+    template.items?.reduce((count, item) => count + (item.subitems?.length || 0), 0) || 0;
+
+  const getTemplateTypeLine = (template: ChecklistTemplate) => {
+    const types = Array.from(new Set((template.items || []).map((item) => (item.item_type || 'ROUTINE').replace(/_/g, ' '))));
+    return types.length > 0 ? types.slice(0, 3).join(' / ') : 'No items drafted';
+  };
+
   if (loading) {
     return <TemplateManagerSkeleton />;
   }
@@ -153,28 +161,16 @@ const TemplateList: React.FC<TemplateListProps> = ({ onEdit, onDelete, onView })
               <p className="sentinel-template-description-text">{template.description || 'No description'}</p>
 
               <div className="sentinel-template-meta-wrapper">
-                <span className="sentinel-meta-info-row">
-                  Items: <strong>{template.items?.length || 0}</strong>
-                </span>
-                <span className="sentinel-meta-info-row">
-                  Status: <strong>{template.is_active ? 'Active' : 'Inactive'}</strong>
-                </span>
-                <span className="sentinel-meta-info-row">
-                  Created: <strong>{formatDate(template.created_at)}</strong>
-                </span>
-                <span className="sentinel-meta-info-row">
-                  Timed: <strong>{template.items?.filter((item) => item.item_type === 'TIMED').length || 0}</strong>
-                </span>
-                <span className="sentinel-meta-info-row">
-                  Events:{' '}
-                  <strong>
-                    {template.items?.reduce((count, item) => count + (item.scheduled_events?.length || 0), 0) || 0}
-                  </strong>
-                </span>
-                <span className="sentinel-meta-info-row">
-                  Conditional:{' '}
-                  <strong>{template.items?.filter((item) => item.item_type === 'CONDITIONAL').length || 0}</strong>
-                </span>
+                <div className="sentinel-template-status-line">
+                  <span className={template.is_active ? 'sentinel-live-dot' : 'sentinel-muted-dot'} />
+                  <strong>{template.is_active ? 'Active template' : 'Inactive template'}</strong>
+                  <span>{formatDate(template.created_at)}</span>
+                </div>
+                <div className="sentinel-template-blueprint-line">
+                  <span>{template.items?.length || 0} items</span>
+                  <span>{getSubitemCount(template)} subitems</span>
+                </div>
+                <p className="sentinel-template-type-line">{getTemplateTypeLine(template)}</p>
               </div>
 
               <div className="sentinel-card-actions-wrapper">

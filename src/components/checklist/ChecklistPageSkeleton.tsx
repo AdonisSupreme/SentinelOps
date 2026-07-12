@@ -1,135 +1,88 @@
 // src/components/checklist/ChecklistPageSkeleton.tsx
 import React from 'react';
 
-export const ChecklistPageSkeleton: React.FC = () => {
-  return (
-    <div className="checklist-page">
-      {/* Header Skeleton */}
-      <header className="checklist-header-skeleton">
-        <div className="back-btn-skeleton"></div>
-        
-        <div className="header-content-skeleton">
-          <div className="checklist-title-skeleton">
-            <div className="skeleton-text skeleton-text-xl"></div>
-            <div className="checklist-meta-skeleton">
-              <div className="skeleton-text skeleton-text-sm"></div>
-              <div className="skeleton-text skeleton-text-sm"></div>
-              <div className="skeleton-text skeleton-text-sm"></div>
-            </div>
-          </div>
-
-          <div className="header-actions-skeleton">
-            <div className="btn-skeleton"></div>
-            <div className="btn-skeleton"></div>
-            <div className="btn-skeleton"></div>
-          </div>
-        </div>
-      </header>
-
-      <div className="checklist-content">
-        {/* Left Column - Timeline Skeleton */}
-        <div className="content-left">
-          <section className="timeline-section-skeleton">
-            <div className="section-header-skeleton">
-              <div className="skeleton-text skeleton-text-lg"></div>
-              <div className="timeline-stats-skeleton">
-                <div className="skeleton-text skeleton-text-sm"></div>
-                <div className="skeleton-text skeleton-text-sm"></div>
-              </div>
-            </div>
-            
-            {/* Timeline Items Skeleton */}
-            <div className="timeline-items-skeleton">
-              {[1, 2, 3, 4, 5].map((itemIndex) => (
-                <div key={itemIndex} className="timeline-item-skeleton">
-                  <div className="timeline-item-status-skeleton"></div>
-                  <div className="timeline-item-content-skeleton">
-                    <div className="skeleton-text skeleton-text-md"></div>
-                    <div className="skeleton-text skeleton-text-sm"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-
-        {/* Right Column - Sidebar Skeleton */}
-        <div className="content-right">
-          {/* Stats Card Skeleton */}
-          <div className="stats-card-skeleton">
-            <div className="stats-grid-skeleton">
-              {[1, 2, 3].map((statIndex) => (
-                <div key={statIndex} className="stat-item-skeleton">
-                  <div className="stat-icon-skeleton"></div>
-                  <div className="stat-content-skeleton">
-                    <div className="skeleton-text skeleton-text-xs"></div>
-                    <div className="skeleton-text skeleton-text-md"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Progress Bar Skeleton */}
-            <div className="progress-section-skeleton">
-              <div className="progress-header-skeleton">
-                <div className="skeleton-text skeleton-text-sm"></div>
-                <div className="skeleton-text skeleton-text-xs"></div>
-              </div>
-              <div className="progress-bar-skeleton">
-                <div className="progress-track-skeleton">
-                  <div className="progress-fill-skeleton"></div>
-                </div>
-              </div>
-              <div className="progress-details-skeleton">
-                <div className="detail-item-skeleton">
-                  <div className="skeleton-text skeleton-text-xs"></div>
-                  <div className="skeleton-text skeleton-text-sm"></div>
-                </div>
-                <div className="detail-item-skeleton">
-                  <div className="skeleton-text skeleton-text-xs"></div>
-                  <div className="skeleton-text skeleton-text-sm"></div>
-                </div>
-                <div className="detail-item-skeleton">
-                  <div className="skeleton-text skeleton-text-xs"></div>
-                  <div className="skeleton-text skeleton-text-sm"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Participants Section Skeleton */}
-          <section className="sidebar-section-skeleton">
-            <div className="section-header-skeleton">
-              <div className="skeleton-text skeleton-text-md"></div>
-              <div className="chevron-skeleton"></div>
-            </div>
-            <div className="participants-list-skeleton">
-              {[1, 2, 3].map((participantIndex) => (
-                <div key={participantIndex} className="participant-item-skeleton">
-                  <div className="participant-avatar-skeleton"></div>
-                  <div className="participant-info-skeleton">
-                    <div className="skeleton-text skeleton-text-sm"></div>
-                    <div className="skeleton-text skeleton-text-xs"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Handover Notes Section Skeleton */}
-          <section className="sidebar-section-skeleton">
-            <div className="section-header-skeleton">
-              <div className="skeleton-text skeleton-text-md"></div>
-              <div className="chevron-skeleton"></div>
-            </div>
-            <div className="handover-notes-skeleton">
-              <div className="skeleton-text skeleton-text-sm"></div>
-              <div className="skeleton-text skeleton-text-sm"></div>
-              <div className="skeleton-text skeleton-text-xs"></div>
-            </div>
-          </section>
-        </div>
+export const ChecklistPageSkeleton: React.FC = () => (
+  <div className="checklist-page checklist-command-page checklist-skeleton-page">
+    <section className="checklist-command-strip checklist-skel-panel">
+      <div className="checklist-skel-command-copy">
+        <div className="checklist-skel-line checklist-skel-kicker" />
+        <div className="checklist-skel-line checklist-skel-title" />
+        <div className="checklist-skel-line checklist-skel-meta" />
       </div>
-    </div>
-  );
-};
+      <div className="checklist-skel-signal-grid">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <article key={index} className="checklist-skel-signal-card">
+            <div className="checklist-skel-block checklist-skel-icon" />
+            <div className="checklist-skel-signal-copy">
+              <div className="checklist-skel-line checklist-skel-label" />
+              <div className="checklist-skel-line checklist-skel-value" />
+              <div className="checklist-skel-line checklist-skel-meta" />
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section className="checklist-workspace">
+      <main className="checklist-execution-board checklist-skel-panel">
+        <div className="checklist-skel-board-head">
+          <div>
+            <div className="checklist-skel-line checklist-skel-kicker" />
+            <div className="checklist-skel-line checklist-skel-panel-title" />
+            <div className="checklist-skel-line checklist-skel-meta" />
+          </div>
+          <div className="checklist-skel-block checklist-skel-pill" />
+        </div>
+        <div className="checklist-skel-actions">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="checklist-skel-block checklist-skel-action" />
+          ))}
+        </div>
+        <div className="checklist-skel-item-stack">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <article key={index} className="checklist-skel-item-card">
+              <div className="checklist-skel-block checklist-skel-status" />
+              <div className="checklist-skel-item-copy">
+                <div className="checklist-skel-line checklist-skel-item-title" />
+                <div className="checklist-skel-line checklist-skel-item-meta" />
+                <div className="checklist-skel-chip-row">
+                  <div className="checklist-skel-block checklist-skel-chip" />
+                  <div className="checklist-skel-block checklist-skel-chip" />
+                  <div className="checklist-skel-block checklist-skel-chip" />
+                </div>
+              </div>
+              <div className="checklist-skel-block checklist-skel-ring" />
+            </article>
+          ))}
+        </div>
+      </main>
+
+      <aside className="content-right checklist-side-rail">
+        <section className="sidebar-section stats-card checklist-skel-panel">
+          <div className="checklist-skel-metric-grid">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="checklist-skel-metric" />
+            ))}
+          </div>
+          <div className="checklist-skel-progress" />
+        </section>
+        <section className="sidebar-section checklist-skel-panel">
+          <div className="checklist-skel-line checklist-skel-panel-title" />
+          <div className="checklist-skel-list">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="checklist-skel-row" />
+            ))}
+          </div>
+        </section>
+        <section className="sidebar-section checklist-skel-panel">
+          <div className="checklist-skel-line checklist-skel-panel-title" />
+          <div className="checklist-skel-list">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="checklist-skel-row" />
+            ))}
+          </div>
+        </section>
+      </aside>
+    </section>
+  </div>
+);

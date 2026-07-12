@@ -4,18 +4,38 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import type { ChecklistTemplate, DashboardChecklistThread } from '../../services/checklistApi';
 import { checklistApi } from '../../services/checklistApi';
-import { FaPlus, FaFileAlt, FaUsers, FaCog, FaBell, FaSyncAlt } from 'react-icons/fa';
+import {
+  FaDatabase,
+  FaLink,
+  FaNetworkWired,
+  FaPlus,
+  FaProjectDiagram,
+  FaSyncAlt,
+  FaTasks,
+  FaUsers,
+} from 'react-icons/fa';
 import { normalizeShiftCode } from '../../utils/shiftUtils';
 import './QuickActions.css';
 import TemplateListSkeleton from './TemplateListSkeleton';
 import '../checklist/ChecklistPageSkeleton.css';
 
+export interface QuickActionSignal {
+  id: string;
+  label: string;
+  value: string;
+  detail: string;
+  to: string;
+  tone?: 'ok' | 'watch' | 'danger' | 'neutral';
+  icon: React.ReactNode;
+}
+
 interface QuickActionsProps {
   onRefresh?: () => void | Promise<void>;
   existingThreads?: DashboardChecklistThread[];
+  signals?: QuickActionSignal[];
 }
 
-const QuickActions: React.FC<QuickActionsProps> = ({ onRefresh, existingThreads = [] }) => {
+const QuickActions: React.FC<QuickActionsProps> = ({ onRefresh, existingThreads = [], signals = [] }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addNotification } = useNotifications();
@@ -151,12 +171,12 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefresh, existingThreads 
     }
   };
 
-  const handleTemplates = () => {
-    navigate('/performance');
-  };
-
+  const handleTasks = () => navigate('/tasks');
+  const handleTrustlink = () => navigate('/trustlink');
+  const handleNexus = () => navigate('/nexus');
+  const handleNetwork = () => navigate('/network-sentinel');
+  const handleDatabase = () => navigate('/database-stats');
   const handleWorkforce = () => navigate('/team');
-  const handleSettings = () => addNotification({ type: 'info', message: 'Settings feature coming soon!', priority: 'low' });
   const handleRefresh = () => {
     if (onRefresh) {
       void Promise.resolve(onRefresh());
@@ -180,74 +200,61 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefresh, existingThreads 
           </button>
         )}
 
-        <button className="qa-action-btn qa-secondary" onClick={handleTemplates}>
-          <FaFileAlt />
-          <span>Analytics</span>
+        <button className="qa-action-btn qa-secondary" onClick={handleTasks}>
+          <FaTasks />
+          <span>Tasks</span>
+        </button>
+
+        <button className="qa-action-btn qa-secondary" onClick={handleTrustlink}>
+          <FaLink />
+          <span>TrustLink</span>
+        </button>
+
+        <button className="qa-action-btn qa-secondary" onClick={handleNexus}>
+          <FaProjectDiagram />
+          <span>Nexus</span>
+        </button>
+
+        <button className="qa-action-btn qa-secondary" onClick={handleNetwork}>
+          <FaNetworkWired />
+          <span>Network</span>
+        </button>
+
+        <button className="qa-action-btn qa-secondary" onClick={handleDatabase}>
+          <FaDatabase />
+          <span>Database</span>
         </button>
 
         <button className="qa-action-btn qa-secondary" onClick={handleWorkforce}>
           <FaUsers />
           <span>Workforce</span>
         </button>
-
-        <button className="qa-action-btn qa-secondary" onClick={handleSettings}>
-          <FaCog />
-          <span>Settings</span>
-        </button>
       </div>
 
-      <div className="quick-info">
-        <div className="info-item">
-          <FaBell className="info-icon" />
-          <div className="info-content">
-            <div className="info-title">Shift Reminder</div>
-            <div className="info-desc">
-              {(() => {
-                const now = new Date();
-                const hour = now.getHours();
-                const minute = now.getMinutes();
-                const currentTimeInMinutes = hour * 60 + minute;
-
-                let timeString = '';
-                if (hour >= 7 && hour < 15) {
-                  const remaining = (15 * 60) - currentTimeInMinutes;
-                  if (remaining < 60) {
-                    timeString = `Morning shift - ${remaining}m left`;
-                  } else {
-                    const remainingHours = Math.floor(remaining / 60);
-                    const remainingMinutes = remaining % 60;
-                    timeString = `Morning shift - ${remainingHours}h ${remainingMinutes}m left`;
-                  }
-                } else if (hour >= 15 && hour < 23) {
-                  const remaining = (23 * 60) - currentTimeInMinutes;
-                  if (remaining < 60) {
-                    timeString = `Afternoon shift - ${remaining}m left`;
-                  } else {
-                    const remainingHours = Math.floor(remaining / 60);
-                    const remainingMinutes = remaining % 60;
-                    timeString = `Afternoon shift - ${remainingHours}h ${remainingMinutes}m left`;
-                  }
-                } else {
-                  const remaining =
-                    hour >= 23
-                      ? ((24 * 60) + (7 * 60)) - currentTimeInMinutes
-                      : (7 * 60) - currentTimeInMinutes;
-
-                  if (remaining < 60) {
-                    timeString = `Night shift - ${remaining}m left`;
-                  } else {
-                    const remainingHours = Math.floor(remaining / 60);
-                    const remainingMinutes = remaining % 60;
-                    timeString = `Night shift - ${remainingHours}h ${remainingMinutes}m left`;
-                  }
-                }
-
-                return timeString;
-              })()}
-            </div>
+      {signals.length > 0 && (
+        <div className="operator-signal-stack">
+          <div className="operator-signal-heading">
+            <span>Live queue</span>
+            <small>Open the source console</small>
           </div>
+
+          {signals.map((signal) => (
+            <button
+              key={signal.id}
+              type="button"
+              className={`operator-signal-item tone-${signal.tone || 'neutral'}`}
+              onClick={() => navigate(signal.to)}
+            >
+              <span className="operator-signal-icon">{signal.icon}</span>
+              <span className="operator-signal-copy">
+                <strong>{signal.label}</strong>
+                <small>{signal.detail}</small>
+              </span>
+              <em>{signal.value}</em>
+            </button>
+          ))}
         </div>
-      </div>
+      )}
 
       {showModal && (
         <div className="qa-modal-overlay" onClick={() => setShowModal(false)}>

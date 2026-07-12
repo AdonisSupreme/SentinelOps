@@ -6201,6 +6201,11 @@
   }
 }
 
+  .super-fine-div {
+    display: flex;
+    flex-direction: column;
+  }
+
 @media (max-width: 640px) {
   .nexus-boot-preview {
     width: 100%;
@@ -6327,3 +6332,5 @@
     grid-column: 1;
   }
 }
+
+

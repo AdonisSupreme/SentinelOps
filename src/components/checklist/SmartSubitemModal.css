@@ -973,3 +973,172 @@
     transform: scale(1) translateY(0);
   }
 }
+
+.checklist-command-page .smart-subitem-modal-backdrop {
+  background: rgba(2, 6, 23, 0.66);
+  backdrop-filter: blur(10px);
+}
+
+.checklist-command-page .smart-subitem-modal.futuristic {
+  width: min(980px, 96vw);
+  max-width: none;
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 8px;
+  background: var(--checklist-surface, rgba(255, 255, 255, 0.94));
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+  animation: none;
+}
+
+.checklist-command-page .smart-subitem-modal.futuristic::before,
+.checklist-command-page .smart-subitem-modal.futuristic::after {
+  display: none;
+}
+
+.checklist-command-page .smart-subitem-modal .modal-header,
+.checklist-command-page .smart-subitem-modal .modal-footer,
+.checklist-command-page .view-mode-selector {
+  padding: 1rem;
+  border-color: var(--checklist-border, rgba(71, 85, 105, 0.18));
+  background: var(--checklist-strong, #ffffff);
+}
+
+.checklist-command-page .smart-subitem-modal .modal-title {
+  color: var(--checklist-ink, var(--text-primary));
+  font-size: 1rem;
+}
+
+.checklist-command-page .completion-badge,
+.checklist-command-page .subitem-count {
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 999px;
+  background: var(--checklist-fill, rgba(100, 116, 139, 0.16));
+  color: var(--checklist-ink, var(--text-primary));
+}
+
+.checklist-command-page .close-btn,
+.checklist-command-page .modal-close,
+.checklist-command-page .timeline-toggle-btn,
+.checklist-command-page .mode-btn,
+.checklist-command-page .nav-btn,
+.checklist-command-page .sub-action-btn,
+.checklist-command-page .complete-item-btn,
+.checklist-command-page .reason-modal-close,
+.checklist-command-page .reason-btn {
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 8px;
+  background: var(--checklist-surface, rgba(255, 255, 255, 0.94));
+  color: var(--checklist-ink, var(--text-primary));
+  box-shadow: none;
+}
+
+.checklist-command-page .close-btn,
+.checklist-command-page .modal-close,
+.checklist-command-page .reason-modal-close {
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+}
+
+.checklist-command-page .close-btn:hover,
+.checklist-command-page .modal-close:hover,
+.checklist-command-page .timeline-toggle-btn:hover,
+.checklist-command-page .mode-btn:hover,
+.checklist-command-page .nav-btn:hover,
+.checklist-command-page .sub-action-btn:hover,
+.checklist-command-page .complete-item-btn:hover,
+.checklist-command-page .reason-modal-close:hover,
+.checklist-command-page .reason-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+.checklist-command-page .mode-btn.active,
+.checklist-command-page .sub-action-btn.complete,
+.checklist-command-page .complete-item-btn,
+.checklist-command-page .reason-btn.confirm {
+  border-color: rgba(15, 159, 115, 0.28);
+  background: var(--checklist-green, #0f9f73);
+  color: #04120d;
+}
+
+.checklist-command-page .sub-action-btn.start,
+.checklist-command-page .nav-btn.smart-next {
+  border-color: rgba(8, 145, 178, 0.24);
+  background: rgba(8, 145, 178, 0.1);
+  color: var(--checklist-cyan, #0891b2);
+}
+
+.checklist-command-page .sub-action-btn.skip {
+  border-color: rgba(217, 119, 6, 0.24);
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--checklist-amber, #d97706);
+}
+
+.checklist-command-page .sub-action-btn.fail {
+  border-color: rgba(220, 38, 38, 0.24);
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--checklist-red, #dc2626);
+}
+
+.checklist-command-page .smart-subitem-modal .modal-content,
+.checklist-command-page .current-subitem,
+.checklist-command-page .no-subitems,
+.checklist-command-page .status-display,
+.checklist-command-page .reason-modal {
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 8px;
+  background: var(--checklist-strong, #ffffff);
+  box-shadow: none;
+}
+
+.checklist-command-page .smart-subitem-modal .modal-content {
+  margin: 1rem;
+  padding: 1rem;
+}
+
+.checklist-command-page .subitem-navigation {
+  gap: 0.65rem;
+  padding: 0;
+}
+
+.checklist-command-page .si-progress-indicator,
+.checklist-command-page .step-dots {
+  gap: 0.4rem;
+}
+
+.checklist-command-page .step-dot {
+  border-radius: 999px;
+}
+
+.checklist-command-page .current-subitem {
+  padding: 1rem;
+}
+
+.checklist-command-page .subitem-header,
+.checklist-command-page .subitem-actions {
+  gap: 0.65rem;
+}
+
+.checklist-command-page .type-badge,
+.checklist-command-page .required-badge,
+.checklist-command-page .severity-indicator {
+  border-radius: 999px;
+}
+
+.checklist-command-page .reason-modal-backdrop {
+  background: rgba(2, 6, 23, 0.66);
+  backdrop-filter: blur(10px);
+}
+
+.checklist-command-page .reason-modal-header,
+.checklist-command-page .reason-modal-actions {
+  border-color: var(--checklist-border, rgba(71, 85, 105, 0.18));
+}
+
+.checklist-command-page .reason-textarea,
+.checklist-command-page .complete-item-textarea {
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 8px;
+  background: var(--checklist-strong, #ffffff);
+  color: var(--checklist-ink, var(--text-primary));
+}

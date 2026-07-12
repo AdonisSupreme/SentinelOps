@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { taskApi, Task } from '../../services/taskApi';
 import api from '../../services/api';
-import { FaThLarge, FaUserPlus } from 'react-icons/fa';
+import { FaThLarge, FaTimes, FaUserPlus } from 'react-icons/fa';
 import './TaskDetail.css';
 
 interface Props {
@@ -73,7 +73,7 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
 
   const TaskDetailSkeleton: React.FC = () => (
     <div className="ts-td-modal-backdrop" onClick={onClose}>
-      <div className="ts-td-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="ts-td-modal task-detail-command-modal" onClick={(e) => e.stopPropagation()}>
         <div className="td-header">
           <div className="td-title">
             <div className="td-skeleton">
@@ -415,10 +415,11 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
 
   return (
     <div className="ts-td-modal-backdrop" onClick={onClose}>
-      <div className="ts-td-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="ts-td-modal task-detail-command-modal" onClick={(e) => e.stopPropagation()}>
         <div className="td-header">
           <div className="td-title">
             <div>
+              <span className="td-kicker fine-div">Task detail</span>
               <h2>{task?.title || (loadError ? 'Task unavailable' : 'Task')}</h2>
               <div className="td-sub">{task?.id ? `#${task.id}` : ''}</div>
             </div>
@@ -464,8 +465,8 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
             <div className="td-card td-meta">
               <div><strong>Assigned</strong><div className="td-small">{getAssignedName(task) || 'Unassigned'}</div></div>
               <div><strong>Priority</strong><div className="td-small">{task?.priority || 'Normal'}</div></div>
-              <div><strong>Due</strong><div className="td-small">{task?.due_date ? new Date(task.due_date).toLocaleString() : '—'}</div></div>
-              <div><strong>Tags</strong><div className="td-small">{(task as any)?.tags?.join(', ') || '—'}</div></div>
+              <div><strong>Due</strong><div className="td-small">{task?.due_date ? new Date(task.due_date).toLocaleString() : 'Not set'}</div></div>
+              <div><strong>Tags</strong><div className="td-small">{(task as any)?.tags?.join(', ') || 'No tags'}</div></div>
             </div>
 
             <div className="td-card td-desc">
@@ -509,7 +510,7 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
                   View History
                 </button>
               </div>
-              {loading ? <div>Loading…</div> : (() => {
+              {loading ? <div>Loading...</div> : (() => {
                 const { commentEntries } = computeFormattedEntries();
                 if (!commentEntries || commentEntries.length === 0) return <div className="td-small">No comments yet</div>;
                 return (
@@ -579,7 +580,9 @@ const TaskDetail: React.FC<Props> = ({ taskId, onClose, onRefresh, onRequestHist
               <div className="td-header">
                 <div className="td-title"><h2>Task History</h2><div className="td-sub">{task?.id ? `#${task.id}` : ''}</div></div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <button className="td-close" onClick={() => setShowHistory(false)}>×</button>
+                  <button className="td-close" onClick={() => setShowHistory(false)} aria-label="Close task history">
+                    <FaTimes />
+                  </button>
                 </div>
               </div>
               <div className="history-body">

@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { useChecklist } from '../../contexts/checklistContext';
 import { FaCheckCircle, FaPlay, FaBan, FaExclamationTriangle, FaComment } from 'react-icons/fa';
-import SubitemActions from './SubitemActions';
 import './ItemActions.css';
 
 interface ItemActionsProps {

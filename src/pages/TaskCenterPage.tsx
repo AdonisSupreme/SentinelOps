@@ -12,16 +12,11 @@ import {
   FaCheckCircle,
   FaPlay,
   FaPause,
-  FaBan,
   FaCalendarAlt,
   FaUser,
   FaUsers,
   FaCog,
-  FaEye,
-  FaThLarge,
-  FaArrowLeft,
   FaArrowRight,
-  FaTrash,
   FaEdit,
   FaUserCheck,
   FaTimes
@@ -97,20 +92,18 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [historyEntries, setHistoryEntries] = useState<any[]>([]);
 
-  const nowMs = Date.now();
-
-  const getCompletedAt = (task: TaskSummary) => {
+  const getCompletedAt = useCallback((task: TaskSummary) => {
     return (task as TaskSummary & { completed_at?: string }).completed_at;
-  };
+  }, []);
 
-  const isOpenOverdueTask = (task: TaskSummary) => {
+  const isOpenOverdueTask = useCallback((task: TaskSummary) => {
     if (!task.due_date) return false;
     const dueMs = new Date(task.due_date).getTime();
     if (Number.isNaN(dueMs)) return false;
-    return dueMs < nowMs && task.status !== 'COMPLETED' && task.status !== 'CANCELLED';
-  };
+    return dueMs < Date.now() && task.status !== 'COMPLETED' && task.status !== 'CANCELLED';
+  }, []);
 
-  const isCompletedLateTask = (task: TaskSummary) => {
+  const isCompletedLateTask = useCallback((task: TaskSummary) => {
     if (!task.due_date || task.status !== 'COMPLETED') return false;
     const dueMs = new Date(task.due_date).getTime();
     const completedAt = getCompletedAt(task);
@@ -118,13 +111,11 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
     const completedMs = new Date(completedAt).getTime();
     if (Number.isNaN(dueMs) || Number.isNaN(completedMs)) return false;
     return completedMs > dueMs;
-  };
+  }, [getCompletedAt]);
 
   // Get user role for conditional rendering
   const userRole = user?.role?.toLowerCase() || '';
   const isManager = ['admin', 'manager'].includes(userRole);
-  const isAdmin = userRole === 'admin';
-
   // Helpers to support both nested and flat API shapes
   const getAssignedIds = (t: any): string[] => {
     const fromAssignees = Array.isArray(t?.assignees)
@@ -165,13 +156,6 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
   };
 
   // View management functions
-  const handleShowList = useCallback(() => {
-    selectedTaskIdRef.current = null;
-    setViewMode('list');
-    setSelectedTask(null);
-    setSearchParams({}, { replace: true });
-  }, [setSearchParams]);
-
   const handleShowDetail = useCallback((task: TaskSummary) => {
     selectedTaskIdRef.current = task.id;
     setSelectedTask(task);
@@ -240,7 +224,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
       default:
         return myTasks;
     }
-  }, [activeFilter, myTasks, allVisibleTasks, assignedByMeTasks, assignedToMeTasks, departmentTasks, user?.id]);
+  }, [activeFilter, myTasks, allVisibleTasks, assignedByMeTasks, assignedToMeTasks, departmentTasks, user?.id, isOpenOverdueTask]);
 
   const setTaskLanesLoaded = useCallback((lanes: TaskLaneFilter[], loaded: boolean) => {
     lanes.forEach((lane) => {
@@ -407,39 +391,6 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
   // Load tasks based on active filter
   useEffect(() => {
     loadActiveTaskLane(activeFilter);
-    return;
-    const loadTasks = async () => {
-      // Don't load tasks if user is not available or auth is still loading
-      if (!user || authLoading) {
-        console.log('👤 User not available or auth loading, skipping task load', { user: !!user, authLoading });
-        return;
-      }
-
-      try {
-        switch (activeFilter) {
-          case 'my-tasks':
-            await fetchMyTasks();
-            break;
-          case 'assigned-to-me':
-            await fetchAssignedToMe();
-            break;
-          case 'assigned-by-me':
-            if (isManager) {
-              await fetchTasksAssignedByMe();
-            }
-            break;
-          case 'department-tasks':
-            await fetchDepartmentTasks();
-            break;
-          default:
-            await fetchMyTasks();
-        }
-      } catch (err) {
-        console.error('Failed to load tasks:', err);
-      }
-    };
-
-    loadTasks();
   }, [activeFilter, loadActiveTaskLane]);
 
   useEffect(() => {
@@ -614,43 +565,14 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
 
     return tasks;
   }, [currentTasks, deferredSearchTerm, priorityFilter, statusFilter]);
-  const activeFilterLabel = filterOptions.find(option => option.id === activeFilter)?.label || 'Task Center';
-  const overdueCount = filteredTasks.filter((task) => isOpenOverdueTask(task)).length;
-  const inProgressCount = filteredTasks.filter(task => task.status === 'IN_PROGRESS').length;
-  const completedCount = filteredTasks.filter(task => task.status === 'COMPLETED').length;
-  const criticalCount = filteredTasks.filter(task => task.priority === 'CRITICAL').length;
-  const taskBrief =
-    filteredTasks.length === 0
-      ? `No tasks are active in ${activeFilterLabel.toLowerCase()} right now. Create a task or widen the filters to rebuild the operating picture.`
-      : overdueCount > 0
-        ? `${overdueCount} overdue task${overdueCount === 1 ? '' : 's'} need attention in ${activeFilterLabel.toLowerCase()}, with ${criticalCount} critical item${criticalCount === 1 ? '' : 's'} currently in the queue.`
-        : `${filteredTasks.length} task${filteredTasks.length === 1 ? '' : 's'} are visible in ${activeFilterLabel.toLowerCase()}, and ${inProgressCount} ${inProgressCount === 1 ? 'is' : 'are'} actively moving through execution.`;
-  const taskSignals = [
-    {
-      label: 'Visible tasks',
-      value: String(filteredTasks.length),
-      meta: `${activeFilterLabel} in view`,
-      icon: <FaTasks />
-    },
-    {
-      label: 'In progress',
-      value: String(inProgressCount),
-      meta: `${completedCount} completed`,
-      icon: <FaPlay />
-    },
-    {
-      label: 'Overdue',
-      value: String(overdueCount),
-      meta: overdueCount > 0 ? 'Needs action' : 'On schedule',
-      icon: <FaExclamationTriangle />
-    },
-    {
-      label: 'Critical',
-      value: String(criticalCount),
-      meta: criticalCount > 0 ? 'Priority watchlist' : 'No critical tasks',
-      icon: <FaClock />
-    }
-  ];
+  const activeFilterOption = filterOptions.find(option => option.id === activeFilter);
+  const activeFilterLabel = activeFilterOption?.label || 'Task Center';
+  const laneContext = [
+    activeFilterLabel,
+    statusFilter === 'all' ? 'All statuses' : statusFilter.replace('_', ' '),
+    priorityFilter === 'all' ? 'All priorities' : priorityFilter,
+    deferredSearchTerm ? `Search: ${searchTerm.trim()}` : ''
+  ].filter(Boolean);
 
   // Render main content helper to avoid deeply nested JSX expressions
   const renderMainContent = () => {
@@ -666,72 +588,13 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
 
     return (
       <div className="task-content">
-        {viewMode !== 'detail' && (
-          <section className="task-command-hero">
-            <div className="task-command-copy">
-              <div className="task-command-kicker">
-                <FaTasks />
-                <span>SentinelOps Task Center</span>
-              </div>
-              <div className="task-header">
-                <h1><FaTasks /> Task Center</h1>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div className="header-stats">
-                    <span className="stat-item">{filteredTasks.length} of {currentTasks.length} tasks</span>
-                    {(statusFilter !== 'all' || priorityFilter !== 'all' || searchTerm) && (
-                      <button
-                        className="clear-filters-btn"
-                        onClick={() => { setStatusFilter('all'); setPriorityFilter('all'); setSearchTerm(''); }}
-                      >
-                        <FaBan /> Clear Filters
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <p className="task-command-brief">{taskBrief}</p>
-              <div className="task-signal-grid">
-                {taskSignals.map(signal => (
-                  <div key={signal.label} className="task-signal-card">
-                    <div className="task-signal-icon">{signal.icon}</div>
-                    <div className="task-signal-copy">
-                      <span>{signal.label}</span>
-                      <strong>{signal.value}</strong>
-                      <small>{signal.meta}</small>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <aside className="task-command-aside">
-              <div className="task-status-panel">
-                <div className="task-status-label">Command lane</div>
-                <h2>{activeFilterLabel}</h2>
-                <p>
-                  {searchTerm
-                    ? `Search is focused on "${searchTerm}".`
-                    : 'Filters are aligned to the current SentinelOps operating view.'}
-                </p>
-                <div className="task-status-metrics">
-                  <div>
-                    <span>Status filter</span>
-                    <strong>{statusFilter === 'all' ? 'All statuses' : statusFilter.replace('_', ' ')}</strong>
-                  </div>
-                  <div>
-                    <span>Priority filter</span>
-                    <strong>{priorityFilter === 'all' ? 'All priorities' : priorityFilter}</strong>
-                  </div>
-                </div>
-              </div>
-            </aside>
-          </section>
-        )}
-
         {error && (
           <div className="error-banner">
             <FaExclamationTriangle />
             <span>{error}</span>
-            <button onClick={clearError} className="dismiss-error">×</button>
+            <button onClick={clearError} className="dismiss-error" aria-label="Dismiss error">
+              <FaTimes />
+            </button>
           </div>
         )}
 
@@ -739,7 +602,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
           typeof TaskDetail === 'undefined' ? (
             <div className="task-detail-error">
               <h3>Unable to load task detail</h3>
-              <p>TaskDetail component is undefined — check the console for details.</p>
+              <p>TaskDetail component is undefined - check the console for details.</p>
             </div>
           ) : (
             <div className="task-detail-pane">
@@ -755,8 +618,22 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
               />
             </div>
           )
-        ) : filteredTasks.length === 0 ? (
-          <div className="empty-state">
+        ) : (
+          <>
+            <div className="task-lane-strip">
+              <div className="task-lane-title">
+                <span>{activeFilterOption?.icon || <FaTasks />}</span>
+                <strong>{activeFilterLabel}</strong>
+              </div>
+              <div className="task-lane-context">
+                {laneContext.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+            </div>
+
+          {filteredTasks.length === 0 ? (
+            <div className="empty-state">
             <FaTasks size={48} />
             <h3>No tasks found</h3>
             <p>{searchTerm || statusFilter !== 'all' || priorityFilter !== 'all'
@@ -768,7 +645,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
                 <FaPlus /> Create Your First Task
               </button>
             )}
-          </div>
+            </div>
         ) : (
           <div className="task-grid">
             {filteredTasks.map(task => {
@@ -781,15 +658,21 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
               return (
                 <div
                   key={task.id}
-                  className={`task-card ${isOpenOverdue ? 'overdue-open' : ''} ${isCompletedLate ? 'completed-late' : ''}`}
+                  className={`task-card priority-${task.priority.toLowerCase()} status-${task.status.toLowerCase().replace('_', '-')} ${isOpenOverdue ? 'overdue-open' : ''} ${isCompletedLate ? 'completed-late' : ''}`}
                   onClick={() => handleShowDetail(task)}
                 >
                   <div className="card-header">
-                    <div className="task-type-icon">{getTaskTypeIcon(task.task_type)}</div>
-                    <div className="task-priority">
-                      <div className="priority-indicator" style={{ backgroundColor: priority.color }} title={priority.label} />
+                    <div className="task-type-lockup">
+                      <div className="task-type-icon">{getTaskTypeIcon(task.task_type)}</div>
+                      <span>{task.task_type.replace('_', ' ')}</span>
                     </div>
-                    <div className="status-badge" style={{ backgroundColor: statusColor }}>{task.status.replace('_', ' ')}</div>
+                    <div className="task-card-state">
+                      <div className="task-priority" title={priority.label}>
+                        <div className="priority-indicator" style={{ backgroundColor: priority.color }} title={priority.label} />
+                        <span>{priority.label}</span>
+                      </div>
+                      <div className="status-badge" style={{ backgroundColor: statusColor }}>{task.status.replace('_', ' ')}</div>
+                    </div>
                   </div>
                   {isOpenOverdue ? (
                     <div className="task-urgency-banner overdue">Overdue and still open</div>
@@ -809,8 +692,8 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
                           <FaCalendarAlt />
                           <span>
                             {dueDate.date} at {dueDate.time}
-                            {isOpenOverdue ? ' • overdue' : ''}
-                            {isCompletedLate ? ' • completed late' : ''}
+                            {isOpenOverdue ? ' - overdue' : ''}
+                            {isCompletedLate ? ' - completed late' : ''}
                           </span>
                         </div>
                       )}
@@ -819,6 +702,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
                   </div>
 
                   <div className="card-footer">
+                    <span className="task-open-cue">Open details</span>
                     <div className="task-actions">
                       {task.status === 'ACTIVE' && canUserAct(task) && (
                         <button className="tc-action-btn tc-start" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'IN_PROGRESS'); }} title="Start Task"><FaPlay className='tc-actn-icon' /></button>
@@ -830,9 +714,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
                         </>
                       )}
                       {canUserAct(task) && (
-                        <>
-                          <button className="tc-action-btn tc-edit" onClick={(e) => { e.stopPropagation(); navigate(`/tasks/${task.id}/edit`); }} title="Edit Task"><FaEdit className='tc-actn-icon' /></button>
-                        </>
+                        <button className="tc-action-btn tc-edit" onClick={(e) => { e.stopPropagation(); navigate(`/tasks/${task.id}/edit`); }} title="Edit Task"><FaEdit className='tc-actn-icon' /></button>
                       )}
                       {task.status === 'ON_HOLD' && canUserAct(task) && (
                         <button className="tc-action-btn tc-resume" onClick={(e) => { e.stopPropagation(); handleStatusChange(task.id, 'IN_PROGRESS'); }} title="Resume Task"><FaPlay className='tc-actn-icon' /></button>
@@ -843,29 +725,30 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
               );
             })}
           </div>
+          )}
+          </>
         )}
       </div>
     );
   };
 
   if (loading && currentTasks.length === 0) {
-    return (
-      <div className="task-center">
-        <div className="task-center-layout">
-          <TaskCenterSkeleton />
-        </div>
-      </div>
-    );
+    return <TaskCenterSkeleton />;
   }
 
   return (
-    <div className="task-center">
+    <div className="task-center task-command-page">
       <div className="task-center-layout">
 
         {/* Left Sidebar - Filters - always visible */}
         <aside className="task-sidebar">
+          <div className="task-sidebar-head">
+            <span>SentinelOps</span>
+            <strong>Task Center</strong>
+          </div>
+
           {/* Quick Actions */}
-          <div className="sidebar-section">
+          <div className="sidebar-section task-action-section">
             <h3><FaPlus /> Quick Actions</h3>
             <button
               className="quick-action-btn primary"
@@ -881,7 +764,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
             </button>
           </div>
 
-          <div className="sidebar-section">
+          <div className="sidebar-section task-lane-section">
             <h3><FaFilter /> Task Filters</h3>
 
             <div className="filter-options">
@@ -905,7 +788,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
             </div>
           </div>
 
-          <div className="sidebar-section">
+          <div className="sidebar-section task-search-section">
             <h3><FaSearch /> Search & Filter</h3>
 
             <div className="tc-search-box">
@@ -971,7 +854,9 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
             <div className="td-header">
               <div className="td-title"><h2>Task History</h2><div className="td-sub">History</div></div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <button className="td-close" onClick={() => setHistoryModalOpen(false)}>×</button>
+                <button className="td-close" onClick={() => setHistoryModalOpen(false)} aria-label="Close task history">
+                  <FaTimes />
+                </button>
               </div>
             </div>
             <div className="history-body">
@@ -1010,7 +895,7 @@ const TaskCenterPage: React.FC<TaskCenterPageProps> = () => {
 
 // Enhanced Skeleton Component
 const TaskCenterSkeleton: React.FC = () => (
-  <div className="task-center">
+  <div className="task-center task-command-page">
     <div className="task-center-layout">
       {/* Left Sidebar Skeleton */}
       <aside className="task-sidebar">
@@ -1346,7 +1231,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
         <div className="create-task-modal-header">
           <h2><FaPlus /> Create New Task</h2>
           <button onClick={onClose} className="create-task-close-btn" aria-label="Close modal">
-            ×
+            <FaTimes />
           </button>
         </div>
 
@@ -1393,8 +1278,7 @@ const CreateTaskModal: React.FC<CreateTaskModalProps> = ({ onClose, onSubmit, us
               <label>Priority *</label>
               <div className="create-task-priority-selection">
                 <div className="create-task-priority-options">
-                  {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((priorityLevel, index) => {
-                    const priorityValue = index + 1;
+                  {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((priorityLevel) => {
                     const isActive = formData.priority === priorityLevel;
                     const priorityColors = {
                       LOW: '#22c55e',

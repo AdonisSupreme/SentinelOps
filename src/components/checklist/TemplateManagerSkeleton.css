@@ -252,3 +252,127 @@
   border-color: rgba(37,99,235,0.12);
 }
 
+/* SentinelOps template skeleton evolution */
+.stm-skeleton-command,
+.stm-skeleton-command * {
+  letter-spacing: 0;
+}
+
+.stm-skeleton-command {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--primary) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(0deg, color-mix(in srgb, var(--accent) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(180deg, var(--bg-primary), var(--bg-secondary));
+  background-size: 38px 38px, 38px 38px, auto;
+}
+
+.stm-skeleton-command::before {
+  display: none;
+}
+
+.stm-skeleton-hero::before {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--primary) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(0deg, color-mix(in srgb, var(--accent) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(145deg, var(--stm-surface-strong), var(--stm-surface));
+  background-size: 34px 34px, 34px 34px, auto;
+}
+
+.skeleton-kicker-line {
+  width: 170px;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.stm-skeleton-tags {
+  display: flex;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.skeleton-tag {
+  width: 96px;
+  height: 28px;
+  border-radius: 999px;
+}
+
+.skeleton-tag-wide {
+  width: 150px;
+}
+
+.stm-skeleton-list-header,
+.skeleton-search-shell,
+.skeleton-filter-shell {
+  border: 1px solid color-mix(in srgb, var(--border-primary) 82%, transparent);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--primary) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(0deg, color-mix(in srgb, var(--accent) 6%, transparent) 1px, transparent 1px),
+    color-mix(in srgb, var(--bg-card) 86%, transparent);
+  background-size: 34px 34px, 34px 34px, auto;
+}
+
+.skeleton-search-shell,
+.skeleton-filter-shell {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem;
+}
+
+.skeleton-search-shell {
+  flex: 1;
+}
+
+.skeleton-filter-shell {
+  width: 170px;
+}
+
+.stm-skeleton-grid {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.stm-skeleton-card {
+  min-height: 280px;
+  padding: 1rem;
+  border-top: 3px solid var(--primary);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--primary) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(0deg, color-mix(in srgb, var(--accent) 5%, transparent) 1px, transparent 1px),
+    color-mix(in srgb, var(--bg-card) 86%, transparent);
+  background-size: 32px 32px, 32px 32px, auto;
+}
+
+.stm-skeleton-blueprint {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: auto;
+  padding: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--border-primary) 82%, transparent);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-card) 84%, transparent);
+}
+
+.skeleton-status-line {
+  height: 16px;
+  width: 100%;
+}
+
+.skeleton-chip-row {
+  height: 26px;
+  width: 72%;
+  border-radius: 999px;
+}
+
+.skeleton-type-line {
+  height: 14px;
+  width: 84%;
+}
+
+.stm-skeleton-card .skeleton-action-btn {
+  border-radius: 8px;
+}
+

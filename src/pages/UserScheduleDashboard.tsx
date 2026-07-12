@@ -10,7 +10,6 @@ import {
   FaMoon,
   FaQuestion,
   FaSignal,
-  FaStar,
   FaTasks,
 } from 'react-icons/fa';
 import PageGuide from '../components/ui/PageGuide';
@@ -94,6 +93,95 @@ const rankChecklistInstance = (instance: ChecklistInstance) => {
       return 5;
   }
 };
+
+const UserScheduleSkeleton: React.FC = () => (
+  <div className="user-schedule-dashboard user-schedule-skeleton-page">
+    <section className="schedule-command-strip schedule-skel-panel">
+      <div className="schedule-skel-command-copy">
+        <div className="schedule-skel-line schedule-skel-kicker" />
+        <div className="schedule-skel-line schedule-skel-title" />
+        <div className="schedule-skel-line schedule-skel-meta" />
+      </div>
+
+      <div className="schedule-skel-signal-grid">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <article key={index} className="schedule-skel-signal-card">
+            <div className="schedule-skel-block schedule-skel-icon" />
+            <div className="schedule-skel-signal-copy">
+              <div className="schedule-skel-line schedule-skel-label" />
+              <div className="schedule-skel-line schedule-skel-value" />
+              <div className="schedule-skel-line schedule-skel-meta" />
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section className="schedule-layout">
+      <div className="schedule-command-panel schedule-skel-panel">
+        <div className="schedule-skel-board-head">
+          <div>
+            <div className="schedule-skel-line schedule-skel-kicker" />
+            <div className="schedule-skel-line schedule-skel-panel-title" />
+          </div>
+          <div className="schedule-skel-toggle-pair">
+            <div className="schedule-skel-block schedule-skel-toggle" />
+            <div className="schedule-skel-block schedule-skel-toggle" />
+          </div>
+        </div>
+
+        <div className="schedule-skel-ledger">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="schedule-skel-ledger-item">
+              <div className="schedule-skel-line schedule-skel-value" />
+              <div className="schedule-skel-line schedule-skel-label" />
+            </div>
+          ))}
+        </div>
+
+        <div className="schedule-skeleton-calendar-shell">
+          <div className="schedule-skeleton-weekdays">
+            {Array.from({ length: 7 }).map((_, index) => (
+              <div key={index} className="schedule-skel-line schedule-skel-weekday" />
+            ))}
+          </div>
+          <div className="schedule-skeleton-grid">
+            {Array.from({ length: 35 }).map((_, index) => (
+              <div key={index} className="schedule-skel-cell">
+                <div className="schedule-skel-line schedule-skel-cell-date" />
+                <div className="schedule-skel-line schedule-skel-cell-title" />
+                <div className="schedule-skel-line schedule-skel-cell-copy" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <aside className="schedule-insight-panel">
+        <article className="insight-card schedule-skel-panel">
+          <div className="schedule-skel-line schedule-skel-kicker" />
+          <div className="schedule-skel-line schedule-skel-panel-title" />
+          <div className="schedule-skel-focus-block" />
+          <div className="schedule-skel-list">
+            <div className="schedule-skel-row" />
+            <div className="schedule-skel-row" />
+            <div className="schedule-skel-row" />
+          </div>
+        </article>
+
+        <article className="insight-card schedule-skel-panel">
+          <div className="schedule-skel-line schedule-skel-kicker" />
+          <div className="schedule-skel-line schedule-skel-panel-title" />
+          <div className="schedule-skel-list">
+            <div className="schedule-skel-row" />
+            <div className="schedule-skel-row" />
+            <div className="schedule-skel-row" />
+          </div>
+        </article>
+      </aside>
+    </section>
+  </div>
+);
 
 const UserScheduleDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -195,11 +283,11 @@ const UserScheduleDashboard: React.FC = () => {
   }, [schedule, todayKey]);
 
   useEffect(() => {
-    const selectedIsVisible = selectedDate >= format(displayStart, 'yyyy-MM-dd') && selectedDate <= format(displayEnd, 'yyyy-MM-dd');
+    const selectedIsVisible = selectedDate >= displayStartKey && selectedDate <= displayEndKey;
     if (!selectedIsVisible || !scheduleByDate.has(selectedDate)) {
       setSelectedDate(preferredFocusDate);
     }
-  }, [displayEnd, displayStart, preferredFocusDate, scheduleByDate, selectedDate]);
+  }, [displayEndKey, displayStartKey, preferredFocusDate, scheduleByDate, selectedDate]);
 
   const stats = useMemo(() => {
     const base = {
@@ -268,6 +356,43 @@ const UserScheduleDashboard: React.FC = () => {
   const focusedDeadlineTasks = deadlineTasksByDate.get(selectedDate) || [];
   const focusedDateLabel = format(parseISO(selectedDate), 'EEEE, MMMM d');
   const userLabel = currentUser?.first_name || currentUser?.username || 'Operator';
+  const visibleRangeLabel = `${format(displayStart, 'MMM d')} - ${format(displayEnd, 'MMM d')}`;
+  const visibleDayCount = schedule?.schedule.length || 0;
+  const definedDayCount = stats.totalShifts + stats.daysOff;
+
+  const scheduleSignals = useMemo(
+    () => [
+      {
+        label: 'Next shift',
+        value: nextShift ? format(parseISO(nextShift.date), 'EEE d MMM') : 'None',
+        detail: nextShift ? `${nextShift.shift_name || 'Assigned'} / ${formatWindow(nextShift)}` : 'No shift in this window',
+        icon: <FaClock />,
+        tone: nextShift ? 'ok' : 'watch',
+      },
+      {
+        label: 'Upcoming',
+        value: stats.upcoming,
+        detail: `${stats.completed} completed / ${stats.totalShifts} total shifts`,
+        icon: <FaCalendarAlt />,
+        tone: stats.upcoming ? 'info' : 'watch',
+      },
+      {
+        label: 'Tasks due',
+        value: deadlineTasks.length,
+        detail: deadlineTasks.length ? 'Deadlines inside this view' : 'No visible task deadlines',
+        icon: <FaTasks />,
+        tone: deadlineTasks.length ? 'watch' : 'ok',
+      },
+      {
+        label: 'Coverage',
+        value: `${operationalPulse}%`,
+        detail: `${definedDayCount}/${visibleDayCount} days defined`,
+        icon: <FaSignal />,
+        tone: operationalPulse >= 80 ? 'ok' : operationalPulse >= 50 ? 'watch' : 'danger',
+      },
+    ],
+    [deadlineTasks.length, definedDayCount, nextShift, operationalPulse, stats.completed, stats.totalShifts, stats.upcoming, visibleDayCount]
+  );
 
   const handleTaskDeadlineOpen = (taskId: string) => {
     navigate(`/tasks?task=${taskId}`);
@@ -280,7 +405,7 @@ const UserScheduleDashboard: React.FC = () => {
 
     if (selectedDate > todayKey) {
       setTimelineNotice({
-        title: 'Timeline Not Ready Yet',
+        title: 'Timeline not ready yet',
         message: `The ${focusedDay.shift_name || 'selected'} timeline for ${focusedDateLabel} has not been created yet. Future shifts become available once the day arrives and the checklist instance is initialized.`,
       });
       return;
@@ -340,6 +465,10 @@ const UserScheduleDashboard: React.FC = () => {
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
   }, [weekStart]);
+
+  if (loading && !schedule) {
+    return <UserScheduleSkeleton />;
+  }
 
   const renderDayPreview = (dayData?: UserScheduleDay) => {
     if (!dayData || dayData.type === 'UNSCHEDULED') {
@@ -478,109 +607,77 @@ const UserScheduleDashboard: React.FC = () => {
 
   return (
     <div className="user-schedule-dashboard">
-      <div className="schedule-ambient">
-        <div className="schedule-ambient-orb orb-a" />
-        <div className="schedule-ambient-orb orb-b" />
-        <div className="schedule-ambient-grid" />
-      </div>
-
-      <section className="schedule-hero-panel">
-        <div className="schedule-hero-copy">
-          <div className="schedule-kicker">
-            <FaSignal />
-            SentinelOS Shift Intelligence
-          </div>
-          <p>Own your rhythm, every watch, every handoff, every recovery window.</p>
-          <p>
-            {userLabel}, this is your live operations canvas for scheduled shifts, recovery days, and upcoming assignments across SentinelOS.
-          </p>
-
-          <div className="schedule-hero-highlights">
-            <div className="hero-chip">
-              <FaCalendarAlt />
-              <span>{format(displayStart, 'MMM d')} to {format(displayEnd, 'MMM d')}</span>
-            </div>
-            <div className="hero-chip">
-              <FaCheckCircle />
-              <span>{stats.upcoming} future assignment{stats.upcoming === 1 ? '' : 's'}</span>
-            </div>
-          </div>
+      <section className="schedule-command-strip">
+        <div className="schedule-command-title">
+          <span><FaSignal /> User schedule</span>
+          <strong>{userLabel}</strong>
+          <small>{visibleRangeLabel} / {visibleDayCount} day window</small>
         </div>
 
-        <div className="schedule-hero-telemetry">
-          <div className="schedule-pulse-card">
-            <div className="schedule-pulse-ring">
-              <div className="schedule-pulse-core">
-                <strong>{operationalPulse}%</strong>
-                <span>Coverage Pulse</span>
-              </div>
-            </div>
-            <p>How much of this visible window is already defined by active shifts or protected time off.</p>
-          </div>
-
-          <div className="schedule-next-card">
-            <div className="next-card-head">
-              <span>Next mission block</span>
-              <FaStar />
-            </div>
-            {nextShift ? (
-              <>
-                <strong>{nextShift.shift_name || 'Assigned Shift'}</strong>
-                <div>{format(parseISO(nextShift.date), 'EEEE, MMM d')}</div>
-                <p>{formatWindow(nextShift)}</p>
-              </>
-            ) : (
-              <>
-                <strong>No shift queued</strong>
-                <div>Enjoy the breathing room</div>
-                <p>Your next assignment will appear here when your manager publishes it.</p>
-              </>
-            )}
-          </div>
+        <div className="schedule-signal-grid">
+          {scheduleSignals.map((signal) => (
+            <article key={signal.label} className={`schedule-signal-card tone-${signal.tone}`}>
+              <span className="schedule-signal-icon">{signal.icon}</span>
+              <span className="schedule-signal-copy">
+                <small>{signal.label}</small>
+                <strong>{signal.value}</strong>
+                <em>{signal.detail}</em>
+              </span>
+            </article>
+          ))}
         </div>
       </section>
 
-      <section className="schedule-overview-grid">
-        <article className="overview-stat-card">
-          <span>Total shifts</span>
-          <strong>{stats.totalShifts}</strong>
-          <small>Visible in this {viewMode === 'month' ? 'month' : 'week'} window</small>
-        </article>
-        <article className="overview-stat-card emphasis">
-          <span>Upcoming</span>
-          <strong>{stats.upcoming}</strong>
-          <small>Operational commitments ahead</small>
-        </article>
-        <article className="overview-stat-card">
-          <span>Completed</span>
-          <strong>{stats.completed}</strong>
-          <small>Closed successfully</small>
-        </article>
-        <article className="overview-stat-card">
-          <span>Recovery days</span>
-          <strong>{stats.daysOff}</strong>
-          <small>Protected time to reset</small>
-        </article>
-      </section>
-
-      <section className="schedule-workspace">
+      <section className="schedule-layout">
         <div className="schedule-command-panel">
-          <div className="schedule-toolbar">
+          <div className="schedule-panel-heading">
+            <div className="schedule-panel-title">
+              <span><FaCalendarAlt /> Schedule board</span>
+              <strong>
+                {viewMode === 'month'
+                  ? format(currentMonth, 'MMMM yyyy')
+                  : `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`}
+              </strong>
+            </div>
+
             <div className="schedule-toggle-group">
               <button
                 type="button"
                 className={`schedule-toggle ${viewMode === 'month' ? 'active' : ''}`}
                 onClick={() => setViewMode('month')}
+                aria-pressed={viewMode === 'month'}
               >
-                Month Grid
+                Month
               </button>
               <button
                 type="button"
                 className={`schedule-toggle ${viewMode === 'week' ? 'active' : ''}`}
                 onClick={() => setViewMode('week')}
+                aria-pressed={viewMode === 'week'}
               >
-                Weekly Agenda
+                Week
               </button>
+            </div>
+          </div>
+
+          <div className="schedule-toolbar">
+            <div className="schedule-window-ledger">
+              <span>
+                <strong>{stats.totalShifts}</strong>
+                <em>shifts</em>
+              </span>
+              <span>
+                <strong>{stats.completed}</strong>
+                <em>closed</em>
+              </span>
+              <span>
+                <strong>{stats.daysOff}</strong>
+                <em>recovery</em>
+              </span>
+              <span>
+                <strong>{stats.unscheduled}</strong>
+                <em>open</em>
+              </span>
             </div>
 
             <div className="schedule-toolbar-meta">
@@ -595,7 +692,7 @@ const UserScheduleDashboard: React.FC = () => {
               </button>
               <div className="schedule-toolbar-label">
                 <span>Viewing</span>
-                <strong>{viewMode === 'month' ? format(currentMonth, 'MMMM yyyy') : `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`}</strong>
+                <strong>{visibleRangeLabel}</strong>
               </div>
               <button
                 type="button"
@@ -614,30 +711,25 @@ const UserScheduleDashboard: React.FC = () => {
 
             {!loading && schedule && schedule.schedule.length === 0 ? (
               <div className="schedule-inline-empty">
-                <FaCalendarAlt />
+                <FaExclamationTriangle />
                 <div>
                   <strong>No schedule published yet</strong>
-                  <span>Your assignment grid will populate here as soon as a manager pushes your next rotation.</span>
+                  <span>Your assignment grid will populate here once scheduling control publishes the rotation.</span>
                 </div>
               </div>
             ) : null}
 
-            {(loading || isRefreshing) ? (
-              <div className={`schedule-loading-overlay ${loading ? 'initial' : 'refresh'}`}>
-                <div className="schedule-spinner">
-                  <div className="spinner-ring" />
-                  <div className="spinner-ring inner" />
-                </div>
-                <div className="schedule-loading-text">
-                  {loading ? 'Loading schedule intelligence...' : 'Refreshing live schedule...'}
-                </div>
+            {isRefreshing ? (
+              <div className="schedule-loading-overlay refresh">
+                <div className="schedule-refresh-mark" />
+                <div className="schedule-loading-text">Refreshing live schedule</div>
               </div>
             ) : null}
           </div>
         </div>
 
         <aside className="schedule-insight-panel">
-          <div className="insight-card feature">
+          <article className="insight-card feature">
             <div className="insight-card-head">
               <span>Focus day</span>
               <strong>{focusedDateLabel}</strong>
@@ -647,12 +739,12 @@ const UserScheduleDashboard: React.FC = () => {
                 <>
                   <div className="focus-title-row">
                     <FaClock />
-                    <h3>{focusedDay.shift_name || 'Shift Assigned'}</h3>
+                    <h3>{focusedDay.shift_name || 'Shift assigned'}</h3>
                   </div>
                   <p>{formatWindow(focusedDay)}</p>
                   <div className="focus-tags">
                     <span>{focusedDay.status || 'Assigned'}</span>
-                    <span>{focusedDay.reason || 'Mission-ready'}</span>
+                    <span>{focusedDay.reason || 'Timeline ready when the shift opens'}</span>
                   </div>
                   <button
                     type="button"
@@ -660,14 +752,15 @@ const UserScheduleDashboard: React.FC = () => {
                     onClick={handleShiftTimelineOpen}
                     disabled={shiftNavigationPending}
                   >
-                    {shiftNavigationPending ? 'Opening timeline...' : 'Open shift timeline'}
+                    <span>{shiftNavigationPending ? 'Opening timeline' : 'Open shift timeline'}</span>
+                    <FaArrowRight />
                   </button>
                 </>
               ) : focusedDay?.type === 'OFF_DAY' ? (
                 <>
                   <div className="focus-title-row">
                     <FaMoon />
-                    <h3>Recovery Window</h3>
+                    <h3>Recovery window</h3>
                   </div>
                   <p>{focusedDay.reason || 'Protected downtime for reset and readiness.'}</p>
                   <div className="focus-tags">
@@ -681,7 +774,7 @@ const UserScheduleDashboard: React.FC = () => {
                     <FaQuestion />
                     <h3>Open day</h3>
                   </div>
-                  <p>No shift has been pinned to this day yet. Keep an eye on updates from scheduling control.</p>
+                  <p>No shift has been pinned to this day yet. Watch this panel for schedule updates.</p>
                   <div className="focus-tags">
                     <span>Unscheduled</span>
                     <span>Awaiting assignment</span>
@@ -707,7 +800,7 @@ const UserScheduleDashboard: React.FC = () => {
                       >
                         <div>
                           <strong>{task.title}</strong>
-                          <span>{formatDeadlineTime(task.due_date)} · {task.status.replace('_', ' ')}</span>
+                          <span>{formatDeadlineTime(task.due_date)} / {task.status.replace(/_/g, ' ')}</span>
                         </div>
                         <em>{task.priority}</em>
                       </button>
@@ -719,14 +812,14 @@ const UserScheduleDashboard: React.FC = () => {
                 </div>
               ) : (
                 <div className="focus-deadline-empty">
-                  <FaExclamationTriangle />
+                  <FaCheckCircle />
                   <span>No deadlines set for this day.</span>
                 </div>
               )}
             </div>
-          </div>
+          </article>
 
-          <div className="insight-card">
+          <article className="insight-card">
             <div className="insight-card-head">
               <span>Upcoming lineup</span>
               <strong>{upcomingShifts.length} queued</strong>
@@ -751,12 +844,12 @@ const UserScheduleDashboard: React.FC = () => {
                 <div className="upcoming-empty">No future shifts in this window yet.</div>
               )}
             </div>
-          </div>
+          </article>
 
-          <div className="insight-card legend-card">
+          <article className="insight-card legend-card">
             <div className="insight-card-head">
-              <span>Legend</span>
-              <strong>Read at a glance</strong>
+              <span>Read key</span>
+              <strong>Schedule states</strong>
             </div>
             <div className="schedule-legend-list">
               <div className="schedule-legend-item">
@@ -781,7 +874,7 @@ const UserScheduleDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </article>
         </aside>
       </section>
       {timelineNotice ? (

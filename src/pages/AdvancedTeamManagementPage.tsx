@@ -42,6 +42,76 @@ const defaultScheduleDays = (): PatternDayConfig[] =>
     is_off_day: true,
   }));
 
+const TeamManagementPreview: React.FC = () => (
+  <div className="advanced-team-mgmt-page team-preview-page">
+    <section className="team-command-strip team-skel-panel">
+      <div className="team-skel-command-copy">
+        <div className="team-skel-line team-skel-kicker" />
+        <div className="team-skel-line team-skel-title" />
+        <div className="team-skel-line team-skel-meta" />
+      </div>
+      <div className="team-skel-signal-grid">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <article key={index} className="team-skel-signal-card">
+            <div className="team-skel-block team-skel-icon" />
+            <div className="team-skel-signal-copy">
+              <div className="team-skel-line team-skel-label" />
+              <div className="team-skel-line team-skel-value" />
+              <div className="team-skel-line team-skel-meta" />
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section className="team-command-layout">
+      <div className="team-board-panel team-skel-panel">
+        <div className="team-skel-board-head">
+          <div>
+            <div className="team-skel-line team-skel-kicker" />
+            <div className="team-skel-line team-skel-panel-title" />
+          </div>
+          <div className="team-skel-action-row">
+            <div className="team-skel-block team-skel-action" />
+            <div className="team-skel-block team-skel-action" />
+          </div>
+        </div>
+        <div className="team-skel-control-grid">
+          <div className="team-skel-control" />
+          <div className="team-skel-control" />
+          <div className="team-skel-control" />
+        </div>
+        <div className="schedule-skeleton-stack">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="schedule-skeleton-cluster">
+              <div className="team-skel-line skeleton-day-head" />
+              <div className="schedule-skeleton-grid">
+                {Array.from({ length: 3 }).map((__, nestedIndex) => (
+                  <div key={nestedIndex} className="schedule-skeleton-card" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <aside className="team-insights">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <article key={index} className="insight-panel team-skel-panel">
+            <div className="team-skel-line team-skel-kicker" />
+            <div className="team-skel-line team-skel-panel-title" />
+            <div className="team-skel-list">
+              <div className="team-skel-row" />
+              <div className="team-skel-row" />
+              <div className="team-skel-row" />
+            </div>
+          </article>
+        ))}
+      </aside>
+    </section>
+  </div>
+);
+
 const AdvancedTeamManagementPage: React.FC = () => {
   const { user: currentUser } = useAuth();
   const { addNotification } = useNotifications();
@@ -264,6 +334,40 @@ const AdvancedTeamManagementPage: React.FC = () => {
     scheduledShifts.forEach((item) => counts.set(item.shift_id, (counts.get(item.shift_id) || 0) + 1));
     return Array.from(counts.entries()).map(([id, total]) => ({ shift: shiftMap.get(id), total })).sort((a, b) => b.total - a.total);
   }, [scheduledShifts, shiftMap]);
+  const visibleWindowLabel = `${format(dateRange.start, 'MMM d')} - ${format(dateRange.end, 'MMM d')}`;
+  const teamSignals = useMemo(
+    () => [
+      {
+        label: 'Section scope',
+        value: activeSection?.section_name || 'Unassigned',
+        detail: `${sectionUsers.length} roster members / ${shifts.length} shifts`,
+        icon: <FaUsers />,
+        tone: activeSection ? 'ok' : 'watch',
+      },
+      {
+        label: 'Assignments',
+        value: scheduledShifts.length,
+        detail: `${assignedUserCount} people engaged in ${PRESET_LABELS[viewPreset].toLowerCase()}`,
+        icon: <FaCalendarAlt />,
+        tone: scheduledShifts.length ? 'info' : 'watch',
+      },
+      {
+        label: 'Coverage',
+        value: `${coveragePercent}%`,
+        detail: sectionUsers.length ? `${assignedUserCount}/${sectionUsers.length} roster engaged` : 'No roster loaded',
+        icon: <FaChartLine />,
+        tone: coveragePercent >= 80 ? 'ok' : coveragePercent >= 50 ? 'watch' : 'danger',
+      },
+      {
+        label: 'Patterns',
+        value: patterns.length,
+        detail: `${shiftAnalytics.length} shift types active`,
+        icon: <FaLayerGroup />,
+        tone: patterns.length ? 'ok' : 'watch',
+      },
+    ],
+    [activeSection, assignedUserCount, coveragePercent, patterns.length, scheduledShifts.length, sectionUsers.length, shiftAnalytics.length, shifts.length, viewPreset]
+  );
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -581,10 +685,9 @@ const AdvancedTeamManagementPage: React.FC = () => {
   if (!canManageTeam) {
     return (
       <div className="advanced-team-mgmt-page">
-        <div className="team-page-ambient"><div className="team-ambient-orb orb-one" /><div className="team-ambient-orb orb-two" /></div>
-        <div className="access-guard glass-panel">
+        <div className="access-guard">
           <FaUsers />
-          <h2>Team Command Access Required</h2>
+          <h2>Team command access required</h2>
           <p>You need manager or admin rights to orchestrate schedules, patterns, and staffing exceptions.</p>
         </div>
       </div>
@@ -592,116 +695,86 @@ const AdvancedTeamManagementPage: React.FC = () => {
   }
 
   if (bootstrapping) {
-    return (
-      <div className="advanced-team-mgmt-page">
-        <div className="team-page-ambient">
-          <div className="team-ambient-orb orb-one" />
-          <div className="team-ambient-orb orb-two" />
-          <div className="team-ambient-grid" />
-        </div>
-        <section className="team-skeleton-hero glass-panel">
-          <div className="skeleton-bar skeleton-kicker" />
-          <div className="skeleton-bar skeleton-title" />
-          <div className="skeleton-bar skeleton-copy" />
-          <div className="skeleton-bar skeleton-copy short" />
-        </section>
-        <section className="team-skeleton-metrics">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="team-skeleton-card glass-panel">
-              <div className="skeleton-bar skeleton-label" />
-              <div className="skeleton-bar skeleton-value" />
-              <div className="skeleton-bar skeleton-footnote" />
-            </div>
-          ))}
-        </section>
-        <section className="team-skeleton-layout">
-          <div className="team-skeleton-card glass-panel large">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="skeleton-assignment-row" />
-            ))}
-          </div>
-          <div className="team-skeleton-stack">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="team-skeleton-card glass-panel" />
-            ))}
-          </div>
-        </section>
-      </div>
-    );
+    return <TeamManagementPreview />;
   }
 
   return (
     <div className="advanced-team-mgmt-page">
-      <div className="team-page-ambient">
-        <div className="team-ambient-orb orb-one" />
-        <div className="team-ambient-orb orb-two" />
-        <div className="team-ambient-grid" />
-      </div>
-
-      <section className="team-hero glass-panel">
-        <div className="hero-copy">
-          <div className="hero-kicker"><FaLayerGroup /> SentinelOps Workforce Command</div>
-          <p>Move beyond static staffing tables with schedule intelligence, section-level focus, pattern automation, and fast exception handling for real-world operations.</p>
-          <div className="hero-actions">
-            <button className="btn-primary-glow" onClick={openBulkAssignment} disabled={!effectiveSectionId}><FaRobot /> Smart Assign</button>
-            <button className="btn-secondary" onClick={() => setShowDaysOffModal(true)} disabled={!effectiveSectionId}><FaUserClock /> Time Off</button>
-            <button className="btn-secondary" onClick={openSingleAssignment} disabled={!effectiveSectionId || !shifts.length}><FaPlus /> Single Shift</button>
-          </div>
+      <section className="team-command-strip">
+        <div className="team-command-title">
+          <span><FaLayerGroup /> Team management</span>
+          <strong>{activeSection?.section_name || 'Unassigned section'}</strong>
+          <small>{visibleWindowLabel} / {PRESET_LABELS[viewPreset]} / {role || 'operator'}</small>
         </div>
-        <div className="hero-pulse-panel">
-          <div className="pulse-orb"><div className="pulse-core"><strong>{coveragePercent}%</strong><span>Coverage</span></div></div>
-          <div className="pulse-meta">
-            <div className="pulse-card"><span>Section Focus</span><strong>{activeSection?.section_name || 'Unassigned'}</strong><small>{PRESET_LABELS[viewPreset]} window</small></div>
-            <div className="pulse-card"><span>Assignments</span><strong>{scheduledShifts.length}</strong><small>{assignedUserCount} people engaged</small></div>
-          </div>
-        </div>
-      </section>
 
-      <section className="team-metrics-grid">
-        <article className="metric-card glass-panel"><span>Roster Strength</span><strong>{sectionUsers.length}</strong><small>Section team members available</small></article>
-        <article className="metric-card glass-panel"><span>Pattern Library</span><strong>{patterns.length}</strong><small>Reusable schedule blueprints</small></article>
-        <article className="metric-card glass-panel"><span>Weekend Load</span><strong>{weekendAssignments}</strong><small>Assignments on weekend coverage</small></article>
-        <article className="metric-card glass-panel"><span>Busiest Day</span><strong>{busiestDay ? format(parseISO(busiestDay.date), 'MMM d') : '--'}</strong><small>{busiestDay ? `${busiestDay.entries.length} scheduled shifts` : 'No assignments yet'}</small></article>
-      </section>
-
-      <section className="team-toolbar glass-panel">
-        <div className="toolbar-block">
-          <span className="toolbar-label">View Window</span>
-          <div className="view-presets">
-            {(Object.keys(PRESET_LABELS) as ViewPreset[]).map((preset) => (
-              <button key={preset} className={`preset-btn ${viewPreset === preset ? 'active' : ''}`} onClick={() => setViewPreset(preset)}>
-                {PRESET_LABELS[preset]}
-              </button>
-            ))}
-          </div>
+        <div className="team-signal-grid">
+          {teamSignals.map((signal) => (
+            <article key={signal.label} className={`team-signal-card tone-${signal.tone}`}>
+              <span className="team-signal-icon">{signal.icon}</span>
+              <span className="team-signal-copy">
+                <small>{signal.label}</small>
+                <strong>{signal.value}</strong>
+                <em>{signal.detail}</em>
+              </span>
+            </article>
+          ))}
         </div>
-        <div className="toolbar-block compact"><span className="toolbar-label">Window Span</span><strong>{format(dateRange.start, 'MMM d')} - {format(dateRange.end, 'MMM d')}</strong></div>
-        {isAdmin ? (
-          <div className="toolbar-block compact">
-            <span className="toolbar-label">Section Scope</span>
-            <select value={sectionId} onChange={(event) => setSectionId(event.target.value)} className="section-select">
-              <option value="">Select section</option>
-              {sections.map((section) => <option key={section.id} value={section.id}>{section.section_name}</option>)}
-            </select>
-          </div>
-        ) : null}
       </section>
 
       <section className="team-command-layout">
-        <div className="schedule-command glass-panel">
+        <div className="team-board-panel">
           <div className="panel-head">
-            <div><span className="panel-kicker"><FaCalendarAlt /> Schedule Stream</span><h2>Live assignment board</h2></div>
+            <div><span className="panel-kicker"><FaCalendarAlt /> Assignment board</span><h2>Live schedule stream</h2></div>
             <div className="panel-meta">
               <span>{scheduledShifts.length} assignments</span>
               <span>{shiftAnalytics.length} shift types active</span>
               <span>{scheduleRefreshing ? 'Refreshing...' : `Page ${Math.min(currentPage, totalPages)} of ${totalPages}`}</span>
             </div>
           </div>
+
+          <div className="team-control-grid">
+            <div className="toolbar-block">
+              <span className="toolbar-label">View window</span>
+              <div className="view-presets">
+                {(Object.keys(PRESET_LABELS) as ViewPreset[]).map((preset) => (
+                  <button key={preset} className={`preset-btn ${viewPreset === preset ? 'active' : ''}`} onClick={() => setViewPreset(preset)} type="button">
+                    {PRESET_LABELS[preset]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="toolbar-block compact"><span className="toolbar-label">Window span</span><strong>{visibleWindowLabel}</strong></div>
+            {isAdmin ? (
+              <div className="toolbar-block compact">
+                <span className="toolbar-label">Section scope</span>
+                <select value={sectionId} onChange={(event) => setSectionId(event.target.value)} className="section-select">
+                  <option value="">Select section</option>
+                  {sections.map((section) => <option key={section.id} value={section.id}>{section.section_name}</option>)}
+                </select>
+              </div>
+            ) : (
+              <div className="toolbar-block compact"><span className="toolbar-label">Weekend load</span><strong>{weekendAssignments}</strong></div>
+            )}
+          </div>
+
+          <div className="team-action-row">
+            <button className="btn-primary-glow" onClick={openBulkAssignment} disabled={!effectiveSectionId} type="button"><FaRobot /> Smart assign</button>
+            <button className="btn-secondary" onClick={() => setShowDaysOffModal(true)} disabled={!effectiveSectionId} type="button"><FaUserClock /> Time off</button>
+            <button className="btn-secondary" onClick={openSingleAssignment} disabled={!effectiveSectionId || !shifts.length} type="button"><FaPlus /> Single shift</button>
+          </div>
+
+          <div className="team-board-ledger">
+            <span><strong>{sectionUsers.length}</strong><em>Roster</em></span>
+            <span><strong>{patterns.length}</strong><em>Patterns</em></span>
+            <span><strong>{weekendAssignments}</strong><em>Weekend</em></span>
+            <span><strong>{busiestDay ? format(parseISO(busiestDay.date), 'MMM d') : '--'}</strong><em>Busiest</em></span>
+          </div>
+
           {scheduleLoading ? (
             <div className="schedule-skeleton-stack">
               {Array.from({ length: 3 }).map((_, index) => (
                 <div key={index} className="schedule-skeleton-cluster">
-                  <div className="skeleton-bar skeleton-day-head" />
+                  <div className="team-skel-line skeleton-day-head" />
                   <div className="schedule-skeleton-grid">
                     {Array.from({ length: 3 }).map((__, nestedIndex) => (
                       <div key={nestedIndex} className="schedule-skeleton-card" />
@@ -763,8 +836,13 @@ const AdvancedTeamManagementPage: React.FC = () => {
         </div>
 
         <aside className="team-insights">
-          <div className="insight-panel glass-panel">
-            <div className="panel-head compact"><div><span className="panel-kicker"><FaUsers /> Team Pulse</span><h3>Roster preview</h3></div></div>
+          <div className="insight-panel">
+            <div className="panel-head compact">
+              <div>
+                <span className="panel-kicker"><FaUsers /> Roster</span>
+                <h3>Section operators</h3>
+              </div>
+            </div>
             <div className="roster-list">
               {sectionUsers.slice(0, 6).map((member) => (
                 <div key={member.id} className="roster-item">
@@ -776,8 +854,13 @@ const AdvancedTeamManagementPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="insight-panel glass-panel">
-            <div className="panel-head compact"><div><span className="panel-kicker"><FaChartLine /> Shift Mix</span><h3>Distribution</h3></div></div>
+          <div className="insight-panel">
+            <div className="panel-head compact">
+              <div>
+                <span className="panel-kicker"><FaChartLine /> Shift mix</span>
+                <h3>Distribution</h3>
+              </div>
+            </div>
             <div className="analytics-list">
               {shiftAnalytics.slice(0, 5).map(({ shift, total }) => (
                 <div key={shift?.id || total} className="analytics-item"><div><strong>{shift?.name || 'Unknown shift'}</strong><span>{shift ? `${shift.start_time} - ${shift.end_time}` : 'Missing shift metadata'}</span></div><em>{total}</em></div>
@@ -786,12 +869,15 @@ const AdvancedTeamManagementPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="insight-panel glass-panel">
+          <div className="insight-panel">
             <div className="panel-head compact">
-              <div><span className="panel-kicker"><FaClock /> Shift Configuration</span><h3>Operational shifts</h3></div>
+              <div>
+                <span className="panel-kicker"><FaClock /> Shift configuration</span>
+                <h3>Operational shifts</h3>
+              </div>
               {canManageShifts ? (
                 <button className="btn-secondary" type="button" onClick={openCreateShift}>
-                  <FaPlus /> New Shift
+                  <FaPlus /> New shift
                 </button>
               ) : null}
             </div>
@@ -819,11 +905,14 @@ const AdvancedTeamManagementPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="insight-panel glass-panel">
+          <div className="insight-panel">
             <div className="panel-head compact">
-              <div><span className="panel-kicker"><FaWrench /> Pattern Deck</span><h3>Available smart patterns</h3></div>
+              <div>
+                <span className="panel-kicker"><FaWrench /> Pattern deck</span>
+                <h3>Available patterns</h3>
+              </div>
               <button className="btn-secondary" type="button" onClick={openCreatePattern} disabled={!effectiveSectionId}>
-                <FaPlus /> New Pattern
+                <FaPlus /> New pattern
               </button>
             </div>
             <div className="pattern-list">

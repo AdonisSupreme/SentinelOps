@@ -1382,3 +1382,730 @@
     border-radius: 18px;
   }
 }
+
+/* SentinelOps checklist history command surface */
+.checklists-command-page {
+  --checklists-surface: rgba(12, 18, 22, 0.92);
+  --checklists-strong: rgba(18, 28, 33, 0.96);
+  --checklists-tile: rgba(255, 255, 255, 0.04);
+  --checklists-line: rgba(146, 169, 177, 0.2);
+  --checklists-line-strong: rgba(18, 184, 207, 0.34);
+  --checklists-ink: #eef8fa;
+  --checklists-muted: #a7b8bf;
+  --checklists-soft: #7f939c;
+  --checklists-cyan: #12b8cf;
+  --checklists-green: #129b74;
+  --checklists-amber: #c98215;
+  --checklists-red: #d94b5b;
+  --checklists-violet: #8b6fd6;
+  gap: 1rem;
+  padding: clamp(0.85rem, 1.6vw, 1.25rem);
+  overflow-x: clip;
+  overflow-y: auto;
+  color: var(--checklists-ink);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(180deg, #081013 0%, #10171a 58%, #12191d 100%);
+  background-size: 44px 44px, 44px 44px, auto;
+}
+
+[data-theme='light'] .checklists-command-page {
+  --checklists-surface: rgba(246, 250, 251, 0.94);
+  --checklists-strong: rgba(255, 255, 255, 0.96);
+  --checklists-tile: rgba(12, 42, 52, 0.045);
+  --checklists-line: rgba(42, 73, 84, 0.16);
+  --checklists-line-strong: rgba(8, 138, 168, 0.28);
+  --checklists-ink: #101827;
+  --checklists-muted: #40515e;
+  --checklists-soft: #657681;
+  --checklists-cyan: #078aa8;
+  --checklists-green: #0b8669;
+  --checklists-amber: #b96b07;
+  --checklists-red: #c73d4f;
+  --checklists-violet: #6d55b8;
+  background:
+    linear-gradient(rgba(7, 138, 168, 0.052) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(7, 138, 168, 0.038) 1px, transparent 1px),
+    linear-gradient(180deg, #f7fbfc 0%, #eef5f7 56%, #e7eef1 100%);
+  background-size: 44px 44px, 44px 44px, auto;
+}
+
+.checklists-command-page .ambient-orb {
+  display: none;
+}
+
+.checklists-command-page .ambient-grid {
+  background-image:
+    linear-gradient(rgba(18, 184, 207, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(18, 184, 207, 0.06) 1px, transparent 1px);
+  background-size: 88px 88px;
+  opacity: 0.25;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.48), transparent 86%);
+}
+
+.checklists-command-page .checklists-hero,
+.checklists-command-page .summary-card,
+.checklists-command-page .checklists-init-radar,
+.checklists-command-page .command-bar,
+.checklists-command-page .timeline-shell,
+.checklists-command-page .timeline-day-cluster,
+.checklists-command-page .timeline-instance-card,
+.checklists-command-page .timeline-pagination,
+.checklists-command-page .checklists-state-card,
+.checklists-command-page .checklists-modal {
+  border: 1px solid var(--checklists-line);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.046), transparent 58%),
+    var(--checklists-surface);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(14px);
+}
+
+[data-theme='light'] .checklists-command-page .checklists-hero,
+[data-theme='light'] .checklists-command-page .summary-card,
+[data-theme='light'] .checklists-command-page .checklists-init-radar,
+[data-theme='light'] .checklists-command-page .command-bar,
+[data-theme='light'] .checklists-command-page .timeline-shell,
+[data-theme='light'] .checklists-command-page .timeline-day-cluster,
+[data-theme='light'] .checklists-command-page .timeline-instance-card,
+[data-theme='light'] .checklists-command-page .timeline-pagination,
+[data-theme='light'] .checklists-command-page .checklists-state-card,
+[data-theme='light'] .checklists-command-page .checklists-modal {
+  box-shadow: 0 16px 32px rgba(20, 42, 56, 0.08);
+}
+
+.checklists-command-page .checklists-command-strip {
+  grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.2fr);
+  align-items: stretch;
+  gap: 1rem;
+  padding: clamp(1rem, 2vw, 1.35rem);
+}
+
+.checklists-command-page .hero-copy {
+  justify-content: start;
+  gap: 0.8rem;
+  max-width: none;
+}
+
+.checklists-command-page .hero-kicker,
+.checklists-command-page .hero-metric-card span,
+.checklists-command-page .summary-card span,
+.checklists-command-page .init-radar-head span,
+.checklists-command-page .temporal-panel-copy span,
+.checklists-command-page .instance-kicker,
+.checklists-command-page .day-copy span,
+.checklists-command-page .checklists-command-signal span {
+  color: var(--checklists-cyan);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.checklists-command-page .hero-copy h1 {
+  margin: 0;
+  max-width: none;
+  color: var(--checklists-ink);
+  font-size: clamp(1.75rem, 3vw, 2.45rem);
+  line-height: 1.04;
+  letter-spacing: 0;
+}
+
+.checklists-command-page .hero-copy p {
+  max-width: 58ch;
+  color: var(--checklists-muted);
+  line-height: 1.55;
+}
+
+.checklists-command-page .hero-tags {
+  gap: 0.55rem;
+  margin-top: auto;
+}
+
+.checklists-command-page .hero-tags span,
+.checklists-command-page .hero-template-link,
+.checklists-command-page .day-badges span,
+.checklists-command-page .instance-chip-row span,
+.checklists-command-page .temporal-all-time,
+.checklists-command-page .timeline-refresh-badge {
+  min-height: 2rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--checklists-line);
+  border-radius: 999px;
+  background: var(--checklists-tile);
+  color: var(--checklists-muted);
+  font-size: 0.78rem;
+}
+
+.checklists-command-page .hero-template-link {
+  color: var(--checklists-cyan);
+  background: color-mix(in srgb, var(--checklists-cyan) 10%, transparent);
+  border-color: color-mix(in srgb, var(--checklists-cyan) 24%, transparent);
+}
+
+.checklists-command-page .checklists-command-signals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.checklists-command-page .checklists-command-signal {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "icon label"
+    "icon value"
+    "icon meta";
+  column-gap: 0.7rem;
+  align-items: center;
+  min-height: 6rem;
+  padding: 0.8rem;
+  border: 1px solid var(--checklists-line);
+  border-radius: 8px;
+  background: var(--checklists-tile);
+}
+
+.checklists-command-page .checklists-command-signal svg {
+  grid-area: icon;
+  width: 2.45rem;
+  height: 2.45rem;
+  padding: 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--signal-color, var(--checklists-cyan)) 24%, transparent);
+  border-radius: 8px;
+  color: var(--signal-color, var(--checklists-cyan));
+  background: color-mix(in srgb, var(--signal-color, var(--checklists-cyan)) 11%, transparent);
+}
+
+.checklists-command-page .checklists-command-signal span {
+  grid-area: label;
+}
+
+.checklists-command-page .checklists-command-signal strong {
+  grid-area: value;
+  color: var(--checklists-ink);
+  font-family: var(--font-mono);
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.checklists-command-page .checklists-command-signal small {
+  grid-area: meta;
+  color: var(--checklists-muted);
+  line-height: 1.35;
+}
+
+.checklists-command-page .checklists-command-signal.tone-active {
+  --signal-color: var(--checklists-green);
+}
+
+.checklists-command-page .checklists-command-signal.tone-exceptions {
+  --signal-color: var(--checklists-red);
+}
+
+.checklists-command-page .checklists-command-signal.tone-records {
+  --signal-color: var(--checklists-amber);
+}
+
+.checklists-command-page .checklists-summary-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.checklists-command-page .summary-card {
+  gap: 0.35rem;
+  min-height: 6.2rem;
+  padding: 0.9rem;
+}
+
+.checklists-command-page .summary-card strong {
+  color: var(--checklists-ink);
+  font-family: var(--font-mono);
+  font-size: 1.65rem;
+}
+
+.checklists-command-page .summary-card small,
+.checklists-command-page .day-copy p,
+.checklists-command-page .temporal-all-time span,
+.checklists-command-page .pagination-copy span,
+.checklists-command-page .checklists-state-card p,
+.checklists-command-page .checklists-modal p,
+.checklists-command-page .init-radar-card small {
+  color: var(--checklists-muted);
+}
+
+.checklists-command-page .checklists-init-radar,
+.checklists-command-page .command-bar,
+.checklists-command-page .timeline-shell {
+  padding: 1rem;
+}
+
+.checklists-command-page .checklists-init-radar {
+  gap: 0.8rem;
+}
+
+.checklists-command-page .init-radar-head h3 {
+  color: var(--checklists-ink);
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.checklists-command-page .init-radar-pill {
+  min-height: 2.2rem;
+  border-radius: 8px;
+  border-color: color-mix(in srgb, var(--checklists-green) 28%, transparent);
+  background: color-mix(in srgb, var(--checklists-green) 10%, transparent);
+  color: var(--checklists-green);
+}
+
+.checklists-command-page .init-radar-grid {
+  gap: 0.7rem;
+}
+
+.checklists-command-page .init-radar-card {
+  border: 1px solid var(--checklists-line);
+  border-radius: 8px;
+  background: var(--checklists-tile);
+}
+
+.checklists-command-page .init-progress-track {
+  height: 0.55rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--checklists-soft) 18%, transparent);
+}
+
+.checklists-command-page .init-progress-fill {
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--checklists-cyan), var(--checklists-green), var(--checklists-amber));
+}
+
+.checklists-command-page .command-bar {
+  gap: 0.85rem;
+}
+
+.checklists-command-page .command-row {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, auto);
+}
+
+.checklists-command-page .search-shell,
+.checklists-command-page .filter-shell,
+.checklists-command-page .temporal-panel,
+.checklists-command-page .mode-switch,
+.checklists-command-page .temporal-nav-label,
+.checklists-command-page .temporal-range-inputs input,
+.checklists-command-page .pagination-number,
+.checklists-command-page .pagination-btn,
+.checklists-command-page .temporal-nav-btn {
+  border: 1px solid var(--checklists-line);
+  border-radius: 8px;
+  background: var(--checklists-tile);
+  color: var(--checklists-ink);
+  box-shadow: none;
+}
+
+.checklists-command-page .search-shell,
+.checklists-command-page .filter-shell {
+  min-height: 3rem;
+  padding: 0.65rem 0.8rem;
+}
+
+.checklists-command-page .search-shell svg,
+.checklists-command-page .filter-shell svg,
+.checklists-command-page .temporal-all-time svg {
+  color: var(--checklists-cyan);
+}
+
+.checklists-command-page .search-shell input,
+.checklists-command-page .filter-shell select,
+.checklists-command-page .temporal-range-inputs input {
+  color: var(--checklists-ink);
+}
+
+.checklists-command-page .search-shell input::placeholder {
+  color: var(--checklists-soft);
+}
+
+.checklists-command-page .mode-switch {
+  padding: 0.35rem;
+  gap: 0.35rem;
+}
+
+.checklists-command-page .mode-btn {
+  min-height: 2.5rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--checklists-muted);
+  font-weight: 800;
+  box-shadow: none;
+}
+
+.checklists-command-page .mode-btn:hover {
+  color: var(--checklists-ink);
+  background: color-mix(in srgb, var(--checklists-cyan) 8%, transparent);
+  transform: translateY(-1px);
+}
+
+.checklists-command-page .mode-btn.active {
+  border-color: color-mix(in srgb, var(--checklists-cyan) 28%, transparent);
+  background: color-mix(in srgb, var(--checklists-cyan) 12%, transparent);
+  color: var(--checklists-cyan);
+  box-shadow: none;
+}
+
+.checklists-command-page .temporal-panel {
+  grid-template-columns: minmax(220px, auto) auto minmax(0, 1fr);
+  padding: 0.75rem;
+}
+
+.checklists-command-page .temporal-range-inputs input {
+  min-height: 2.5rem;
+}
+
+.checklists-command-page .timeline-shell {
+  gap: 0.85rem;
+}
+
+.checklists-command-page .timeline-day-cluster {
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.checklists-command-page .timeline-day-cluster.today {
+  border-color: var(--checklists-line-strong);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--checklists-cyan) 10%, transparent);
+}
+
+.checklists-command-page .timeline-day-rail {
+  gap: 0.8rem;
+  padding-left: 1rem;
+}
+
+.checklists-command-page .timeline-day-rail::before {
+  width: 1px;
+  background: linear-gradient(180deg, var(--checklists-cyan), color-mix(in srgb, var(--checklists-green) 42%, transparent));
+}
+
+.checklists-command-page .day-marker {
+  left: -0.42rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 2px solid var(--checklists-surface);
+  background: var(--checklists-cyan);
+  box-shadow: none;
+}
+
+.checklists-command-page .day-copy h2 {
+  color: var(--checklists-ink);
+  font-size: 1.08rem;
+  line-height: 1.25;
+}
+
+.checklists-command-page .day-badges {
+  gap: 0.45rem;
+}
+
+.checklists-command-page .timeline-card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.75rem;
+}
+
+.checklists-command-page .timeline-instance-card {
+  --status-surface: var(--checklists-tile);
+  min-height: 13.5rem;
+  max-width: none;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  overflow: hidden;
+  border-left: 4px solid var(--status-accent);
+  color: var(--checklists-ink);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--status-accent) 5%, transparent), transparent 42%),
+    var(--checklists-strong);
+  box-shadow: none;
+}
+
+.checklists-command-page .timeline-instance-card::before,
+.checklists-command-page .timeline-instance-card::after,
+.checklists-command-page .instance-card-glow {
+  display: none;
+}
+
+.checklists-command-page .timeline-instance-card:hover,
+.checklists-command-page .pagination-number:hover,
+.checklists-command-page .pagination-btn:hover,
+.checklists-command-page .temporal-nav-btn:hover,
+.checklists-command-page .delete-inline:hover {
+  transform: translateY(-1px);
+}
+
+.checklists-command-page .timeline-instance-card:hover {
+  border-color: rgba(var(--status-rgb), 0.38);
+  border-left-color: var(--status-accent);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.checklists-command-page .timeline-instance-head {
+  gap: 0.75rem;
+}
+
+.checklists-command-page .timeline-instance-head h3 {
+  margin-top: 0.25rem;
+  color: var(--checklists-ink);
+  font-size: 1rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.checklists-command-page .timeline-instance-card.status-completed .timeline-instance-head h3,
+.checklists-command-page .timeline-instance-card.status-completed-with-exceptions .timeline-instance-head h3,
+.checklists-command-page .timeline-instance-card.status-incomplete .timeline-instance-head h3,
+.checklists-command-page .timeline-instance-card.status-closed-by-exception .timeline-instance-head h3,
+.checklists-command-page .timeline-instance-card.status-failed .timeline-instance-head h3 {
+  color: var(--checklists-ink);
+}
+
+.checklists-command-page .instance-status-badge {
+  flex: 0 0 auto;
+  max-width: 12rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--status-accent) 11%, transparent);
+  border-color: color-mix(in srgb, var(--status-accent) 28%, transparent);
+  color: var(--status-accent);
+  box-shadow: none;
+}
+
+.checklists-command-page .instance-status-badge span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checklists-command-page .instance-chip-row {
+  gap: 0.4rem;
+}
+
+.checklists-command-page .timeline-instance-card .instance-chip-row span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: color-mix(in srgb, var(--status-accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--status-accent) 18%, transparent);
+  color: var(--checklists-muted);
+}
+
+.checklists-command-page .instance-metrics-grid {
+  gap: 0.55rem;
+}
+
+.checklists-command-page .instance-metrics-grid > div {
+  padding: 0.7rem;
+  border-radius: 8px;
+  background: var(--checklists-tile);
+  border-color: var(--checklists-line);
+}
+
+.checklists-command-page .instance-metrics-grid label {
+  margin-bottom: 0.35rem;
+  color: var(--checklists-soft);
+  font-size: 0.68rem;
+  letter-spacing: 0;
+}
+
+.checklists-command-page .instance-metrics-grid strong {
+  color: var(--checklists-ink);
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+}
+
+.checklists-command-page .instance-footer-row {
+  border-top-color: var(--checklists-line);
+}
+
+.checklists-command-page .footer-hint,
+.checklists-command-page .timeline-instance-card .instance-status-icon,
+.checklists-command-page .timeline-instance-card .instance-kicker {
+  color: var(--status-accent);
+}
+
+.checklists-command-page .delete-inline {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--checklists-red) 11%, transparent);
+  color: var(--checklists-red);
+}
+
+.checklists-command-page .timeline-pagination {
+  padding: 0.9rem;
+}
+
+.checklists-command-page .pagination-btn,
+.checklists-command-page .pagination-number,
+.checklists-command-page .temporal-nav-btn {
+  min-height: 2.5rem;
+}
+
+.checklists-command-page .pagination-number {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.checklists-command-page .pagination-number.active {
+  border-color: color-mix(in srgb, var(--checklists-cyan) 30%, transparent);
+  background: color-mix(in srgb, var(--checklists-cyan) 13%, transparent);
+  color: var(--checklists-cyan);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .checklists-command-page .timeline-instance-card.status-in-progress::before {
+    animation: none;
+  }
+}
+
+@media (max-width: 1180px) {
+  .checklists-command-page .checklists-command-strip,
+  .checklists-command-page .timeline-day-cluster,
+  .checklists-command-page .temporal-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .checklists-command-page .command-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 820px) {
+  .checklists-command-page .checklists-command-signals,
+  .checklists-command-page .checklists-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .checklists-command-page .filter-shell {
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 560px) {
+  .checklists-command-page .checklists-command-signals,
+  .checklists-command-page .checklists-summary-grid,
+  .checklists-command-page .init-radar-grid,
+  .checklists-command-page .instance-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .checklists-command-page .mode-switch {
+    grid-template-columns: 1fr;
+  }
+
+  .checklists-command-page .timeline-instance-head,
+  .checklists-command-page .instance-footer-row,
+  .checklists-command-page .temporal-nav,
+  .checklists-command-page .temporal-range-inputs {
+    align-items: stretch;
+  }
+
+  .checklists-command-page .instance-status-badge {
+    max-width: 100%;
+  }
+}
+
+/* Checklist history lens: no duplicate metric echo */
+.checklists-command-page .checklists-history-lens {
+  display: grid;
+  grid-template-columns: 1.15fr 0.95fr;
+  gap: 0.7rem;
+  align-self: stretch;
+}
+
+.checklists-command-page .history-lens-card {
+  --lens-color: var(--checklists-cyan);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  min-height: 6rem;
+  padding: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--lens-color) 20%, var(--checklists-line));
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--lens-color) 9%, transparent), transparent 48%),
+    var(--checklists-tile);
+}
+
+.checklists-command-page .history-lens-card:first-child {
+  grid-row: span 2;
+  align-content: center;
+}
+
+.checklists-command-page .history-lens-card:first-child .history-lens-icon {
+  width: 3rem;
+  height: 3rem;
+}
+
+.checklists-command-page .history-lens-card:first-child .history-lens-copy strong {
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
+}
+
+.checklists-command-page .history-lens-card.tone-status {
+  --lens-color: var(--checklists-violet);
+}
+
+.checklists-command-page .history-lens-card.tone-shift {
+  --lens-color: var(--checklists-green);
+}
+
+.checklists-command-page .history-lens-card.tone-search {
+  --lens-color: var(--checklists-amber);
+}
+
+.checklists-command-page .history-lens-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.55rem;
+  height: 2.55rem;
+  border: 1px solid color-mix(in srgb, var(--lens-color) 24%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--lens-color) 11%, transparent);
+  color: var(--lens-color);
+}
+
+.checklists-command-page .history-lens-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+.checklists-command-page .history-lens-copy span {
+  color: var(--lens-color);
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.checklists-command-page .history-lens-copy strong {
+  color: var(--checklists-ink);
+  font-size: 1rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  text-transform: capitalize;
+}
+
+.checklists-command-page .history-lens-copy small {
+  color: var(--checklists-muted);
+  line-height: 1.35;
+}
+
+@media (max-width: 900px) {
+  .checklists-command-page .checklists-history-lens {
+    grid-template-columns: 1fr;
+  }
+
+  .checklists-command-page .history-lens-card:first-child {
+    grid-row: auto;
+  }
+}

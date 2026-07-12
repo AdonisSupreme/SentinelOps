@@ -2,7 +2,7 @@ import React from 'react';
 
 export const ChecklistsSkeleton: React.FC = () => {
   return (
-    <div className="checklists-page checklists-skeleton-page">
+    <div className="checklists-page checklists-command-page checklists-skeleton-page">
       <section className="checklists-skeleton-hero">
         <div className="skel-line skel-kicker" />
         <div className="skel-line skel-title" />
@@ -11,16 +11,6 @@ export const ChecklistsSkeleton: React.FC = () => {
           <div className="skel-chip" />
           <div className="skel-chip" />
         </div>
-      </section>
-
-      <section className="checklists-skeleton-summary">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="checklists-skeleton-card">
-            <div className="skel-line skel-label" />
-            <div className="skel-line skel-value" />
-            <div className="skel-line skel-footnote" />
-          </div>
-        ))}
       </section>
 
       <section className="checklists-skeleton-command">

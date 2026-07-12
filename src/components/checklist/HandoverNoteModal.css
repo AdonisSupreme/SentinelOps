@@ -561,3 +561,146 @@
     font-size: var(--font-size-sm);
   }
 }
+
+.checklist-command-page .handover-note-modal-backdrop {
+  background: rgba(2, 6, 23, 0.66);
+  backdrop-filter: blur(10px);
+}
+
+.checklist-command-page .handover-note-modal.futuristic {
+  width: min(680px, 96vw);
+  max-width: none;
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 8px;
+  background: var(--checklist-surface, rgba(255, 255, 255, 0.94));
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+  animation: none;
+}
+
+.checklist-command-page .handover-note-modal.futuristic::before,
+.checklist-command-page .handover-note-modal.futuristic::after {
+  display: none;
+}
+
+.checklist-command-page .handover-note-modal .modal-header,
+.checklist-command-page .handover-note-modal .modal-footer {
+  padding: 1rem;
+  border-color: var(--checklist-border, rgba(71, 85, 105, 0.18));
+  background: var(--checklist-strong, #ffffff);
+}
+
+.checklist-command-page .handover-note-modal .modal-title {
+  color: var(--checklist-ink, var(--text-primary));
+  font-size: 1rem;
+}
+
+.checklist-command-page .handover-note-modal .modal-title svg {
+  color: var(--checklist-green, #0f9f73);
+}
+
+.checklist-command-page .handover-note-modal .modal-close,
+.checklist-command-page .handover-note-modal .btn-cancel,
+.checklist-command-page .handover-note-modal .btn-primary {
+  min-height: 2.35rem;
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 8px;
+  background: var(--checklist-surface, rgba(255, 255, 255, 0.94));
+  color: var(--checklist-ink, var(--text-primary));
+  box-shadow: none;
+}
+
+.checklist-command-page .handover-note-modal .modal-close {
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+  color: var(--checklist-red, #dc2626);
+}
+
+.checklist-command-page .handover-note-modal .btn-primary {
+  border-color: rgba(15, 159, 115, 0.28);
+  background: var(--checklist-green, #0f9f73);
+  color: #04120d;
+}
+
+.checklist-command-page .handover-note-modal .modal-close:hover:not(:disabled),
+.checklist-command-page .handover-note-modal .btn-cancel:hover:not(:disabled),
+.checklist-command-page .handover-note-modal .btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+.checklist-command-page .handover-note-modal .modal-body {
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.checklist-command-page .handover-note-modal .section-label {
+  color: var(--checklist-muted, var(--text-secondary));
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.checklist-command-page .handover-note-modal .priority-options {
+  gap: 0.65rem;
+}
+
+.checklist-command-page .handover-note-modal .priority-option {
+  gap: 0.35rem;
+  padding: 0.75rem;
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 8px;
+  background: var(--checklist-strong, #ffffff);
+  box-shadow: none;
+}
+
+.checklist-command-page .handover-note-modal .priority-option:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.checklist-command-page .handover-note-modal .priority-option.active,
+[data-theme="dark"] .checklist-command-page .handover-note-modal .priority-option.active {
+  border-color: rgba(8, 145, 178, 0.3);
+  background: rgba(8, 145, 178, 0.1);
+  color: var(--checklist-ink, var(--text-primary));
+  box-shadow: none;
+  transform: none;
+}
+
+.checklist-command-page .handover-note-modal .priority-option.active::before {
+  display: none;
+}
+
+.checklist-command-page .handover-note-modal .priority-option.active .priority-label,
+.checklist-command-page .handover-note-modal .priority-option.active .priority-value,
+[data-theme="dark"] .checklist-command-page .handover-note-modal .priority-option.active .priority-label,
+[data-theme="dark"] .checklist-command-page .handover-note-modal .priority-option.active .priority-value {
+  color: var(--checklist-ink, var(--text-primary));
+  text-shadow: none;
+}
+
+.checklist-command-page .handover-note-modal .handover-textarea,
+[data-theme="dark"] .checklist-command-page .handover-note-modal .handover-textarea {
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 8px;
+  background: var(--checklist-strong, #ffffff);
+  color: var(--checklist-ink, var(--text-primary));
+}
+
+.checklist-command-page .handover-note-modal .handover-textarea:focus,
+[data-theme="dark"] .checklist-command-page .handover-note-modal .handover-textarea:focus {
+  border-color: rgba(8, 145, 178, 0.32);
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.12);
+}
+
+.checklist-command-page .handover-note-modal .error-message,
+.checklist-command-page .handover-note-modal .help-text {
+  border-radius: 8px;
+}
+
+.checklist-command-page .handover-note-modal .help-text {
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  background: var(--checklist-strong, #ffffff);
+  color: var(--checklist-muted, var(--text-secondary));
+}

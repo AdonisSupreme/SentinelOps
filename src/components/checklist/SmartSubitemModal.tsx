@@ -1,9 +1,13 @@
 // src/components/checklist/SmartSubitemModal.tsx
 import React, { useState, useEffect } from 'react';
+import Slider from 'react-slick';
+import type { Settings } from 'react-slick';
 import {
   FaTimes, FaArrowLeft, FaArrowRight, FaCheckCircle,
   FaClock, FaPlay, FaBan, FaExclamationTriangle
 } from 'react-icons/fa';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 import './SmartSubitemModal.css';
 
 interface Subitem {
@@ -21,12 +25,17 @@ interface Subitem {
   completed_at: string | null;
   skipped_reason: string | null;
   failure_reason: string | null;
+  notes?: string | null;
+  completion_note?: string | null;
+  comment?: string | null;
+  started_at?: string | null;
 }
 
 interface SmartSubitemModalProps {
   isOpen: boolean;
   itemTitle: string;
   itemId: string;
+  itemStatus?: string;
   instanceId: string;
   subitems: Subitem[];
   onAction: (subitemId: string, action: 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'IN_PROGRESS', notes?: string) => Promise<void>;
@@ -34,10 +43,28 @@ interface SmartSubitemModalProps {
   onClose: () => void;
 }
 
+interface PreviewArrowProps {
+  className?: string;
+  onClick?: () => void;
+  direction: 'previous' | 'next';
+}
+
+const PreviewArrow: React.FC<PreviewArrowProps> = ({ className = '', onClick, direction }) => (
+  <button
+    type="button"
+    className={`subitem-preview-arrow subitem-preview-arrow--${direction} ${className}`}
+    onClick={onClick}
+    aria-label={direction === 'previous' ? 'Previous subitem' : 'Next subitem'}
+  >
+    {direction === 'previous' ? <FaArrowLeft /> : <FaArrowRight />}
+  </button>
+);
+
 const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
   isOpen,
   itemTitle,
   itemId,
+  itemStatus,
   instanceId,
   subitems,
   onAction,
@@ -85,7 +112,73 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
   const completionPercentage = stats.total > 0 ? Math.round((actionedCount / stats.total) * 100) : 0;
   const allActioned = stats.pending === 0 && stats.inProgress === 0;
   const requiresFinalVerdict = stats.failed > 0;
-  const currentSubitem = subitems[currentSubitemIndex];
+  const remainingCount = stats.pending + stats.inProgress;
+  const isCompletedPreview = itemStatus === 'COMPLETED' && subitems.length > 0 && allActioned;
+
+  const previewSliderSettings: Settings = {
+    className: 'subitem-preview-slider',
+    dots: true,
+    arrows: subitems.length > 1,
+    infinite: subitems.length > 1,
+    speed: 420,
+    autoplay: subitems.length > 1,
+    autoplaySpeed: 3600,
+    pauseOnHover: true,
+    pauseOnFocus: true,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    adaptiveHeight: true,
+    swipe: true,
+    swipeToSlide: true,
+    draggable: true,
+    touchMove: true,
+    centerMode: false,
+    variableWidth: false,
+    nextArrow: <PreviewArrow direction="next" />,
+    prevArrow: <PreviewArrow direction="previous" />,
+  };
+
+  const getStatusLabel = (status?: Subitem['status']) => {
+    switch (status) {
+      case 'IN_PROGRESS': return 'In Progress';
+      case 'COMPLETED': return 'Completed';
+      case 'SKIPPED': return 'Skipped';
+      case 'FAILED': return 'Issue Reported';
+      case 'PENDING':
+      default: return 'Awaiting Start';
+    }
+  };
+
+  const getStatusTone = (status?: Subitem['status']) => {
+    switch (status) {
+      case 'IN_PROGRESS': return 'in-progress';
+      case 'COMPLETED': return 'completed';
+      case 'SKIPPED': return 'skipped';
+      case 'FAILED': return 'failed';
+      case 'PENDING':
+      default: return 'pending';
+    }
+  };
+
+  const getSubitemEvidence = (subitem: Subitem) => (
+    subitem.failure_reason
+    || subitem.skipped_reason
+    || subitem.notes
+    || subitem.completion_note
+    || subitem.comment
+    || ''
+  );
+
+  const formatSubitemTimestamp = (value?: string | null) => {
+    if (!value) {
+      return '';
+    }
+
+    return new Date(value).toLocaleString([], {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+  };
 
   // Get current subitem with optimistic updates applied
   const getCurrentSubitemWithOptimisticUpdates = () => {
@@ -267,10 +360,6 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
     }
   };
 
-  const handleJumpToSubitem = (index: number) => {
-    setCurrentSubitemIndex(index);
-  };
-
   // Intelligent navigation: find next actionable item
   const getNextActionableItem = () => {
     for (let i = currentSubitemIndex + 1; i < subitems.length; i++) {
@@ -370,6 +459,57 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
           <FaCheckCircle /> {completeItemBusy ? 'Completing...' : 'Complete Main Item'}
         </button>
       </div>
+    </div>
+  );
+
+  const renderCompletedPreview = () => (
+    <div className="subitem-preview-stage">
+      <div className="subitem-preview-shell">
+        <Slider {...previewSliderSettings}>
+          {subitems.map((subitem, index) => {
+            const tone = getStatusTone(subitem.status);
+            const evidence = getSubitemEvidence(subitem);
+            const timestamp = formatSubitemTimestamp(subitem.completed_at);
+
+            return (
+              <article className={`subitem-preview-card subitem-preview-card--${tone}`} key={subitem.id}>
+                <div className="subitem-preview-card__topline">
+                  <span className={`subitem-status-pill subitem-status-pill--${tone}`}>
+                    {getStatusLabel(subitem.status)}
+                  </span>
+                  <span className="subitem-step-chip">Subitem {index + 1}</span>
+                </div>
+
+                <div className="subitem-preview-card__body">
+                  <h3>{subitem.title}</h3>
+                  <div className="subitem-meta">
+                    <span className="type-badge">{subitem.item_type}</span>
+                    {subitem.is_required && <span className="required-badge">Required</span>}
+                    {subitem.severity > 0 && (
+                      <span className="severity-indicator">Severity {subitem.severity}</span>
+                    )}
+                  </div>
+
+                  {subitem.description ? (
+                    <p className="subitem-preview-description">{subitem.description}</p>
+                  ) : null}
+                </div>
+
+                <div className="subitem-preview-evidence">
+                  <span>{subitem.status === 'COMPLETED' ? 'Completion Evidence' : 'Recorded Reason'}</span>
+                  <p>{evidence || 'No note or reason was recorded for this subitem.'}</p>
+                </div>
+
+                <div className="subitem-preview-footer">
+                  <span>{subitem.completed_by?.username ? `By ${subitem.completed_by.username}` : 'Operator record'}</span>
+                  <strong>{timestamp || 'Time not recorded'}</strong>
+                </div>
+              </article>
+            );
+          })}
+        </Slider>
+      </div>
+
     </div>
   );
 
@@ -515,18 +655,210 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
     </div>
   );
 
+  const renderWorkflowView = () => {
+    if (currentSubitemIndex < -1) {
+      return renderSequentialView();
+    }
+
+    if (isCompletedPreview) {
+      return renderCompletedPreview();
+    }
+
+    if (showCompletionStep || !currentSubitemWithOptimistic) {
+      return (
+        <div className="sequential-view sequential-view--completion">
+          {renderCompletionStep()}
+        </div>
+      );
+    }
+
+    const currentTone = getStatusTone(currentSubitemWithOptimistic.status);
+    const progressWidth = `${completionPercentage}%`;
+
+    return (
+      <div className="sequential-view">
+        <div className="subitem-workspace">
+          <aside className="subitem-route-rail" aria-label="Subitem progress">
+            <div className="route-panel route-panel--active">
+              <span className="route-kicker">Current Step</span>
+              <strong>{currentSubitemIndex + 1} of {subitems.length}</strong>
+              <div className="route-meter" aria-hidden="true">
+                <span style={{ width: progressWidth }} />
+              </div>
+              <div className="step-dots">
+                {subitems.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`step-dot ${index === currentSubitemIndex ? 'active' : ''} ${index < currentSubitemIndex ? 'completed' : ''}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="route-nav">
+              <button
+                className="nav-btn prev"
+                onClick={handlePreviousSubitem}
+                disabled={currentSubitemIndex === 0}
+              >
+                <FaArrowLeft /> Previous
+              </button>
+              <button
+                className="nav-btn next"
+                onClick={allActioned ? handleContinueToCompletion : handleNextSubitem}
+                disabled={allActioned ? false : currentSubitemIndex === subitems.length - 1}
+              >
+                {allActioned ? <><FaCheckCircle /> Finalize</> : <><FaArrowRight /> Next</>}
+              </button>
+              {!allActioned && (
+                <button
+                  className="nav-btn smart-next"
+                  onClick={handleSmartNext}
+                  disabled={getNextActionableItem() === -1}
+                  title={getNextActionableItem() >= 0 ? `Jump to next actionable item (${getNextActionableItem() + 1})` : 'No more actionable items'}
+                >
+                  <FaArrowRight /> {getNextActionableItem() >= 0 ? 'Next Open' : 'End'}
+                </button>
+              )}
+            </div>
+          </aside>
+
+          <section
+            className={`current-subitem subitem-card--${currentTone}`}
+            key={`${currentSubitemWithOptimistic.id}-${currentSubitemWithOptimistic.status}-${currentSubitemWithOptimistic.completed_at || 'not-completed'}-${currentSubitemWithOptimistic.skipped_reason || 'not-skipped'}-${currentSubitemWithOptimistic.failure_reason || 'not-failed'}`}
+          >
+            <div className="subitem-status-row">
+              <span className={`subitem-status-pill subitem-status-pill--${currentTone}`}>
+                {getStatusLabel(currentSubitemWithOptimistic.status)}
+              </span>
+              <span className="subitem-step-chip">Step {currentSubitemIndex + 1}</span>
+            </div>
+
+            <div className="subitem-header">
+              <h3>{currentSubitemWithOptimistic.title}</h3>
+              <div className="subitem-meta">
+                <span className="type-badge">{currentSubitemWithOptimistic.item_type}</span>
+                {currentSubitemWithOptimistic.is_required && (
+                  <span className="required-badge">Required</span>
+                )}
+                {currentSubitemWithOptimistic.severity > 0 && (
+                  <span className="severity-indicator">Severity {currentSubitemWithOptimistic.severity}</span>
+                )}
+              </div>
+            </div>
+
+            <div className="subitem-brief">
+              <span>Operator Brief</span>
+              <p>
+                {currentSubitemWithOptimistic.description
+                  || 'No extra description was attached to this subitem. Use the available action that matches the current evidence.'}
+              </p>
+            </div>
+
+            <div className="subitem-action-panel">
+              <div className="action-panel-copy">
+                <span>Available Action</span>
+                <strong>{currentSubitemWithOptimistic.status === 'PENDING' ? 'Start the work item' : 'Record the operational outcome'}</strong>
+              </div>
+              <div className="subitem-actions">
+                {currentSubitemWithOptimistic.status === 'PENDING' && (
+                  <button
+                    className="sub-action-btn start"
+                    onClick={() => handleSubitemAction(currentSubitemWithOptimistic.id, 'IN_PROGRESS')}
+                  >
+                    <FaPlay /> Start Working
+                  </button>
+                )}
+
+                {currentSubitemWithOptimistic.status === 'IN_PROGRESS' && (
+                  <>
+                    <button
+                      className="sub-action-btn complete"
+                      onClick={() => handleSubitemAction(currentSubitemWithOptimistic.id, 'COMPLETED')}
+                    >
+                      <FaCheckCircle /> Mark Complete
+                    </button>
+
+                    <button
+                      className="sub-action-btn skip"
+                      onClick={() => handleSubitemAction(currentSubitemWithOptimistic.id, 'SKIPPED')}
+                    >
+                      <FaTimes /> Skip
+                    </button>
+
+                    <button
+                      className="sub-action-btn fail"
+                      onClick={() => handleSubitemAction(currentSubitemWithOptimistic.id, 'FAILED')}
+                    >
+                      <FaTimes /> Report Issue
+                    </button>
+                  </>
+                )}
+
+                {currentSubitemWithOptimistic.status === 'COMPLETED' && (
+                  <div className="status-display completed">
+                    <FaCheckCircle className="status-icon" />
+                    <span>Completed</span>
+                    {currentSubitemWithOptimistic.completed_at && (
+                      <div className="completion-time">
+                        at {new Date(currentSubitemWithOptimistic.completed_at).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {currentSubitemWithOptimistic.status === 'SKIPPED' && (
+                  <div className="status-display skipped">
+                    <FaBan className="status-icon" />
+                    <span>Skipped</span>
+                    {currentSubitemWithOptimistic.skipped_reason && (
+                      <div className="reason-display">
+                        Reason: {currentSubitemWithOptimistic.skipped_reason}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {currentSubitemWithOptimistic.status === 'FAILED' && (
+                  <div className="status-display failed">
+                    <FaExclamationTriangle className="status-icon" />
+                    <span>Issue Reported</span>
+                    {currentSubitemWithOptimistic.failure_reason && (
+                      <div className="reason-display">
+                        Issue: {currentSubitemWithOptimistic.failure_reason}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  };
+
 
   if (!isOpen) return null;
 
   return (
     <div className="smart-subitem-modal-backdrop" onClick={onClose}>
-      <div className="smart-subitem-modal futuristic" onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`smart-subitem-modal futuristic ${isCompletedPreview ? 'smart-subitem-modal--preview' : ''}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Modal Header */}
         <div className="modal-header">
           <div className="header-content">
-            <h2 className="modal-title">{itemTitle}<div className="header-stats">
-              <span className="completion-badge">{completionPercentage}%</span>
-            </div></h2>
+            <div className="modal-heading-copy">
+              <span className="modal-kicker">{isCompletedPreview ? 'Completed Subitems' : 'Subitem Execution'}</span>
+              <h2 className="modal-title">{itemTitle}</h2>
+            </div>
+            {!isCompletedPreview && (
+              <div className="header-stats" aria-label={`${completionPercentage}% actioned`}>
+                <span className="completion-badge">{completionPercentage}%</span>
+              </div>
+            )}
           </div>
 
           <div className="header-controls">
@@ -538,25 +870,24 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
 
         {/* Content Area */}
         <div className="modal-content">
-          <div className="sequential-view">
-            {renderSequentialView()}
-          </div>
+          {renderWorkflowView()}
         </div>
 
-        {/* Footer */}
-        <div className="modal-footer">
-          <div className="footer-info">
-            <FaClock />
-            <span>
-              {allActioned && !showCompletionStep
-                ? 'All subitems actioned - click Continue to add final verdict and complete'
-                : allActioned && showCompletionStep
-                ? 'Completion stage active - submit verdict and close the main item'
-                : `${stats.pending + stats.inProgress} subitem${(stats.pending + stats.inProgress) === 1 ? '' : 's'} remaining`
-              }
-            </span>
+        {!isCompletedPreview && (
+          <div className="modal-footer">
+            <div className="footer-info">
+              <FaClock />
+              <span>
+                {allActioned && !showCompletionStep
+                  ? 'All subitems actioned - click Continue to add final verdict and complete'
+                  : allActioned && showCompletionStep
+                  ? 'Completion stage active - submit verdict and close the main item'
+                  : `${remainingCount} subitem${remainingCount === 1 ? '' : 's'} remaining`
+                }
+              </span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Reason Modal */}

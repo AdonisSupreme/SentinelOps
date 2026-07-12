@@ -5,13 +5,15 @@ import {
   FaBook,
   FaCalendarAlt,
   FaChartLine,
-  FaCompass,
   FaClock,
+  FaCompass,
+  FaDatabase,
   FaIdBadge,
+  FaPalette,
   FaShieldAlt,
   FaSignOutAlt,
-  FaUsers,
   FaUserShield,
+  FaUsers,
 } from 'react-icons/fa';
 import ThemeToggle from '../components/ui/ThemeToggle';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,21 +27,72 @@ const describeAccess = (role?: string) => {
   const normalizedRole = (role || '').toLowerCase();
 
   if (normalizedRole === 'admin') {
-    return 'You can move across SentinelOps as a platform owner. Use that reach carefully: access, coverage, user placement, and template quality all cascade downstream.';
+    return 'Platform owner lane. Access, placement, templates, and system settings affect every downstream workflow.';
   }
 
   if (normalizedRole === 'manager' || normalizedRole === 'supervisor') {
-    return 'You are operating in a leadership lane. Your best leverage comes from shaping coverage, cleaning execution flows, and turning weak repeat work into stronger structure.';
+    return 'Leadership lane. Coverage, execution quality, and handover structure are your highest-leverage controls.';
   }
 
-  return 'You are working in the operator lane. Your highest value is clean execution, accurate handover, and keeping the live source of truth trustworthy for the next person.';
+  return 'Operator lane. Keep execution clean, handovers accurate, and the live source of truth ready for the next shift.';
 };
 
+const ProfileSettingsSkeleton: React.FC = () => (
+  <div className="profile-settings-page settings-skeleton-page">
+    <section className="settings-command-strip settings-skel-panel">
+      <div className="settings-skel-command-copy">
+        <div className="settings-skel-line settings-skel-kicker" />
+        <div className="settings-skel-line settings-skel-title" />
+        <div className="settings-skel-line settings-skel-meta" />
+      </div>
+      <div className="settings-skel-signal-grid">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="settings-skel-signal">
+            <div className="settings-skel-block settings-skel-icon" />
+            <div>
+              <div className="settings-skel-line settings-skel-label" />
+              <div className="settings-skel-line settings-skel-value" />
+              <div className="settings-skel-line settings-skel-meta" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section className="profile-settings-layout">
+      <aside className="settings-skel-panel settings-skeleton-identity">
+        <div className="settings-skel-avatar" />
+        <div className="settings-skel-line settings-skel-title" />
+        <div className="settings-skel-line settings-skel-meta" />
+        <div className="settings-skel-line settings-skel-meta short" />
+      </aside>
+
+      <div className="settings-workspace">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <article key={index} className="settings-skel-panel">
+            <div className="settings-panel-heading">
+              <div className="settings-skel-block settings-skel-small-icon" />
+              <div className="settings-skel-line settings-skel-panel-title" />
+            </div>
+            <div className="settings-skel-grid">
+              <div className="settings-skel-tile" />
+              <div className="settings-skel-tile" />
+              <div className="settings-skel-tile" />
+              <div className="settings-skel-tile" />
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  </div>
+);
+
 const ProfileSettingsPage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const { theme, resolvedTheme } = useTheme();
   const { applicationTimeZone, setting: timezoneSetting, updateApplicationTimeZone } = useAppConfig();
   const [sectionName, setSectionName] = useState<string>('');
+  const [sectionLoading, setSectionLoading] = useState(Boolean(user?.section_id));
   const [timeZoneDraft, setTimeZoneDraft] = useState(applicationTimeZone);
   const [timeZoneBusy, setTimeZoneBusy] = useState(false);
   const [timeZoneMessage, setTimeZoneMessage] = useState<string | null>(null);
@@ -52,9 +105,11 @@ const ProfileSettingsPage: React.FC = () => {
     const loadSectionName = async () => {
       if (!user?.section_id) {
         setSectionName('');
+        setSectionLoading(false);
         return;
       }
 
+      setSectionLoading(true);
       try {
         const sections = await orgApi.listSections();
         const activeSection = sections.find((section) => section.id === user.section_id);
@@ -62,6 +117,8 @@ const ProfileSettingsPage: React.FC = () => {
       } catch (error) {
         console.error('Failed to load section metadata for profile settings', error);
         setSectionName('');
+      } finally {
+        setSectionLoading(false);
       }
     };
 
@@ -73,47 +130,84 @@ const ProfileSettingsPage: React.FC = () => {
   }, [applicationTimeZone]);
 
   const initials = `${user?.first_name?.[0] ?? 'S'}${user?.last_name?.[0] ?? 'O'}`.toUpperCase();
+  const displayName = `${user?.first_name || 'Sentinel'} ${user?.last_name || 'Operator'}`.trim();
+  const activeSectionLabel = sectionName || user?.section_id || 'Not assigned';
+  const timezoneUpdatedBy = timezoneSetting?.updated_by || 'Default';
 
   const quickLinks = useMemo(
     () =>
       [
         {
           title: 'My Schedule',
-          description: 'Confirm your next assignment, open days, and near-term deadlines before the shift starts moving.',
+          description: 'Next assignment, open days, and shift timing.',
           to: '/schedule',
           icon: <FaCalendarAlt />,
           visible: true,
         },
         {
           title: 'Performance',
-          description: 'Open your performance intelligence view for streaks, score signals, and team momentum.',
+          description: 'Score signals, streaks, and team momentum.',
           to: '/performance',
           icon: <FaChartLine />,
           visible: true,
         },
         {
           title: 'Team Management',
-          description: 'Jump straight into coverage planning, patterns, and exception handling when the roster needs attention.',
+          description: 'Coverage planning, patterns, and exceptions.',
           to: '/team',
           icon: <FaUsers />,
           visible: canManageTeam,
         },
         {
           title: 'User Management',
-          description: 'Open the identity control room for roles, placement, and access cleanup.',
+          description: 'Roles, placement, and access cleanup.',
           to: '/users',
           icon: <FaUserShield />,
           visible: isAdmin,
         },
         {
           title: 'SentinelOps Manual',
-          description: 'Open the guided user manual with visual landmarks, checklist flow, handover rules, and PDF download.',
+          description: 'Operating rules, checklist flow, and handover guidance.',
           to: '/manual',
           icon: <FaBook />,
           visible: true,
         },
       ].filter((item) => item.visible),
     [canManageTeam, isAdmin],
+  );
+
+  const settingsSignals = useMemo(
+    () => [
+      {
+        label: 'Access lane',
+        value: user?.role || 'User',
+        detail: isAdmin ? 'Admin controls enabled' : canManageTeam ? 'Team controls enabled' : 'Operator controls',
+        icon: <FaShieldAlt />,
+        tone: isAdmin ? 'watch' : 'ok',
+      },
+      {
+        label: 'Section',
+        value: activeSectionLabel,
+        detail: user?.department || 'Department pending',
+        icon: <FaIdBadge />,
+        tone: user?.section_id ? 'ok' : 'neutral',
+      },
+      {
+        label: 'Clock',
+        value: applicationTimeZone,
+        detail: `Updated by ${timezoneUpdatedBy}`,
+        icon: <FaClock />,
+        tone: 'ok',
+      },
+      {
+        label: 'Theme',
+        value: resolvedTheme,
+        detail: `Preference ${theme}`,
+        icon: <FaPalette />,
+        tone: 'neutral',
+      },
+    ],
+    [activeSectionLabel, applicationTimeZone, canManageTeam, isAdmin, resolvedTheme, theme, timezoneUpdatedBy, user?.department, user?.role, user?.section_id],
   );
 
   const recommendedTimeZones = timezoneSetting?.recommended_timezones?.length
@@ -133,7 +227,7 @@ const ProfileSettingsPage: React.FC = () => {
     setTimeZoneMessage(null);
     try {
       await updateApplicationTimeZone(nextTimeZone);
-      setTimeZoneMessage(`SentinelOps display timezone updated to ${nextTimeZone}.`);
+      setTimeZoneMessage(`Display timezone updated to ${nextTimeZone}.`);
     } catch (error: any) {
       setTimeZoneMessage(error?.response?.data?.detail || error?.message || 'Timezone update failed.');
     } finally {
@@ -141,187 +235,56 @@ const ProfileSettingsPage: React.FC = () => {
     }
   };
 
+  if (authLoading || !user || sectionLoading) {
+    return <ProfileSettingsSkeleton />;
+  }
+
   return (
     <div className="profile-settings-page">
-      <section className="profile-settings-hero">
-        <div className="profile-settings-copy">
-          <span className="profile-settings-eyebrow">Operator Settings</span>
-          <h1>Profile and command preferences</h1>
-          <p>
-            This is your control layer for identity context, access posture, visual mode, and the
-            fastest paths back into the parts of SentinelOps you use most.
-          </p>
-
-          <div className="profile-settings-badges">
-            <span>Role: {user?.role || 'User'}</span>
-            <span>Theme: {theme} ({resolvedTheme})</span>
-            {user?.section_id && <span>Section: {sectionName || user.section_id}</span>}
-          </div>
+      <section className="settings-command-strip">
+        <div className="settings-command-title">
+          <span><FaCompass /> Operator settings</span>
+          <strong>{displayName}</strong>
+          <small>{user.email || user.username || 'Authenticated SentinelOps user'}</small>
         </div>
 
-        <aside className="profile-identity-hero-card">
-          <div className="profile-identity-avatar">{initials}</div>
-          <div className="profile-identity-summary">
-            <strong>
-              {user?.first_name} {user?.last_name}
-            </strong>
-            <span>@{user?.username}</span>
-            <small>{user?.email}</small>
-          </div>
-        </aside>
+        <div className="settings-signal-grid">
+          {settingsSignals.map((signal) => (
+            <article key={signal.label} className={`settings-signal-card tone-${signal.tone}`}>
+              <span className="settings-signal-icon">{signal.icon}</span>
+              <span className="settings-signal-copy">
+                <small>{signal.label}</small>
+                <strong>{signal.value}</strong>
+                <em>{signal.detail}</em>
+              </span>
+            </article>
+          ))}
+        </div>
       </section>
 
-      <section className="profile-settings-grid">
-        <article className="settings-panel">
-          <div className="settings-panel-heading">
-            <FaIdBadge />
-            <span>Identity Snapshot</span>
+      <section className="profile-settings-layout">
+        <aside className="settings-identity-panel">
+          <div className="settings-avatar">{initials}</div>
+          <div className="settings-identity-copy">
+            <span>Signed in as</span>
+            <strong>{displayName}</strong>
+            <small>@{user.username}</small>
           </div>
 
-          <div className="settings-stat-grid">
-            <div className="settings-stat-card">
+          <div className="settings-identity-ledger">
+            <div>
               <label>Department</label>
-              <strong>{user?.department || 'Not assigned'}</strong>
+              <strong>{user.department || 'Not assigned'}</strong>
             </div>
-            <div className="settings-stat-card">
+            <div>
               <label>Position</label>
-              <strong>{user?.position || 'Not assigned'}</strong>
+              <strong>{user.position || 'Not assigned'}</strong>
             </div>
-            <div className="settings-stat-card">
+            <div>
               <label>Section</label>
-              <strong>{sectionName || user?.section_id || 'Not assigned'}</strong>
-            </div>
-            <div className="settings-stat-card">
-              <label>Username</label>
-              <strong>{user?.username || 'Unavailable'}</strong>
+              <strong>{activeSectionLabel}</strong>
             </div>
           </div>
-        </article>
-
-        <article className="settings-panel">
-          <div className="settings-panel-heading">
-            <FaShieldAlt />
-            <span>Access Posture</span>
-          </div>
-
-          <p className="settings-panel-copy">{describeAccess(user?.role)}</p>
-
-          <div className="settings-highlight-list">
-            <div>
-              <label>Current lane</label>
-              <strong>{user?.role || 'User'}</strong>
-            </div>
-            <div>
-              <label>Manual availability</label>
-              <strong>Available to every SentinelOps user</strong>
-            </div>
-            <div>
-              <label>Control rule</label>
-              <strong>Fix the source, not the symptom</strong>
-            </div>
-          </div>
-        </article>
-
-        <article className="settings-panel">
-          <div className="settings-panel-heading">
-            <FaCompass />
-            <span>Appearance and Focus</span>
-          </div>
-
-          <p className="settings-panel-copy">
-            Switch the visual mode when you need clearer contrast for long sessions, bright-room
-            readability, or a cleaner handover environment during shared-screen work.
-          </p>
-
-          <div className="settings-theme-toggle">
-            <ThemeToggle />
-          </div>
-        </article>
-
-        <article className="settings-panel">
-          <div className="settings-panel-heading">
-            <FaClock />
-            <span>Application Timezone</span>
-          </div>
-
-          <p className="settings-panel-copy">
-            SentinelOps stores operational timestamps in UTC, then renders them in the configured application timezone.
-            The default is Harare, Zimbabwe time so Nexus and Network Sentinel incidents show the operator-facing clock correctly.
-          </p>
-
-          <div className="settings-timezone-control">
-            <label>
-              <span>Display timezone</span>
-              <input
-                list="sentinelops-timezone-options"
-                value={timeZoneDraft}
-                onChange={(event) => setTimeZoneDraft(event.target.value)}
-                disabled={!isAdmin}
-                placeholder="Africa/Harare"
-              />
-              <datalist id="sentinelops-timezone-options">
-                {recommendedTimeZones.map((timeZone) => (
-                  <option key={timeZone} value={timeZone} />
-                ))}
-              </datalist>
-            </label>
-            <div className="settings-highlight-list compact">
-              <div>
-                <label>Current display</label>
-                <strong>{applicationTimeZone}</strong>
-              </div>
-              <div>
-                <label>Last updated</label>
-                <strong>{timezoneSetting?.updated_by || 'Default'}</strong>
-              </div>
-            </div>
-            {isAdmin ? (
-              <button type="button" className="settings-save-btn" onClick={() => void saveApplicationTimezone()} disabled={timeZoneBusy}>
-                {timeZoneBusy ? 'Saving timezone...' : 'Save timezone'}
-              </button>
-            ) : (
-              <span className="settings-readonly-note">Only administrators can change the application timezone.</span>
-            )}
-            {timeZoneMessage ? <p className="settings-timezone-message">{timeZoneMessage}</p> : null}
-          </div>
-        </article>
-
-        <article className="settings-panel">
-          <div className="settings-panel-heading">
-            <FaArrowRight />
-            <span>Quick Returns</span>
-          </div>
-
-          <div className="settings-link-grid">
-            {quickLinks.map((item) => (
-              <Link key={item.to} to={item.to} className="settings-quick-link">
-                <span className="settings-quick-link-icon">{item.icon}</span>
-                <span className="settings-quick-link-copy">
-                  <strong>{item.title}</strong>
-                  <small>{item.description}</small>
-                </span>
-                <FaArrowRight />
-              </Link>
-            ))}
-          </div>
-        </article>
-      </section>
-
-      <section className="settings-footer-panel">
-        <div className="settings-footer-copy">
-          <span className="profile-settings-eyebrow">Operational Discipline</span>
-          <h2>Keep your profile aligned to the real operation</h2>
-          <p>
-            Role, section placement, and visual mode are not cosmetic here. They shape what you can
-            see, how fast you can navigate, and whether the platform is helping you work cleanly.
-          </p>
-        </div>
-
-        <div className="settings-footer-actions">
-          <Link to="/manual" className="settings-footer-link">
-            <FaBook />
-            <span>Open SentinelOps Manual</span>
-          </Link>
 
           <button
             type="button"
@@ -333,6 +296,123 @@ const ProfileSettingsPage: React.FC = () => {
             <FaSignOutAlt />
             <span>Sign out securely</span>
           </button>
+        </aside>
+
+        <div className="settings-workspace">
+          <article className="settings-panel access-panel">
+            <div className="settings-panel-heading">
+              <FaShieldAlt />
+              <span>Access Posture</span>
+            </div>
+            <p className="settings-panel-copy">{describeAccess(user.role)}</p>
+            <div className="settings-lane-list">
+              <div>
+                <label>Current lane</label>
+                <strong>{user.role || 'User'}</strong>
+              </div>
+              <div>
+                <label>Team controls</label>
+                <strong>{canManageTeam ? 'Available' : 'Restricted'}</strong>
+              </div>
+              <div>
+                <label>Platform controls</label>
+                <strong>{isAdmin ? 'Available' : 'Restricted'}</strong>
+              </div>
+            </div>
+          </article>
+
+          <article className="settings-panel">
+            <div className="settings-panel-heading">
+              <FaPalette />
+              <span>Appearance</span>
+            </div>
+            <div className="settings-control-row">
+              <div>
+                <label>Visual mode</label>
+                <strong>{resolvedTheme}</strong>
+                <small>Preference: {theme}</small>
+              </div>
+              <ThemeToggle />
+            </div>
+          </article>
+
+          <article className="settings-panel timezone-panel">
+            <div className="settings-panel-heading">
+              <FaClock />
+              <span>Application Clock</span>
+            </div>
+            <p className="settings-panel-copy">
+              Operational timestamps render in the application timezone. UTC remains the storage baseline.
+            </p>
+
+            <div className="settings-timezone-control">
+              <label>
+                <span>Display timezone</span>
+                <input
+                  list="sentinelops-timezone-options"
+                  value={timeZoneDraft}
+                  onChange={(event) => setTimeZoneDraft(event.target.value)}
+                  disabled={!isAdmin}
+                  placeholder="Africa/Harare"
+                />
+                <datalist id="sentinelops-timezone-options">
+                  {recommendedTimeZones.map((timeZone) => (
+                    <option key={timeZone} value={timeZone} />
+                  ))}
+                </datalist>
+              </label>
+
+              <div className="settings-lane-list compact">
+                <div>
+                  <label>Current display</label>
+                  <strong>{applicationTimeZone}</strong>
+                </div>
+                <div>
+                  <label>Last updated</label>
+                  <strong>{timezoneUpdatedBy}</strong>
+                </div>
+              </div>
+
+              {isAdmin ? (
+                <button type="button" className="settings-save-btn" onClick={() => void saveApplicationTimezone()} disabled={timeZoneBusy}>
+                  {timeZoneBusy ? 'Saving timezone...' : 'Save timezone'}
+                </button>
+              ) : (
+                <span className="settings-readonly-note">Only administrators can change the application timezone.</span>
+              )}
+              {timeZoneMessage ? <p className="settings-timezone-message">{timeZoneMessage}</p> : null}
+            </div>
+          </article>
+
+          <article className="settings-panel quick-return-panel">
+            <div className="settings-panel-heading">
+              <FaArrowRight />
+              <span>Quick Returns</span>
+            </div>
+            <div className="settings-link-grid">
+              {quickLinks.map((item) => (
+                <Link key={item.to} to={item.to} className="settings-quick-link">
+                  <span className="settings-quick-link-icon">{item.icon}</span>
+                  <span className="settings-quick-link-copy">
+                    <strong>{item.title}</strong>
+                    <small>{item.description}</small>
+                  </span>
+                  <FaArrowRight />
+                </Link>
+              ))}
+            </div>
+          </article>
+
+          <section className="settings-footer-panel">
+            <div>
+              <span className="settings-footer-kicker"><FaDatabase /> Control discipline</span>
+              <strong>Keep identity, clock, and access aligned with the live operation.</strong>
+            </div>
+            <Link to="/manual" className="settings-footer-link">
+              <FaBook />
+              <span>Open Manual</span>
+            </Link>
+          </section>
         </div>
       </section>
     </div>

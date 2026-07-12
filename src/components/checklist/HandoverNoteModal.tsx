@@ -1,6 +1,6 @@
 // src/components/checklist/HandoverNoteModal.tsx
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaFlag, FaPlus, FaSave, FaExclamationTriangle } from 'react-icons/fa';
+import { FaTimes, FaFlag, FaSave, FaExclamationTriangle } from 'react-icons/fa';
 import { useChecklist } from '../../contexts/checklistContext';
 import './HandoverNoteModal.css';
 
@@ -15,7 +15,7 @@ const HandoverNoteModal: React.FC<HandoverNoteModalProps> = ({
   onClose,
   instanceId
 }) => {
-  const { createHandoverNote, loading } = useChecklist();
+  const { createHandoverNote } = useChecklist();
   const [content, setContent] = useState('');
   const [priority, setPriority] = useState(2);
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -4708,7 +4708,7 @@ const NexusPage: React.FC = () => {
             <FaTimesCircle />
           </button>
           <div className="nexus-drilldown-hero">
-            <div>
+            <div className='fine-div'>
               <span className="panel-kicker"><FaSignal />Source Explorer</span>
               <h2>{selectedService.service_name}</h2>
               <p>Full recent evidence stream for {activeSource}. The cockpit stays light; this lane opens the investigation window only when needed.</p>
@@ -5473,8 +5473,8 @@ const NexusPage: React.FC = () => {
                     <div className="rollover-rule-results">
                       {rolloverAssessment.rule_results.map((result) => (
                         <div key={result.rule_id} className={`rollover-result-card result-${result.status}`}>
-                          <div>
-                            <strong>{result.rule_id}</strong>
+                          <div className='super-fine-div'>
+                            <strong>{result.rule_id} </strong>
                             <span>{result.table_name}.{result.column_name}</span>
                           </div>
                           <div className="rollover-result-counts">

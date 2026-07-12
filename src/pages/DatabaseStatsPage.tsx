@@ -11,7 +11,6 @@ import {
   FaServer,
   FaShieldAlt,
   FaSync,
-  FaWaveSquare
 } from 'react-icons/fa';
 import PageGuide from '../components/ui/PageGuide';
 import { dashboardApi, DashboardSummary } from '../services/dashboardApi';
@@ -307,338 +306,300 @@ const DatabaseStatsPage: React.FC = () => {
   const latestGrowth = prediction?.dailyGrowthRateGb || 0;
   const syncLabel = lastUpdated?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || 'Pending';
   const status = prediction?.status || 'HEALTHY';
+  const capacityTone = usedPercentage >= 90 ? 'critical' : usedPercentage >= 75 ? 'warning' : 'healthy';
+  const growthTone = latestGrowth >= 0 ? 'warning' : 'healthy';
+  const dbSignals = [
+    {
+      label: 'Runway',
+      value: `${prediction?.daysRemaining ?? '--'}d`,
+      meta: prediction ? formatDate(prediction.predictedFullDate) : 'Projection unavailable',
+      tone: status.toLowerCase(),
+      icon: <FaShieldAlt />
+    },
+    {
+      label: 'Used',
+      value: `${usedPercentage.toFixed(1)}%`,
+      meta: `${prediction?.currentUsedGb.toFixed(0) ?? '--'} / ${prediction?.totalCapacityGb.toFixed(0) ?? '--'} GB`,
+      tone: capacityTone,
+      icon: <FaHdd />
+    },
+    {
+      label: 'Free',
+      value: `${metrics?.remaining_capacity_gb.toFixed(0) ?? '--'} GB`,
+      meta: `${remainingPercentage.toFixed(1)}% headroom`,
+      tone: remainingPercentage <= 10 ? 'critical' : remainingPercentage <= 25 ? 'warning' : 'healthy',
+      icon: <FaDatabase />
+    },
+    {
+      label: 'Growth',
+      value: `${latestGrowth >= 0 ? '+' : '-'}${Math.abs(latestGrowth).toFixed(1)}`,
+      meta: 'GB per day',
+      tone: growthTone,
+      icon: latestGrowth >= 0 ? <FaArrowUp /> : <FaArrowDown />
+    }
+  ];
 
   return (
-    <div className="dbstats-page">
+    <div className="dbstats-page dbstats-command-page">
       <div className="dbstats-backdrop" />
       <main className="dbstats-shell">
-        <section className="dbstats-hero">
-          <div className="dbstats-hero-copy">
-            <div className="dbstats-kicker">
-              <FaShieldAlt />
-              <span>SentinelOps Database Command</span>
-            </div>
-            <p>
-              Track storage pressure, forecast runway, and growth velocity with a cleaner SentinelOps view that
-              stays readable across themes and screen sizes.
-            </p>
+        <section className="db-command-strip">
+          <div className="db-command-title fine-div">
+            <span className="dbstats-kicker"><FaShieldAlt /> Database Command</span>
+            <h1>Database Stats</h1>
+            <p>Storage pressure, runway, and growth telemetry for operator decisions.</p>
+          </div>
 
-            <div className="dbstats-hero-actions">
-              <button
-                className={`dbstats-sync-btn ${loading ? 'syncing' : ''}`}
-                onClick={handleSync}
-                disabled={loading}
-                type="button"
-              >
-                <FaSync />
-                <span>{loading ? 'Syncing telemetry' : 'Sync telemetry'}</span>
-              </button>
-
-              <div className="dbstats-sync-meta">
-                <span className="sync-meta-label">Last refresh</span>
-                <strong>{syncLabel}</strong>
-              </div>
-
-              <div className={`dbstats-status-pill ${status.toLowerCase()}`}>
-                {getStatusIcon(status)}
-                <span>{status} runway</span>
-              </div>
+          <div className="db-command-actions">
+            <button
+              className={`dbstats-sync-btn ${loading ? 'syncing' : ''}`}
+              onClick={handleSync}
+              disabled={loading}
+              type="button"
+            >
+              <FaSync />
+              <span>{loading ? 'Syncing' : 'Sync'}</span>
+            </button>
+            <div className="dbstats-sync-meta">
+              <span className="sync-meta-label">Refresh</span>
+              <strong>{syncLabel}</strong>
             </div>
           </div>
 
-          <div className="dbstats-hero-panel">
-            <div className="hero-panel-grid">
-              <article className="hero-signal-card">
-                <span className="signal-label">Current posture</span>
-                <strong>{status}</strong>
-                <span className="signal-caption">
-                  The storage layer is currently operating in a {status.toLowerCase()} state based on live runway forecasting.
-                </span>
+          <div className="db-signal-grid">
+            {dbSignals.map((signal) => (
+              <article className={`db-signal-card tone-${signal.tone}`} key={signal.label}>
+                <div className="db-signal-icon">{signal.icon}</div>
+                <div>
+                  <span>{signal.label}</span>
+                  <strong>{signal.value}</strong>
+                  <small>{signal.meta}</small>
+                </div>
               </article>
-
-              <article className="hero-signal-card">
-                <span className="signal-label">Runway</span>
-                <strong>{prediction?.daysRemaining ?? '--'} days</strong>
-                <span className="signal-caption">
-                  Full-capacity projection lands on {prediction ? formatDate(prediction.predictedFullDate) : '--'}.
-                </span>
-              </article>
-
-              <article className="hero-signal-card wide">
-                <span className="signal-label">Growth tempo</span>
-                <div className="signal-trend">
-                  {latestGrowth >= 0 ? <FaArrowUp /> : <FaArrowDown />}
-                  <strong>{Math.abs(latestGrowth).toFixed(1)} GB/day</strong>
-                </div>
-                <span className="signal-caption">
-                  Seven-day average is {Math.abs(averageGrowth).toFixed(1)} GB/day, giving operators a steadier view of expansion pressure.
-                </span>
-              </article>
-            </div>
-          </div>
-        </section>
-
-        <section className="dbstats-summary-row">
-          <article className="summary-card">
-            <div className="summary-icon"><FaHdd /></div>
-            <div className="summary-copy">
-              <span className="summary-label">Used capacity</span>
-              <strong>{prediction?.currentUsedGb.toFixed(0)} GB</strong>
-              <span className="summary-meta">of {prediction?.totalCapacityGb.toFixed(0)} GB total capacity</span>
-            </div>
-          </article>
-
-          <article className="summary-card">
-            <div className="summary-icon"><FaDatabase /></div>
-            <div className="summary-copy">
-              <span className="summary-label">Free capacity</span>
-              <strong>{metrics?.remaining_capacity_gb.toFixed(0)} GB</strong>
-              <span className="summary-meta">{remainingPercentage.toFixed(1)}% available headroom remaining</span>
-            </div>
-          </article>
-
-          <article className="summary-card">
-            <div className="summary-icon"><FaWaveSquare /></div>
-            <div className="summary-copy">
-              <span className="summary-label">Projected full date</span>
-              <strong>{prediction ? formatDate(prediction.predictedFullDate) : '--'}</strong>
-              <span className="summary-meta">Forecasted saturation point if current data patterns hold</span>
-            </div>
-          </article>
-        </section>
-
-        <section className="dbstats-grid">
-          <article className="db-panel db-panel-capacity">
-            <div className="panel-head">
-              <div>
-                <span className="panel-kicker">Storage Core</span>
-                <h2>Capacity posture</h2>
-              </div>
-              <div className="panel-icon"><FaServer /></div>
-            </div>
-
-            <div className="capacity-layout">
-              <div className="ring-container">
-                <svg viewBox="0 0 120 120" className="capacity-ring">
-                  <defs>
-                    <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="var(--dbstats-accent-cyan)" />
-                      <stop offset="50%" stopColor="var(--dbstats-accent-green)" />
-                      <stop offset="100%" stopColor="var(--dbstats-accent-cyan)" />
-                    </linearGradient>
-                  </defs>
-                  <circle className="ring-track" cx="60" cy="60" r="52" />
-                  <circle
-                    className="ring-progress"
-                    cx="60"
-                    cy="60"
-                    r="52"
-                    strokeDasharray={`${usedPercentage * 3.27} 327`}
-                    style={{ stroke: 'url(#ringGradient)' }}
-                  />
-                </svg>
-                <div className="ring-center">
-                  <span className="percentage-value">{usedPercentage.toFixed(1)}%</span>
-                  <span className="percentage-label">Utilized</span>
-                </div>
-              </div>
-
-              <div className="capacity-breakdown">
-                <div className="breakdown-item">
-                  <div className="breakdown-topline">
-                    <span className="breakdown-label">Used now</span>
-                    <span className="breakdown-value">{prediction?.currentUsedGb.toFixed(1)} GB</span>
-                  </div>
-                  <div className="breakdown-bar">
-                    <div className="bar-fill" style={{ width: `${usedPercentage}%` }} />
-                  </div>
-                </div>
-
-                <div className="breakdown-item">
-                  <div className="breakdown-topline">
-                    <span className="breakdown-label">Remaining buffer</span>
-                    <span className="breakdown-value">{metrics?.remaining_capacity_gb.toFixed(1)} GB</span>
-                  </div>
-                  <div className="breakdown-bar free">
-                    <div className="bar-fill" style={{ width: `${remainingPercentage}%` }} />
-                  </div>
-                </div>
-
-                <div className="breakdown-item total">
-                  <div className="breakdown-topline">
-                    <span className="breakdown-label">Provisioned total</span>
-                    <span className="breakdown-value">{prediction?.totalCapacityGb.toFixed(1)} GB</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <article className="db-panel db-panel-forecast">
-            <div className="panel-head">
-              <div>
-                <span className="panel-kicker">Predictive Layer</span>
-                <h2>Runway forecast</h2>
-              </div>
-              <div className="panel-icon"><FaCalendarAlt /></div>
-            </div>
-
-            <div className="forecast-display">
-              <div className="days-remaining">
-                <span className="days-value">{prediction?.daysRemaining}</span>
-                <span className="days-unit">days</span>
-              </div>
-
-              <div className="forecast-details">
-                <div className="forecast-detail-row">
-                  <span className="forecast-label">Projected full date</span>
-                  <strong>{prediction && formatDate(prediction.predictedFullDate)}</strong>
-                </div>
-                <div className="forecast-detail-row">
-                  <span className="forecast-label">Risk state</span>
-                  <strong style={{ color: getStatusColor(status) }}>{status}</strong>
-                </div>
-              </div>
-
-              <div
-                className="status-pill"
-                style={{
-                  backgroundColor: `color-mix(in srgb, ${getStatusColor(status)} 12%, transparent)`,
-                  borderColor: `color-mix(in srgb, ${getStatusColor(status)} 35%, transparent)`,
-                  color: getStatusColor(status)
-                }}
-              >
-                {getStatusIcon(status)}
-                <span>{status} capacity outlook</span>
-              </div>
-            </div>
-          </article>
-
-          <article className="db-panel db-panel-growth">
-            <div className="panel-head">
-              <div>
-                <span className="panel-kicker">Velocity Scan</span>
-                <h2>Growth pulse</h2>
-              </div>
-              <div className="panel-icon"><FaChartLine /></div>
-            </div>
-
-            <div className="growth-display">
-              <div className="growth-primary">
-                <div className="growth-value-wrapper">
-                  {latestGrowth >= 0 ? <FaArrowUp className="growth-direction" /> : <FaArrowDown className="growth-direction negative" />}
-                  <span className="growth-number">{Math.abs(latestGrowth).toFixed(1)}</span>
-                  <span className="growth-unit">GB/day</span>
-                </div>
-                <span className="growth-label">Current daily growth rate</span>
-              </div>
-
-              <div className="growth-secondary">
-                <div className="secondary-stat">
-                  <span className="stat-label">7-day average</span>
-                  <span className={`stat-value ${averageGrowth >= 0 ? 'positive' : 'negative'}`}>
-                    {averageGrowth >= 0 ? <FaArrowUp /> : <FaArrowDown />}
-                    {Math.abs(averageGrowth).toFixed(1)} GB
-                  </span>
-                </div>
-
-                <div className="secondary-stat">
-                  <span className="stat-label">Trend interpretation</span>
-                  <span className="stat-annotation">
-                    {averageGrowth >= 0 ? 'Storage footprint expanding steadily' : 'Storage footprint contracting'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </article>
-        </section>
-
-        <section className="dbstats-analytics-grid">
-          <article className="db-panel chart-panel">
-            <div className="panel-head panel-head-inline">
-              <div>
-                <span className="panel-kicker">Weekly Analysis</span>
-                <h2>Growth contour</h2>
-              </div>
-              <div className="live-chip">
-                <span className="badge-dot" />
-                Live Data
-              </div>
-            </div>
-
-            <div className="chart-wrapper">
-              <canvas ref={canvasRef} className="growth-chart" />
-            </div>
-          </article>
-
-          <article className="db-panel insight-panel">
-            <div className="panel-head">
-              <div>
-                <span className="panel-kicker">Operator Insight</span>
-                <h2>Control notes</h2>
-              </div>
-              <div className="panel-icon"><FaShieldAlt /></div>
-            </div>
-
-            <div className="insight-list">
-              <div className="insight-item">
-                <span className="insight-label">Runway confidence</span>
-                <p>
-                  With {prediction?.daysRemaining ?? '--'} days remaining, the platform is currently tracking a
-                  <strong> {status.toLowerCase()} </strong>
-                  storage posture.
-                </p>
-              </div>
-
-              <div className="insight-item">
-                <span className="insight-label">Capacity pressure</span>
-                <p>
-                  {usedPercentage.toFixed(1)}% of provisioned space is already occupied, leaving {remainingPercentage.toFixed(1)}% available for future growth.
-                </p>
-              </div>
-
-              <div className="insight-item">
-                <span className="insight-label">Growth watch</span>
-                <p>
-                  Current change is {Math.abs(latestGrowth).toFixed(1)} GB/day, while the weekly average settles at {Math.abs(averageGrowth).toFixed(1)} GB/day for a steadier planning baseline.
-                </p>
-              </div>
-            </div>
-          </article>
-        </section>
-
-        <section className="legend-panel">
-          <div className="legend-header">
-            <span className="panel-kicker">Seven-Day Detail</span>
-            <h2>Daily ledger</h2>
-          </div>
-
-          <div className="chart-legend">
-            {weekly?.growth.map((value, index) => (
-              <div key={index} className="legend-item">
-                <div
-                  className={`legend-bar ${value >= 0 ? 'positive' : 'negative'}`}
-                  style={{ height: `${Math.abs(value) * 3 + 20}px` }}
-                />
-                <span className={`legend-value ${value >= 0 ? 'positive' : 'negative'}`}>
-                  {value > 0 ? '+' : ''}{value}
-                </span>
-                <span className="legend-date">
-                  {new Date(weekly.labels[index]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </span>
-              </div>
             ))}
           </div>
         </section>
 
-        <footer className="dbstats-footer">
-          <div className="footer-content">
-            <FaServer className="footer-icon" />
-            <span className="footer-text">
-              Telemetry endpoint: {DATABASE_TELEMETRY_ENDPOINT_LABEL} | Source mode: {data?.timestamp ? 'Cached fallback' : 'Direct connection'}
-            </span>
+        <section className="db-command-layout">
+          <div className="db-command-main">
+            <article className="db-panel db-capacity-board">
+              <div className="panel-head">
+                <div>
+                  <span className="panel-kicker">Storage Core</span>
+                  <h2>Capacity posture</h2>
+                </div>
+                <div className="panel-icon"><FaServer /></div>
+              </div>
+
+              <div className="capacity-layout">
+                <div className="ring-container">
+                  <svg viewBox="0 0 120 120" className="capacity-ring">
+                    <defs>
+                      <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="var(--dbstats-accent-cyan)" />
+                        <stop offset="50%" stopColor="var(--dbstats-accent-green)" />
+                        <stop offset="100%" stopColor="var(--dbstats-accent-cyan)" />
+                      </linearGradient>
+                    </defs>
+                    <circle className="ring-track" cx="60" cy="60" r="52" />
+                    <circle
+                      className="ring-progress"
+                      cx="60"
+                      cy="60"
+                      r="52"
+                      strokeDasharray={`${usedPercentage * 3.27} 327`}
+                      style={{ stroke: 'url(#ringGradient)' }}
+                    />
+                  </svg>
+                  <div className="ring-center">
+                    <span className="percentage-value">{usedPercentage.toFixed(1)}%</span>
+                    <span className="percentage-label">Utilized</span>
+                  </div>
+                </div>
+
+                <div className="capacity-breakdown">
+                  <div className="breakdown-item">
+                    <div className="breakdown-topline">
+                      <span className="breakdown-label">Used now</span>
+                      <span className="breakdown-value">{prediction?.currentUsedGb.toFixed(1)} GB</span>
+                    </div>
+                    <div className="breakdown-bar">
+                      <div className="bar-fill" style={{ width: `${usedPercentage}%` }} />
+                    </div>
+                  </div>
+
+                  <div className="breakdown-item">
+                    <div className="breakdown-topline">
+                      <span className="breakdown-label">Remaining buffer</span>
+                      <span className="breakdown-value">{metrics?.remaining_capacity_gb.toFixed(1)} GB</span>
+                    </div>
+                    <div className="breakdown-bar free">
+                      <div className="bar-fill" style={{ width: `${remainingPercentage}%` }} />
+                    </div>
+                  </div>
+
+                  <div className="breakdown-item total">
+                    <div className="breakdown-topline">
+                      <span className="breakdown-label">Provisioned total</span>
+                      <span className="breakdown-value">{prediction?.totalCapacityGb.toFixed(1)} GB</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className="db-panel chart-panel db-growth-board">
+              <div className="panel-head panel-head-inline">
+                <div>
+                  <span className="panel-kicker">Weekly Analysis</span>
+                  <h2>Growth contour</h2>
+                </div>
+                <div className="live-chip">
+                  <span className="badge-dot" />
+                  Live Data
+                </div>
+              </div>
+
+              <div className="chart-wrapper">
+                <canvas ref={canvasRef} className="growth-chart" />
+              </div>
+            </article>
+
+            <article className="legend-panel db-ledger-board">
+              <div className="legend-header fine-div">
+                <span className="panel-kicker">Seven-Day Detail</span>
+                <h2>Daily ledger</h2>
+              </div>
+
+              <div className="chart-legend">
+                {weekly?.growth.map((value, index) => (
+                  <div key={index} className="legend-item">
+                    <div
+                      className={`legend-bar ${value >= 0 ? 'positive' : 'negative'}`}
+                      style={{ height: `${Math.abs(value) * 3 + 20}px` }}
+                    />
+                    <span className={`legend-value ${value >= 0 ? 'positive' : 'negative'}`}>
+                      {value > 0 ? '+' : ''}{value}
+                    </span>
+                    <span className="legend-date">
+                      {new Date(weekly.labels[index]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </article>
           </div>
-        </footer>
+
+          <aside className="db-command-rail">
+            <article className="db-panel db-runway-panel">
+              <div className="panel-head">
+                <div>
+                  <span className="panel-kicker">Predictive Layer</span>
+                  <h2>Runway</h2>
+                </div>
+                <div className="panel-icon"><FaCalendarAlt /></div>
+              </div>
+
+              <div className="forecast-display">
+                <div className="days-remaining">
+                  <span className="days-value">{prediction?.daysRemaining}</span>
+                  <span className="days-unit">days</span>
+                </div>
+
+                <div className="forecast-details">
+                  <div className="forecast-detail-row">
+                    <span className="forecast-label">Full date</span>
+                    <strong>{prediction && formatDate(prediction.predictedFullDate)}</strong>
+                  </div>
+                  <div className="forecast-detail-row">
+                    <span className="forecast-label">Risk state</span>
+                    <strong style={{ color: getStatusColor(status) }}>{status}</strong>
+                  </div>
+                </div>
+
+                <div className={`dbstats-status-pill ${status.toLowerCase()}`}>
+                  {getStatusIcon(status)}
+                  <span>{status}</span>
+                </div>
+              </div>
+            </article>
+
+            <article className="db-panel db-growth-rail-panel">
+              <div className="panel-head">
+                <div>
+                  <span className="panel-kicker">Velocity Scan</span>
+                  <h2>Growth pulse</h2>
+                </div>
+                <div className="panel-icon"><FaChartLine /></div>
+              </div>
+
+              <div className="growth-display">
+                <div className="growth-primary">
+                  <div className="growth-value-wrapper">
+                    {latestGrowth >= 0 ? <FaArrowUp className="growth-direction" /> : <FaArrowDown className="growth-direction negative" />}
+                    <span className="growth-number">{Math.abs(latestGrowth).toFixed(1)}</span>
+                    <span className="growth-unit">GB/day</span>
+                  </div>
+                  <span className="growth-label">Current daily growth rate</span>
+                </div>
+
+                <div className="growth-secondary">
+                  <div className="secondary-stat">
+                    <span className="stat-label">7-day average</span>
+                    <span className={`stat-value ${averageGrowth >= 0 ? 'positive' : 'negative'}`}>
+                      {averageGrowth >= 0 ? <FaArrowUp /> : <FaArrowDown />}
+                      {Math.abs(averageGrowth).toFixed(1)} GB
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className="db-panel insight-panel">
+              <div className="panel-head">
+                <div>
+                  <span className="panel-kicker">Operator Insight</span>
+                  <h2>Control notes</h2>
+                </div>
+                <div className="panel-icon"><FaShieldAlt /></div>
+              </div>
+
+              <div className="insight-list">
+                <div className="insight-item">
+                  <span className="insight-label">Runway confidence</span>
+                  <p>
+                    With {prediction?.daysRemaining ?? '--'} days remaining, the platform is tracking a
+                    <strong> {status.toLowerCase()} </strong>
+                    storage posture.
+                  </p>
+                </div>
+
+                <div className="insight-item">
+                  <span className="insight-label">Capacity pressure</span>
+                  <p>
+                    {usedPercentage.toFixed(1)}% occupied, leaving {remainingPercentage.toFixed(1)}% available for future growth.
+                  </p>
+                </div>
+
+                <div className="insight-item">
+                  <span className="insight-label">Growth watch</span>
+                  <p>
+                    Current change is {Math.abs(latestGrowth).toFixed(1)} GB/day against a {Math.abs(averageGrowth).toFixed(1)} GB/day weekly baseline.
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            <footer className="dbstats-footer">
+              <div className="footer-content">
+                <FaServer className="footer-icon" />
+                <span className="footer-text">
+                  {DATABASE_TELEMETRY_ENDPOINT_LABEL} | {data?.timestamp ? 'Cached fallback' : 'Direct connection'}
+                </span>
+              </div>
+            </footer>
+          </aside>
+        </section>
       </main>
       <PageGuide guide={pageGuides.databaseStats} />
     </div>

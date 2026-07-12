@@ -92,6 +92,77 @@ const TABS: Array<{ id: TrustlinkTab; label: string; icon: React.ReactNode }> = 
   { id: 'history', label: 'History', icon: <FiFileText /> },
 ];
 
+const TrustlinkOperationsPreview: React.FC = () => (
+  <div className="trustlink-page trustlink-preview-page">
+    <section className="trustlink-command-strip trustlink-skel-panel">
+      <div className="trustlink-skel-command-copy">
+        <div className="trustlink-skel-line trustlink-skel-kicker" />
+        <div className="trustlink-skel-line trustlink-skel-title" />
+        <div className="trustlink-skel-line trustlink-skel-meta" />
+      </div>
+      <div className="trustlink-skel-signal-grid">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <article key={index} className="trustlink-skel-signal-card">
+            <div className="trustlink-skel-block trustlink-skel-icon" />
+            <div className="trustlink-skel-signal-copy">
+              <div className="trustlink-skel-line trustlink-skel-label" />
+              <div className="trustlink-skel-line trustlink-skel-value" />
+              <div className="trustlink-skel-line trustlink-skel-meta" />
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section className="trustlink-layout">
+      <div className="trustlink-board-panel trustlink-skel-panel">
+        <div className="trustlink-skel-board-head">
+          <div>
+            <div className="trustlink-skel-line trustlink-skel-kicker" />
+            <div className="trustlink-skel-line trustlink-skel-panel-title" />
+          </div>
+          <div className="trustlink-skel-block trustlink-skel-pill" />
+        </div>
+        <div className="trustlink-skel-actions">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="trustlink-skel-block trustlink-skel-action" />
+          ))}
+        </div>
+        <div className="trustlink-skel-tabs">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="trustlink-skel-block trustlink-skel-tab" />
+          ))}
+        </div>
+        <div className="trustlink-skel-pipeline">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="trustlink-skel-stage" />
+          ))}
+        </div>
+      </div>
+
+      <aside className="trustlink-side-rail">
+        <div className="trustlink-side-card trustlink-skel-panel">
+          <div className="trustlink-skel-line trustlink-skel-kicker" />
+          <div className="trustlink-skel-line trustlink-skel-panel-title" />
+          <div className="trustlink-skel-micro-grid">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="trustlink-skel-field" />
+            ))}
+          </div>
+        </div>
+        <div className="trustlink-side-card trustlink-skel-panel">
+          <div className="trustlink-skel-line trustlink-skel-kicker" />
+          <div className="trustlink-skel-list">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="trustlink-skel-row" />
+            ))}
+          </div>
+        </div>
+      </aside>
+    </section>
+  </div>
+);
+
 const formatDuration = (ms?: number | null): string => {
   if (!ms || ms <= 0) return '-';
   if (ms < 1000) return `${ms} ms`;
@@ -573,32 +644,51 @@ const TrustlinkOperationsPage: React.FC = () => {
     return { label: prettyStatus(run.status), tone: 'warning' as const };
   }, [todayStatus]);
 
-  const heroMetrics = [
+  const pipelineTone = completionCount === PIPELINE_ORDER.length
+    ? 'success'
+    : currentStatusTone === 'failed'
+      ? 'failed'
+      : currentStatusTone === 'running'
+        ? 'running'
+        : 'warning';
+  const exportTone = displayRun?.file_present
+    ? 'success'
+    : displayRun?.file_status === 'deleted'
+      ? 'warning'
+      : currentStatusTone === 'failed'
+        ? 'failed'
+        : 'pending';
+  const trustlinkSignals = [
     {
-      label: 'Pipeline Completion',
+      label: 'Pipeline',
       value: `${completionCount}/${PIPELINE_ORDER.length}`,
-      helper: 'Stages sealed',
+      helper: currentStatus === 'none' ? 'No run selected' : prettyStatus(currentStatus),
       icon: <FiTarget />,
+      tone: pipelineTone,
     },
     {
-      label: 'Rows Processed',
+      label: 'Rows',
       value: formatNumber(totalRows),
-      helper: 'Current evidence set',
+      helper: `${formatNumber(displayRun?.idc_rows)} IDC / ${formatNumber(displayRun?.digipay_rows)} DigiPay`,
       icon: <FiDatabase />,
+      tone: totalRows > 0 ? 'success' : 'pending',
     },
     {
-      label: 'Delivery Duration',
-      value: formatDuration(totalDuration),
-      helper: 'End-to-end execution',
-      icon: <FiClock />,
+      label: 'Export',
+      value: displayRun?.file_present ? 'Ready' : prettyFileStatus(displayRun?.file_status),
+      helper: displayRun?.file_name || 'No export file',
+      icon: <FiFileText />,
+      tone: exportTone,
     },
     {
-      label: 'Export Readiness',
-      value: displayRun?.file_present ? 'Ready' : 'Awaiting file',
-      helper: displayRun?.file_present ? 'Download available' : 'File save pending',
-      icon: <FiShield />,
+      label: 'Realtime',
+      value: liveConnectionState,
+      helper: refreshing ? 'Synchronizing live state' : liveLabel,
+      icon: <FiZap />,
+      tone: liveTone,
     },
   ];
+  const recentRuns = runs.slice(0, 5);
 
   const handleRunNow = async () => {
     setActionLoading(true);
@@ -748,65 +838,36 @@ const TrustlinkOperationsPage: React.FC = () => {
   );
 
   if (initialLoading) {
-    return (
-      <div className="trustlink-page trustlink-page-loading">
-        <section className="trustlink-hero trustlink-hero-loading">
-          <div className="skeleton skeleton-badge" />
-          <div className="skeleton skeleton-title" />
-          <div className="skeleton skeleton-subtitle" />
-          <div className="trustlink-hero-metrics">
-            <div className="skeleton skeleton-hero-card" />
-            <div className="skeleton skeleton-hero-card" />
-            <div className="skeleton skeleton-hero-card" />
-            <div className="skeleton skeleton-hero-card" />
-          </div>
-        </section>
-
-        <section className="trustlink-command-bar">
-          <div className="skeleton skeleton-btn" />
-          <div className="skeleton skeleton-btn" />
-          <div className="skeleton skeleton-btn" />
-        </section>
-      </div>
-    );
+    return <TrustlinkOperationsPreview />;
   }
 
   const inspectorTimeline = buildPipelineTimeline(inspectorRun, inspectorSteps, inspectorRun?.file_present);
 
   return (
     <div className="trustlink-page">
-      <section className="trustlink-hero">
-        <div className="trustlink-hero-copy">
-          <span className={`trustlink-eyebrow tone-${currentStatusTone}`}>
-            <FiActivity />
-            TrustLink Operations
+      <section className="trustlink-command-strip">
+        <div className="trustlink-command-title">
+          <span>
+            <FiShield />
+            TrustLink command
           </span>
-          <h1>TrustLink Ops</h1>
-          <p>
-            A focused command surface for the daily account export: run control,
-            delivery evidence, audit history, and precise pipeline telemetry.
-          </p>
-
-          <div className="trustlink-status-strip">
-            <span className={`status-dot ${liveConnectionState === 'connected' || refreshing ? 'active' : ''}`} />
-            <span>{refreshing ? 'Synchronizing live state' : 'WebSocket telemetry'}</span>
-            <span className={`trustlink-status-pill tone-${liveTone}`}>
-              {liveLabel}
-            </span>
-            <span className={`trustlink-status-pill tone-${currentStatusTone}`}>
-              {prettyStatus(currentStatus)}
-            </span>
-            {actionLoading && actionLabel && <span className="action-label">{actionLabel}</span>}
-          </div>
+          <strong>{prettyStatus(currentStatus)}</strong>
+          <small>
+            {displayRun
+              ? `${formatRunDate(displayRun.run_date)} / ${formatRunType(displayRun.run_type)} / ${formatDuration(totalDuration)}`
+              : 'Extraction console ready'}
+          </small>
         </div>
 
-        <div className="trustlink-hero-metrics">
-          {heroMetrics.map((metric) => (
-            <article key={metric.label} className="trustlink-hero-card">
-              <span className="hero-card-icon">{metric.icon}</span>
-              <span className="hero-card-label">{metric.label}</span>
-              <strong>{metric.value}</strong>
-              <small>{metric.helper}</small>
+        <div className="trustlink-signal-grid">
+          {trustlinkSignals.map((signal) => (
+            <article key={signal.label} className={`trustlink-signal-card tone-${signal.tone}`}>
+              <span className="trustlink-signal-icon">{signal.icon}</span>
+              <div className="trustlink-signal-copy">
+                <small>{signal.label}</small>
+                <strong>{signal.value}</strong>
+                <em>{signal.helper}</em>
+              </div>
             </article>
           ))}
         </div>
@@ -819,289 +880,396 @@ const TrustlinkOperationsPage: React.FC = () => {
         </div>
       )}
 
-      <section className="trustlink-command-bar">
-        <div className="trustlink-command-group">
-          <button className="trustlink-btn primary" onClick={handleRunNow} disabled={actionLoading}>
-            <FiPlay />
-            Run Extraction
-          </button>
-          <button className="trustlink-btn secondary" onClick={() => void hydrate()} disabled={actionLoading}>
-            <FiRefreshCcw />
-            Refresh Live Data
-          </button>
-          {displayRun?.file_present && displayRun.id && (
-            <button className="trustlink-btn ghost" onClick={() => void handleDownload(displayRun.id, displayRun.file_name)} disabled={actionLoading}>
-              <FiArrowDownCircle />
-              Download Export
+      <section className="trustlink-layout">
+        <div className="trustlink-board-panel">
+          <div className="trustlink-panel-head">
+            <div>
+              <span className="trustlink-panel-kicker">
+                <FiLayers />
+                Extraction board
+              </span>
+              <h2>Daily TrustLink run control</h2>
+              <p>Run, verify, export, and inspect the account delivery path from source extraction to file evidence.</p>
+            </div>
+            <div className="trustlink-panel-meta">
+              <span className={`trustlink-status-pill tone-${liveTone}`}>
+                {liveLabel}
+              </span>
+              {actionLoading && actionLabel && <span className="action-label">{actionLabel}</span>}
+            </div>
+          </div>
+
+          <div className="trustlink-command-actions">
+            <button className="trustlink-btn primary" onClick={handleRunNow} disabled={actionLoading}>
+              <FiPlay />
+              Run Extraction
             </button>
+            <button className="trustlink-btn secondary" onClick={() => void hydrate()} disabled={actionLoading}>
+              <FiRefreshCcw />
+              Refresh
+            </button>
+            {displayRun?.file_present && displayRun.id && (
+              <button className="trustlink-btn ghost" onClick={() => void handleDownload(displayRun.id, displayRun.file_name)} disabled={actionLoading}>
+                <FiArrowDownCircle />
+                Download Export
+              </button>
+            )}
+            <button className="trustlink-btn danger" onClick={() => setShowOverwriteWarning(true)} disabled={actionLoading}>
+              <FiZap />
+              Overwrite
+            </button>
+          </div>
+
+          {!hasRunData ? (
+            <section className="trustlink-empty-state">
+              <span className="trustlink-empty-icon"><FiDatabase /></span>
+              <h2>No TrustLink run is available yet</h2>
+              <p>The command surface is ready, but no extraction run has been returned by the active backend yet.</p>
+              <button className="trustlink-btn primary" onClick={handleRunNow} disabled={actionLoading}>
+                <FiPlay />
+                Trigger First Run
+              </button>
+            </section>
+          ) : (
+            <section className="trustlink-tabs-shell">
+              <div className="trustlink-tabs" role="tablist" aria-label="TrustLink operations sections">
+                {TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    className={`trustlink-tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+                    onClick={() => setActiveTab(tab.id)}
+                  >
+                    {tab.icon}
+                    <span>{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {activeTab === 'pipeline' && (
+                <div className="trustlink-tab-panel trustlink-pipeline-panel">
+                  <article className="trustlink-card trustlink-card-wide">
+                    <div className="trustlink-card-header">
+                      <div>
+                        <span className="trustlink-card-kicker">Pipeline visualization</span>
+                        <h2>Extraction path</h2>
+                      </div>
+                      <span className="trustlink-chip">
+                        {completionCount} of {PIPELINE_ORDER.length} stages complete
+                      </span>
+                    </div>
+                    {renderPipelineNodes(timeline)}
+                  </article>
+
+                  <article className="trustlink-card">
+                    <div className="trustlink-card-header">
+                      <div>
+                        <span className="trustlink-card-kicker">Live signal</span>
+                        <h2>Run posture</h2>
+                      </div>
+                      <span className={`trustlink-status-pill tone-${currentStatusTone}`}>
+                        {prettyStatus(currentStatus)}
+                      </span>
+                    </div>
+                    <div className="trustlink-run-lattice">
+                      {renderDataPoint('Selected run', displayRun?.id || '-')}
+                      {renderDataPoint('Rows processed', formatNumber(displayRun?.total_rows))}
+                      {renderDataPoint('Delivery duration', formatDuration(getRunDurationMs(displayRun)))}
+                      {renderDataPoint('Completed', formatDateTime(displayRun?.completed_at))}
+                    </div>
+                  </article>
+                </div>
+              )}
+
+              {activeTab === 'today' && (
+                <div className="trustlink-tab-panel trustlink-today-panel">
+                  <article className="trustlink-card trustlink-schedule-radar">
+                    <div className="schedule-radar-head">
+                      <div>
+                        <span className="trustlink-card-kicker">Delivery cadence</span>
+                        <h2>Daily 07:00 command deadline</h2>
+                      </div>
+                      <span className={`trustlink-status-pill tone-${deadlineReadiness.tone}`}>
+                        {deadlineReadiness.label}
+                      </span>
+                    </div>
+
+                    <div className="schedule-radar-grid">
+                      <article className="schedule-radar-tile">
+                        <span>Next deadline</span>
+                        <strong>{formatDateTime(scheduleTelemetry.nextDeadline.toISOString())}</strong>
+                        <small>{scheduleTelemetry.countdown} remaining</small>
+                      </article>
+                      <article className="schedule-radar-tile">
+                        <span>Cadence cycle</span>
+                        <strong>{scheduleTelemetry.cycleProgress}%</strong>
+                        <small>From last 07:00 checkpoint</small>
+                      </article>
+                      <article className="schedule-radar-tile progress">
+                        <span>Deadline progress</span>
+                        <div className="schedule-progress-track">
+                          <span className="schedule-progress-fill" style={{ width: `${scheduleTelemetry.cycleProgress}%` }} />
+                        </div>
+                        <small>{formatDateTime(scheduleTelemetry.previousDeadline.toISOString())} to {formatDateTime(scheduleTelemetry.nextDeadline.toISOString())}</small>
+                      </article>
+                    </div>
+                  </article>
+
+                  <article className="trustlink-card">
+                    <div className="trustlink-card-header">
+                      <div>
+                        <span className="trustlink-card-kicker">Today</span>
+                        <h2>Current run</h2>
+                      </div>
+                      <span className={`trustlink-status-pill tone-${currentStatusTone}`}>
+                        {prettyStatus(todayStatus?.run?.status || todayStatus?.status)}
+                      </span>
+                    </div>
+
+                    <div className="trustlink-data-grid">
+                      {renderDataPoint('Run ID', todayStatus?.run?.id || '-', true)}
+                      {renderDataPoint('Run Date', formatRunDate(todayStatus?.run?.run_date))}
+                      {renderDataPoint('Run Type', formatRunType(todayStatus?.run?.run_type))}
+                      {renderDataPoint('Triggered By', todayStatus?.run?.triggered_by_display || '-')}
+                      {renderDataPoint('Started', formatDateTime(todayStatus?.run?.started_at))}
+                      {renderDataPoint('Completed', formatDateTime(todayStatus?.run?.completed_at))}
+                      {renderDataPoint('Delivery Duration', formatDuration(getRunDurationMs(todayStatus?.run)))}
+                      {renderDataPoint('File Presence', prettyFileStatus(todayStatus?.run?.file_status))}
+                    </div>
+                  </article>
+                </div>
+              )}
+
+              {activeTab === 'evidence' && (
+                <div className="trustlink-tab-panel trustlink-evidence-panel">
+                  <article className="trustlink-card trustlink-card-wide">
+                    <div className="trustlink-card-header">
+                      <div>
+                        <span className="trustlink-card-kicker">Evidence</span>
+                        <h2>Selected run packet</h2>
+                      </div>
+                      {displayRun && (
+                        <button
+                          type="button"
+                          className="trustlink-inline-btn"
+                          onClick={() => void openRunInspector(displayRun.id)}
+                        >
+                          <FiEye /> Inspect run
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="trustlink-data-grid evidence-grid">
+                      {renderDataPoint('Total Rows', formatNumber(displayRun?.total_rows))}
+                      {renderDataPoint('IDC Rows', formatNumber(displayRun?.idc_rows))}
+                      {renderDataPoint('DigiPay Rows', formatNumber(displayRun?.digipay_rows))}
+                      {renderDataPoint('Delivery Duration', formatDuration(getRunDurationMs(displayRun)))}
+                      {renderDataPoint('Extract Time', formatDuration(displayRun?.extract_duration_ms))}
+                      {renderDataPoint('Transform Time', formatDuration(displayRun?.transform_duration_ms))}
+                      {renderDataPoint('Validation Time', formatDuration(displayRun?.validation_duration_ms))}
+                      {renderDataPoint('Triggered By', displayRun?.triggered_by_display || '-', true)}
+                      {renderDataPoint('Export File', displayRun?.file_name || 'No file recorded', true)}
+                      {renderDataPoint('File Status', prettyFileStatus(displayRun?.file_status))}
+                      {renderDataPoint('Run Type', formatRunType(displayRun?.run_type))}
+                      {renderDataPoint('Integrity Hash', displayRun?.file_hash || '-', true)}
+                      {renderDataPoint('Error Surface', displayRun?.error_message || 'No run error captured', true)}
+                    </div>
+                  </article>
+                </div>
+              )}
+
+              {activeTab === 'history' && (
+                <div className="trustlink-tab-panel">
+                  <section className="trustlink-history">
+                    <div className="trustlink-card-header">
+                      <div>
+                        <span className="trustlink-card-kicker">Run history</span>
+                        <h2>Audit trail</h2>
+                      </div>
+                      <span className="trustlink-chip">{runs.length} recorded runs</span>
+                    </div>
+
+                    <div className="trustlink-history-list">
+                      {runs.map((run) => {
+                        const tone = normalizeVisualStatus(run.status);
+                        const isSelected = displayRun?.id === run.id;
+
+                        return (
+                          <article
+                            key={run.id}
+                            className={`trustlink-history-item ${isSelected ? 'selected' : ''}`}
+                            onClick={() => void selectRun(run.id, 'evidence')}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                void selectRun(run.id, 'evidence');
+                              }
+                            }}
+                          >
+                            <div className="history-item-topline">
+                              <div>
+                                <h3>{formatRunDate(run.run_date)}</h3>
+                                <p>{run.id}</p>
+                              </div>
+                              <span className={`trustlink-status-pill tone-${tone}`}>{prettyStatus(run.status)}</span>
+                            </div>
+
+                            <div className="history-item-metrics">
+                              <span>{formatRunType(run.run_type)}</span>
+                              <span>{formatNumber(run.total_rows)} rows</span>
+                              <span>{formatDuration(getRunDurationMs(run))}</span>
+                              <span>{run.triggered_by_display || 'Unknown trigger'}</span>
+                              <span>{prettyFileStatus(run.file_status)}</span>
+                              <span>{formatDateTime(run.completed_at || run.started_at)}</span>
+                            </div>
+
+                            <div className="history-item-actions">
+                              <button
+                                className="trustlink-inline-btn"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  void openRunInspector(run.id);
+                                }}
+                                disabled={inspectorLoading}
+                              >
+                                <FiEye /> Inspect run
+                              </button>
+                              {run.file_present && (
+                                <button
+                                  className="trustlink-inline-btn"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    void handleDownload(run.id, run.file_name);
+                                  }}
+                                >
+                                  <FiArrowDownCircle /> Download
+                                </button>
+                              )}
+                              {canDeleteRunFile(run, runs) && (
+                                <button
+                                  className="trustlink-inline-btn danger"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setPendingFileDeleteRun(run);
+                                  }}
+                                >
+                                  Delete file
+                                </button>
+                              )}
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </section>
+                </div>
+              )}
+            </section>
           )}
         </div>
 
-        <button className="trustlink-btn danger" onClick={() => setShowOverwriteWarning(true)} disabled={actionLoading}>
-          <FiZap />
-          Overwrite and Re-Extract
-        </button>
+        <aside className="trustlink-side-rail">
+          <article className="trustlink-side-card cadence-card">
+            <div className="trustlink-panel-head compact">
+              <div>
+                <span className="trustlink-panel-kicker">
+                  <FiClock />
+                  Cadence
+                </span>
+                <h3>07:00 delivery window</h3>
+              </div>
+              <span className={`trustlink-status-pill tone-${deadlineReadiness.tone}`}>
+                {deadlineReadiness.label}
+              </span>
+            </div>
+            <div className="trustlink-cadence-readout">
+              <strong>{scheduleTelemetry.countdown}</strong>
+              <span>to next command deadline</span>
+            </div>
+            <div className="schedule-progress-track">
+              <span className="schedule-progress-fill" style={{ width: `${scheduleTelemetry.cycleProgress}%` }} />
+            </div>
+            <div className="trustlink-mini-grid">
+              {renderDataPoint('Next', formatDateTime(scheduleTelemetry.nextDeadline.toISOString()))}
+              {renderDataPoint('Cycle', `${scheduleTelemetry.cycleProgress}%`)}
+            </div>
+          </article>
+
+          <article className="trustlink-side-card">
+            <div className="trustlink-panel-head compact">
+              <div>
+                <span className="trustlink-panel-kicker">
+                  <FiShield />
+                  Run packet
+                </span>
+                <h3>Selected evidence</h3>
+              </div>
+              <span className={`trustlink-status-pill tone-${currentStatusTone}`}>
+                {prettyStatus(currentStatus)}
+              </span>
+            </div>
+            <div className="trustlink-mini-grid">
+              {renderDataPoint('Rows', formatNumber(displayRun?.total_rows))}
+              {renderDataPoint('IDC', formatNumber(displayRun?.idc_rows))}
+              {renderDataPoint('DigiPay', formatNumber(displayRun?.digipay_rows))}
+              {renderDataPoint('Duration', formatDuration(getRunDurationMs(displayRun)))}
+            </div>
+            <div className="trustlink-file-line">
+              <FiFileText />
+              <span>{displayRun?.file_name || 'No export file recorded'}</span>
+            </div>
+            {displayRun && (
+              <button type="button" className="trustlink-inline-btn full" onClick={() => void openRunInspector(displayRun.id)}>
+                <FiEye />
+                Inspect selected run
+              </button>
+            )}
+          </article>
+
+          <article className="trustlink-side-card">
+            <div className="trustlink-panel-head compact">
+              <div>
+                <span className="trustlink-panel-kicker">
+                  <FiFileText />
+                  History pulse
+                </span>
+                <h3>Recent runs</h3>
+              </div>
+              <span className="trustlink-chip">{runs.length}</span>
+            </div>
+            <div className="trustlink-rail-list">
+              {recentRuns.map((run) => {
+                const tone = normalizeVisualStatus(run.status);
+                return (
+                  <button
+                    key={run.id}
+                    type="button"
+                    className={`trustlink-rail-run ${displayRun?.id === run.id ? 'selected' : ''}`}
+                    onClick={() => void selectRun(run.id, 'evidence')}
+                  >
+                    <span>
+                      <strong>{formatRunDate(run.run_date)}</strong>
+                      <em>{formatNumber(run.total_rows)} rows / {formatDuration(getRunDurationMs(run))}</em>
+                    </span>
+                    <small className={`trustlink-status-pill tone-${tone}`}>{prettyStatus(run.status)}</small>
+                  </button>
+                );
+              })}
+              {!recentRuns.length && <div className="trustlink-rail-empty">Run history will appear here.</div>}
+            </div>
+          </article>
+        </aside>
       </section>
 
-      {!hasRunData ? (
-        <section className="trustlink-empty-state">
-          <span className="trustlink-empty-icon"><FiDatabase /></span>
-          <h2>No TrustLink run is available yet</h2>
-          <p>
-            The command surface is ready, but no extraction run has been returned by the active backend yet.
-          </p>
-          <button className="trustlink-btn primary" onClick={handleRunNow} disabled={actionLoading}>
-            <FiPlay />
-            Trigger First Run
-          </button>
-        </section>
-      ) : (
-        <section className="trustlink-tabs-shell">
-          <div className="trustlink-tabs" role="tablist" aria-label="TrustLink operations sections">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={activeTab === tab.id}
-                className={`trustlink-tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.icon}
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {activeTab === 'pipeline' && (
-            <div className="trustlink-tab-panel trustlink-pipeline-panel">
-              <article className="trustlink-card trustlink-card-wide">
-                <div className="trustlink-card-header">
-                  <div>
-                    <span className="trustlink-card-kicker">Pipeline Visualization</span>
-                    <h2>Extraction path</h2>
-                  </div>
-                  <span className="trustlink-chip">
-                    {completionCount} of {PIPELINE_ORDER.length} stages complete
-                  </span>
-                </div>
-                {renderPipelineNodes(timeline)}
-              </article>
-
-              <article className="trustlink-card">
-                <div className="trustlink-card-header">
-                  <div>
-                    <span className="trustlink-card-kicker">Live Signal</span>
-                    <h2>Run posture</h2>
-                  </div>
-                  <span className={`trustlink-status-pill tone-${currentStatusTone}`}>
-                    {prettyStatus(currentStatus)}
-                  </span>
-                </div>
-                <div className="trustlink-run-lattice">
-                  {renderDataPoint('Selected run', displayRun?.id || '-')}
-                  {renderDataPoint('Rows processed', formatNumber(displayRun?.total_rows))}
-                  {renderDataPoint('Delivery duration', formatDuration(getRunDurationMs(displayRun)))}
-                  {renderDataPoint('Completed', formatDateTime(displayRun?.completed_at))}
-                </div>
-              </article>
-            </div>
-          )}
-
-          {activeTab === 'today' && (
-            <div className="trustlink-tab-panel trustlink-today-panel">
-              <article className="trustlink-card trustlink-schedule-radar">
-                <div className="schedule-radar-head">
-                  <div>
-                    <span className="trustlink-card-kicker">Delivery Cadence</span>
-                    <h2>Daily 07:00 command deadline</h2>
-                  </div>
-                  <span className={`trustlink-status-pill tone-${deadlineReadiness.tone}`}>
-                    {deadlineReadiness.label}
-                  </span>
-                </div>
-
-                <div className="schedule-radar-grid">
-                  <article className="schedule-radar-tile">
-                    <span>Next deadline</span>
-                    <strong>{formatDateTime(scheduleTelemetry.nextDeadline.toISOString())}</strong>
-                    <small>{scheduleTelemetry.countdown} remaining</small>
-                  </article>
-                  <article className="schedule-radar-tile">
-                    <span>Cadence cycle</span>
-                    <strong>{scheduleTelemetry.cycleProgress}%</strong>
-                    <small>From last 07:00 checkpoint</small>
-                  </article>
-                  <article className="schedule-radar-tile progress">
-                    <span>Deadline progress</span>
-                    <div className="schedule-progress-track">
-                      <span className="schedule-progress-fill" style={{ width: `${scheduleTelemetry.cycleProgress}%` }} />
-                    </div>
-                    <small>{formatDateTime(scheduleTelemetry.previousDeadline.toISOString())} to {formatDateTime(scheduleTelemetry.nextDeadline.toISOString())}</small>
-                  </article>
-                </div>
-              </article>
-
-              <article className="trustlink-card">
-                <div className="trustlink-card-header">
-                  <div>
-                    <span className="trustlink-card-kicker">Today</span>
-                    <h2>Current run</h2>
-                  </div>
-                  <span className={`trustlink-status-pill tone-${currentStatusTone}`}>
-                    {prettyStatus(todayStatus?.run?.status || todayStatus?.status)}
-                  </span>
-                </div>
-
-                <div className="trustlink-data-grid">
-                  {renderDataPoint('Run ID', todayStatus?.run?.id || '-', true)}
-                  {renderDataPoint('Run Date', formatRunDate(todayStatus?.run?.run_date))}
-                  {renderDataPoint('Run Type', formatRunType(todayStatus?.run?.run_type))}
-                  {renderDataPoint('Triggered By', todayStatus?.run?.triggered_by_display || '-')}
-                  {renderDataPoint('Started', formatDateTime(todayStatus?.run?.started_at))}
-                  {renderDataPoint('Completed', formatDateTime(todayStatus?.run?.completed_at))}
-                  {renderDataPoint('Delivery Duration', formatDuration(getRunDurationMs(todayStatus?.run)))}
-                  {renderDataPoint('File Presence', prettyFileStatus(todayStatus?.run?.file_status))}
-                </div>
-              </article>
-            </div>
-          )}
-
-          {activeTab === 'evidence' && (
-            <div className="trustlink-tab-panel trustlink-evidence-panel">
-              <article className="trustlink-card trustlink-card-wide">
-                <div className="trustlink-card-header">
-                  <div>
-                    <span className="trustlink-card-kicker">Evidence</span>
-                    <h2>Selected run packet</h2>
-                  </div>
-                  {displayRun && (
-                    <button
-                      type="button"
-                      className="trustlink-inline-btn"
-                      onClick={() => void openRunInspector(displayRun.id)}
-                    >
-                      <FiEye /> Inspect run
-                    </button>
-                  )}
-                </div>
-
-                <div className="trustlink-data-grid evidence-grid">
-                  {renderDataPoint('Total Rows', formatNumber(displayRun?.total_rows))}
-                  {renderDataPoint('IDC Rows', formatNumber(displayRun?.idc_rows))}
-                  {renderDataPoint('DigiPay Rows', formatNumber(displayRun?.digipay_rows))}
-                  {renderDataPoint('Delivery Duration', formatDuration(getRunDurationMs(displayRun)))}
-                  {renderDataPoint('Extract Time', formatDuration(displayRun?.extract_duration_ms))}
-                  {renderDataPoint('Transform Time', formatDuration(displayRun?.transform_duration_ms))}
-                  {renderDataPoint('Validation Time', formatDuration(displayRun?.validation_duration_ms))}
-                  {renderDataPoint('Triggered By', displayRun?.triggered_by_display || '-', true)}
-                  {renderDataPoint('Export File', displayRun?.file_name || 'No file recorded', true)}
-                  {renderDataPoint('File Status', prettyFileStatus(displayRun?.file_status))}
-                  {renderDataPoint('Run Type', formatRunType(displayRun?.run_type))}
-                  {renderDataPoint('Integrity Hash', displayRun?.file_hash || '-', true)}
-                  {renderDataPoint('Error Surface', displayRun?.error_message || 'No run error captured', true)}
-                </div>
-              </article>
-            </div>
-          )}
-
-          {activeTab === 'history' && (
-            <div className="trustlink-tab-panel">
-              <section className="trustlink-history">
-                <div className="trustlink-card-header">
-                  <div>
-                    <span className="trustlink-card-kicker">Run History</span>
-                    <h2>Audit trail</h2>
-                  </div>
-                  <span className="trustlink-chip">{runs.length} recorded runs</span>
-                </div>
-
-                <div className="trustlink-history-list">
-                  {runs.map((run) => {
-                    const tone = normalizeVisualStatus(run.status);
-                    const isSelected = displayRun?.id === run.id;
-
-                    return (
-                      <article
-                        key={run.id}
-                        className={`trustlink-history-item ${isSelected ? 'selected' : ''}`}
-                        onClick={() => void selectRun(run.id, 'evidence')}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            void selectRun(run.id, 'evidence');
-                          }
-                        }}
-                      >
-                        <div className="history-item-topline">
-                          <div>
-                            <h3>{formatRunDate(run.run_date)}</h3>
-                            <p>{run.id}</p>
-                          </div>
-                          <span className={`trustlink-status-pill tone-${tone}`}>{prettyStatus(run.status)}</span>
-                        </div>
-
-                        <div className="history-item-metrics">
-                          <span>{formatRunType(run.run_type)}</span>
-                          <span>{formatNumber(run.total_rows)} rows</span>
-                          <span>{formatDuration(getRunDurationMs(run))}</span>
-                          <span>{run.triggered_by_display || 'Unknown trigger'}</span>
-                          <span>{prettyFileStatus(run.file_status)}</span>
-                          <span>{formatDateTime(run.completed_at || run.started_at)}</span>
-                        </div>
-
-                        <div className="history-item-actions">
-                          <button
-                            className="trustlink-inline-btn"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void openRunInspector(run.id);
-                            }}
-                            disabled={inspectorLoading}
-                          >
-                            <FiEye /> Inspect run
-                          </button>
-                          {run.file_present && (
-                            <button
-                              className="trustlink-inline-btn"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void handleDownload(run.id, run.file_name);
-                              }}
-                            >
-                              <FiArrowDownCircle /> Download
-                            </button>
-                          )}
-                          {canDeleteRunFile(run, runs) && (
-                            <button
-                              className="trustlink-inline-btn danger"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                setPendingFileDeleteRun(run);
-                              }}
-                            >
-                              Delete file
-                            </button>
-                          )}
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </section>
-            </div>
-          )}
-
-          <PageGuide guide={pageGuides.trustlinkOperations} />
-        </section>
-      )}
+      <PageGuide guide={pageGuides.trustlinkOperations} />
 
       {showInspector && (
         <div className="trustlink-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="trustlink-inspector-title">
           <div className="trustlink-modal inspector">
-            <div className="trustlink-modal-glow" aria-hidden="true" />
             <div className="trustlink-modal-header inspector-header">
               <span className="trustlink-modal-icon">
                 <FiEye />
@@ -1192,7 +1360,6 @@ const TrustlinkOperationsPage: React.FC = () => {
       {showOverwriteWarning && (
         <div className="trustlink-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="trustlink-overwrite-title">
           <div className="trustlink-modal warning">
-            <div className="trustlink-modal-glow" aria-hidden="true" />
             <div className="trustlink-modal-header">
               <span className="trustlink-modal-icon">
                 <FiAlertTriangle />
@@ -1239,7 +1406,6 @@ const TrustlinkOperationsPage: React.FC = () => {
       {pendingFileDeleteRun && (
         <div className="trustlink-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="trustlink-delete-file-title">
           <div className="trustlink-modal warning delete-file">
-            <div className="trustlink-modal-glow" aria-hidden="true" />
             <div className="trustlink-modal-header">
               <span className="trustlink-modal-icon">
                 <FiAlertTriangle />

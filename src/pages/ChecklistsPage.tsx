@@ -94,7 +94,6 @@ const ChecklistsPage: React.FC = () => {
   const [instancesPerPage] = useState(18);
   const [totalInstances, setTotalInstances] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [hasNextPage, setHasNextPage] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -226,14 +225,12 @@ const ChecklistsPage: React.FC = () => {
       let pageData: ChecklistInstance[] = [];
       let total = 0;
       let pages = 0;
-      let next = false;
 
       try {
         const response = await checklistApi.getInstancesPaginated(queryParams);
         pageData = response.data || [];
         total = response.pagination.total || pageData.length;
         pages = response.pagination.totalPages || 1;
-        next = response.pagination.hasNext;
       } catch (paginatedError) {
         const fallback = await checklistApi.getAllInstances(queryParams.start_date, queryParams.end_date, queryParams.shift);
         let filtered = [...fallback];
@@ -271,14 +268,12 @@ const ChecklistsPage: React.FC = () => {
         const pageStart = (currentPage - 1) * instancesPerPage;
         const pageEnd = pageStart + instancesPerPage;
         pageData = filtered.slice(pageStart, pageEnd);
-        next = pageEnd < total;
         console.warn('Falling back to non-paginated checklist query', paginatedError);
       }
 
       setInstances(pageData);
       setTotalInstances(total);
       setTotalPages(Math.max(1, pages));
-      setHasNextPage(next);
       setError(null);
       hasLoadedRef.current = true;
     } catch (err) {
@@ -365,27 +360,6 @@ const ChecklistsPage: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [searchDraft]);
 
-  const summary = useMemo(() => {
-    const data = {
-      total: instances.length,
-      completed: 0,
-      active: 0,
-      open: 0,
-      exceptions: 0,
-    };
-
-    instances.forEach((instance) => {
-      if (instance.status === 'COMPLETED') data.completed += 1;
-      else if (instance.status === 'IN_PROGRESS') data.active += 1;
-      else if (instance.status === 'OPEN') data.open += 1;
-      else if (instance.status === 'COMPLETED_WITH_EXCEPTIONS' || instance.status === 'INCOMPLETE') {
-        data.exceptions += 1;
-      }
-    });
-
-    return data;
-  }, [instances]);
-
   const groupedInstances = useMemo(() => {
     const grouped = new Map<string, ChecklistInstance[]>();
 
@@ -403,12 +377,6 @@ const ChecklistsPage: React.FC = () => {
 
     return Array.from(grouped.entries());
   }, [instances, timelineShiftOptions]);
-
-  const timelinePulse = useMemo(() => {
-    if (!totalInstances) return 0;
-    const resolved = summary.completed + summary.active;
-    return Math.round((resolved / Math.max(summary.total, 1)) * 100);
-  }, [summary.active, summary.completed, summary.total, totalInstances]);
 
   const initializationTelemetry = useMemo(() => {
     const now = clockTick;
@@ -536,12 +504,42 @@ const ChecklistsPage: React.FC = () => {
   };
 
   const activeModeNeedsNavigation = dateFilterMode === 'week' || dateFilterMode === 'day';
-  const rangeDescription =
-    dateFilterMode === 'all'
-      ? 'Full history loaded without date boundaries.'
-      : dateFilterMode === 'range'
-        ? 'Define a start and end boundary for a precise operational slice.'
-        : 'Move backward or forward through time without losing your filter context.';
+  const timelineModeLabel = dateFilterMode === 'all'
+    ? 'All recorded time'
+    : dateFilterMode === 'range'
+      ? 'Custom range'
+      : dateFilterMode === 'day'
+        ? 'Single day'
+        : 'Weekly sweep';
+  const statusLensLabel = statusFilter === 'all'
+    ? 'All lifecycle states'
+    : statusFilter.replaceAll('_', ' ').toLowerCase();
+  const shiftLensLabel = shiftFilter === 'all'
+    ? 'All shifts'
+    : getShiftLabel(shiftFilter, timelineShiftOptions);
+  const historyLensCards = [
+    {
+      label: 'Timeline lens',
+      value: timelineModeLabel,
+      detail: resolvedWindow.label,
+      icon: <FaCalendarWeek />,
+      tone: 'scope',
+    },
+    {
+      label: 'Lifecycle filter',
+      value: statusLensLabel,
+      detail: statusFilter === 'all' ? 'No status restriction applied' : 'Timeline is narrowed by status',
+      icon: <FaFilter />,
+      tone: 'status',
+    },
+    {
+      label: 'Shift filter',
+      value: shiftLensLabel,
+      detail: shiftFilter === 'all' ? 'Configured shift order stays visible' : 'Only this shift is in focus',
+      icon: <FaLayerGroup />,
+      tone: 'shift',
+    },
+  ];
 
   if (loading) {
     return <ChecklistsSkeleton />;
@@ -564,24 +562,23 @@ const ChecklistsPage: React.FC = () => {
   }
 
   return (
-    <div className="checklists-page">
+    <div className="checklists-page checklists-command-page">
       <div className="checklists-ambient">
-        <div className="ambient-orb orb-a" />
-        <div className="ambient-orb orb-b" />
         <div className="ambient-grid" />
       </div>
 
-      <section className="checklists-hero">
+      <section className="checklists-hero checklists-command-strip">
         <div className="hero-copy">
           <div className="hero-kicker">
             <FaSignal />
-            SentinelOS Checklist Timeline
+            SentinelOps Checklist History
           </div>
-          <p>Trace every checklist through time with a sharp timeline, cleaner filters, and reliable date control.</p>
-          <p>Command the full checklist history with clean temporal control and sharper operational context.</p>
+          <h1>Checklist Timeline</h1>
+          <p>Recorded checklist runs by date, shift, status, and closure state.</p>
           <div className="hero-tags">
             <span>{resolvedWindow.label}</span>
-            <span>{totalInstances} matched instance{totalInstances === 1 ? '' : 's'}</span>
+            <span>{shiftLensLabel}</span>
+            <span>{statusLensLabel}</span>
             {canManageTemplates ? (
               <button type="button" className="hero-template-link" onClick={() => navigate('/templates')}>
                 <FaWrench />
@@ -591,49 +588,18 @@ const ChecklistsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="hero-pulse-panel">
-          <div className="pulse-orb">
-            <div className="pulse-core">
-              <strong>{timelinePulse}%</strong>
-              <span>Resolution</span>
-            </div>
-          </div>
-          <div className="hero-metrics">
-            <div className="hero-metric-card">
-              <span>Window</span>
-              <strong>{dateFilterMode === 'all' ? 'All Time' : dateFilterMode === 'range' ? 'Custom Range' : dateFilterMode === 'day' ? 'Specific Day' : 'Weekly Sweep'}</strong>
-              <small>{rangeDescription}</small>
-            </div>
-            <div className="hero-metric-card">
-              <span>Page</span>
-              <strong>{currentPage} / {Math.max(totalPages, 1)}</strong>
-              <small>{hasNextPage ? 'More records ahead' : 'You are at the latest loaded edge'}</small>
-            </div>
-          </div>
+        <div className="checklists-history-lens" aria-label="Current checklist history lens">
+          {historyLensCards.map((card) => (
+            <article className={`history-lens-card tone-${card.tone}`} key={card.label}>
+              <span className="history-lens-icon">{card.icon}</span>
+              <div className="history-lens-copy">
+                <span>{card.label}</span>
+                <strong>{card.value}</strong>
+                <small>{card.detail}</small>
+              </div>
+            </article>
+          ))}
         </div>
-      </section>
-
-      <section className="checklists-summary-grid">
-        <article className="summary-card">
-          <span>Visible now</span>
-          <strong>{summary.total}</strong>
-          <small>Instances on this page</small>
-        </article>
-        <article className="summary-card emphasis">
-          <span>Completed</span>
-          <strong>{summary.completed}</strong>
-          <small>Closed successfully</small>
-        </article>
-        <article className="summary-card">
-          <span>In progress</span>
-          <strong>{summary.active}</strong>
-          <small>Active operations</small>
-        </article>
-        <article className="summary-card">
-          <span>Exceptions</span>
-          <strong>{summary.exceptions}</strong>
-          <small>Needs follow-up attention</small>
-        </article>
       </section>
 
       <section className="checklists-init-radar">
@@ -841,7 +807,7 @@ const ChecklistsPage: React.FC = () => {
                       >
                         <div className="instance-card-glow" />
                         <div className="timeline-instance-head">
-                          <div>
+                          <div className='fine-div'>
                             <span className="instance-kicker">{getShiftLabel(instance.shift, timelineShiftOptions)} shift</span>
                             <h3>{instance.template?.name || 'Unknown Checklist'}</h3>
                           </div>

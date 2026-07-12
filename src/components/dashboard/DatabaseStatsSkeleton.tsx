@@ -1,180 +1,128 @@
 // src/components/dashboard/DatabaseStatsSkeleton.tsx
 import React from 'react';
 
+const signalPlaceholders = ['Runway', 'Used', 'Free', 'Growth'];
+const ledgerPlaceholders = Array.from({ length: 7 }, (_, index) => index);
+const railPlaceholders = ['Runway', 'Growth', 'Notes'];
+
 export const DatabaseStatsSkeleton: React.FC = () => {
   return (
-    <div className="dbstats-page">
-      {/* Header Skeleton */}
-      <header className="dbstats-header-skeleton">
-        <div className="header-brand-skeleton">
-          <div className="brand-icon-skeleton"></div>
-          <div className="brand-text-skeleton">
-            <div className="skeleton-text skeleton-text-xl"></div>
-            <div className="skeleton-text skeleton-text-sm"></div>
+    <div className="dbstats-page dbstats-command-page dbstats-skeleton-page">
+      <div className="dbstats-backdrop" />
+      <main className="dbstats-shell">
+        <section className="db-command-strip db-skeleton-panel">
+          <div className="db-command-title">
+            <div className="db-skeleton-chip db-skeleton-kicker" />
+            <div className="db-skeleton-line db-skeleton-title" />
+            <div className="db-skeleton-line db-skeleton-copy" />
           </div>
-        </div>
-        <div className="header-actions-skeleton">
-          <div className="sync-status-skeleton">
-            <div className="skeleton-indicator"></div>
-            <div className="skeleton-text skeleton-text-xs"></div>
-          </div>
-          <div className="skeleton-button"></div>
-        </div>
-      </header>
 
-      <main className="dbstats-content">
-        {/* Stats Grid Skeleton */}
-        <section className="db-stats-grid-skeleton">
-          {/* Capacity Card Skeleton */}
-          <div className="db-stat-card-skeleton capacity">
-            <div className="card-ambient-skeleton"></div>
-            <div className="card-border-skeleton"></div>
-            <div className="card-inner-skeleton">
-              <div className="card-header-skeleton">
-                <div className="card-icon-skeleton"></div>
-                <div className="skeleton-text skeleton-text-md"></div>
-              </div>
-              
-              <div className="capacity-visual-skeleton">
-                <div className="ring-container-skeleton">
-                  <div className="capacity-ring-skeleton"></div>
-                  <div className="ring-center-skeleton">
-                    <div className="skeleton-text skeleton-text-lg"></div>
-                    <div className="skeleton-text skeleton-text-xs"></div>
-                  </div>
-                </div>
-                
-                <div className="capacity-breakdown-skeleton">
-                  <div className="breakdown-item-skeleton">
-                    <div className="skeleton-text skeleton-text-md"></div>
-                    <div className="skeleton-text skeleton-text-xs"></div>
-                    <div className="breakdown-bar-skeleton">
-                      <div className="bar-fill-skeleton"></div>
-                    </div>
-                  </div>
-                  <div className="breakdown-item-skeleton">
-                    <div className="skeleton-text skeleton-text-md"></div>
-                    <div className="skeleton-text skeleton-text-xs"></div>
-                    <div className="breakdown-bar-skeleton">
-                      <div className="bar-fill-skeleton"></div>
-                    </div>
-                  </div>
-                  <div className="breakdown-item-skeleton">
-                    <div className="skeleton-text skeleton-text-md"></div>
-                    <div className="skeleton-text skeleton-text-xs"></div>
-                  </div>
-                </div>
-              </div>
+          <div className="db-command-actions">
+            <div className="db-skeleton-button" />
+            <div className="dbstats-sync-meta db-skeleton-sync-meta">
+              <div className="db-skeleton-line db-skeleton-xs" />
+              <div className="db-skeleton-line db-skeleton-sm" />
             </div>
           </div>
 
-          {/* Forecast Card Skeleton */}
-          <div className="db-stat-card-skeleton forecast">
-            <div className="card-ambient-skeleton"></div>
-            <div className="card-border-skeleton"></div>
-            <div className="card-inner-skeleton">
-              <div className="card-header-skeleton">
-                <div className="card-icon-skeleton"></div>
-                <div className="skeleton-text skeleton-text-md"></div>
-              </div>
-              
-              <div className="forecast-display-skeleton">
-                <div className="days-remaining-skeleton">
-                  <div className="skeleton-text skeleton-text-xl"></div>
-                  <div className="skeleton-text skeleton-text-sm"></div>
-                  <div className="skeleton-text skeleton-text-xs"></div>
+          <div className="db-signal-grid">
+            {signalPlaceholders.map((label) => (
+              <article className="db-signal-card db-skeleton-card" key={label}>
+                <div className="db-signal-icon db-skeleton-icon" />
+                <div>
+                  <div className="db-skeleton-line db-skeleton-xs" />
+                  <div className="db-skeleton-line db-skeleton-value" />
+                  <div className="db-skeleton-line db-skeleton-sm" />
                 </div>
-                
-                <div className="forecast-details-skeleton">
-                  <div className="forecast-row-skeleton">
-                    <div className="skeleton-text skeleton-text-sm"></div>
-                    <div className="skeleton-text skeleton-text-md"></div>
-                  </div>
-                </div>
-                
-                <div className="status-pill-skeleton"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Growth Card Skeleton */}
-          <div className="db-stat-card-skeleton growth">
-            <div className="card-ambient-skeleton"></div>
-            <div className="card-border-skeleton"></div>
-            <div className="card-inner-skeleton">
-              <div className="card-header-skeleton">
-                <div className="card-icon-skeleton"></div>
-                <div className="skeleton-text skeleton-text-md"></div>
-              </div>
-              
-              <div className="growth-display-skeleton">
-                <div className="growth-primary-skeleton">
-                  <div className="growth-value-wrapper-skeleton">
-                    <div className="skeleton-text skeleton-text-xl"></div>
-                    <div className="skeleton-text skeleton-text-sm"></div>
-                  </div>
-                  <div className="skeleton-text skeleton-text-xs"></div>
-                </div>
-                
-                <div className="growth-secondary-skeleton">
-                  <div className="secondary-stat-skeleton">
-                    <div className="skeleton-text skeleton-text-xs"></div>
-                    <div className="skeleton-text skeleton-text-md"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Chart Section Skeleton */}
-        <section className="chart-section-skeleton">
-          <div className="section-header-skeleton">
-            <div className="section-title-skeleton">
-              <div className="title-icon-skeleton"></div>
-              <div className="skeleton-text skeleton-text-lg"></div>
-            </div>
-            <div className="section-meta-skeleton">
-              <div className="data-badge-skeleton">
-                <div className="badge-dot-skeleton"></div>
-                <div className="skeleton-text skeleton-text-xs"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="chart-wrapper-skeleton">
-            <div className="chart-placeholder-skeleton">
-              <div className="chart-lines-skeleton">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="chart-line-skeleton"></div>
-                ))}
-              </div>
-              <div className="chart-points-skeleton">
-                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                  <div key={i} className="chart-point-skeleton"></div>
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          <div className="chart-legend-skeleton">
-            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-              <div key={i} className="legend-item-skeleton">
-                <div className="legend-bar-skeleton"></div>
-                <div className="legend-value-skeleton"></div>
-                <div className="legend-date-skeleton"></div>
-              </div>
+              </article>
             ))}
           </div>
         </section>
 
-        {/* Footer Skeleton */}
-        <footer className="dbstats-footer-skeleton">
-          <div className="footer-content-skeleton">
-            <div className="footer-icon-skeleton"></div>
-            <div className="skeleton-text skeleton-text-md"></div>
+        <section className="db-command-layout db-skeleton-layout">
+          <div className="db-command-main">
+            <article className="db-panel db-capacity-board db-skeleton-panel">
+              <div className="panel-head">
+                <div>
+                  <div className="db-skeleton-line db-skeleton-xs" />
+                  <div className="db-skeleton-line db-skeleton-heading" />
+                </div>
+                <div className="panel-icon db-skeleton-icon" />
+              </div>
+
+              <div className="capacity-layout">
+                <div className="db-skeleton-ring">
+                  <div className="db-skeleton-line db-skeleton-ring-value" />
+                  <div className="db-skeleton-line db-skeleton-xs" />
+                </div>
+
+                <div className="capacity-breakdown">
+                  {[1, 2, 3].map((item) => (
+                    <div className="breakdown-item db-skeleton-breakdown" key={item}>
+                      <div className="breakdown-topline">
+                        <div className="db-skeleton-line db-skeleton-sm" />
+                        <div className="db-skeleton-line db-skeleton-xs" />
+                      </div>
+                      <div className="db-skeleton-meter" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </article>
+
+            <article className="db-panel chart-panel db-growth-board db-skeleton-panel">
+              <div className="panel-head panel-head-inline">
+                <div>
+                  <div className="db-skeleton-line db-skeleton-xs" />
+                  <div className="db-skeleton-line db-skeleton-heading" />
+                </div>
+                <div className="db-skeleton-chip" />
+              </div>
+
+              <div className="chart-wrapper db-skeleton-chart">
+                <div className="db-skeleton-chart-line line-one" />
+                <div className="db-skeleton-chart-line line-two" />
+                <div className="db-skeleton-chart-line line-three" />
+              </div>
+            </article>
+
+            <article className="legend-panel db-ledger-board db-skeleton-panel">
+              <div className="legend-header">
+                <div className="db-skeleton-line db-skeleton-xs" />
+                <div className="db-skeleton-line db-skeleton-heading" />
+              </div>
+
+              <div className="chart-legend">
+                {ledgerPlaceholders.map((item) => (
+                  <div className="legend-item db-skeleton-ledger" key={item}>
+                    <div className="db-skeleton-ledger-bar" />
+                    <div className="db-skeleton-line db-skeleton-xs" />
+                    <div className="db-skeleton-line db-skeleton-xs" />
+                  </div>
+                ))}
+              </div>
+            </article>
           </div>
-        </footer>
+
+          <aside className="db-command-rail">
+            {railPlaceholders.map((label, index) => (
+              <article className="db-panel db-skeleton-panel db-skeleton-rail-card" key={label}>
+                <div className="panel-head">
+                  <div>
+                    <div className="db-skeleton-line db-skeleton-xs" />
+                    <div className="db-skeleton-line db-skeleton-heading" />
+                  </div>
+                  <div className="panel-icon db-skeleton-icon" />
+                </div>
+                <div className={index === 0 ? 'db-skeleton-runway' : 'db-skeleton-rail-lines'}>
+                  <div className="db-skeleton-line db-skeleton-big-value" />
+                  <div className="db-skeleton-line db-skeleton-sm" />
+                  <div className="db-skeleton-line db-skeleton-copy" />
+                </div>
+              </article>
+            ))}
+          </aside>
+        </section>
       </main>
     </div>
   );

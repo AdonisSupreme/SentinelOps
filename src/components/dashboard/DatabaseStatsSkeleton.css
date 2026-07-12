@@ -604,3 +604,183 @@
   border-color: rgba(37,99,235,0.12);
 }
 
+/* Command-board skeleton */
+.dbstats-skeleton-page {
+  color: var(--dbstats-text-primary);
+}
+
+.dbstats-skeleton-page .db-skeleton-panel {
+  pointer-events: none;
+}
+
+.dbstats-skeleton-page .db-skeleton-line,
+.dbstats-skeleton-page .db-skeleton-chip,
+.dbstats-skeleton-page .db-skeleton-button,
+.dbstats-skeleton-page .db-skeleton-icon,
+.dbstats-skeleton-page .db-skeleton-ring,
+.dbstats-skeleton-page .db-skeleton-meter,
+.dbstats-skeleton-page .db-skeleton-ledger-bar,
+.dbstats-skeleton-page .db-skeleton-chart-line {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--dbstats-accent-cyan) 8%, transparent) 0%,
+    color-mix(in srgb, var(--dbstats-accent-cyan) 20%, transparent) 48%,
+    color-mix(in srgb, var(--dbstats-accent-green) 10%, transparent) 100%
+  );
+  background-size: 220px 100%;
+  animation: skeleton-shimmer 1.45s ease-in-out infinite;
+}
+
+.dbstats-skeleton-page .db-skeleton-line {
+  height: 0.8rem;
+  border-radius: 4px;
+}
+
+.dbstats-skeleton-page .db-skeleton-kicker {
+  width: 9.5rem;
+  height: 0.95rem;
+}
+
+.dbstats-skeleton-page .db-skeleton-title {
+  width: min(20rem, 70vw);
+  height: 2.35rem;
+  margin-top: 0.65rem;
+}
+
+.dbstats-skeleton-page .db-skeleton-copy {
+  width: min(34rem, 76vw);
+  margin-top: 0.8rem;
+}
+
+.dbstats-skeleton-page .db-skeleton-xs {
+  width: 4.8rem;
+}
+
+.dbstats-skeleton-page .db-skeleton-sm {
+  width: 7.2rem;
+}
+
+.dbstats-skeleton-page .db-skeleton-value {
+  width: 6.6rem;
+  height: 1.65rem;
+  margin: 0.45rem 0;
+}
+
+.dbstats-skeleton-page .db-skeleton-heading {
+  width: 9.8rem;
+  height: 1.25rem;
+  margin-top: 0.45rem;
+}
+
+.dbstats-skeleton-page .db-skeleton-big-value {
+  width: 11rem;
+  height: 2.75rem;
+}
+
+.dbstats-skeleton-page .db-skeleton-button {
+  width: 6.4rem;
+  min-height: 3rem;
+  border: 1px solid var(--dbstats-border);
+  border-radius: 8px;
+}
+
+.dbstats-skeleton-page .db-skeleton-sync-meta {
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.dbstats-skeleton-page .db-skeleton-card {
+  min-height: 6rem;
+}
+
+.dbstats-skeleton-page .db-skeleton-icon {
+  border-radius: 8px;
+}
+
+.dbstats-skeleton-page .db-skeleton-ring {
+  width: min(11rem, 82%);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 0.55rem solid color-mix(in srgb, var(--dbstats-accent-cyan) 12%, transparent);
+  border-radius: 50%;
+}
+
+.dbstats-skeleton-page .db-skeleton-ring-value {
+  width: 5rem;
+  height: 1.45rem;
+}
+
+.dbstats-skeleton-page .db-skeleton-breakdown {
+  min-height: 4.2rem;
+}
+
+.dbstats-skeleton-page .db-skeleton-meter {
+  width: 100%;
+  height: 0.55rem;
+  border-radius: 4px;
+}
+
+.dbstats-skeleton-page .db-skeleton-chart {
+  position: relative;
+  display: grid;
+  align-items: center;
+  gap: 2.5rem;
+  padding: 2rem;
+}
+
+.dbstats-skeleton-page .db-skeleton-chart-line {
+  height: 0.28rem;
+  border-radius: 999px;
+  transform-origin: left center;
+}
+
+.dbstats-skeleton-page .db-skeleton-chart-line.line-one {
+  width: 78%;
+  transform: rotate(-5deg);
+}
+
+.dbstats-skeleton-page .db-skeleton-chart-line.line-two {
+  width: 64%;
+  margin-left: 12%;
+  transform: rotate(4deg);
+}
+
+.dbstats-skeleton-page .db-skeleton-chart-line.line-three {
+  width: 86%;
+  margin-left: 4%;
+  transform: rotate(-2deg);
+}
+
+.dbstats-skeleton-page .db-skeleton-ledger {
+  min-height: 8rem;
+}
+
+.dbstats-skeleton-page .db-skeleton-ledger-bar {
+  width: 1.1rem;
+  height: 3.8rem;
+  border-radius: 4px 4px 0 0;
+}
+
+.dbstats-skeleton-page .db-skeleton-rail-card {
+  min-height: 12rem;
+}
+
+.dbstats-skeleton-page .db-skeleton-runway,
+.dbstats-skeleton-page .db-skeleton-rail-lines {
+  display: grid;
+  gap: 0.85rem;
+}
+
+@media (max-width: 720px) {
+  .dbstats-skeleton-page .db-skeleton-title,
+  .dbstats-skeleton-page .db-skeleton-copy,
+  .dbstats-skeleton-page .db-skeleton-big-value {
+    width: 100%;
+  }
+
+  .dbstats-skeleton-page .db-skeleton-button {
+    width: 100%;
+  }
+}
+

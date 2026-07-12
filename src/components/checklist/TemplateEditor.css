@@ -602,3 +602,114 @@
   }
 }
 
+/* SentinelOps command authoring evolution */
+.ste-command-authoring,
+.ste-command-authoring * {
+  letter-spacing: 0;
+}
+
+.ste-command-authoring {
+  gap: 1rem;
+}
+
+.ste-command-authoring .editor-section {
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--primary) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(0deg, color-mix(in srgb, var(--accent) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(145deg, color-mix(in srgb, var(--bg-card) 96%, transparent), color-mix(in srgb, var(--bg-secondary) 72%, var(--bg-card) 28%));
+  background-size: 34px 34px, 34px 34px, auto;
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--text-primary) 10%, transparent);
+}
+
+.ste-command-authoring .editor-section::before {
+  display: none;
+}
+
+.ste-frame-copy {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--ste-border-soft);
+}
+
+.section-kicker {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ste-command-authoring .section-title {
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+}
+
+.ste-frame-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.72fr) minmax(170px, 0.42fr);
+  gap: 0.9rem;
+  align-items: end;
+}
+
+.ste-field-span-2 {
+  grid-column: span 2;
+}
+
+.ste-active-check {
+  min-height: 44px;
+  justify-content: center;
+  padding: 0.72rem;
+  border: 1px solid var(--ste-border-soft);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+}
+
+.ste-command-authoring .form-input,
+.ste-command-authoring .form-textarea,
+.ste-command-authoring .form-select,
+.ste-command-authoring .btn,
+.ste-command-authoring .inline-action {
+  border-radius: 8px;
+}
+
+.ste-command-authoring .editor-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  margin-top: 0;
+  padding: 0.85rem;
+  border: 1px solid var(--ste-border-soft);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+@media (max-width: 1040px) {
+  .ste-frame-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ste-field-span-2 {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 720px) {
+  .ste-frame-copy {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ste-frame-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ste-field-span-2 {
+    grid-column: span 1;
+  }
+}
+

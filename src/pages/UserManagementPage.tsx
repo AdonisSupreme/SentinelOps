@@ -1,5 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FaSearch, FaUserShield, FaUserEdit, FaUserPlus, FaToggleOn, FaToggleOff } from 'react-icons/fa';
+import {
+  FaBuilding,
+  FaIdBadge,
+  FaSearch,
+  FaShieldAlt,
+  FaTimes,
+  FaToggleOff,
+  FaToggleOn,
+  FaUserEdit,
+  FaUserPlus,
+  FaUserShield,
+  FaUsers,
+} from 'react-icons/fa';
 import PageGuide from '../components/ui/PageGuide';
 import { useAuth } from '../contexts/AuthContext';
 import { pageGuides } from '../content/pageGuides';
@@ -20,8 +32,80 @@ const mapBackendRoleToOption = (backendRole?: string | null): RoleOption => {
   const value = (backendRole || '').toLowerCase();
   if (value === 'admin') return 'admin';
   if (value === 'supervisor' || value === 'manager') return 'manager';
-  return 'user'; // operator/participant/default
+  return 'user';
 };
+
+const getDisplayName = (user: UserListItem) => {
+  const name = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+  return name || user.username || user.email || 'Unnamed user';
+};
+
+const getInitials = (user: UserListItem) => {
+  const first = user.first_name?.[0] || user.username?.[0] || 'U';
+  const second = user.last_name?.[0] || '';
+  return `${first}${second}`.toUpperCase();
+};
+
+const isUserActive = (user: UserListItem) => user.is_active !== false;
+
+const getDepartmentLabel = (user: UserListItem) =>
+  (user as any).department_name || (user as any).department || 'Unassigned';
+
+const getSectionLabel = (user: UserListItem) =>
+  (user as any).section_name || 'Unassigned';
+
+const UserManagementPreview: React.FC = () => (
+  <div className="user-mgmt-page user-mgmt-preview-page">
+    <section className="user-command-strip user-skel-panel">
+      <div className="user-skel-command-copy">
+        <div className="user-skel-line user-skel-kicker" />
+        <div className="user-skel-line user-skel-title" />
+        <div className="user-skel-line user-skel-meta" />
+      </div>
+      <div className="user-skel-signal-grid">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <article key={index} className="user-skel-signal-card">
+            <div className="user-skel-block user-skel-icon" />
+            <div className="user-skel-signal-copy">
+              <div className="user-skel-line user-skel-label" />
+              <div className="user-skel-line user-skel-value" />
+              <div className="user-skel-line user-skel-meta" />
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section className="user-mgmt-body">
+      <div className="user-directory-panel user-skel-panel">
+        <div className="user-skel-board-head">
+          <div>
+            <div className="user-skel-line user-skel-kicker" />
+            <div className="user-skel-line user-skel-panel-title" />
+          </div>
+          <div className="user-skel-block user-skel-action" />
+        </div>
+        <div className="user-skel-control" />
+        <div className="user-skel-table">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="user-skel-row" />
+          ))}
+        </div>
+      </div>
+
+      <aside className="user-detail-panel user-skel-panel">
+        <div className="user-skel-avatar" />
+        <div className="user-skel-line user-skel-panel-title" />
+        <div className="user-skel-line user-skel-meta" />
+        <div className="user-skel-field-grid">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="user-skel-field" />
+          ))}
+        </div>
+      </aside>
+    </section>
+  </div>
+);
 
 const UserManagementPage: React.FC = () => {
   const { user: currentUser } = useAuth();
@@ -78,7 +162,6 @@ const UserManagementPage: React.FC = () => {
     void load();
   }, [canManageUsers, addNotification]);
 
-
   const selectedUser = useMemo(
     () => users.find((u) => u.id === selectedUserId) || null,
     [users, selectedUserId],
@@ -94,7 +177,7 @@ const UserManagementPage: React.FC = () => {
         department_id: selectedUser.department_id,
         section_id: selectedUser.section_id,
         role: mapBackendRoleToOption((selectedUser as any).role),
-        is_active: selectedUser.is_active,
+        is_active: isUserActive(selectedUser),
       });
     } else {
       setEditForm({});
@@ -183,20 +266,67 @@ const UserManagementPage: React.FC = () => {
   const filteredUsers = useMemo(() => {
     const term = search.toLowerCase();
     if (!term) return users;
-    return users.filter(
-      (u) =>
+    return users.filter((u) => {
+      const role = mapBackendRoleToOption((u as any).role);
+      return (
         u.username.toLowerCase().includes(term) ||
         u.email.toLowerCase().includes(term) ||
-        `${u.first_name} ${u.last_name}`.toLowerCase().includes(term),
-    );
+        getDisplayName(u).toLowerCase().includes(term) ||
+        getDepartmentLabel(u).toLowerCase().includes(term) ||
+        getSectionLabel(u).toLowerCase().includes(term) ||
+        role.includes(term)
+      );
+    });
   }, [users, search]);
+
+  const activeCount = useMemo(() => users.filter(isUserActive).length, [users]);
+  const inactiveCount = users.length - activeCount;
+  const adminCount = useMemo(() => users.filter((u) => mapBackendRoleToOption((u as any).role) === 'admin').length, [users]);
+  const managerCount = useMemo(() => users.filter((u) => mapBackendRoleToOption((u as any).role) === 'manager').length, [users]);
+  const unplacedCount = useMemo(() => users.filter((u) => !u.department_id || !u.section_id).length, [users]);
+  const selectedRole = selectedUser ? mapBackendRoleToOption((selectedUser as any).role) : 'user';
+  const selectedActive = selectedUser ? isUserActive(selectedUser) : false;
+
+  const userSignals = useMemo(
+    () => [
+      {
+        label: 'Directory',
+        value: users.length,
+        detail: `${activeCount} active / ${inactiveCount} inactive`,
+        icon: <FaUsers />,
+        tone: users.length ? 'ok' : 'watch',
+      },
+      {
+        label: 'Access leads',
+        value: adminCount + managerCount,
+        detail: `${adminCount} admins / ${managerCount} managers`,
+        icon: <FaShieldAlt />,
+        tone: adminCount ? 'ok' : 'watch',
+      },
+      {
+        label: 'Placement gaps',
+        value: unplacedCount,
+        detail: unplacedCount ? 'Department or section missing' : 'Every user is placed',
+        icon: <FaBuilding />,
+        tone: unplacedCount ? 'watch' : 'ok',
+      },
+      {
+        label: 'Search view',
+        value: filteredUsers.length,
+        detail: search ? `Filtered by "${search}"` : 'Full directory visible',
+        icon: <FaSearch />,
+        tone: filteredUsers.length ? 'info' : 'danger',
+      },
+    ],
+    [activeCount, adminCount, filteredUsers.length, inactiveCount, managerCount, search, unplacedCount, users.length]
+  );
 
   if (!canManageUsers) {
     return (
       <div className="user-mgmt-page">
         <div className="user-mgmt-guard">
-          <FaUserShield size={32} />
-          <h2>Restricted Area</h2>
+          <FaUserShield />
+          <h2>Restricted area</h2>
           <p>You need administrator rights to manage SentinelOps users.</p>
         </div>
         <PageGuide guide={pageGuides.userManagement} />
@@ -204,34 +334,65 @@ const UserManagementPage: React.FC = () => {
     );
   }
 
+  if (loading && !users.length) {
+    return (
+      <>
+        <UserManagementPreview />
+        <PageGuide guide={pageGuides.userManagement} />
+      </>
+    );
+  }
+
   return (
     <div className="user-mgmt-page">
-      <header className="user-mgmt-header">
-        <div>
-          <h1>User Management</h1>
-          <p>Curate access, roles, and operational identities across SentinelOps.</p>
+      <section className="user-command-strip">
+        <div className="user-command-title">
+          <span><FaUserShield /> User management</span>
+          <strong>{users.length} identities</strong>
+          <small>{departments.length} departments / {sections.length} sections / admin lane</small>
         </div>
-        <button
-          className="btn-primary-glow"
-          onClick={() => setShowCreatePanel(true)}
-        >
-          <FaUserPlus /> New User
-        </button>
-      </header>
+
+        <div className="user-signal-grid">
+          {userSignals.map((signal) => (
+            <article key={signal.label} className={`user-signal-card tone-${signal.tone}`}>
+              <span className="user-signal-icon">{signal.icon}</span>
+              <span className="user-signal-copy">
+                <small>{signal.label}</small>
+                <strong>{signal.value}</strong>
+                <em>{signal.detail}</em>
+              </span>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <section className="user-mgmt-body">
-        <div className="user-mgmt-list">
+        <div className="user-directory-panel">
+          <div className="user-panel-head">
+            <div>
+              <span className="user-panel-kicker"><FaIdBadge /> Identity directory</span>
+              <h2>Operators and access</h2>
+            </div>
+            <button
+              type="button"
+              className="btn-primary-glow"
+              onClick={() => setShowCreatePanel(true)}
+            >
+              <FaUserPlus /> New user
+            </button>
+          </div>
+
           <div className="user-mgmt-toolbar">
-            <div className="search-box">
+            <label className="search-box">
               <FaSearch />
               <input
                 type="text"
-                placeholder="Search by name, username, or email..."
+                placeholder="Search names, roles, email, department..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-            </div>
-            {loading && <span className="loading-pill">Loading users...</span>}
+            </label>
+            {loading ? <span className="loading-pill">Refreshing users</span> : null}
           </div>
 
           <div className="user-table">
@@ -243,40 +404,62 @@ const UserManagementPage: React.FC = () => {
               <span>Section</span>
             </div>
             <div className="user-table-body">
-              {filteredUsers.map((u) => (
-                <button
-                  key={u.id}
-                  className={`user-row ${selectedUserId === u.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedUserId(u.id)}
-                >
-                  <span>
-                    <strong>{u.first_name} {u.last_name}</strong>
-                    <span className="user-subline">{u.username} · {u.email}</span>
-                  </span>
-                  <span className="role-pill">{mapBackendRoleToOption((u as any).role)}</span>
-                  <span className={u.is_active ? 'status-pill active' : 'status-pill inactive'}>
-                    {u.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                  <span>{(u as any).department_name || u.department || '—'}</span>
-                  <span>{(u as any).section_name || '—'}</span>
-                </button>
-              ))}
-              {!loading && filteredUsers.length === 0 && (
+              {filteredUsers.map((u) => {
+                const role = mapBackendRoleToOption((u as any).role);
+                const active = isUserActive(u);
+                return (
+                  <button
+                    key={u.id}
+                    type="button"
+                    className={`user-row ${selectedUserId === u.id ? 'selected' : ''}`}
+                    onClick={() => setSelectedUserId(u.id)}
+                  >
+                    <span className="user-identity-cell">
+                      <span className="user-avatar">{getInitials(u)}</span>
+                      <span>
+                        <strong>{getDisplayName(u)}</strong>
+                        <span className="user-subline">{u.username} / {u.email}</span>
+                      </span>
+                    </span>
+                    <span className={`role-pill role-${role}`}>{role}</span>
+                    <span className={active ? 'status-pill active' : 'status-pill inactive'}>
+                      {active ? 'Active' : 'Inactive'}
+                    </span>
+                    <span>{getDepartmentLabel(u)}</span>
+                    <span>{getSectionLabel(u)}</span>
+                  </button>
+                );
+              })}
+              {!loading && filteredUsers.length === 0 ? (
                 <div className="user-empty-state">
-                  <FaUserEdit size={32} />
+                  <FaUserEdit />
                   <p>No users match this view.</p>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
 
-        <aside className="user-mgmt-detail">
+        <aside className="user-detail-panel">
           {selectedUser ? (
             <div className="detail-card">
               <div className="detail-header">
-                <h2>Edit User</h2>
+                <div>
+                  <span className="user-panel-kicker"><FaUserEdit /> Edit identity</span>
+                  <h2>{getDisplayName(selectedUser)}</h2>
+                </div>
                 <span className="detail-username">@{selectedUser.username}</span>
+              </div>
+
+              <div className="detail-summary">
+                <span className="detail-avatar">{getInitials(selectedUser)}</span>
+                <div>
+                  <strong>{selectedRole}</strong>
+                  <span>{selectedActive ? 'Active account' : 'Inactive account'}</span>
+                </div>
+                <span className={`status-pill ${selectedActive ? 'active' : 'inactive'}`}>
+                  {selectedActive ? 'Active' : 'Inactive'}
+                </span>
               </div>
 
               <div className="detail-grid">
@@ -318,7 +501,7 @@ const UserManagementPage: React.FC = () => {
                     value={editForm.department_id ?? ''}
                     onChange={(e) => handleEditChange('department_id', e.target.value ? parseInt(e.target.value, 10) : undefined)}
                   >
-                    <option value="">— Select —</option>
+                    <option value="">-- Select --</option>
                     {departments.map((d) => (
                       <option key={d.id} value={d.id}>{d.department_name}</option>
                     ))}
@@ -330,10 +513,10 @@ const UserManagementPage: React.FC = () => {
                     value={editForm.section_id ?? ''}
                     onChange={(e) => handleEditChange('section_id', e.target.value || undefined)}
                   >
-                    <option value="">— Select —</option>
+                    <option value="">-- Select --</option>
                     {sections.map((s) => (
-                        <option key={s.id} value={s.id}>{s.section_name}</option>
-                      ))}
+                      <option key={s.id} value={s.id}>{s.section_name}</option>
+                    ))}
                   </select>
                 </label>
                 <label>
@@ -374,35 +557,45 @@ const UserManagementPage: React.FC = () => {
 
               <div className="detail-actions">
                 <button
+                  type="button"
                   className="btn-secondary"
                   onClick={() => setSelectedUserId(null)}
                 >
                   Close
                 </button>
                 <button
+                  type="button"
                   className="btn-primary-glow"
                   onClick={handleSaveChanges}
                   disabled={saving}
                 >
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  {saving ? 'Saving...' : 'Save changes'}
                 </button>
               </div>
             </div>
           ) : (
             <div className="detail-placeholder">
-              <FaUserEdit size={32} />
+              <FaUserEdit />
               <h3>Select a user</h3>
-              <p>Choose a user from the left to view and edit their profile, role, and status.</p>
+              <p>Choose an identity to inspect placement, role, status, and profile controls.</p>
             </div>
           )}
         </aside>
       </section>
 
-      {showCreatePanel && (
+      {showCreatePanel ? (
         <div className="user-mgmt-modal">
           <div className="user-mgmt-modal-content">
-            <h2>Create New User</h2>
-            <form className="detail-grid" onSubmit={handleCreateUser}>
+            <div className="modal-header">
+              <div>
+                <span className="user-panel-kicker"><FaUserPlus /> Create identity</span>
+                <h2>New SentinelOps user</h2>
+              </div>
+              <button type="button" className="btn-close" onClick={() => setShowCreatePanel(false)} aria-label="Close create user panel">
+                <FaTimes />
+              </button>
+            </div>
+            <form className="detail-grid create-grid" onSubmit={handleCreateUser}>
               <label>
                 First name
                 <input
@@ -445,7 +638,7 @@ const UserManagementPage: React.FC = () => {
                   value={createForm.department_id ?? ''}
                   onChange={(e) => handleCreateChange('department_id', e.target.value ? parseInt(e.target.value, 10) : undefined)}
                 >
-                  <option value="">— Select —</option>
+                  <option value="">-- Select --</option>
                   {departments.map((d) => (
                     <option key={d.id} value={d.id}>{d.department_name}</option>
                   ))}
@@ -457,7 +650,7 @@ const UserManagementPage: React.FC = () => {
                   value={createForm.section_id ?? ''}
                   onChange={(e) => handleCreateChange('section_id', e.target.value || undefined)}
                 >
-                  <option value="">— Select —</option>
+                  <option value="">-- Select --</option>
                   {sections.map((s) => (
                     <option key={s.id} value={s.id}>{s.section_name}</option>
                   ))}
@@ -496,17 +689,16 @@ const UserManagementPage: React.FC = () => {
                   className="btn-primary-glow"
                   disabled={saving}
                 >
-                  {saving ? 'Creating...' : 'Create User'}
+                  {saving ? 'Creating...' : 'Create user'}
                 </button>
               </div>
             </form>
           </div>
         </div>
-      )}
+      ) : null}
       <PageGuide guide={pageGuides.userManagement} />
     </div>
   );
 };
 
 export default UserManagementPage;
-

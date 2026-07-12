@@ -153,3 +153,50 @@
     left: 100%;
   }
 }
+
+.checklist-command-page .enhanced-item-actions-modal-overlay {
+  background: rgba(2, 6, 23, 0.66);
+  backdrop-filter: blur(10px);
+}
+
+.checklist-command-page .enhanced-item-actions-modal {
+  width: min(680px, 96vw);
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 8px;
+  background: var(--checklist-surface, rgba(255, 255, 255, 0.94));
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+
+.checklist-command-page .enhanced-item-actions-modal::before {
+  display: none;
+}
+
+.checklist-command-page .enhanced-modal-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  background: var(--checklist-strong, #ffffff);
+}
+
+.checklist-command-page .enhanced-modal-header h3 {
+  color: var(--checklist-ink, var(--text-primary));
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.checklist-command-page .enhanced-modal-close {
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 8px;
+  background: var(--checklist-surface, rgba(255, 255, 255, 0.94));
+  color: var(--checklist-ink, var(--text-primary));
+  box-shadow: none;
+}
+
+.checklist-command-page .enhanced-modal-close:hover {
+  background: rgba(8, 145, 178, 0.1);
+  color: var(--checklist-cyan, #0891b2);
+  box-shadow: none;
+  transform: translateY(-1px);
+}

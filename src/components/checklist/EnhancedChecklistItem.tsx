@@ -155,7 +155,7 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
 
   const handleItemClick = () => {
     if (hasSubitems) {
-      if (item.status === 'IN_PROGRESS') {
+      if (item.status === 'IN_PROGRESS' || item.status === 'COMPLETED') {
         onItemAction(item.id, item);
       } else {
         onItemActionsClick(item);
@@ -306,7 +306,7 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
                     cy="20"
                     r="16"
                     fill="none"
-                    stroke="#1f2937"
+                    stroke="var(--checklist-fill, #e2e8f0)"
                     strokeWidth="3"
                   />
                   <circle

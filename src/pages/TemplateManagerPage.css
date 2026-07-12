@@ -65,6 +65,7 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  margin-bottom: 1rem;
 }
 
 .stm-template-header {
@@ -194,7 +195,7 @@
 
 /* Header */
 .stm-template-header {
-  margin-bottom: 3rem;
+  margin-bottom: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -922,5 +923,88 @@
   .stm-command-signals {
     grid-template-columns: 1fr;
   }
+}
+
+/* SentinelOps template command evolution */
+.stm-template-manager-page,
+.stm-template-manager-page * {
+  letter-spacing: 0;
+}
+
+.stm-template-manager-page,
+[data-theme="dark"] .stm-template-manager-page {
+  --stm-command-line: color-mix(in srgb, var(--border-primary) 82%, transparent);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--primary) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(0deg, color-mix(in srgb, var(--accent) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(180deg, var(--bg-primary), var(--bg-secondary));
+  background-size: 38px 38px, 38px 38px, auto;
+}
+
+.stm-template-manager-page::before {
+  display: none;
+}
+
+.stm-command-hero::before,
+[data-theme="dark"] .stm-command-hero::before {
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--primary) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(0deg, color-mix(in srgb, var(--accent) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(145deg, var(--stm-surface-strong), var(--stm-surface));
+  background-size: 34px 34px, 34px 34px, auto;
+}
+
+.stm-command-copy {
+  padding: 1.25rem;
+}
+
+.stm-header-content h1 {
+  letter-spacing: 0;
+}
+
+.stm-header-subtitle {
+  max-width: 52rem;
+  line-height: 1.55;
+}
+
+.stm-command-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.stm-command-tags span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--stm-command-line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-card) 78%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.stm-command-signals {
+  display: none;
+}
+
+.stm-page-content,
+.stm-content-section,
+.stm-list-view,
+.stm-create-view,
+.stm-edit-view,
+.stm-view-view {
+  gap: 1rem;
+}
+
+.stm-view-header {
+  padding: 1rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-card) 84%, transparent);
+  border: 1px solid var(--stm-command-line);
 }
 

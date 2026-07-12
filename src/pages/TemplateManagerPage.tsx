@@ -1,6 +1,6 @@
 // src/pages/TemplateManagerPage.tsx
 import React, { useState } from 'react';
-import { FaPlus, FaClipboardList, FaLayerGroup, FaStream, FaShieldAlt } from 'react-icons/fa';
+import { FaPlus, FaClipboardList } from 'react-icons/fa';
 import SentinelTemplateList from '../components/checklist/TemplateList';
 import TemplateBuilder from '../components/checklist/TemplateBuilder';
 import TemplateEditor from '../components/checklist/TemplateEditor';
@@ -44,12 +44,7 @@ const SentinelTemplateManagerPage: React.FC = () => {
         : view === 'view'
           ? 'Review the active structure, shift targeting, and item hierarchy for this template.'
           : 'Manage reusable operational checklists with the same command-surface feel used across SentinelOps.';
-  const heroSignals = [
-    { label: 'Template flow', value: view === 'list' ? 'Library' : view === 'create' ? 'Authoring' : view === 'edit' ? 'Editing' : 'Inspecting', icon: <FaLayerGroup /> },
-    { label: 'Structure', value: selectedTemplate?.items?.length ? `${selectedTemplate.items.length} items` : 'Reusable', icon: <FaStream /> },
-    { label: 'Shift scope', value: selectedTemplate?.shift ? formatShiftLabel(selectedTemplate.shift) : 'Configurable', icon: <FaClipboardList /> },
-    { label: 'SentinelOps fit', value: 'Aligned', icon: <FaShieldAlt /> },
-  ];
+  const modeLabel = view === 'list' ? 'Library' : view === 'create' ? 'Authoring' : view === 'edit' ? 'Editing' : 'Briefing';
 
   const handleShowCreate = () => {
     setView('create');
@@ -132,46 +127,16 @@ const SentinelTemplateManagerPage: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="stm-command-signals">
-            {heroSignals.map((signal) => (
-              <div key={signal.label} className="stm-command-signal">
-                <div className="stm-command-signal-icon">{signal.icon}</div>
-                <div className="stm-command-signal-copy">
-                  <span>{signal.label}</span>
-                  <strong>{signal.value}</strong>
-                </div>
-              </div>
-            ))}
+          <div className="stm-command-tags">
+            <span>{modeLabel}</span>
+            <span>{selectedTemplate?.shift ? formatShiftLabel(selectedTemplate.shift) : 'Shift scoped'}</span>
+            {selectedTemplate?.name && <span>{selectedTemplate.name}</span>}
           </div>
         </div>
       </section>
 
       {/* Page Content */}
       <div className="stm-page-content">
-        {/* Breadcrumb Navigation */}
-        <div className="stm-breadcrumb">
-          <button type="button" onClick={handleShowList} className={view === 'list' ? 'stm-active' : ''}>
-            Templates
-          </button>
-          {view === 'create' && (
-            <>
-              <span className="stm-breadcrumb-sep">/</span>
-              <span className="stm-breadcrumb-current">Create New Template</span>
-            </>
-          )}
-          {view === 'edit' && (
-            <>
-              <span className="stm-breadcrumb-sep">/</span>
-              <span className="stm-breadcrumb-current">Edit Template</span>
-            </>
-          )}
-          {view === 'view' && (
-            <>
-              <span className="stm-breadcrumb-sep">/</span>
-              <span className="stm-breadcrumb-current">View Template</span>
-            </>
-          )}
-        </div>
 
         {/* Main Content */}
         <div className="stm-content-section">

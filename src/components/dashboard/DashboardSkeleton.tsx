@@ -3,50 +3,51 @@ import React from 'react';
 export const DashboardSkeleton: React.FC = () => {
   return (
     <div className="sentinel-dashboard dashboard-skeleton-page">
-      <section className="dashboard-skeleton-hero">
-        <div className="dash-skel-copy">
-          <div className="dash-skel-line kicker" />
-          <div className="dash-skel-line title" />
-          <div className="dash-skel-line copy" />
-          <div className="dash-signal-grid">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="dash-signal-card">
-                <div className="dash-skel-block icon" />
-                <div className="dash-signal-copy">
-                  <div className="dash-skel-line label" />
-                  <div className="dash-skel-line value" />
-                  <div className="dash-skel-line meta" />
-                </div>
-              </div>
-            ))}
-          </div>
+      <header className="dash-skeleton-header">
+        <div>
+          <div className="dash-skel-line dash-kicker" />
+          <div className="dash-skel-line dash-name" />
+          <div className="dash-skel-line dash-meta" />
         </div>
-        <div className="dash-skel-aside">
-          <div className="dash-skel-line label" />
-          <div className="dash-skel-line value" />
-          <div className="dash-ring-row">
-            <div className="dash-skel-block ring" />
-            <div className="dash-skel-block ring" />
-            <div className="dash-skel-block ring" />
-          </div>
-          <div className="dash-footer-row">
-            <div className="dash-skel-line meta" />
-            <div className="dash-skel-line meta" />
-          </div>
+        <div className="dash-skel-shift" />
+        <div className="dash-skel-clock" />
+      </header>
+
+      <section className="dash-skeleton-command-strip">
+        <div className="dash-skel-command-copy">
+          <div className="dash-skel-line dash-kicker" />
+          <div className="dash-skel-line dash-posture" />
+          <div className="dash-skel-line dash-meta" />
+        </div>
+
+        <div className="dash-skel-signal-grid">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <article key={index} className="dash-skel-signal-card">
+              <div className="dash-skel-block dash-icon" />
+              <div className="dash-skel-signal-copy">
+                <div className="dash-skel-line dash-label" />
+                <div className="dash-skel-line dash-value" />
+                <div className="dash-skel-line dash-meta" />
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
-      <section className="dashboard-skeleton-grid">
-        <div className="dashboard-skeleton-main">
-          <article className="dashboard-skeleton-panel">
-            <div className="dash-skel-line panel-title" />
-            <div className="dash-radar-grid">
+      <section className="dash-skeleton-layout">
+        <div className="dash-skeleton-main">
+          <article className="dash-skel-panel dash-skel-thread-panel">
+            <div className="dash-skel-panel-head">
+              <div className="dash-skel-line dash-panel-title" />
+              <div className="dash-skel-chip" />
+            </div>
+            <div className="dash-skel-thread-grid">
               {Array.from({ length: 3 }).map((_, index) => (
-                <div key={index} className="dash-radar-card">
-                  <div className="dash-skel-line label" />
-                  <div className="dash-skel-line value" />
+                <div key={index} className="dash-skel-thread-card">
+                  <div className="dash-skel-line dash-value" />
+                  <div className="dash-skel-line dash-copy" />
                   <div className="dash-skel-progress" />
-                  <div className="dash-tag-row">
+                  <div className="dash-skel-mini-row">
                     <div className="dash-skel-chip" />
                     <div className="dash-skel-chip" />
                   </div>
@@ -55,33 +56,80 @@ export const DashboardSkeleton: React.FC = () => {
             </div>
           </article>
 
-          <article className="dashboard-skeleton-panel">
-            <div className="dash-skel-line panel-title" />
-            <div className="dash-thread-grid">
+          <article className="dash-skel-panel">
+            <div className="dash-skel-panel-head">
+              <div className="dash-skel-line dash-panel-title" />
+              <div className="dash-skel-chip" />
+            </div>
+            <div className="dash-skel-radar-grid">
               {Array.from({ length: 3 }).map((_, index) => (
-                <div key={index} className="dash-thread-card">
-                  <div className="dash-skel-line value" />
-                  <div className="dash-skel-line copy" />
+                <div key={index} className="dash-skel-radar-card">
+                  <div className="dash-skel-line dash-label" />
+                  <div className="dash-skel-line dash-value" />
                   <div className="dash-skel-progress" />
+                  <div className="dash-skel-mini-row three">
+                    <div className="dash-skel-chip" />
+                    <div className="dash-skel-chip" />
+                    <div className="dash-skel-chip" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="dash-skel-panel">
+            <div className="dash-skel-panel-head">
+              <div className="dash-skel-line dash-panel-title" />
+              <div className="dash-skel-chip" />
+            </div>
+            <div className="dash-skel-fabric-grid">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="dash-skel-fabric-lane">
+                  <div className="dash-skel-line dash-label" />
+                  <div className="dash-skel-line dash-value" />
+                  <div className="dash-skel-line dash-meta" />
                 </div>
               ))}
             </div>
           </article>
         </div>
 
-        <div className="dashboard-skeleton-side">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <article key={index} className="dashboard-skeleton-panel compact">
-              <div className="dash-skel-line panel-title" />
-              <div className="dash-skel-line copy" />
-              <div className="dash-skel-line copy short" />
-              <div className="dash-tag-row">
-                <div className="dash-skel-chip" />
-                <div className="dash-skel-chip" />
-              </div>
+        <aside className="dash-skeleton-side">
+          <article className="dash-skel-panel dash-skel-actions">
+            <div className="dash-skel-panel-head">
+              <div className="dash-skel-line dash-panel-title" />
+              <div className="dash-skel-block dash-small-icon" />
+            </div>
+            <div className="dash-skel-action-grid">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="dash-skel-action-btn">
+                  <div className="dash-skel-block dash-small-icon" />
+                  <div className="dash-skel-line dash-label" />
+                </div>
+              ))}
+            </div>
+            <div className="dash-skel-live-stack">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="dash-skel-live-row">
+                  <div className="dash-skel-block dash-small-icon" />
+                  <div>
+                    <div className="dash-skel-line dash-label" />
+                    <div className="dash-skel-line dash-meta" />
+                  </div>
+                  <div className="dash-skel-chip" />
+                </div>
+              ))}
+            </div>
+          </article>
+
+          {Array.from({ length: 3 }).map((_, index) => (
+            <article key={index} className="dash-skel-panel dash-skel-compact-panel">
+              <div className="dash-skel-line dash-panel-title" />
+              <div className="dash-skel-line dash-copy" />
+              <div className="dash-skel-line dash-copy short" />
             </article>
           ))}
-        </div>
+        </aside>
       </section>
     </div>
   );

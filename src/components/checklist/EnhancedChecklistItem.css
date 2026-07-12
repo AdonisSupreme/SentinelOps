@@ -802,3 +802,292 @@
     padding: 0 16px 12px;
   }
 }
+
+/* SentinelOps command-board item surface */
+.checklist-command-page .eci-card.eci-card--futuristic {
+  --eci-tone: var(--checklist-cyan, #0891b2);
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-left: 4px solid var(--eci-tone);
+  border-radius: 8px;
+  background: var(--checklist-strong, #ffffff);
+  box-shadow: none;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.checklist-command-page .eci-card.eci-card--futuristic::before {
+  display: none;
+}
+
+.checklist-command-page .eci-card.eci-card--futuristic:hover {
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+.checklist-command-page .eci-card:has(.eci-header--completed) {
+  --eci-tone: var(--checklist-green, #0f9f73);
+}
+
+.checklist-command-page .eci-card:has(.eci-header--in-progress) {
+  --eci-tone: var(--checklist-cyan, #0891b2);
+}
+
+.checklist-command-page .eci-card:has(.eci-header--skipped),
+.checklist-command-page .eci-card.eci-card--subitem-exceptions {
+  --eci-tone: var(--checklist-amber, #d97706);
+}
+
+.checklist-command-page .eci-card:has(.eci-header--failed) {
+  --eci-tone: var(--checklist-red, #dc2626);
+}
+
+.checklist-command-page .eci-card.eci-card--futuristic.eci-card--subitem-exceptions,
+[data-theme="dark"] .checklist-command-page .eci-card.eci-card--futuristic.eci-card--subitem-exceptions {
+  background: var(--checklist-strong, #ffffff);
+}
+
+.checklist-command-page .eci-header,
+.checklist-command-page .eci-header.eci-header--has-subitems,
+.checklist-command-page .eci-header.eci-header--subitem-exceptions,
+[data-theme="dark"] .checklist-command-page .eci-header.eci-header--has-subitems,
+[data-theme="dark"] .checklist-command-page .eci-header.eci-header--subitem-exceptions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+  padding: 0.9rem;
+  border-left: 0;
+  background: transparent;
+  animation: none;
+}
+
+.checklist-command-page .eci-main-info {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: flex-start;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.checklist-command-page .eci-status-indicator {
+  position: static;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 8px;
+  background: rgba(8, 145, 178, 0.1);
+  color: var(--eci-tone);
+  box-shadow: none;
+}
+
+.checklist-command-page .eci-status-icon {
+  font-size: 1rem;
+}
+
+.checklist-command-page .eci-status-icon--in-progress {
+  animation: none;
+}
+
+.checklist-command-page .eci-content {
+  min-width: 0;
+  padding-left: 0;
+}
+
+.checklist-command-page .eci-title {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+  color: var(--checklist-ink, var(--text-primary));
+  font-size: 1rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.checklist-command-page .eci-description {
+  margin: 0 0 0.65rem;
+  color: var(--checklist-muted, var(--text-secondary));
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.checklist-command-page .eci-metadata {
+  gap: 0.45rem;
+}
+
+.checklist-command-page .eci-type-badge,
+.checklist-command-page .eci-progress-stat,
+.checklist-command-page .eci-progress-label,
+.checklist-command-page .eci-progress-alert {
+  letter-spacing: 0.08em;
+}
+
+.checklist-command-page .eci-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.65rem;
+  padding: 0.28rem 0.5rem;
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 999px;
+  background: var(--checklist-fill, rgba(100, 116, 139, 0.16));
+  color: var(--checklist-ink, var(--text-primary));
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.checklist-command-page .eci-type-badge--exception {
+  border-color: rgba(217, 119, 6, 0.26);
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--checklist-amber, #d97706);
+}
+
+.checklist-command-page .eci-type-badge--execution {
+  border-color: rgba(8, 145, 178, 0.24);
+  background: rgba(8, 145, 178, 0.1);
+  color: var(--checklist-cyan, #0891b2);
+}
+
+.checklist-command-page .eci-controls {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.checklist-command-page .eci-subitems-progress {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.checklist-command-page .eci-progress-ring {
+  width: 2.55rem;
+  height: 2.55rem;
+  color: var(--checklist-fill, rgba(100, 116, 139, 0.16));
+}
+
+.checklist-command-page .eci-progress-text {
+  color: var(--checklist-ink, var(--text-primary));
+  font-size: 0.62rem;
+  letter-spacing: 0;
+}
+
+.checklist-command-page .eci-progress-stats {
+  display: grid;
+  min-width: 0;
+  text-align: left;
+}
+
+.checklist-command-page .eci-progress-stats .eci-progress-stat {
+  color: var(--checklist-green, #0f9f73);
+  font-size: 0.76rem;
+}
+
+.checklist-command-page .eci-progress-stats .eci-progress-label,
+.checklist-command-page .eci-progress-alert {
+  color: var(--checklist-muted, var(--text-secondary));
+  font-size: 0.64rem;
+}
+
+.checklist-command-page .eci-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 8px;
+  background: var(--checklist-surface, rgba(255, 255, 255, 0.94));
+  color: var(--checklist-ink, var(--text-primary));
+}
+
+.checklist-command-page .eci-expand-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(8, 145, 178, 0.3);
+  background: rgba(8, 145, 178, 0.1);
+  color: var(--checklist-cyan, #0891b2);
+}
+
+.checklist-command-page .eci-inspection-section {
+  padding: 0 0.9rem 0.9rem;
+  border-top: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+}
+
+.checklist-command-page .eci-activity-panel {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.8rem;
+  padding: 0.8rem;
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 8px;
+  background: var(--checklist-surface, rgba(255, 255, 255, 0.94));
+  box-shadow: none;
+}
+
+.checklist-command-page .eci-activity-panel-header {
+  margin: 0;
+}
+
+.checklist-command-page .eci-activity-panel-title {
+  color: var(--checklist-cyan, #0891b2);
+}
+
+.checklist-command-page .eci-activity-entry {
+  border: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+  border-radius: 8px;
+  background: var(--checklist-strong, #ffffff);
+}
+
+.checklist-command-page .eci-subitems-section {
+  border-top: 1px solid var(--checklist-border, rgba(71, 85, 105, 0.18));
+}
+
+.checklist-command-page .eci-completion-overlay {
+  width: auto;
+  padding: 0;
+}
+
+.checklist-command-page .eci-completion-info {
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--checklist-green, #0f9f73);
+  font-size: 0.8rem;
+}
+
+.checklist-command-page .eci-completion-icon {
+  font-size: 1rem;
+}
+
+.checklist-command-page .activity-chip,
+.checklist-command-page .quick-action-btn,
+.checklist-command-page .toggle-subitems-btn {
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+@media (max-width: 760px) {
+  .checklist-command-page .eci-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .checklist-command-page .eci-main-info {
+    grid-template-columns: 1fr;
+  }
+
+  .checklist-command-page .eci-status-indicator {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
+
+  .checklist-command-page .eci-controls {
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+}
