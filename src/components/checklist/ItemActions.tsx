@@ -140,7 +140,9 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
       );
     }
 
-    switch (action) {
+    const selectedAction = currentStatus === 'PENDING' ? 'START' : action === 'START' ? 'COMPLETE' : action;
+
+    switch (selectedAction) {
       case 'SKIP':
         return (
           <div className="action-form">
@@ -206,25 +208,7 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
         );
       
       case 'START':
-        return (
-          <div className="action-form">
-            <textarea
-              placeholder="Add start notes (optional)..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={3}
-            />
-            {currentStatus === 'PENDING' && (
-              <button
-              onClick={() => handleAction('IN_PROGRESS', comment)}
-              disabled={loadingState || contextLoading}
-              className="btn-action confirm"
-            >
-              Start Working
-            </button>
-            )}
-          </div>
-        );
+        return null;
       
       default:
         return null;
@@ -239,6 +223,7 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
   const canComplete = isPending || isInProgress || canCompleteFromSkippedOrFailed;
   const canSkipOrFail = isPending || isInProgress;
   const showStandardActions = !canCaptureFinalVerdict;
+  const selectedAction = currentStatus === 'PENDING' ? 'START' : action === 'START' ? 'COMPLETE' : action;
 
   return (
     <div className="item-actions">
@@ -246,17 +231,18 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
         <div className="action-buttons">
           {canStart && (
             <button
-              onClick={() => setAction('START')}
+              onClick={() => void handleAction('IN_PROGRESS')}
+              disabled={loadingState || contextLoading}
               className={`btn-action ${action === 'START' ? 'active' : ''}`}
             >
               <FaPlay /> Start Working
             </button>
           )}
           
-          {canComplete && (
+          {!isPending && canComplete && (
             <button
               onClick={() => setAction('COMPLETE')}
-              className={`btn-action ${action === 'COMPLETE' ? 'active' : ''}`}
+              className={`btn-action ${selectedAction === 'COMPLETE' ? 'active' : ''}`}
               disabled={hasSubitems && !canCompleteWithSubitems}
               title={hasSubitems && !canCompleteWithSubitems ? 'Complete all subitems first' : undefined}
             >
@@ -264,19 +250,19 @@ const ItemActions: React.FC<ItemActionsProps> = ({ instanceId, itemId, currentSt
             </button>
           )}
           
-          {canSkipOrFail && (
+          {!isPending && canSkipOrFail && (
             <button
               onClick={() => setAction('SKIP')}
-              className={`btn-action ${action === 'SKIP' ? 'active' : ''}`}
+              className={`btn-action ${selectedAction === 'SKIP' ? 'active' : ''}`}
             >
               <FaBan /> Skip Item
             </button>
           )}
           
-          {canSkipOrFail && (
+          {!isPending && canSkipOrFail && (
             <button
               onClick={() => setAction('FAIL')}
-              className={`btn-action ${action === 'FAIL' ? 'active' : ''}`}
+              className={`btn-action ${selectedAction === 'FAIL' ? 'active' : ''}`}
             >
               <FaExclamationTriangle /> Report Issue
             </button>

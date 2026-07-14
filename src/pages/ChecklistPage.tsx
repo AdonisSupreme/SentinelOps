@@ -762,11 +762,11 @@ const ChecklistPage: React.FC = () => {
             <div className="reason-modal-content one-time-completion-content">
               <div className="one-time-command-surface">
                 <span>Rapid closeout protocol</span>
-                <strong>Complete every item and subitem in this checklist.</strong>
+                <strong>Finish the outstanding work in this checklist.</strong>
                 <p>
-                  SentinelOps will record the completion under your account, convert unfinished or exception-marked
-                  work into completed evidence, and move this checklist to Pending Review. Final approval still remains
-                  with the existing checklist completion control.
+                  SentinelOps will complete only pending or in-progress work. Completed items, skips, and reported
+                  issues remain exactly as recorded before the checklist moves to Pending Review. Final approval still
+                  remains with the existing checklist completion control.
                 </p>
               </div>
 

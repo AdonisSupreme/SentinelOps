@@ -3,14 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 import {
   FaBolt,
   FaBroadcastTower,
-  FaClock,
   FaDownload,
-  FaExclamationTriangle,
   FaPlus,
   FaSearch,
   FaShieldAlt,
   FaSignal,
-  FaStream,
   FaSyncAlt,
 } from 'react-icons/fa';
 import PageGuide from '../components/ui/PageGuide';
@@ -66,7 +63,30 @@ const formatTargetKindLabel = (targetKind?: string | null) => {
 
 const normalizeGroupValue = (groupName?: string | null) => (groupName && groupName.trim() ? groupName : UNGROUPED_GROUP);
 const formatGroupLabel = (groupName?: string | null) => (groupName && groupName.trim() ? groupName : 'Ungrouped');
-
+const formatNetworkEndpoint = (service: NetworkServiceCard) => `${service.address}${service.port ? `:${service.port}` : ''}`;
+const formatMonitorMode = (service: NetworkServiceCard) => {
+  if (service.check_icmp && service.check_tcp) return 'ICMP + TCP';
+  if (service.check_tcp) return 'TCP only';
+  if (service.check_icmp) return 'ICMP only';
+  return 'Passive';
+};
+const formatLatencyPair = (service: NetworkServiceCard) => {
+  const icmp = service.check_icmp ? formatLatency(service.status?.icmp_latency_ms) : null;
+  const tcp = service.check_tcp ? formatLatency(service.status?.tcp_latency_ms) : null;
+  if (icmp && tcp) return `${icmp} / ${tcp}`;
+  if (tcp) return tcp;
+  if (icmp) return icmp;
+  return 'No probe';
+};
+const formatServicePosture = (service: NetworkServiceCard) => {
+  const status = service.status?.overall_status || 'UNKNOWN';
+  if (!service.enabled) return 'Disabled';
+  if (service.active_outage) return 'Incident active';
+  if (status === 'DOWN' || status === 'DEGRADED') return 'Needs review';
+  if (service.allow_ttl_expired) return 'Tunnel aware';
+  if (status === 'UP') return 'Nominal';
+  return 'Awaiting signal';
+};
 const sortNetworkServices = (services: NetworkServiceCard[]) => [...services].sort((left, right) => {
   const leftPriority = statusPriority[(left.status?.overall_status || 'UNKNOWN') as Status];
   const rightPriority = statusPriority[(right.status?.overall_status || 'UNKNOWN') as Status];
@@ -109,7 +129,6 @@ const NetworkSentinelPage: React.FC = () => {
   });
   const requestedServiceId = searchParams.get('service');
   const requestedTab = searchParams.get('tab');
-  const timezoneLabel = applicationTimeZone;
 
   const deferredQuery = useDeferredValue(serviceQuery);
   const detailRefreshTimerRef = useRef<number | null>(null);
@@ -628,15 +647,29 @@ const NetworkSentinelPage: React.FC = () => {
     <div className="network-sentinel-page">
       <div className="network-surface" />
       <section className="network-hero-panel network-shell">
-        <div className="hero-copy"><div className="eyebrow"><FaSignal />Network Sentinel</div><p>Live posture, sampled diagnostics, and major-event retention now move through one purpose-built command-center path.</p><div className="hero-actions"><button className="primary-action" onClick={runRefresh}><FaSyncAlt /> Refresh</button>{isManagerOrAdmin ? <button className="secondary-action" onClick={openCreate}><FaPlus /> Add Service</button> : null}</div></div>
-        <div className="hero-metrics"><div className="pulse-orb"><strong>{snapshot?.overview.fleet_pulse ?? 0}%</strong><span>Fleet Pulse</span></div><div className="metric-stack"><div className="metric-tile"><span>Engine</span><strong>{snapshot?.engine.online ? 'ONLINE' : 'OFFLINE'}</strong><small>{snapshot?.engine.active_service_workers ?? 0} workers</small></div><div className="metric-tile"><span>Retention</span><strong>{snapshot?.retention.raw_history_days ?? 2}d raw / {snapshot?.retention.event_history_days ?? 14}d major</strong><small>{snapshot?.retention.sample_interval_seconds ?? 60}s sample cadence</small></div></div></div>
-      </section>
-
-      <section className="top-strip">
-        <div className="strip-card network-shell"><FaBroadcastTower /><div><span>Coverage</span><strong>{snapshot?.overview.enabled_services ?? 0}/{snapshot?.overview.total_services ?? 0}</strong></div></div>
-        <div className="strip-card network-shell"><FaExclamationTriangle /><div><span>Degraded + Down</span><strong>{snapshot?.overview.impaired_services ?? 0}</strong></div></div>
-        <div className="strip-card network-shell"><FaClock /><div><span>Average Cadence</span><strong>{snapshot?.overview.average_interval_seconds ? `${snapshot.overview.average_interval_seconds}s` : '--'}</strong></div></div>
-        <div className="strip-card network-shell"><FaStream /><div><span>Recent Events</span><strong>{snapshot?.recent_events.length ?? 0}</strong></div></div>
+        <div className="hero-copy">
+          <div className="eyebrow"><FaSignal />Network Sentinel</div>
+          <h1>Network evidence cockpit</h1>
+          <p>Live reachability, retained outage evidence, and Nexus-ready service posture in one focused operations lane.</p>
+          <div className="hero-actions">
+            <button className="primary-action" onClick={runRefresh}><FaSyncAlt /> Refresh</button>
+            {isManagerOrAdmin ? <button className="secondary-action" onClick={openCreate}><FaPlus /> Add Service</button> : null}
+          </div>
+        </div>
+        <div className="network-command-rail">
+          <div>
+            <span>Engine</span>
+            <strong>{snapshot?.engine.online ? 'Online' : 'Offline'}</strong>
+          </div>
+          <div>
+            <span>Focused asset</span>
+            <strong>{selectedCard?.name || 'Select a service'}</strong>
+          </div>
+          <div>
+            <span>Evidence window</span>
+            <strong>{snapshot?.retention.raw_history_days ?? 2}d raw / {snapshot?.retention.event_history_days ?? 14}d events</strong>
+          </div>
+        </div>
       </section>
 
       {error ? <div className="network-shell status-banner error-banner">{error}</div> : null}
@@ -666,21 +699,96 @@ const NetworkSentinelPage: React.FC = () => {
             {loading ? <div className="network-shell placeholder-card">Loading network command center...</div> : null}
             {filteredServices.map((service) => {
               const status = service.status?.overall_status || 'UNKNOWN';
-              return <button key={service.id} className={`service-node network-shell ${statusClass(status)} ${selectedId === service.id ? 'selected' : ''}`} onClick={() => focusService(service.id)}><div className="service-node-head"><div><span>{formatGroupLabel(service.group_name)} · {formatTargetKindLabel(service.target_kind)}</span><h3>{service.name}</h3></div><strong className={`status-pill ${statusClass(status)}`}>{status}</strong></div><p>{service.address}{service.port ? `:${service.port}` : ''}</p><div className="service-node-meta"><span>ICMP {formatLatency(service.status?.icmp_latency_ms)}</span><span>TCP {service.check_tcp ? formatLatency(service.status?.tcp_latency_ms) : 'Route watch'}</span><span>{formatPercent(service.metrics.uptime_percent_24h)} uptime</span></div><div className="service-node-footer"><span>Since {formatSince(service.status?.last_state_change_at)}</span>{service.active_outage ? <em>Incident active</em> : <em>{service.allow_ttl_expired ? 'Tunnel aware' : 'Nominal'}</em>}</div></button>;
+              return (
+                <button
+                  key={service.id}
+                  className={`service-node network-shell ${statusClass(status)} ${selectedId === service.id ? 'selected' : ''}`}
+                  onClick={() => focusService(service.id)}
+                >
+                  <div className="network-service-command">
+                    <span className={`network-service-dot ${statusClass(status)}`} />
+                    <div>
+                      <span>{formatGroupLabel(service.group_name)} / {formatTargetKindLabel(service.target_kind)}</span>
+                      <h3>{service.name}</h3>
+                    </div>
+                    <strong className={`status-pill ${statusClass(status)}`}>{status}</strong>
+                  </div>
+                  <div className="network-service-endpoint">
+                    <code>{formatNetworkEndpoint(service)}</code>
+                    <span>{formatMonitorMode(service)}</span>
+                  </div>
+                  <div className="network-service-facts">
+                    <div><span>Signal</span><strong>{formatLatencyPair(service)}</strong></div>
+                    <div><span>Availability</span><strong>{formatPercent(service.metrics.uptime_percent_24h)}</strong></div>
+                    <div><span>Posture</span><strong>{formatServicePosture(service)}</strong></div>
+                  </div>
+                </button>
+              );
             })}
           </div>
 
           <div className="subpanels">
-            <div className="network-shell subpanel"><div className="subpanel-head"><h2>Active Incidents</h2><span>{snapshot?.active_outages.length ?? 0}</span></div><div className="subpanel-list">{(snapshot?.active_outages || []).map((outage) => <button key={outage.id} className="list-row" onClick={() => outage.service_id && focusService(outage.service_id)}><div><strong>{outage.service_name || 'Unknown service'}</strong><span>{formatDateTime(outage.started_at)}</span></div><em>{formatDuration(outage.duration_seconds)}</em></button>)}{!snapshot?.active_outages.length ? <div className="list-empty">No live incidents right now.</div> : null}</div></div>
-            <div className="network-shell subpanel"><div className="subpanel-head"><h2>Major Events</h2><span>{snapshot?.recent_events.length ?? 0}</span></div><div className="subpanel-list">{(snapshot?.recent_events || []).slice(0, 8).map((event: NetworkEvent) => <div key={event.id} className={`list-row event-row ${event.severity.toLowerCase()}`}><div><strong>{event.title}</strong><span>{event.service_name || 'Fleet'} - {formatDateTime(event.created_at)}</span></div><em>{event.severity}</em></div>)}{!snapshot?.recent_events.length ? <div className="list-empty">Major events will appear here.</div> : null}</div></div>
+            <div className="network-shell subpanel">
+              <div className="network-subpanel-command">
+                <div><span>Incident lane</span><h2>Active Incidents</h2></div>
+                <strong>{snapshot?.active_outages.length ? `${snapshot.active_outages.length} open` : 'Clear'}</strong>
+              </div>
+              <div className="subpanel-list">
+                {(snapshot?.active_outages || []).map((outage) => (
+                  <button key={outage.id} className="list-row" onClick={() => outage.service_id && focusService(outage.service_id)}>
+                    <div><strong>{outage.service_name || 'Unknown service'}</strong><span>{formatDateTime(outage.started_at)}</span></div>
+                    <em>{formatDuration(outage.duration_seconds)}</em>
+                  </button>
+                ))}
+                {!snapshot?.active_outages.length ? <div className="list-empty">No live incidents right now.</div> : null}
+              </div>
+            </div>
+            <div className="network-shell subpanel">
+              <div className="network-subpanel-command">
+                <div><span>Event lane</span><h2>Major Events</h2></div>
+                <strong>{snapshot?.recent_events.length ? `${snapshot.recent_events.length} retained` : 'Quiet'}</strong>
+              </div>
+              <div className="subpanel-list">
+                {(snapshot?.recent_events || []).slice(0, 8).map((event: NetworkEvent) => (
+                  <div key={event.id} className={`list-row event-row ${event.severity.toLowerCase()}`}>
+                    <div><strong>{event.title}</strong><span>{event.service_name || 'Fleet'} - {formatDateTime(event.created_at)}</span></div>
+                    <em>{event.severity}</em>
+                  </div>
+                ))}
+                {!snapshot?.recent_events.length ? <div className="list-empty">Major events will appear here.</div> : null}
+              </div>
+            </div>
           </div>
         </section>
 
         <aside className="detail-column network-shell">
           {!selectedCard ? <div className="placeholder-card detail-placeholder"><FaShieldAlt /><p>Select a service to open its investigation deck.</p></div> : <>
-            <div className="detail-head"><div><span>{formatGroupLabel(selectedCard.group_name)} · {formatTargetKindLabel(selectedCard.target_kind)}</span><h2>{selectedCard.name}</h2><p>{selectedCard.address}{selectedCard.port ? `:${selectedCard.port}` : ''}</p></div><strong className={`status-pill ${statusClass(selectedCard.status?.overall_status)}`}>{selectedCard.status?.overall_status || 'UNKNOWN'}</strong></div>
+            <div className="detail-head">
+              <div>
+                <span>{formatGroupLabel(selectedCard.group_name)} / {formatTargetKindLabel(selectedCard.target_kind)}</span>
+                <h2>{selectedCard.name}</h2>
+                <p>{formatNetworkEndpoint(selectedCard)}</p>
+              </div>
+              <strong className={`status-pill ${statusClass(selectedCard.status?.overall_status)}`}>{selectedCard.status?.overall_status || 'UNKNOWN'}</strong>
+            </div>
             <div className="detail-actions">{isManagerOrAdmin ? <button onClick={runCheckNow} disabled={checkNowBusy}><FaBolt /> {checkNowBusy ? 'Checking...' : 'Check now'}</button> : null}{isManagerOrAdmin ? <button onClick={toggleEnabled} disabled={toggleBusy}>{toggleBusy ? 'Working...' : selectedCard.enabled ? 'Disable' : 'Enable'}</button> : null}{isManagerOrAdmin ? <button onClick={openEdit}>Edit</button> : null}<button onClick={downloadEvidenceText} disabled={evidenceDownloading}><FaDownload /> {evidenceDownloading ? 'Preparing...' : 'Evidence TXT'}</button>{isAdmin ? <button className="danger-action" onClick={deleteService} disabled={deleteBusy}>{deleteBusy ? 'Deleting...' : 'Delete'}</button> : null}</div>
-            <div className="detail-metrics"><div><label>Availability 24h</label><strong>{formatPercent(investigation?.metrics.availability_percent_24h)}</strong></div><div><label>ICMP Latency</label><strong>{formatLatency(selectedCard.status?.icmp_latency_ms)}</strong></div><div><label>TCP Latency</label><strong>{selectedCard.check_tcp ? formatLatency(selectedCard.status?.tcp_latency_ms) : 'Route watch'}</strong></div><div><label>Monitor Kind</label><strong>{formatTargetKindLabel(selectedCard.target_kind)}</strong></div><div><label>Transit TTL</label><strong>{selectedCard.allow_ttl_expired ? 'Accepted' : 'Strict reply'}</strong></div><div><label>State Since</label><strong>{formatSince(selectedCard.status?.last_state_change_at)}</strong></div><div><label>Diagnostic Incidents</label><strong>{investigation?.metrics.outage_count_diagnostic_window ?? 0}</strong></div><div><label>Raw Retention</label><strong>{investigation?.retention.raw_history_days ?? snapshot?.retention.raw_history_days ?? 2} days</strong></div></div>
+            <div className="network-detail-strip">
+              <div>
+                <span><FaSignal /> Signal</span>
+                <strong>{formatPercent(investigation?.metrics.availability_percent_24h ?? selectedCard.metrics.uptime_percent_24h)}</strong>
+                <small>{formatLatencyPair(selectedCard)}</small>
+              </div>
+              <div>
+                <span><FaBroadcastTower /> Probe</span>
+                <strong>{formatMonitorMode(selectedCard)}</strong>
+                <small>{selectedCard.allow_ttl_expired ? 'Transit TTL accepted' : 'Strict endpoint reply'}</small>
+              </div>
+              <div>
+                <span><FaShieldAlt /> Posture</span>
+                <strong>{formatServicePosture(selectedCard)}</strong>
+                <small>Since {formatSince(selectedCard.status?.last_state_change_at)}</small>
+              </div>
+            </div>
             <div className="detail-tabs"><button className={tab === 'signal' ? 'active' : ''} onClick={() => setTab('signal')}>Signal</button><button className={tab === 'timeline' ? 'active' : ''} onClick={() => setTab('timeline')}>Timeline</button><button className={tab === 'evidence' ? 'active' : ''} onClick={() => setTab('evidence')}>Evidence</button></div>
             {investigationLoading ? <div className="network-shell inner-loading">Refreshing diagnostics...</div> : null}
             {tab === 'signal' ? <div className="tab-content"><div className="signal-panel"><div className="panel-head"><h3>Sampled Availability</h3><span>{signalLabel}</span></div><SignalBand samples={normalizedSamples} /></div><div className="signal-panel"><div className="panel-head"><h3>Latency Envelope</h3><span>{formatLatency(investigation?.metrics.avg_icmp_latency_ms_24h || investigation?.metrics.avg_tcp_latency_ms_24h)}</span></div><LatencyChart samples={normalizedSamples} /></div></div> : null}
@@ -693,7 +801,53 @@ const NetworkSentinelPage: React.FC = () => {
       {todayEventsOpen ? <div className="editor-backdrop" onClick={() => setTodayEventsOpen(false)}><div className="editor-card network-shell outage-ledger-modal" onClick={(event) => event.stopPropagation()}><div className="panel-head"><div className='my-div'><h3>Today's Major Events</h3><span>{selectedCard?.name || 'Focused asset'}</span></div><button type="button" onClick={() => setTodayEventsOpen(false)}>Close</button></div><div className="timeline-list outage-ledger-list">{todaysEvents.map((event) => <div key={event.id} className={`timeline-entry ${event.severity.toLowerCase()}`}><strong>{event.title}</strong><span>{formatDateTime(event.created_at)}</span><p>{event.summary || 'No summary provided.'}</p></div>)}{!todaysEvents.length ? <div className="list-empty">No major events recorded today for this service.</div> : null}</div></div></div> : null}
       {outageLedgerOpen ? <div className="editor-backdrop" onClick={() => setOutageLedgerOpen(false)}><div className="editor-card network-shell outage-ledger-modal" onClick={(event) => event.stopPropagation()}><div className="panel-head"><div className='my-div'><h3>Today's Outages</h3><span>{selectedCard?.name || 'Focused asset'}</span></div><button type="button" onClick={() => setOutageLedgerOpen(false)}>Close</button></div><div className="timeline-list outage-ledger-list">{todaysOutages.map((outage) => <div key={outage.id} className={`timeline-entry ${outage.ended_at ? 'info' : 'critical'}`}><strong>{outage.ended_at ? 'Resolved incident' : 'Active incident'}</strong><span>{formatDateTime(outage.started_at)}</span><p>{outage.ended_at ? `Resolved in ${formatDuration(outage.duration_seconds)}` : `Ongoing for ${formatSince(outage.started_at)}`}</p></div>)}{!todaysOutages.length ? <div className="list-empty">No outages recorded today for this service.</div> : null}</div></div></div> : null}
 
-      {editorOpen ? <div className="editor-backdrop" onClick={() => setEditorOpen(false)}><div className="editor-card network-shell" onClick={(event) => event.stopPropagation()}><h3>{editorMode === 'create' ? 'Add Service' : 'Edit Service'}</h3><p className="editor-helper">Choose the asset kind first, then decide whether this monitor expects a strict reply or can treat routed transit TTL signals as valid tunnel reachability.</p><div className="editor-grid"><input placeholder="Name" value={serviceForm.name} onChange={(event) => setServiceForm((state) => ({ ...state, name: event.target.value }))} /><input placeholder="Address / Hostname" value={serviceForm.address} onChange={(event) => setServiceForm((state) => ({ ...state, address: event.target.value }))} /><input placeholder="Port" value={serviceForm.port} onChange={(event) => setServiceForm((state) => ({ ...state, port: event.target.value }))} /><select value={serviceForm.target_kind} onChange={(event) => setServiceForm((state) => ({ ...state, target_kind: event.target.value }))}><option value="SERVICE">Service</option><option value="CHANNEL">Channel</option><option value="VPN">VPN</option><option value="NETWORK">Network Path</option></select><input placeholder="Environment" value={serviceForm.environment} onChange={(event) => setServiceForm((state) => ({ ...state, environment: event.target.value }))} /><input placeholder="Group" value={serviceForm.group_name} onChange={(event) => setServiceForm((state) => ({ ...state, group_name: event.target.value }))} /><input placeholder="Tags comma-separated" value={serviceForm.tags} onChange={(event) => setServiceForm((state) => ({ ...state, tags: event.target.value }))} /><input placeholder="Timeout ms" value={serviceForm.timeout_ms} onChange={(event) => setServiceForm((state) => ({ ...state, timeout_ms: event.target.value }))} /><input placeholder="Interval seconds" value={serviceForm.interval_seconds} onChange={(event) => setServiceForm((state) => ({ ...state, interval_seconds: event.target.value }))} /><textarea placeholder="Notes" value={serviceForm.notes} onChange={(event) => setServiceForm((state) => ({ ...state, notes: event.target.value }))} /><label><input type="checkbox" checked={serviceForm.check_icmp} onChange={(event) => setServiceForm((state) => ({ ...state, check_icmp: event.target.checked }))} /> ICMP</label><label><input type="checkbox" checked={serviceForm.check_tcp} onChange={(event) => setServiceForm((state) => ({ ...state, check_tcp: event.target.checked }))} /> TCP</label><label><input type="checkbox" checked={serviceForm.enabled} onChange={(event) => setServiceForm((state) => ({ ...state, enabled: event.target.checked }))} /> Enabled</label><label className="wide-toggle"><input type="checkbox" checked={serviceForm.allow_ttl_expired} onChange={(event) => setServiceForm((state) => ({ ...state, allow_ttl_expired: event.target.checked }))} /> Accept transit TTL responses as valid route/tunnel reachability</label></div><div className="editor-actions"><button onClick={() => setEditorOpen(false)} disabled={saveBusy}>Cancel</button><button className="primary-action" onClick={submitServiceForm} disabled={saveBusy}>{saveBusy ? 'Saving...' : 'Save'}</button></div></div></div> : null}
+      {editorOpen ? (
+        <div className="editor-backdrop" onClick={() => setEditorOpen(false)}>
+          <div className="editor-card network-shell" onClick={(event) => event.stopPropagation()}>
+            <div className="editor-card-head">
+              <span>{editorMode === 'create' ? 'New monitor' : 'Monitor profile'}</span>
+              <h3>{editorMode === 'create' ? 'Add Service' : 'Edit Service'}</h3>
+              <p>{serviceForm.group_name || 'Network Sentinel'} / {serviceForm.target_kind.toLowerCase()}</p>
+            </div>
+            <div className="network-editor-strip">
+              <div>
+                <span>Monitor posture</span>
+                <strong>{serviceForm.enabled ? 'Enabled' : 'Paused'}</strong>
+                <small>{editorMode === 'create' ? 'New monitor profile' : 'Existing monitor profile'}</small>
+              </div>
+              <div>
+                <span>Probe plan</span>
+                <strong>{[serviceForm.check_icmp ? 'ICMP' : '', serviceForm.check_tcp ? 'TCP' : ''].filter(Boolean).join(' + ') || 'No probes'}</strong>
+                <small>{serviceForm.allow_ttl_expired ? 'Transit TTL accepted' : 'Strict endpoint reply'}</small>
+              </div>
+              <div>
+                <span>Cadence</span>
+                <strong>{serviceForm.interval_seconds || 'Default'}{serviceForm.interval_seconds ? 's' : ''}</strong>
+                <small>{serviceForm.timeout_ms || 'Default'} ms timeout</small>
+              </div>
+            </div>
+            <div className="editor-grid">
+              <label><span>Name</span><input placeholder="Name" value={serviceForm.name} onChange={(event) => setServiceForm((state) => ({ ...state, name: event.target.value }))} /></label>
+              <label><span>Address</span><input placeholder="Address / Hostname" value={serviceForm.address} onChange={(event) => setServiceForm((state) => ({ ...state, address: event.target.value }))} /></label>
+              <label><span>Port</span><input placeholder="Port" value={serviceForm.port} onChange={(event) => setServiceForm((state) => ({ ...state, port: event.target.value }))} /></label>
+              <label><span>Kind</span><select value={serviceForm.target_kind} onChange={(event) => setServiceForm((state) => ({ ...state, target_kind: event.target.value }))}><option value="SERVICE">Service</option><option value="CHANNEL">Channel</option><option value="VPN">VPN</option><option value="NETWORK">Network Path</option></select></label>
+              <label><span>Environment</span><input placeholder="Environment" value={serviceForm.environment} onChange={(event) => setServiceForm((state) => ({ ...state, environment: event.target.value }))} /></label>
+              <label><span>Group</span><input placeholder="Group" value={serviceForm.group_name} onChange={(event) => setServiceForm((state) => ({ ...state, group_name: event.target.value }))} /></label>
+              <label><span>Tags</span><input placeholder="Tags comma-separated" value={serviceForm.tags} onChange={(event) => setServiceForm((state) => ({ ...state, tags: event.target.value }))} /></label>
+              <label><span>Timeout</span><input placeholder="Timeout ms" value={serviceForm.timeout_ms} onChange={(event) => setServiceForm((state) => ({ ...state, timeout_ms: event.target.value }))} /></label>
+              <label><span>Interval</span><input placeholder="Interval seconds" value={serviceForm.interval_seconds} onChange={(event) => setServiceForm((state) => ({ ...state, interval_seconds: event.target.value }))} /></label>
+              <label className="editor-notes"><span>Notes</span><textarea placeholder="Notes" value={serviceForm.notes} onChange={(event) => setServiceForm((state) => ({ ...state, notes: event.target.value }))} /></label>
+              <div className="editor-switches">
+                <label><input type="checkbox" checked={serviceForm.check_icmp} onChange={(event) => setServiceForm((state) => ({ ...state, check_icmp: event.target.checked }))} /> ICMP</label>
+                <label><input type="checkbox" checked={serviceForm.check_tcp} onChange={(event) => setServiceForm((state) => ({ ...state, check_tcp: event.target.checked }))} /> TCP</label>
+                <label><input type="checkbox" checked={serviceForm.enabled} onChange={(event) => setServiceForm((state) => ({ ...state, enabled: event.target.checked }))} /> Enabled</label>
+                <label><input type="checkbox" checked={serviceForm.allow_ttl_expired} onChange={(event) => setServiceForm((state) => ({ ...state, allow_ttl_expired: event.target.checked }))} /> Transit TTL valid</label>
+              </div>
+            </div>
+            <div className="editor-actions"><button onClick={() => setEditorOpen(false)} disabled={saveBusy}>Cancel</button><button className="primary-action" onClick={submitServiceForm} disabled={saveBusy}>{saveBusy ? 'Saving...' : 'Save'}</button></div>
+          </div>
+        </div>
+      ) : null}
       <PageGuide guide={pageGuides.networkSentinel} />
     </div>
   );

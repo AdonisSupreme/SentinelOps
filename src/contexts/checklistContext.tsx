@@ -764,7 +764,26 @@ export const ChecklistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // Make API call with retry logic - server returns the full instance
       const updatedInstance = await retryWithBackoff(async () => {
         if (status === 'IN_PROGRESS' && currentItemHasSubitems) {
-          await checklistApi.startItemWork(instanceId, itemId, comment || reason || undefined);
+          const startResponse = await checklistApi.startItemWork(instanceId, itemId, comment || reason || undefined);
+          const subitemsToStart = (startResponse.subitems || currentItem?.subitems || [])
+            .filter((subitem: any) => subitem.status === 'PENDING');
+
+          // Starting the parent opens the entire execution set. Keep already-actioned
+          // subitems untouched, then fetch one authoritative instance snapshot.
+          if (subitemsToStart.length > 0) {
+            await Promise.all(
+              subitemsToStart.map((subitem: any) => checklistApi.updateSubitemStatus(
+                instanceId,
+                itemId,
+                subitem.id,
+                {
+                  status: 'IN_PROGRESS',
+                  comment: comment || reason || undefined,
+                },
+              )),
+            );
+          }
+
           const refreshedInstance = await loadInstance(instanceId);
 
           if (!refreshedInstance) {

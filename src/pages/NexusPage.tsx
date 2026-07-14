@@ -38,10 +38,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAppConfig } from '../contexts/AppConfigContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import {
-  formatApplicationDateBucket,
   formatDateTimeInApplicationTimeZone,
   formatRelativeFromNow,
-  getApplicationDateBucket,
   parseSentinelTimestamp,
 } from '../utils/time';
 import nexusMark from '../assets/sentinel-nexus-mark.svg';
@@ -109,7 +107,7 @@ const NEXUS_SECTION_ID = '7bd4144d-68d8-4ac3-897d-245941612daf';
 
 type WorkspaceTab = 'incidents' | 'services' | 'agents' | 'databases' | 'rollover' | 'clusters' | 'flows' | 'dependencies' | 'sops' | 'onboarding';
 type NexusDetailTab = 'overview' | 'topology' | 'evidence' | 'actions' | 'procedure' | 'outcome';
-type IncidentTimelineFilter = 'all' | 'active' | 'last_1h' | 'last_5h' | 'last_12h' | 'last_24h' | string;
+type IncidentTimelineFilter = 'all' | 'active' | 'shift' | 'last_24h' | 'older';
 
 const displayRiskLevelForIncident = (incident: NexusIncident): NexusRiskLevel =>
   incident.status === 'AWAITING_VERDICT' ? 'LOW' : incident.risk_level;
@@ -139,14 +137,6 @@ const workspaceLabels: Record<WorkspaceTab, string> = {
   sops: 'SOPs',
   onboarding: 'Onboarding',
 };
-
-const intelligenceLoop = [
-  { label: 'Evidence Intake', detail: 'Obtain', signal: 'Network, agents, logs' },
-  { label: 'Normalization', detail: 'Scrub', signal: 'Canonical metadata' },
-  { label: 'Correlation', detail: 'Explore', signal: 'Graph and timeline' },
-  { label: 'Prediction', detail: 'Model', signal: 'Risk and root cause' },
-  { label: 'Operator Guidance', detail: 'iNterpret', signal: 'SOP and action path' },
-];
 
 const bootPreviewSteps = [
   'Opening SentinelOps database fabric',
@@ -258,10 +248,6 @@ const splitSectionLines = (value: string) =>
     .filter(Boolean);
 
 const getIncidentActivityDate = (incident: NexusIncident) => parseSentinelTimestamp(incident.end_time || incident.start_time) || new Date(0);
-
-const dateBucketId = (date: Date) => `date:${getApplicationDateBucket(date)}`;
-
-const formatBucketDate = (bucketId: string) => formatApplicationDateBucket(bucketId.replace('date:', ''));
 
 const cleanAiNarrative = (answer: string) =>
   answer
@@ -833,6 +819,7 @@ const NexusPage: React.FC = () => {
   const [selectedSopId, setSelectedSopId] = useState<string | null>(null);
   const [timelineServiceId, setTimelineServiceId] = useState<string | null>(null);
   const [servicePanelMode, setServicePanelMode] = useState<'overview' | 'configuration'>('overview');
+  const [serviceWorkspaceView, setServiceWorkspaceView] = useState<'catalog' | 'certified'>('catalog');
   const [rolloverPanelMode, setRolloverPanelMode] = useState<'command' | 'configuration' | 'services'>('command');
   const [serviceLiveState, setServiceLiveState] = useState<NexusServiceLiveState | null>(null);
   const [serviceLiveLoading, setServiceLiveLoading] = useState(false);
@@ -852,8 +839,11 @@ const NexusPage: React.FC = () => {
   const [serviceControlBusy, setServiceControlBusy] = useState<string | null>(null);
   const [serviceControlError, setServiceControlError] = useState<string | null>(null);
   const [selectedClusterId, setSelectedClusterId] = useState<string | null>(null);
+  const [clusterPanelMode, setClusterPanelMode] = useState<'fabric' | 'configuration'>('fabric');
   const [selectedFlowId, setSelectedFlowId] = useState<string | null>(null);
+  const [flowPanelMode, setFlowPanelMode] = useState<'preview' | 'configuration'>('preview');
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
+  const [edgePanelMode, setEdgePanelMode] = useState<'preview' | 'configuration'>('preview');
   const [selectedRolloverEnvironmentId, setSelectedRolloverEnvironmentId] = useState<string | null>(null);
   const [creatingService, setCreatingService] = useState(false);
   const [creatingSop, setCreatingSop] = useState(false);
@@ -861,6 +851,8 @@ const NexusPage: React.FC = () => {
   const [creatingFlow, setCreatingFlow] = useState(false);
   const [creatingEdge, setCreatingEdge] = useState(false);
   const [creatingRolloverEnvironment, setCreatingRolloverEnvironment] = useState(false);
+  const [sopWorkspaceView, setSopWorkspaceView] = useState<'managed' | 'indexed'>('managed');
+  const [sopPanelMode, setSopPanelMode] = useState<'preview' | 'configuration'>('preview');
   const [serviceDraft, setServiceDraft] = useState<CatalogService>(createEmptyService);
   const [sopDraft, setSopDraft] = useState<ManagedSop>(createEmptyManagedSop);
   const [clusterDraft, setClusterDraft] = useState<DependencyCluster>(createEmptyCluster);
@@ -1008,10 +1000,6 @@ const NexusPage: React.FC = () => {
 
   const syncHealthLabel = (fabricSummary?.sync_health || 'idle').toUpperCase();
   const lastSyncLabel = formatDateTime(fabricSummary?.last_sync_at);
-  const totalServices = fabricSummary?.total_services || services.length;
-  const mappedServices = fabricSummary?.mapped_network_services || 0;
-  const totalClusters = fabricSummary?.total_clusters || clusters.length;
-  const totalFlows = businessFlows.length;
   const timezoneLabel = applicationTimeZone;
   const timelineInferenceActive = timelineChatBusy || timelineInferencePhase !== 'idle';
   const timelineInferenceIndex = timelineInferenceSteps.findIndex((step) => step.id === timelineInferencePhase);
@@ -1613,35 +1601,22 @@ const NexusPage: React.FC = () => {
       const timestamp = getIncidentActivityDate(incident).getTime();
       return !Number.isNaN(timestamp) && now - timestamp <= hours * 60 * 60 * 1000;
     };
-    const activeCount = operationalIncidents.filter((incident) => ['OPEN', 'MONITORING'].includes(incident.status)).length;
-    const baseBuckets = [
-      { id: 'all' as IncidentTimelineFilter, label: 'All unresolved', count: operationalIncidents.length, hint: 'Current Nexus work queue' },
-      { id: 'active' as IncidentTimelineFilter, label: 'Active now', count: activeCount, hint: 'Open or monitoring' },
-      { id: 'last_1h' as IncidentTimelineFilter, label: 'Last hour', count: operationalIncidents.filter((incident) => withinHours(incident, 1)).length, hint: 'Freshest movement' },
-      { id: 'last_5h' as IncidentTimelineFilter, label: 'Last 5 hours', count: operationalIncidents.filter((incident) => withinHours(incident, 5)).length, hint: 'Current shift pulse' },
-      { id: 'last_12h' as IncidentTimelineFilter, label: 'Last 12 hours', count: operationalIncidents.filter((incident) => withinHours(incident, 12)).length, hint: 'Half-day window' },
-      { id: 'last_24h' as IncidentTimelineFilter, label: 'Last 24 hours', count: operationalIncidents.filter((incident) => withinHours(incident, 24)).length, hint: 'Operational day' },
-    ];
+    const activeCount = filteredIncidents.filter((incident) => ['OPEN', 'MONITORING'].includes(incident.status)).length;
+    const shiftCount = filteredIncidents.filter((incident) => withinHours(incident, 5)).length;
+    const dayCount = filteredIncidents.filter((incident) => withinHours(incident, 24)).length;
+    const olderCount = filteredIncidents.filter((incident) => {
+      const timestamp = getIncidentActivityDate(incident).getTime();
+      return !Number.isNaN(timestamp) && now - timestamp > 24 * 60 * 60 * 1000;
+    }).length;
 
-    const dateCounts = operationalIncidents.reduce<Record<string, number>>((acc, incident) => {
-      const activityDate = getIncidentActivityDate(incident);
-      const timestamp = activityDate.getTime();
-      if (Number.isNaN(timestamp) || now - timestamp <= 24 * 60 * 60 * 1000) {
-        return acc;
-      }
-      const bucketId = dateBucketId(activityDate);
-      return { ...acc, [bucketId]: (acc[bucketId] || 0) + 1 };
-    }, {});
-    const dateBuckets = Object.entries(dateCounts)
-      .sort(([left], [right]) => right.localeCompare(left))
-      .map(([id, count]) => ({
-        id,
-        label: formatBucketDate(id),
-        count,
-        hint: 'Awaiting operator closure',
-      }));
-    return [...baseBuckets, ...dateBuckets];
-  }, [operationalIncidents]);
+    return [
+      { id: 'all' as IncidentTimelineFilter, label: 'All unresolved', count: filteredIncidents.length, hint: 'Complete queue' },
+      { id: 'active' as IncidentTimelineFilter, label: 'Active now', count: activeCount, hint: 'Open impact' },
+      { id: 'shift' as IncidentTimelineFilter, label: 'Shift pulse', count: shiftCount, hint: 'Last 5 hours' },
+      { id: 'last_24h' as IncidentTimelineFilter, label: 'Last 24h', count: dayCount, hint: 'Current operating day' },
+      { id: 'older' as IncidentTimelineFilter, label: 'Older', count: olderCount, hint: 'Closure backlog' },
+    ];
+  }, [filteredIncidents]);
 
   const timeFilteredIncidents = useMemo(() => {
     if (incidentTimelineFilter === 'all') {
@@ -1650,20 +1625,22 @@ const NexusPage: React.FC = () => {
     if (incidentTimelineFilter === 'active') {
       return filteredIncidents.filter((incident) => ['OPEN', 'MONITORING'].includes(incident.status));
     }
-    if (incidentTimelineFilter.startsWith('date:')) {
-      return filteredIncidents.filter((incident) => dateBucketId(getIncidentActivityDate(incident)) === incidentTimelineFilter);
+    const now = Date.now();
+    if (incidentTimelineFilter === 'older') {
+      return filteredIncidents.filter((incident) => {
+        const timestamp = getIncidentActivityDate(incident).getTime();
+        return !Number.isNaN(timestamp) && now - timestamp > 24 * 60 * 60 * 1000;
+      });
     }
     const hourMap: Record<string, number> = {
-      last_1h: 1,
-      last_5h: 5,
-      last_12h: 12,
+      shift: 5,
       last_24h: 24,
     };
     const hours = hourMap[incidentTimelineFilter];
     if (!hours) {
       return filteredIncidents;
     }
-    const cutoff = Date.now() - hours * 60 * 60 * 1000;
+    const cutoff = now - hours * 60 * 60 * 1000;
     return filteredIncidents.filter((incident) => {
       const timestamp = getIncidentActivityDate(incident).getTime();
       return !Number.isNaN(timestamp) && timestamp >= cutoff;
@@ -2975,6 +2952,7 @@ const NexusPage: React.FC = () => {
     resetEditorHydration('cluster');
     setCreatingCluster(true);
     setSelectedClusterId(null);
+    setClusterPanelMode('configuration');
     setClusterDraft(createEmptyCluster());
     setClusterMetadataText('{}');
   };
@@ -2987,6 +2965,7 @@ const NexusPage: React.FC = () => {
     resetEditorHydration('flow');
     setCreatingFlow(true);
     setSelectedFlowId(null);
+    setFlowPanelMode('configuration');
     setFlowDraft(createEmptyBusinessFlow());
     setFlowMetadataText('{}');
   };
@@ -2999,6 +2978,7 @@ const NexusPage: React.FC = () => {
     resetEditorHydration('edge');
     setCreatingEdge(true);
     setSelectedEdgeId(null);
+    setEdgePanelMode('configuration');
     setEdgeDraft(createEmptyEdge());
     setEdgeMetadataText('{}');
   };
@@ -3011,6 +2991,7 @@ const NexusPage: React.FC = () => {
     resetEditorHydration('sop');
     setCreatingSop(true);
     setSelectedSopId(null);
+    setSopPanelMode('configuration');
     setSopDraft({
       ...createEmptyManagedSop(),
       updated_by: actor,
@@ -4490,7 +4471,7 @@ const NexusPage: React.FC = () => {
             <h2>Current and Unresolved Incidents</h2>
             <p>Active cases stay severity-ranked. Restored cases remain here as low-risk operator-verdict work until closure.</p>
           </div>
-          <span className="soft-pill">{timeFilteredIncidents.length} visible</span>
+          <span className="panel-state-pill">Command queue</span>
         </div>
         <div className="incident-timeline-rail" aria-label="Incident timeline filters">
           {incidentTimelineBuckets.map((bucket) => (
@@ -4526,31 +4507,29 @@ const NexusPage: React.FC = () => {
               </div>
             </div>
           ) : null}
-          {paginatedIncidents.map((incident) => (
+          {paginatedIncidents.map((incident, incidentIndex) => (
             <button
               key={incident.incident_id}
               type="button"
               className={`incident-card incident-card--preview risk-${displayRiskLevelForIncident(incident).toLowerCase()}`}
               onClick={() => selectIncident(incident)}
             >
-              <div className={`incident-visual risk-${displayRiskLevelForIncident(incident).toLowerCase()}`} aria-hidden="true">
-                <span className="visual-orbit orbit-one" />
-                <span className="visual-orbit orbit-two" />
-                <span className="visual-core" />
-                <span className="visual-pulse" />
+              <div className="incident-card-index" aria-hidden="true">
+                <span>Queue {String((incidentPage - 1) * INCIDENT_PAGE_SIZE + incidentIndex + 1).padStart(2, '0')}</span>
+                <span>{incident.status.replace(/_/g, ' ')}</span>
               </div>
               <div className="incident-card-head">
-                <strong>{incident.title}</strong>
+                <div>
+                  <span className="incident-card-kicker">Incident command</span>
+                  <strong>{incident.title}</strong>
+                </div>
                 <span className={`risk-pill risk-${displayRiskLevelForIncident(incident).toLowerCase()}`}>{displayRiskLevelForIncident(incident)}</span>
               </div>
               <p>{incident.summary}</p>
-              <div className="incident-card-meta">
-                <span>{incident.status.replace(/_/g, ' ')}</span>
-                <span>{incident.suspected_root_service_name || 'Root pending'}</span>
-                <span>{scorePercent(incident.predicted_confidence)} confidence</span>
-                <span>{formatRelativeMinutes(incident.start_time)}</span>
-                <span>{incidentDurationLabel(incident)}</span>
-                <span>{incident.evidence_timeline.length} evidence</span>
+              <div className="incident-card-route">
+                <span><small>Root service</small><strong>{incident.suspected_root_service_name || 'Pending'}</strong></span>
+                <span><small>Age</small><strong>{incidentDurationLabel(incident) || formatRelativeMinutes(incident.start_time)}</strong></span>
+                <span><small>Evidence</small><strong>{incident.evidence_timeline.length} signal{incident.evidence_timeline.length === 1 ? '' : 's'}</strong></span>
               </div>
             </button>
           ))}
@@ -4848,31 +4827,16 @@ const NexusPage: React.FC = () => {
     const rootDisk = (disk.root as Record<string, unknown> | undefined) || {};
     const logDisk = (disk.log_filesystem as Record<string, unknown> | undefined) || {};
     const pressure = live?.agent.resource_pressure || {};
-    const logWindow = live?.agent.log_window || {};
-    const healthcheck = live?.agent.healthcheck || {};
     const heartbeat = live?.agent.heartbeat || {};
     const heartbeatTime = typeof heartbeat.timestamp === 'string' ? heartbeat.timestamp : null;
     const processRows = live?.agent.processes || [];
-    const collectorMode = String(pressure.collector_mode || agentSignal?.attributes?.collector_mode || 'unknown');
     const networkDurationSeconds = Number(live?.network.problem_duration_seconds || 0);
     const networkDuration = networkDurationSeconds
       ? formatDurationBetween(new Date(Date.now() - networkDurationSeconds * 1000).toISOString(), new Date().toISOString())
       : null;
     const displayValue = (value: unknown, fallback = 'Unknown') => (value === null || value === undefined || value === '' ? fallback : String(value));
     const displayPercent = (value: unknown) => (value === null || value === undefined || value === '' ? 'Unknown' : `${String(value)}%`);
-    const displayLogOwner = (owner: unknown) => {
-      if (!owner) return '';
-      if (typeof owner !== 'object') return String(owner);
-      const payload = owner as Record<string, unknown>;
-      if (payload.missing) return 'log path not readable';
-      const identity = payload.uid != null || payload.gid != null ? `uid ${displayValue(payload.uid, '?')} / gid ${displayValue(payload.gid, '?')}` : '';
-      const mode = payload.mode ? `mode ${String(payload.mode)}` : '';
-      const size = payload.size != null ? `${displayValue(payload.size)} bytes` : '';
-      return [identity, mode, size].filter(Boolean).join(' | ');
-    };
     const highLoad = pressure.high_load === true;
-    const healthOk = healthcheck.ok === true ? 'Passing' : healthcheck.ok === false ? 'Failing' : 'Not configured';
-    const logOwnerLabel = displayLogOwner(logWindow.owner);
     const controlReadiness = live?.control?.readiness || {};
     const operationConfig: Array<{ operation: NexusServiceControlOperation; label: string; icon: React.ReactNode; tone: string }> = [
       { operation: 'start', label: 'Start', icon: <FaPlay />, tone: 'start' },
@@ -4991,16 +4955,11 @@ const NexusPage: React.FC = () => {
           </div>
         </section>
 
-        <div className="service-live-grid">
+        <div className="service-live-grid service-live-grid--focused">
           <div className="service-live-tile emphasis">
             <label>Runtime Agent</label>
             <strong>{runtimeState && runtimeState !== 'unknown' ? runtimeState : live?.agent.status || (agentSignal ? agentSignal.severity : 'No signal')}</strong>
             <small>{agentSignal?.message || 'No light-agent runtime signal has arrived yet.'}</small>
-          </div>
-          <div className="service-live-tile">
-            <label>Process Count</label>
-            <strong>{live?.agent.process_count ?? 'Unknown'}</strong>
-            <small>{selectedService.metadata?.process_match ? `match: ${String(selectedService.metadata.process_match)}` : selectedService.observation_config.agent_id || 'agent not mapped'}</small>
           </div>
           <div className="service-live-tile">
             <label>Network Sentinel</label>
@@ -5008,34 +4967,16 @@ const NexusPage: React.FC = () => {
             <small>{networkSignal?.message || 'External reachability has not reported for this service.'}</small>
           </div>
           <div className="service-live-tile">
-            <label>Incident Pressure</label>
-            <strong>{live?.status.active_incidents ?? selectedServiceIncidents.filter(isOperationalImpactActive).length}</strong>
-            <small>{live?.status.awaiting_verdict || 0} awaiting verdict</small>
-          </div>
-          <div className="service-live-tile">
-            <label>Host Load</label>
-            <strong>{displayValue(host.load_per_core)}</strong>
-            <small>{highLoad ? 'High load guard active' : `collector ${collectorMode}`}</small>
-          </div>
-          <div className="service-live-tile">
-            <label>Memory</label>
-            <strong>{displayPercent(memory.used_percent)}</strong>
-            <small>{memory.available_mb != null ? `${displayValue(memory.available_mb)} MB available` : 'Agent memory snapshot pending'}</small>
-          </div>
-          <div className="service-live-tile">
-            <label>Log Filesystem</label>
-            <strong>{logDisk.used_percent != null ? displayPercent(logDisk.used_percent) : rootDisk.used_percent != null ? displayPercent(rootDisk.used_percent) : 'Unknown'}</strong>
-            <small>{logOwnerLabel || selectedService.endpoint_config.logs_url || 'log path not configured'}</small>
+            <label>Host posture</label>
+            <strong>{highLoad ? 'High load' : displayValue(host.load_per_core)}</strong>
+            <small>
+              Memory {displayPercent(memory.used_percent)} / Logs {logDisk.used_percent != null ? displayPercent(logDisk.used_percent) : rootDisk.used_percent != null ? displayPercent(rootDisk.used_percent) : 'Unknown'}
+            </small>
           </div>
           <div className="service-live-tile">
             <label>Heartbeat</label>
             <strong>{heartbeatTime ? formatRelativeMinutes(heartbeatTime) : 'No heartbeat'}</strong>
             <small>{live?.agent.configured_agent_id || selectedService.observation_config.agent_id || 'agent id not configured'}</small>
-          </div>
-          <div className="service-live-tile">
-            <label>Healthcheck</label>
-            <strong>{healthOk}</strong>
-            <small>{healthcheck.status_code ? `HTTP ${displayValue(healthcheck.status_code)}` : selectedService.endpoint_config.healthcheck_url || 'local agent process/log checks are primary'}</small>
           </div>
         </div>
 
@@ -5282,6 +5223,7 @@ const NexusPage: React.FC = () => {
           <div className="management-list rollover-profile-list">
             {filteredRolloverEnvironments.map((environment) => {
               const enabledRules = environment.rules.filter((rule) => rule.enabled);
+              const targetLabel = environment.connection.host || environment.connection.dsn || 'Target pending';
               return (
                 <button
                   key={environment.environment_id}
@@ -5291,22 +5233,21 @@ const NexusPage: React.FC = () => {
                     setCreatingRolloverEnvironment(false);
                     setSelectedRolloverEnvironmentId(environment.environment_id);
                     setRolloverPanelMode('command');
-                  }}
-                >
-                  <div className="rollover-profile-map" aria-hidden="true">
-                    <span>LIVE</span>
-                    <FaSyncAlt />
-                    <strong>{environment.environment_name.slice(0, 18) || environment.environment_id}</strong>
+                }}
+              >
+                  <div className="rollover-profile-command">
+                    <span className="rollover-profile-icon" aria-hidden="true"><FaSyncAlt /></span>
+                    <div>
+                      <span>{environment.environment_type.replace(/_/g, ' ')} / {environment.service_environment || 'unmapped'}</span>
+                      <strong>{environment.environment_name}</strong>
+                      <small>{environment.environment_id}</small>
+                    </div>
+                    <em>{environment.enabled ? 'Enabled' : 'Disabled'}</em>
                   </div>
-                  <div className="management-card-head">
-                    <strong>{environment.environment_name}</strong>
-                    <span className={`status-pill ${environment.enabled ? 'ready' : 'blocked'}`}>{environment.enabled ? 'Enabled' : 'Disabled'}</span>
-                  </div>
-                  <p>{environment.environment_id} | {environment.environment_type.replace(/_/g, ' ')} | {environment.service_environment || 'no service map'}</p>
-                  <div className="management-card-meta">
-                    <span>{enabledRules.length} rollover rules</span>
-                    <span>{environment.connection.host || environment.connection.dsn || 'Oracle target pending'}</span>
-                    <span>{environment.connection.password_set ? 'credential stored' : 'credential missing'}</span>
+                  <div className="rollover-profile-facts">
+                    <span><small>Target</small><strong>{targetLabel}</strong></span>
+                    <span><small>Rules</small><strong>{enabledRules.length} active</strong></span>
+                    <span><small>Credential</small><strong>{environment.connection.password_set ? 'Stored' : 'Missing'}</strong></span>
                   </div>
                 </button>
               );
@@ -5407,6 +5348,23 @@ const NexusPage: React.FC = () => {
                     <strong>{assessmentStatus.replace(/_/g, ' ')}</strong>
                     <small>{rolloverAssessment?.message || 'No assessment has been run in this session.'}</small>
                   </div>
+                  <div className="rollover-target-rail">
+                    <div>
+                      <span>Oracle target</span>
+                      <strong>{rolloverDraft.connection.host || rolloverDraft.connection.dsn || 'Not configured'}</strong>
+                      <small>{rolloverDraft.connection.service_name || rolloverDraft.connection.schema_name || rolloverDraft.connection.username || 'Connection identity pending'}</small>
+                    </div>
+                    <div>
+                      <span>Active rules</span>
+                      <strong>{activeRules.length}</strong>
+                      <small>{rolloverDraft.rules.length} saved in contract</small>
+                    </div>
+                    <div>
+                      <span>Credential</span>
+                      <strong>{credentialReady ? 'Ready' : 'Needed'}</strong>
+                      <small>{rolloverDraft.connection.username || 'No Oracle username'}</small>
+                    </div>
+                  </div>
                   <div className="rollover-guardrail-copy">
                     <span>Execution Guardrail</span>
                     <strong>Assess first. ROLLOVER second.</strong>
@@ -5420,19 +5378,6 @@ const NexusPage: React.FC = () => {
                       <div>
                         <h3>Assessment</h3>
                         <p>Read Oracle configuration and compare live markers with this environment contract.</p>
-                      </div>
-                      <span>{activeRules.length} rules</span>
-                    </div>
-                    <div className="rollover-command-facts">
-                      <div>
-                        <label>Oracle Target</label>
-                        <strong>{rolloverDraft.connection.host || rolloverDraft.connection.dsn || 'Not configured'}</strong>
-                        <small>{rolloverDraft.connection.service_name || rolloverDraft.connection.schema_name || rolloverDraft.connection.username || 'Connection identity pending'}</small>
-                      </div>
-                      <div>
-                        <label>Credential</label>
-                        <strong>{credentialReady ? 'Ready' : 'Needed'}</strong>
-                        <small>{rolloverDraft.connection.username || 'No Oracle username'}</small>
                       </div>
                     </div>
                     <button type="button" className="service-control-button tone-start rollover-command-button" onClick={() => void assessRolloverEnvironment()} disabled={catalogBusy === 'rollover-assess' || !rolloverDraft.environment_id.trim()}>
@@ -5831,13 +5776,69 @@ const NexusPage: React.FC = () => {
     );
   };
 
-  const renderServicesWorkspace = () => (
+  const renderServicesWorkspace = () => {
+    const renderServiceCard = (service: CatalogService) => {
+      const serviceTypeKey = getServiceTypeKey(service.service_type);
+      const visual = getServiceVisual(service);
+      const isMapped = Boolean(service.observation_config.network_service_id);
+      const hasDatabaseContract = Boolean(service.database_profile?.enabled);
+      const lifecycleLabel = service.certification.lifecycle_stage.replace(/_/g, ' ');
+      const serviceIdentity = [service.service_id, service.environment, service.service_type].filter(Boolean).join(' / ');
+      const diagnosticsReady = service.certification.lifecycle_stage === 'diagnostics_ready' || service.certification.lifecycle_stage === 'restart_ready';
+      const restartReady = service.certification.lifecycle_stage === 'restart_ready';
+
+      return (
+        <button
+          key={service.service_id}
+          type="button"
+          className={`management-card service-card service-type-${serviceTypeKey} ${hasDatabaseContract ? 'db-aware' : ''} ${selectedServiceId === service.service_id ? 'selected' : ''}`}
+          onClick={() => {
+            setCreatingService(false);
+            setSelectedServiceId(service.service_id);
+            setServicePanelMode('overview');
+          }}
+        >
+          <div className="service-card-command">
+            <span className="service-card-icon" aria-hidden="true">{visual.icon}</span>
+            <div>
+              <span>{visual.label}</span>
+              <strong>{visual.signal}</strong>
+            </div>
+            <em className={`service-map-state ${isMapped ? 'mapped' : 'unmapped'}`}>{isMapped ? 'Network mapped' : 'Catalog only'}</em>
+          </div>
+          <div className="management-card-head">
+            <strong>{service.service_name}</strong>
+            <span className="soft-pill">{lifecycleLabel}</span>
+          </div>
+          <p>{serviceIdentity}</p>
+          <div className="service-card-facts">
+            <span><small>Owner</small><strong>{service.owner_team || 'Unassigned'}</strong></span>
+            <span><small>Criticality</small><strong>{service.criticality || 'unknown'}</strong></span>
+            <span><small>Data</small><strong>{hasDatabaseContract ? service.database_profile?.platform || 'database' : 'No DB link'}</strong></span>
+          </div>
+          <div className="management-card-meta">
+            <span>{isMapped ? service.observation_config.network_service_id : 'No Network Sentinel mapping'}</span>
+            <span>{diagnosticsReady ? 'diagnostics ready' : 'diagnostics pending'}</span>
+            <span>{restartReady ? 'restart guarded' : 'restart locked'}</span>
+          </div>
+        </button>
+      );
+    };
+
+    const catalogServices = filteredServices.filter((service) => service.certification.lifecycle_stage === 'catalog_only');
+    const certifiedGroups = certificationOptions
+      .filter((stage) => stage !== 'catalog_only')
+      .map((stage) => ({ stage, services: filteredServices.filter((service) => service.certification.lifecycle_stage === stage) }))
+      .filter((group) => group.services.length);
+
+    return (
     <div className="management-layout management-card-workspace">
       <aside className="management-list-panel nexus-panel nexus-shell">
         <div className="panel-head">
           <div>
-            <h2>Service Catalog</h2>
-            <p>Canonical service contracts, telemetry mappings, restart guardrails, and URL endpoints.</p>
+            <span className="panel-kicker">Nexus Service Fabric</span>
+            <h2>{serviceWorkspaceView === 'catalog' ? 'Catalog services' : 'Certified services'}</h2>
+            <p>{serviceWorkspaceView === 'catalog' ? 'Shape the canonical contract before it enters operator-facing correlation.' : 'Read services by the certification stage that unlocks their next operator capability.'}</p>
           </div>
           {canManageNexus ? (
             <button type="button" className="secondary-action" onClick={startNewService}>
@@ -5847,59 +5848,31 @@ const NexusPage: React.FC = () => {
             <span className="readonly-pill">Operator view</span>
           )}
         </div>
-        <div className="management-list">
-          {filteredServices.map((service) => {
-            const serviceTypeKey = getServiceTypeKey(service.service_type);
-            const visual = getServiceVisual(service);
-
-            return (
-              <button
-                key={service.service_id}
-                type="button"
-                className={`management-card service-card service-type-${serviceTypeKey} ${service.database_profile?.enabled ? 'db-aware' : ''} ${selectedServiceId === service.service_id ? 'selected' : ''}`}
-                onClick={() => {
-                  setCreatingService(false);
-                  setSelectedServiceId(service.service_id);
-                  setServicePanelMode('overview');
-                }}
-              >
-                <div className="service-type-thumbnail" aria-hidden="true">
-                  <div className="service-thumb-grid" />
-                  <div className="service-thumb-rings">
-                    <span />
-                    <span />
-                  </div>
-                  <div className="service-thumb-flow">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                  <div className="service-thumb-core">{visual.icon}</div>
-                  <div className="service-thumb-caption">
-                    <span>{visual.label}</span>
-                    <strong>{visual.signal}</strong>
-                  </div>
+        <div className="workspace-view-tabs" role="tablist" aria-label="Service catalog views">
+          <button type="button" role="tab" aria-selected={serviceWorkspaceView === 'catalog'} className={serviceWorkspaceView === 'catalog' ? 'active' : ''} onClick={() => setServiceWorkspaceView('catalog')}>
+            <FaBook /> Catalog <span>{catalogServices.length}</span>
+          </button>
+          <button type="button" role="tab" aria-selected={serviceWorkspaceView === 'certified'} className={serviceWorkspaceView === 'certified' ? 'active' : ''} onClick={() => setServiceWorkspaceView('certified')}>
+            <FaShieldAlt /> Certified <span>{filteredServices.length - catalogServices.length}</span>
+          </button>
+        </div>
+        <div className={`management-list service-workspace-list ${serviceWorkspaceView === 'certified' ? 'is-certified' : 'is-catalog'}`}>
+          {serviceWorkspaceView === 'catalog' ? (
+            catalogServices.map(renderServiceCard)
+          ) : (
+            certifiedGroups.map(({ stage, services: stageServices }) => (
+              <section key={stage} className="service-stage-group">
+                <div className="service-stage-heading">
+                  <div><span>Certification lane</span><strong>{stage.replace(/_/g, ' ')}</strong></div>
+                  <em>{stageServices.length}</em>
                 </div>
-                <div className="management-card-head">
-                  <strong>{service.service_name}</strong>
-                  <span className="soft-pill">{service.certification.lifecycle_stage.replace(/_/g, ' ')}</span>
-                </div>
-                <p>{service.service_id} | {service.environment} | {service.service_type}</p>
-                <div className="management-card-meta">
-                  <span>{service.owner_team}</span>
-                  <span>{service.criticality}</span>
-                  <span>{service.observation_config.network_service_id ? 'mapped' : 'unmapped'}</span>
-                  {service.database_profile?.enabled ? <span>{service.database_profile.platform || 'database'}</span> : null}
-                </div>
-                <div className="service-card-orbit" aria-hidden="true">
-                  <span />
-                  <span />
-                  <span />
-                </div>
-              </button>
-            );
-          })}
-          {!filteredServices.length ? <div className="empty-state">No services match this view yet.</div> : null}
+                <div className="service-stage-list">{stageServices.map(renderServiceCard)}</div>
+              </section>
+            ))
+          )}
+          {((serviceWorkspaceView === 'catalog' && !catalogServices.length) || (serviceWorkspaceView === 'certified' && !certifiedGroups.length)) ? (
+            <div className="empty-state">No services match this view yet.</div>
+          ) : null}
         </div>
       </aside>
 
@@ -5948,35 +5921,29 @@ const NexusPage: React.FC = () => {
             </div>
 
             {selectedService ? (
-              <div className="service-intelligence-strip">
-                <div className={`service-state-orb tone-${selectedServiceSignalStatus.tone}`}>
+              <div className="service-contract-strip">
+                <div className={`service-contract-posture tone-${selectedServiceSignalStatus.tone}`}>
                   <span>{selectedServiceSignalStatus.label}</span>
                   <small>{selectedServiceSignalStatus.detail}</small>
                 </div>
                 <button
                   type="button"
-                  className="summary-tile service-incident-preview"
+                  className="service-contract-lane service-incident-preview"
                   onClick={() => selectedServiceIncidents.length && setTimelineServiceId(selectedService.service_id)}
                   disabled={!selectedServiceIncidents.length}
                 >
-                  <label>Active / Historical Incidents</label>
-                  <strong>{selectedServiceIncidents.length}</strong>
-                  <small>{selectedServiceIncidents[0]?.title || 'No incident history attached yet'}</small>
+                  <span>Incident link</span>
+                  <strong>{selectedServiceIncidents[0]?.title || 'No incident history'}</strong>
                 </button>
-                <div className="summary-tile">
-                  <label>Recent Evidence</label>
-                  <strong>{selectedServiceEvidence.length}</strong>
-                  <small>{selectedServiceEvidence[0]?.summary || 'No service evidence captured yet'}</small>
-                </div>
-                <div className="summary-tile">
-                  <label>Graph Position</label>
+                <div className="service-contract-lane">
+                  <span>Graph role</span>
                   <strong>{selectedServiceDependencies.upstream.length}/{selectedServiceDependencies.downstream.length}</strong>
-                  <small>outgoing / incoming dependencies</small>
+                  <small>uses / feeds</small>
                 </div>
-                <div className="summary-tile">
-                  <label>Business Flows</label>
-                  <strong>{selectedServiceFlows.length}</strong>
-                  <small>{selectedServiceFlows.map((flow) => flow.flow_name).join(', ') || 'No flow placement yet'}</small>
+                <div className="service-contract-lane">
+                  <span>Flow coverage</span>
+                  <strong>{selectedServiceFlows.slice(0, 2).map((flow) => flow.flow_name).join(', ') || 'No flow placement'}</strong>
+                  <small>{selectedServiceEvidence[0]?.summary || 'No recent evidence captured'}</small>
                 </div>
               </div>
             ) : null}
@@ -7161,7 +7128,62 @@ const NexusPage: React.FC = () => {
         </div>
       ) : null}
     </div>
-  );
+    );
+  };
+
+  const renderClusterFabricPreview = (cluster: DependencyCluster) => {
+    const routeRows: Array<[string, keyof ClusterRoutingConfig]> = [
+      ['Collector', 'collector_url'],
+      ['Extraction', 'extraction_url'],
+      ['Formatting', 'formatting_url'],
+      ['Shipping', 'shipping_url'],
+      ['Diagnostics', 'diagnostics_url'],
+      ['Restart', 'restart_url'],
+    ];
+
+    return (
+      <div className="fabric-preview cluster-fabric-preview">
+        <div className="fabric-preview-heading">
+          <div>
+            <span className="panel-kicker"><FaProjectDiagram /> Cluster fabric</span>
+            <h3>One contract, many service paths</h3>
+            <p>Entry services feed the cluster spine. Every declared route becomes an explicit operator boundary.</p>
+          </div>
+          <span className="fabric-preview-state">{cluster.criticality} / {cluster.environment || 'environment unset'}</span>
+        </div>
+        <div className="cluster-fabric-board">
+          <div className="cluster-fabric-ingress">
+            <span>Entry points</span>
+            {cluster.entry_services.length ? cluster.entry_services.map((serviceId) => {
+              const service = serviceMap[serviceId];
+              return <div key={serviceId} className="fabric-node ingress-node"><small>ENTRY</small><strong>{service?.service_name || serviceId}</strong></div>;
+            }) : <div className="fabric-node muted-node"><small>ENTRY</small><strong>No entry service</strong></div>}
+          </div>
+          <div className="cluster-fabric-spine" aria-hidden="true"><span /><span /><span /></div>
+          <div className="cluster-fabric-core">
+            <div className="fabric-core-mark"><FaProjectDiagram /></div>
+            <div><span>NEXUS CLUSTER</span><strong>{cluster.cluster_name || cluster.cluster_id || 'Unnamed cluster'}</strong><small>{cluster.service_ids.length} service paths under one operating contract</small></div>
+          </div>
+          <div className="cluster-fabric-members">
+            <div className="fabric-lane-label">Service mesh</div>
+            {cluster.service_ids.length ? cluster.service_ids.map((serviceId) => {
+              const service = serviceMap[serviceId];
+              return <div key={serviceId} className="fabric-node member-node"><span className="fabric-node-dot" /><div><strong>{service?.service_name || serviceId}</strong><small>{service ? `${service.service_type} / ${service.certification.lifecycle_stage.replace(/_/g, ' ')}` : 'service contract pending'}</small></div></div>;
+            }) : <div className="fabric-node muted-node"><small>MEMBERSHIP</small><strong>No services attached</strong></div>}
+          </div>
+        </div>
+        <div className="fabric-route-rail">
+          {routeRows.map(([label, field]) => (
+            <div key={field} className={cluster.routing_config[field] ? 'linked' : 'unlinked'}>
+              <span>{label}</span>
+              <strong>{cluster.routing_config[field] ? 'Linked' : 'Unset'}</strong>
+              <small>{cluster.routing_config[field] || 'Route will appear after configuration'}</small>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   const renderClustersWorkspace = () => (
     <div className="management-layout management-card-workspace">
@@ -7179,29 +7201,41 @@ const NexusPage: React.FC = () => {
             <span className="readonly-pill">Operator view</span>
           )}
         </div>
-        <div className="management-list">
-          {filteredClusters.map((cluster) => (
-            <button
-              key={cluster.cluster_id}
-              type="button"
-              className={`management-card ${selectedClusterId === cluster.cluster_id ? 'selected' : ''}`}
-              onClick={() => {
-                setCreatingCluster(false);
-                setSelectedClusterId(cluster.cluster_id);
-              }}
-            >
-              <div className="management-card-head">
-                <strong>{cluster.cluster_name}</strong>
-                <span className="soft-pill">{cluster.service_ids.length} services</span>
-              </div>
-              <p>{cluster.cluster_id} | {cluster.environment}</p>
-              <div className="management-card-meta">
-                <span>{cluster.owner_team}</span>
-                <span>{cluster.criticality}</span>
-                <span>{cluster.entry_services.length} entries</span>
-              </div>
-            </button>
-          ))}
+        <div className="management-list graph-record-list">
+          {filteredClusters.map((cluster) => {
+            const configuredRoutes = Object.values(cluster.routing_config || {}).filter(Boolean).length;
+            return (
+              <button
+                key={cluster.cluster_id}
+                type="button"
+                className={`management-card graph-record-card cluster-record ${selectedClusterId === cluster.cluster_id ? 'selected' : ''}`}
+                onClick={() => {
+                  setCreatingCluster(false);
+                  setSelectedClusterId(cluster.cluster_id);
+                  setClusterPanelMode('fabric');
+                }}
+              >
+                <div className="graph-record-command">
+                  <span className="graph-record-icon" aria-hidden="true"><FaProjectDiagram /></span>
+                  <div>
+                    <span>{cluster.environment || 'environment'}</span>
+                    <strong>{cluster.cluster_name}</strong>
+                  </div>
+                  <em>{cluster.criticality}</em>
+                </div>
+                <p>{cluster.cluster_id}</p>
+                <div className="graph-record-facts">
+                  <span><small>Services</small><strong>{cluster.service_ids.length}</strong></span>
+                  <span><small>Entry</small><strong>{cluster.entry_services.length || 'Unset'}</strong></span>
+                  <span><small>Routes</small><strong>{configuredRoutes || 'None'}</strong></span>
+                </div>
+                <div className="management-card-meta">
+                  <span>{cluster.owner_team || 'owner unset'}</span>
+                  <span>{cluster.tags.slice(0, 2).join(', ') || 'no tags'}</span>
+                </div>
+              </button>
+            );
+          })}
           {!filteredClusters.length ? <div className="empty-state">No clusters match the current view.</div> : null}
         </div>
       </aside>
@@ -7239,6 +7273,36 @@ const NexusPage: React.FC = () => {
               </div>
             </div>
 
+            <div className="graph-editor-strip">
+              <div>
+                <span><FaProjectDiagram /> Services</span>
+                <strong>{clusterDraft.service_ids.length || 'None'}</strong>
+                <small>{clusterDraft.entry_services.length ? `${clusterDraft.entry_services.length} entry` : 'Entry unset'}</small>
+              </div>
+              <div>
+                <span><FaSignal /> Routing</span>
+                <strong>{Object.values(clusterDraft.routing_config || {}).filter(Boolean).length || 'No routes'}</strong>
+                <small>{clusterDraft.routing_config.diagnostics_url ? 'Diagnostics linked' : 'Diagnostics URL missing'}</small>
+              </div>
+              <div>
+                <span><FaShieldAlt /> Ownership</span>
+                <strong>{clusterDraft.owner_team || 'Owner unset'}</strong>
+                <small>{clusterDraft.environment || 'Environment unset'} / {clusterDraft.criticality}</small>
+              </div>
+            </div>
+
+            {!creatingCluster ? (
+              <div className="service-modal-tabs graph-preview-tabs" role="tablist" aria-label="Cluster fabric sections">
+                <button type="button" role="tab" aria-selected={clusterPanelMode === 'fabric'} className={clusterPanelMode === 'fabric' ? 'active' : ''} onClick={() => setClusterPanelMode('fabric')}>
+                  <FaProjectDiagram /> Fabric Preview
+                </button>
+                <button type="button" role="tab" aria-selected={clusterPanelMode === 'configuration'} className={clusterPanelMode === 'configuration' ? 'active' : ''} onClick={() => setClusterPanelMode('configuration')}>
+                  <FaWrench /> Configuration
+                </button>
+              </div>
+            ) : null}
+
+            {clusterPanelMode === 'fabric' && !creatingCluster ? renderClusterFabricPreview(clusterDraft) : (
             <div className="editor-scroll">
               <div className="form-grid">
                 <section className="form-section">
@@ -7371,9 +7435,50 @@ const NexusPage: React.FC = () => {
                 </label>
               </section>
             </div>
+            )}
           </section>
         </div>
       ) : null}
+    </div>
+  );
+
+  const renderBusinessFlowPreview = (flow: BusinessFlow) => (
+    <div className="fabric-preview flow-fabric-preview">
+      <div className="fabric-preview-heading">
+        <div>
+          <span className="panel-kicker"><FaLink /> Flow-aware correlation</span>
+          <h3>Follow the user journey through evidence</h3>
+          <p>Correlation starts at an entry service and moves through the declared path until success or failure is proven.</p>
+        </div>
+        <span className={`fabric-preview-state ${flow.enabled ? 'is-live' : ''}`}>{flow.enabled ? 'Correlation enabled' : 'Paused'}</span>
+      </div>
+      <div className="flow-fabric-board">
+        <div className="flow-entry-rail">
+          <span className="fabric-lane-label">Entry services</span>
+          {(flow.entry_service_ids.length ? flow.entry_service_ids : ['No entry service']).map((serviceId) => (
+            <div key={serviceId} className="fabric-node flow-entry-node"><small>START</small><strong>{serviceMap[serviceId]?.service_name || serviceId}</strong></div>
+          ))}
+        </div>
+        <div className="flow-step-rail">
+          {flow.steps.length ? flow.steps.slice().sort((a, b) => a.step_order - b.step_order).map((step, index) => (
+            <React.Fragment key={`${step.step_id || step.service_id}-${index}`}>
+              <div className="flow-step-node">
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <div><strong>{serviceMap[step.service_id]?.service_name || step.service_id || 'Unassigned step'}</strong><small>{step.service_role} / {step.required ? 'required' : 'optional'}</small></div>
+              </div>
+              {index < flow.steps.length - 1 ? <div className="flow-step-connector" aria-hidden="true" /> : null}
+            </React.Fragment>
+          )) : <div className="fabric-node muted-node"><small>PATH</small><strong>No steps declared</strong></div>}
+        </div>
+        <div className="flow-outcome-rail">
+          <div className="flow-outcome success"><span>SUCCESS</span><strong>{flow.success_indicators.length || 'No'} signals</strong><small>{flow.success_indicators.slice(0, 2).join(', ') || 'Awaiting confirmation signals'}</small></div>
+          <div className="flow-outcome failure"><span>FAILURE</span><strong>{flow.failure_indicators.length || 'No'} signals</strong><small>{flow.failure_indicators.slice(0, 2).join(', ') || 'No failure indicators declared'}</small></div>
+        </div>
+      </div>
+      <div className="flow-preview-footer">
+        <span><FaSignal /> {flow.correlation_window_minutes} minute evidence window</span>
+        <span><FaShieldAlt /> {flow.criticality} / {flow.owner_team || 'owner unset'}</span>
+      </div>
     </div>
   );
 
@@ -7428,29 +7533,41 @@ const NexusPage: React.FC = () => {
               <span className="readonly-pill">Operator view</span>
             )}
           </div>
-          <div className="management-list">
-            {filteredBusinessFlows.map((flow) => (
-              <button
-                key={flow.flow_id}
-                type="button"
-                className={`management-card ${selectedFlowId === flow.flow_id ? 'selected' : ''}`}
-                onClick={() => {
-                  setCreatingFlow(false);
-                  setSelectedFlowId(flow.flow_id);
-                }}
-              >
-                <div className="management-card-head">
-                  <strong>{flow.flow_name}</strong>
-                  <span className="soft-pill">{flow.steps.length} steps</span>
-                </div>
-                <p>{flow.flow_id} | {flow.environment}</p>
-                <div className="management-card-meta">
-                  <span>{flow.owner_team}</span>
-                  <span>{flow.criticality}</span>
-                  <span>{flow.enabled ? 'enabled' : 'disabled'}</span>
-                </div>
-              </button>
-            ))}
+          <div className="management-list graph-record-list">
+            {filteredBusinessFlows.map((flow) => {
+              const requiredSteps = flow.steps.filter((step) => step.required).length;
+              return (
+                <button
+                  key={flow.flow_id}
+                  type="button"
+                  className={`management-card graph-record-card flow-record ${selectedFlowId === flow.flow_id ? 'selected' : ''}`}
+                  onClick={() => {
+                    setCreatingFlow(false);
+                    setSelectedFlowId(flow.flow_id);
+                    setFlowPanelMode('preview');
+                  }}
+                >
+                  <div className="graph-record-command">
+                    <span className="graph-record-icon" aria-hidden="true"><FaLink /></span>
+                    <div>
+                      <span>{flow.environment || 'environment'}</span>
+                      <strong>{flow.flow_name}</strong>
+                    </div>
+                    <em>{flow.enabled ? 'Enabled' : 'Disabled'}</em>
+                  </div>
+                  <p>{flow.flow_id}</p>
+                  <div className="graph-record-facts">
+                    <span><small>Steps</small><strong>{flow.steps.length}</strong></span>
+                    <span><small>Required</small><strong>{requiredSteps}</strong></span>
+                    <span><small>Window</small><strong>{flow.correlation_window_minutes}m</strong></span>
+                  </div>
+                  <div className="management-card-meta">
+                    <span>{flow.owner_team || 'owner unset'}</span>
+                    <span>{flow.criticality}</span>
+                  </div>
+                </button>
+              );
+            })}
             {!filteredBusinessFlows.length ? <div className="empty-state">No business flows match the current view.</div> : null}
           </div>
         </aside>
@@ -7488,6 +7605,36 @@ const NexusPage: React.FC = () => {
                 </div>
               </div>
 
+              <div className="graph-editor-strip">
+                <div>
+                  <span><FaLink /> Flow shape</span>
+                  <strong>{flowDraft.steps.length || 'No steps'}</strong>
+                  <small>{flowDraft.entry_service_ids.length ? `${flowDraft.entry_service_ids.length} entry service(s)` : 'Entry unset'}</small>
+                </div>
+                <div>
+                  <span><FaSignal /> Correlation</span>
+                  <strong>{flowDraft.correlation_window_minutes}m</strong>
+                  <small>{flowDraft.success_indicators.length + flowDraft.failure_indicators.length || 'No'} indicators</small>
+                </div>
+                <div>
+                  <span><FaShieldAlt /> Posture</span>
+                  <strong>{flowDraft.enabled ? 'Enabled' : 'Disabled'}</strong>
+                  <small>{flowDraft.owner_team || 'Owner unset'} / {flowDraft.criticality}</small>
+                </div>
+              </div>
+
+              {!creatingFlow ? (
+                <div className="service-modal-tabs graph-preview-tabs" role="tablist" aria-label="Business flow sections">
+                  <button type="button" role="tab" aria-selected={flowPanelMode === 'preview'} className={flowPanelMode === 'preview' ? 'active' : ''} onClick={() => setFlowPanelMode('preview')}>
+                    <FaLink /> Correlation Preview
+                  </button>
+                  <button type="button" role="tab" aria-selected={flowPanelMode === 'configuration'} className={flowPanelMode === 'configuration' ? 'active' : ''} onClick={() => setFlowPanelMode('configuration')}>
+                    <FaWrench /> Configuration
+                  </button>
+                </div>
+              ) : null}
+
+              {flowPanelMode === 'preview' && !creatingFlow ? renderBusinessFlowPreview(flowDraft) : (
               <div className="editor-scroll">
                 <div className="form-grid">
                   <section className="form-section">
@@ -7628,9 +7775,42 @@ const NexusPage: React.FC = () => {
                   </section>
                 </div>
               </div>
+              )}
             </section>
           </div>
         ) : null}
+      </div>
+    );
+  };
+
+  const renderDependencyContractPreview = (edge: DependencyEdge) => {
+    const fromService = serviceMap[edge.from_service_id];
+    const toService = serviceMap[edge.to_service_id];
+    const scopedFlows = (edge.business_flow_ids || []).map((flowId) => businessFlows.find((flow) => flow.flow_id === flowId)?.flow_name || flowId);
+    return (
+      <div className="fabric-preview dependency-fabric-preview">
+        <div className="fabric-preview-heading">
+          <div>
+            <span className="panel-kicker"><FaCodeBranch /> Dependency contract</span>
+            <h3>Make the blast radius legible</h3>
+            <p>This edge tells the operator what can be affected, which evidence is valid, and where a database path enters the story.</p>
+          </div>
+          <span className={`fabric-preview-state ${edge.is_hard_dependency ? 'is-critical' : ''}`}>{edge.is_hard_dependency ? 'Hard dependency' : 'Soft dependency'}</span>
+        </div>
+        <div className="dependency-fabric-route">
+          <div className="dependency-endpoint source"><span>SOURCE</span><strong>{fromService?.service_name || edge.from_service_id || 'Unassigned source'}</strong><small>{fromService?.service_type || 'service'} / {fromService?.environment || 'environment unset'}</small></div>
+          <div className="dependency-link-core"><span>{edge.dependency_type || 'typed edge'}</span><strong>{edge.criticality_weight || 0}</strong><small>{edge.timeout_budget_ms ? `${edge.timeout_budget_ms} ms budget` : 'No timeout budget'}</small></div>
+          <div className="dependency-endpoint target"><span>TARGET</span><strong>{toService?.service_name || edge.to_service_id || 'Unassigned target'}</strong><small>{toService?.service_type || 'service'} / {toService?.environment || 'environment unset'}</small></div>
+        </div>
+        <div className="dependency-preview-grid">
+          <div><span>Failure scope</span><strong>{edge.dependency_scope || 'global'}</strong><small>{edge.valid_failure_domains?.slice(0, 3).join(', ') || 'No failure domains declared'}</small></div>
+          <div><span>Database path</span><strong>{hasDatabaseAccessDetail(edge) ? edge.database_access?.access_mode || 'Modeled' : 'Not modeled'}</strong><small>{edge.database_access?.schema_names?.join(', ') || 'No schema boundary declared'}</small></div>
+          <div><span>Flow context</span><strong>{scopedFlows.length ? `${scopedFlows.length} journey${scopedFlows.length === 1 ? '' : 's'}` : 'Global edge'}</strong><small>{scopedFlows.slice(0, 2).join(', ') || 'Applies outside a named business flow'}</small></div>
+        </div>
+        <div className="dependency-evidence-rail">
+          <span><FaSignal /> Expected evidence</span>
+          <div>{(edge.expected_evidence || []).length ? (edge.expected_evidence || []).map((item) => <strong key={item}>{item.replace(/_/g, ' ')}</strong>) : <small>No evidence contract declared</small>}</div>
+        </div>
       </div>
     );
   };
@@ -7651,29 +7831,41 @@ const NexusPage: React.FC = () => {
             <span className="readonly-pill">Operator view</span>
           )}
         </div>
-        <div className="management-list">
-          {filteredDependencies.map((edge) => (
-            <button
-              key={edge.edge_id || `${edge.from_service_id}-${edge.to_service_id}-${edge.dependency_type}`}
-              type="button"
-              className={`management-card ${selectedEdgeId === (edge.edge_id || '') ? 'selected' : ''}`}
-              onClick={() => {
-                setCreatingEdge(false);
-                setSelectedEdgeId(edge.edge_id || '');
-              }}
-            >
-              <div className="management-card-head">
-                <strong>{edge.from_service_id} -&gt; {edge.to_service_id}</strong>
-                <span className="soft-pill">{edge.dependency_type}</span>
-              </div>
-              <p>{edge.cluster_id || 'global'} | {edge.dependency_scope || 'global'} | weight {edge.criticality_weight}</p>
-              <div className="management-card-meta">
-                <span>{edge.is_hard_dependency ? 'hard' : 'soft'}</span>
-                <span>{edge.timeout_budget_ms || 'n/a'} ms</span>
-                <span>{edge.business_flow_ids?.length || 0} flows</span>
-              </div>
-            </button>
-          ))}
+        <div className="management-list graph-record-list">
+          {filteredDependencies.map((edge) => {
+            const hasDatabaseAccess = Boolean(edge.database_access?.access_mode || edge.database_access?.connection_pool || edge.database_access?.schema_names?.length);
+            return (
+              <button
+                key={edge.edge_id || `${edge.from_service_id}-${edge.to_service_id}-${edge.dependency_type}`}
+                type="button"
+                className={`management-card graph-record-card edge-record ${selectedEdgeId === (edge.edge_id || '') ? 'selected' : ''}`}
+                onClick={() => {
+                  setCreatingEdge(false);
+                  setSelectedEdgeId(edge.edge_id || '');
+                  setEdgePanelMode('preview');
+                }}
+              >
+                <div className="graph-record-command">
+                  <span className="graph-record-icon" aria-hidden="true"><FaCodeBranch /></span>
+                  <div>
+                    <span>{edge.dependency_type}</span>
+                    <strong>{edge.from_service_id} {'->'} {edge.to_service_id}</strong>
+                  </div>
+                  <em>{edge.is_hard_dependency ? 'Hard' : 'Soft'}</em>
+                </div>
+                <p>{edge.cluster_id || 'global'} / {edge.dependency_scope || 'global'}</p>
+                <div className="graph-record-facts">
+                  <span><small>Weight</small><strong>{edge.criticality_weight}</strong></span>
+                  <span><small>Timeout</small><strong>{edge.timeout_budget_ms ? `${edge.timeout_budget_ms}ms` : 'Unset'}</strong></span>
+                  <span><small>DB</small><strong>{hasDatabaseAccess ? 'Modeled' : 'None'}</strong></span>
+                </div>
+                <div className="management-card-meta">
+                  <span>{edge.business_flow_ids?.length || 0} flows</span>
+                  <span>{edge.dependency_purpose || 'purpose unset'}</span>
+                </div>
+              </button>
+            );
+          })}
           {!filteredDependencies.length ? <div className="empty-state">No dependency edges match the current view.</div> : null}
         </div>
       </aside>
@@ -7711,7 +7903,37 @@ const NexusPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="editor-scroll">
+              <div className="graph-editor-strip">
+              <div>
+                <span><FaCodeBranch /> Direction</span>
+                <strong>{edgeDraft.from_service_id || 'Source'} {'->'} {edgeDraft.to_service_id || 'Target'}</strong>
+                <small>{edgeDraft.cluster_id || 'Global'} / {edgeDraft.dependency_scope || 'global'}</small>
+              </div>
+              <div>
+                <span><FaShieldAlt /> Dependency</span>
+                <strong>{edgeDraft.dependency_type || 'Type unset'}</strong>
+                <small>{edgeDraft.is_hard_dependency ? 'Hard dependency' : 'Soft dependency'} / weight {edgeDraft.criticality_weight}</small>
+              </div>
+              <div>
+                <span><FaDatabase /> Data path</span>
+                <strong>{hasDatabaseAccessDetail(edgeDraft) ? 'Modeled' : 'Not modeled'}</strong>
+                <small>{edgeDraft.business_flow_ids?.length || 0} flow scope(s)</small>
+                </div>
+              </div>
+
+              {!creatingEdge ? (
+                <div className="service-modal-tabs graph-preview-tabs" role="tablist" aria-label="Dependency contract sections">
+                  <button type="button" role="tab" aria-selected={edgePanelMode === 'preview'} className={edgePanelMode === 'preview' ? 'active' : ''} onClick={() => setEdgePanelMode('preview')}>
+                    <FaCodeBranch /> Contract Preview
+                  </button>
+                  <button type="button" role="tab" aria-selected={edgePanelMode === 'configuration'} className={edgePanelMode === 'configuration' ? 'active' : ''} onClick={() => setEdgePanelMode('configuration')}>
+                    <FaWrench /> Configuration
+                  </button>
+                </div>
+              ) : null}
+
+              {edgePanelMode === 'preview' && !creatingEdge ? renderDependencyContractPreview(edgeDraft) : (
+              <div className="editor-scroll">
               <div className="form-grid">
                 <section className="form-section">
                   <h3>Endpoints</h3>
@@ -7788,8 +8010,8 @@ const NexusPage: React.FC = () => {
                       />
                       <span>Hard dependency</span>
                     </label>
-                  </div>
-                </section>
+              </div>
+            </section>
 
                 <section className="form-section">
                   <h3>Flow Scope</h3>
@@ -8009,11 +8231,45 @@ const NexusPage: React.FC = () => {
                 </section>
               </div>
             </div>
+            )}
           </section>
         </div>
       ) : null}
     </div>
   );
+
+  const renderSopPreview = (sop: ManagedSop) => {
+    const procedureSections = managedSopSections
+      .map((section) => ({ section, lines: sop.content?.[section] || [] }))
+      .filter((item) => item.lines.length);
+    return (
+      <div className="fabric-preview sop-fabric-preview">
+        <div className="fabric-preview-heading">
+          <div>
+            <span className="panel-kicker"><FaBook /> Operator procedure</span>
+            <h3>{sop.title || sop.sop_id || 'Untitled SOP'}</h3>
+            <p>Read the procedure as a decision path: establish the boundary, inspect evidence, act only inside the guardrails, then verify recovery.</p>
+          </div>
+          <span className={`fabric-preview-state ${sop.validation?.valid ? 'is-live' : 'is-critical'}`}>{sop.validation?.valid ? 'Validated' : 'Validation needed'}</span>
+        </div>
+        <div className="sop-preview-identity">
+          <div><span>Procedure</span><strong>{sop.sop_id || 'Unassigned'}</strong></div>
+          <div><span>Scope</span><strong>{sop.services.length ? sop.services.slice(0, 2).join(', ') : 'Unscoped'}</strong></div>
+          <div><span>Ownership</span><strong>{sop.owner_team || 'Owner unset'}</strong></div>
+          <div><span>Posture</span><strong>{sop.status.replace(/_/g, ' ')} / {sop.severity}</strong></div>
+        </div>
+        <div className="sop-procedure-board">
+          {procedureSections.length ? procedureSections.map(({ section, lines }, index) => (
+            <section key={section} className="sop-procedure-step">
+              <span className="sop-procedure-index">{String(index + 1).padStart(2, '0')}</span>
+              <div><span>{section.replace(/_/g, ' ')}</span><ul>{lines.slice(0, 4).map((line) => <li key={line}>{line}</li>)}</ul></div>
+            </section>
+          )) : <div className="empty-state">No procedure sections have been authored yet.</div>}
+        </div>
+        <div className="sop-preview-footer"><span><FaShieldAlt /> Validation is {sop.validation?.valid ? 'clear' : 'still required'}</span><span>{sop.version ? `Version ${sop.version}` : 'Version pending'}</span><span>{sop.environments.join(', ') || 'Environment unset'}</span></div>
+      </div>
+    );
+  };
 
   const renderSopsWorkspace = () => (
     <div className="nexus-stack management-card-workspace sop-governance-workspace">
@@ -8036,27 +8292,36 @@ const NexusPage: React.FC = () => {
           )}
         </div>
 
-        <div className="sop-control-strip">
+        <div className="sop-governance-strip">
           <div>
-            <strong>{managedSops.filter((sop) => sop.status === 'approved').length}</strong>
-            <span>Approved managed</span>
+            <span>Registry posture</span>
+            <strong>{managedSops.filter((sop) => sop.status === 'approved').length ? 'Governed' : 'Needs approval'}</strong>
+            <small>{managedSops.filter((sop) => sop.status === 'approved').length} approved managed SOPs</small>
           </div>
           <div>
-            <strong>{indexedSops.length}</strong>
-            <span>Indexed corpus</span>
+            <span>Copilot corpus</span>
+            <strong>{indexedSops.length ? 'Indexed' : 'Empty'}</strong>
+            <small>{sopCorpusSummary.chunks} retrieval chunks</small>
           </div>
           <div>
-            <strong>{sopCorpusSummary.chunks}</strong>
-            <span>Retrieval chunks</span>
-          </div>
-          <div>
-            <strong>{filteredIndexedSops.filter((sop) => !managedSopIds.has(sop.sop_id)).length}</strong>
-            <span>Needs adoption</span>
+            <span>Governance gap</span>
+            <strong>{filteredIndexedSops.filter((sop) => !managedSopIds.has(sop.sop_id)).length ? 'Adopt sources' : 'Aligned'}</strong>
+            <small>{filteredIndexedSops.filter((sop) => !managedSopIds.has(sop.sop_id)).length} indexed-only SOPs visible</small>
           </div>
         </div>
 
-        <div className="sop-planes-grid">
-          <section className="sop-plane">
+        <div className="workspace-view-tabs sop-workspace-tabs" role="tablist" aria-label="SOP governance views">
+          <button type="button" role="tab" aria-selected={sopWorkspaceView === 'managed'} className={sopWorkspaceView === 'managed' ? 'active' : ''} onClick={() => setSopWorkspaceView('managed')}>
+            <FaShieldAlt /> Managed registry <span>{filteredManagedSops.length}</span>
+          </button>
+          <button type="button" role="tab" aria-selected={sopWorkspaceView === 'indexed'} className={sopWorkspaceView === 'indexed' ? 'active' : ''} onClick={() => setSopWorkspaceView('indexed')}>
+            <FaBook /> Indexed corpus <span>{filteredIndexedSops.length}</span>
+          </button>
+        </div>
+
+        <div className="sop-workspace-plane">
+           {sopWorkspaceView === 'managed' ? (
+           <section className="sop-plane">
             <div className="panel-head compact">
               <div>
                 <h3>Managed Registry</h3>
@@ -8073,23 +8338,26 @@ const NexusPage: React.FC = () => {
                   onClick={() => {
                     setCreatingSop(false);
                     setSelectedSopId(sop.sop_id);
+                    setSopPanelMode('preview');
                   }}
                 >
-                  <div className="sop-card-visual" aria-hidden="true">
-                    <span className="sop-beam" />
-                    <span className="sop-core"><FaBook /></span>
-                    <span className={`sop-validation-light ${sop.validation?.valid ? 'valid' : 'invalid'}`} />
+                  <div className="sop-card-command">
+                    <span className="sop-card-icon" aria-hidden="true"><FaBook /></span>
+                    <div>
+                      <span>Class {sop.class_code} / {sop.severity}</span>
+                      <strong>{sop.validation?.valid ? 'Validation clear' : `${sop.validation?.errors?.length || 0} validation errors`}</strong>
+                    </div>
+                    <em>{sop.status.replace(/_/g, ' ')}</em>
                   </div>
                   <div className="management-card-head">
                     <strong>{sop.title}</strong>
-                    <span className="soft-pill">{sop.status.replace(/_/g, ' ')}</span>
+                    <span className={`soft-pill ${sop.validation?.valid ? 'soft-pill-ready' : ''}`}>{sop.validation?.valid ? 'validated' : 'needs validation'}</span>
                   </div>
-                  <p>{sop.sop_id} | class {sop.class_code} | {sop.severity}</p>
+                  <p>{sop.sop_id}</p>
                   <div className="management-card-meta">
                     <span>{sop.owner_team || 'owner unset'}</span>
                     <span>{sop.services.length} services</span>
                     <span>{Object.values(sop.content || {}).filter((lines) => lines?.length).length} sections</span>
-                    <span>{sop.validation?.valid ? 'validated' : `${sop.validation?.errors?.length || 0} errors`}</span>
                   </div>
                 </button>
               ))}
@@ -8101,7 +8369,8 @@ const NexusPage: React.FC = () => {
             </div>
           </section>
 
-          <section className="sop-plane">
+           ) : (
+           <section className="sop-plane">
             <div className="panel-head compact">
               <div>
                 <h3>Indexed Copilot Corpus</h3>
@@ -8114,16 +8383,19 @@ const NexusPage: React.FC = () => {
                 const adopted = managedSopIds.has(sop.sop_id) || sop.managed;
                 return (
                   <article key={sop.sop_id} className={`management-card sop-card indexed-sop-card ${adopted ? 'adopted' : ''}`}>
-                    <div className="sop-card-visual" aria-hidden="true">
-                      <span className="sop-beam" />
-                      <span className="sop-core"><FaBook /></span>
-                      <span className={`sop-validation-light ${adopted ? 'valid' : 'invalid'}`} />
+                    <div className="sop-card-command">
+                      <span className="sop-card-icon" aria-hidden="true"><FaBook /></span>
+                      <div>
+                        <span>Class {sop.class_code} / {sop.severity}</span>
+                        <strong>{sop.chunk_count} retrieval chunks</strong>
+                      </div>
+                      <em>{adopted ? 'Managed' : 'Indexed only'}</em>
                     </div>
                     <div className="management-card-head">
                       <strong>{sop.title}</strong>
                       <span className="soft-pill">{adopted ? 'managed' : 'indexed only'}</span>
                     </div>
-                    <p>{sop.sop_id} | class {sop.class_code} | {sop.severity} | {sop.chunk_count} chunks</p>
+                    <p>{sop.sop_id}</p>
                     <div className="management-card-meta">
                       <span>{sop.alignment_status.join(', ') || 'alignment unset'}</span>
                       <span>{sop.source_sections.length} sections</span>
@@ -8147,8 +8419,9 @@ const NexusPage: React.FC = () => {
                 </div>
               ) : null}
             </div>
-          </section>
-        </div>
+           </section>
+           )}
+         </div>
       </section>
 
       {selectedSopId || creatingSop ? (
@@ -8208,6 +8481,18 @@ const NexusPage: React.FC = () => {
               </div>
             </div>
 
+            {!creatingSop ? (
+              <div className="service-modal-tabs graph-preview-tabs" role="tablist" aria-label="SOP contract sections">
+                <button type="button" role="tab" aria-selected={sopPanelMode === 'preview'} className={sopPanelMode === 'preview' ? 'active' : ''} onClick={() => setSopPanelMode('preview')}>
+                  <FaBook /> Operator Preview
+                </button>
+                <button type="button" role="tab" aria-selected={sopPanelMode === 'configuration'} className={sopPanelMode === 'configuration' ? 'active' : ''} onClick={() => setSopPanelMode('configuration')}>
+                  <FaWrench /> Configuration
+                </button>
+              </div>
+            ) : null}
+
+            {sopPanelMode === 'preview' && !creatingSop ? renderSopPreview(sopDraft) : (
             <div className="editor-scroll">
               <div className="form-grid">
                 <section className="form-section">
@@ -8308,6 +8593,7 @@ const NexusPage: React.FC = () => {
                 </section>
               </div>
             </div>
+            )}
           </section>
         </div>
       ) : null}
@@ -8321,10 +8607,7 @@ const NexusPage: React.FC = () => {
           <div>
             <span className="panel-kicker"><FaDatabase />Database Fabric</span>
             <h2>Database-aware service intelligence</h2>
-            <p>
-              Nexus separates application symptoms from data-store pressure by modeling Oracle, PostgreSQL, and other
-              backing databases as explicit services, evidence sources, and dependency edges.
-            </p>
+            <p>Separate application symptoms from data-store pressure with declared DB services, access contracts, and typed dependency edges.</p>
           </div>
           <div className="management-actions">
             {canManageNexus ? (
@@ -8341,35 +8624,22 @@ const NexusPage: React.FC = () => {
             )}
           </div>
         </div>
-        <div className="summary-grid summary-grid-compact">
-          <div className="summary-tile">
-            <label>Database Contracts</label>
-            <strong>{databaseServices.length}</strong>
-            <small>Services marked db-aware or service_type=db</small>
+        <div className="database-command-strip">
+          <div>
+            <span>Fabric posture</span>
+            <strong>{servicesMissingDatabaseDeclaration.length || incompleteDatabaseContracts.length ? 'Needs declaration' : 'Declared'}</strong>
+            <small>{databaseServices.length} contracts / {databaseDependencyEdges.length} edges</small>
           </div>
-          <div className="summary-tile">
-            <label>DB Dependency Edges</label>
-            <strong>{databaseDependencyEdges.length}</strong>
-            <small>App-to-database paths Nexus can reason about</small>
+          <div>
+            <span>Attention queue</span>
+            <strong>{servicesMissingDatabaseDeclaration.length + incompleteDatabaseContracts.length ? `${servicesMissingDatabaseDeclaration.length + incompleteDatabaseContracts.length} gaps` : 'Clear'}</strong>
+            <small>{databaseReadinessPercent}% readiness from current contracts</small>
           </div>
-          <div className="summary-tile">
-            <label>Declaration Gaps</label>
-            <strong>{servicesMissingDatabaseDeclaration.length}</strong>
-            <small>App/channel/integration services still missing DB truth</small>
+          <div>
+            <span>Operator next move</span>
+            <strong>{servicesMissingDatabaseDeclaration.length ? 'Declare DB truth' : incompleteDatabaseContracts.length ? 'Complete contracts' : 'Maintain graph'}</strong>
+            <small>Database pressure stays separate from app symptoms</small>
           </div>
-          <div className="summary-tile">
-            <label>DB Readiness</label>
-            <strong>{databaseReadinessPercent}%</strong>
-            <small>{incompleteDatabaseContracts.length} incomplete database contract(s)</small>
-          </div>
-        </div>
-        <div className={`nexus-banner ${servicesMissingDatabaseDeclaration.length || incompleteDatabaseContracts.length ? 'warning' : 'success'}`}>
-          <strong>{servicesMissingDatabaseDeclaration.length || incompleteDatabaseContracts.length ? 'Database graph needs attention' : 'Database graph is declared'}</strong>
-          <span>
-            Add every shared database as a db service, then connect each app to its backing data store with a typed db
-            edge. This is what lets Nexus blame pool exhaustion, locks, listener failures, replication lag, or storage
-            pressure instead of blindly blaming the application.
-          </span>
         </div>
       </section>
 
@@ -8388,26 +8658,19 @@ const NexusPage: React.FC = () => {
               const incomplete = incompleteDatabaseContracts.some((item) => item.service_id === service.service_id);
               return (
                 <article key={service.service_id} className={`database-contract-card ${incomplete ? 'incomplete' : ''}`}>
-                  <div className="database-card-head">
+                  <div className="database-contract-command">
+                    <span className="database-record-icon"><FaDatabase /></span>
                     <div>
+                      <span>{profile.platform || service.service_type || 'database'} / {service.environment || 'environment unset'}</span>
                       <strong>{service.service_name || service.service_id}</strong>
-                      <span>{service.service_id} | {service.environment}</span>
+                      <small>{service.service_id}</small>
                     </div>
                     <span className={`soft-pill ${incomplete ? '' : 'soft-pill-ready'}`}>{incomplete ? 'Incomplete' : 'Ready'}</span>
                   </div>
-                  <div className="route-card-grid">
-                    <span>Platform</span>
-                    <code>{profile.platform || 'not set'}</code>
-                    <span>Database</span>
-                    <code>{profile.database_name || profile.service_name || profile.instance_name || 'not set'}</code>
-                    <span>Role</span>
-                    <code>{profile.role || 'not set'}</code>
-                    <span>Connection pool</span>
-                    <code>{profile.connection_pool || 'not set'}</code>
-                    <span>Schemas</span>
-                    <code>{profile.schemas?.length ? profile.schemas.join(', ') : 'not set'}</code>
-                    <span>Safe diagnostics</span>
-                    <code>{profile.safe_diagnostics?.length ? profile.safe_diagnostics.join(', ') : 'not set'}</code>
+                  <div className="database-contract-facts">
+                    <span><small>Authority</small><strong>{profile.database_name || profile.service_name || profile.instance_name || 'Not set'}</strong></span>
+                    <span><small>Connection</small><strong>{[profile.role, profile.connection_pool].filter(Boolean).join(' / ') || 'Not set'}</strong></span>
+                    <span><small>Scope</small><strong>{profile.schemas?.length ? `${profile.schemas.length} schema${profile.schemas.length === 1 ? '' : 's'}` : 'No schemas'} / {profile.safe_diagnostics?.length ? `${profile.safe_diagnostics.length} diagnostics` : 'No diagnostics'}</strong></span>
                   </div>
                   <div className="database-card-actions">
                     <button
@@ -8450,26 +8713,19 @@ const NexusPage: React.FC = () => {
               const hasDetail = hasDatabaseAccessDetail(edge);
               return (
                 <article key={edge.edge_id || `${edge.from_service_id}-${edge.to_service_id}`} className={`database-contract-card ${hasDetail ? '' : 'incomplete'}`}>
-                  <div className="database-card-head">
+                  <div className="database-contract-command database-edge-command">
+                    <span className="database-record-icon"><FaCodeBranch /></span>
                     <div>
                       <strong>{fromService?.service_name || edge.from_service_id} {'->'} {toService?.service_name || edge.to_service_id}</strong>
-                      <span>{edge.cluster_id || 'global'} | {edge.dependency_scope || 'global'} | {edge.dependency_purpose || 'database_access'}</span>
+                      <span>{edge.cluster_id || 'global'} / {edge.dependency_scope || 'global'} / {edge.dependency_purpose || 'database_access'}</span>
+                      <small>{edge.is_hard_dependency ? 'Hard dependency' : 'Soft dependency'}</small>
                     </div>
                     <span className={`soft-pill ${hasDetail ? 'soft-pill-ready' : ''}`}>{hasDetail ? 'Modeled' : 'Needs access detail'}</span>
                   </div>
-                  <div className="route-card-grid">
-                    <span>Access mode</span>
-                    <code>{access.access_mode || 'not set'}</code>
-                    <span>Connection pool</span>
-                    <code>{access.connection_pool || 'not set'}</code>
-                    <span>Schemas</span>
-                    <code>{access.schema_names?.length ? access.schema_names.join(', ') : 'not set'}</code>
-                    <span>Operations</span>
-                    <code>{access.operation_types?.length ? access.operation_types.join(', ') : 'not set'}</code>
-                    <span>Error codes</span>
-                    <code>{access.expected_error_codes?.length ? access.expected_error_codes.join(', ') : 'not set'}</code>
-                    <span>Timeout</span>
-                    <code>{access.statement_timeout_ms ? `${access.statement_timeout_ms} ms` : `${edge.timeout_budget_ms || 'not set'} ms edge budget`}</code>
+                  <div className="database-contract-facts database-edge-facts">
+                    <span><small>Access</small><strong>{access.access_mode || 'Not set'}</strong></span>
+                    <span><small>Scope</small><strong>{access.schema_names?.length ? `${access.schema_names.length} schema${access.schema_names.length === 1 ? '' : 's'}` : access.operation_types?.length ? `${access.operation_types.length} operation types` : 'Not set'}</strong></span>
+                    <span><small>Guardrails</small><strong>{access.expected_error_codes?.length ? `${access.expected_error_codes.length} expected errors` : access.statement_timeout_ms ? `${access.statement_timeout_ms} ms timeout` : `${edge.timeout_budget_ms || 'No'} edge budget`}</strong></span>
                   </div>
                   <div className="database-card-actions">
                     <button
@@ -8497,29 +8753,33 @@ const NexusPage: React.FC = () => {
         </section>
       </div>
 
-      <section className="nexus-panel nexus-shell">
+      <section className="nexus-panel nexus-shell database-guardrail-panel">
         <div className="panel-head">
           <div>
             <h2>Database Configuration Rules</h2>
-            <p>Operators should use this as the minimum production contract before trusting DB-aware correlation.</p>
+            <p>Minimum production contract before Nexus can trust DB-aware correlation.</p>
           </div>
           <span>Nexus DB truth model</span>
         </div>
-        <div className="database-rule-grid">
-          <div className="database-rule-card">
-            <strong>1. Model real data stores</strong>
+        <div className="database-guardrail-grid">
+          <div className="database-guardrail-card">
+            <span>01</span>
+            <strong>Model real data stores</strong>
             <p>Add shared Oracle/PostgreSQL databases as db services. Do not hide them inside app metadata when they can cause blast radius.</p>
           </div>
-          <div className="database-rule-card">
-            <strong>2. Connect apps with db edges</strong>
+          <div className="database-guardrail-card">
+            <span>02</span>
+            <strong>Connect apps with db edges</strong>
             <p>Use dependency_type=db and declare schema, pool, access mode, operation type, timeout, and expected SQL/ORA/TNS/JDBC codes.</p>
           </div>
-          <div className="database-rule-card">
-            <strong>3. Keep diagnostics read-only</strong>
+          <div className="database-guardrail-card">
+            <span>03</span>
+            <strong>Keep diagnostics read-only</strong>
             <p>Database agents should report connectivity, sessions, locks, blocking, lag, storage, slow queries, and recent error codes only.</p>
           </div>
-          <div className="database-rule-card">
-            <strong>4. Never restart databases from V1</strong>
+          <div className="database-guardrail-card">
+            <span>04</span>
+            <strong>Never restart databases from V1</strong>
             <p>Databases, queues, caches, shared auth tiers, failover paths, and config changes remain blocked from safe restart automation.</p>
           </div>
         </div>
@@ -8534,19 +8794,21 @@ const NexusPage: React.FC = () => {
             </div>
             <span>{servicesMissingDatabaseDeclaration.length} gaps</span>
           </div>
-          <div className="stage-card-list database-gap-list">
+          <div className="database-gap-queue">
             {servicesMissingDatabaseDeclaration.map((service) => (
               <button
                 key={service.service_id}
                 type="button"
-                className="stage-card"
+                className="database-gap-row"
                 onClick={() => {
                   setCreatingService(false);
                   setSelectedServiceId(service.service_id);
                   setWorkspaceTab('services');
                 }}
               >
-                {service.service_name || service.service_id}
+                <span>{service.service_name || service.service_id}</span>
+                <strong>{service.environment || 'environment unset'}</strong>
+                <small>Declare database contract</small>
               </button>
             ))}
           </div>
@@ -8558,23 +8820,34 @@ const NexusPage: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const agentsWorkspace = (() => {
     const onlineAgents = lightAgents.filter((agent) => agent.status === 'online').length;
+    const staleAgents = lightAgents.filter((agent) => agent.status !== 'online').length;
     const watchedServices = lightAgents.reduce((total, agent) => total + Number(agent.configured_service_count || 0), 0);
+    const commandChannels = lightAgents.filter((agent) => agent.command_server?.enabled).length;
     const displayMetric = (value: unknown, fallback = 'Unknown') => (value === null || value === undefined || value === '' ? fallback : String(value));
     return (
       <div className="agents-workspace">
         <section className="nexus-panel nexus-shell agents-command-hero">
-          <div className='fine-div'>
+          <div className="fine-div agents-hero-copy">
             <span className="panel-kicker"><FaPlug />Nexus Light Agents</span>
-            <h2>Runtime edge fleet</h2>
-            <p>
-              Actual Nexus Light processes that have checked in from watched hosts. Each card represents one deployed agent,
-              with host health, exposed command endpoints, capabilities, and the services that agent currently watches.
-            </p>
+            <h2>Edge command fleet</h2>
+            <p>Live agent check-ins, watched services, and guarded command channels from the Nexus evidence edge.</p>
           </div>
-          <div className="agents-hero-metrics">
-            <span><strong>{onlineAgents}</strong> online</span>
-            <span><strong>{lightAgents.length}</strong> deployed</span>
-            <span><strong>{watchedServices}</strong> service watches</span>
+          <div className="agents-command-line" aria-label="Nexus light agent posture">
+            <div>
+              <small>Fleet state</small>
+              <strong>{onlineAgents ? 'Reporting' : 'Awaiting check-in'}</strong>
+              <span>{lightAgents.length ? `${onlineAgents} online / ${staleAgents} stale` : 'No agents enrolled'}</span>
+            </div>
+            <div>
+              <small>Coverage</small>
+              <strong>{watchedServices ? `${watchedServices} watched` : 'No watches'}</strong>
+              <span>{lightAgents.length ? `${lightAgents.length} deployed agent${lightAgents.length === 1 ? '' : 's'}` : 'Generate token to enroll'}</span>
+            </div>
+            <div>
+              <small>Command channel</small>
+              <strong>{commandChannels ? `${commandChannels} open` : 'Closed'}</strong>
+              <span>{agentTokenStatus?.configured ? 'Trust gate configured' : 'Token not configured'}</span>
+            </div>
           </div>
         </section>
 
@@ -8583,6 +8856,8 @@ const NexusPage: React.FC = () => {
             const memory = (agent.host?.memory as Record<string, unknown> | undefined) || {};
             const pressure = agent.resource_pressure || {};
             const commandServer = agent.command_server || {};
+            const memoryLabel = memory.used_percent != null ? `${displayMetric(memory.used_percent)}% memory` : 'Memory pending';
+            const commandLabel = commandServer.enabled ? 'Channel open' : 'Channel closed';
             return (
               <article key={agent.agent_id} className={`agent-fleet-card status-${agent.status}`}>
                 <div className="agent-card-head">
@@ -8593,31 +8868,33 @@ const NexusPage: React.FC = () => {
                   </div>
                   <strong>{agent.status.replace(/_/g, ' ')}</strong>
                 </div>
-                <div className="agent-metric-grid">
+                <div className="agent-command-strip">
                   <div>
-                    <label>Last seen</label>
+                    <span><FaSignal />Heartbeat</span>
                     <strong>{agent.last_seen_at ? formatRelativeMinutes(agent.last_seen_at) : 'Never'}</strong>
                     <small>{agent.version || 'version pending'}</small>
                   </div>
                   <div>
-                    <label>Memory</label>
-                    <strong>{memory.used_percent != null ? `${displayMetric(memory.used_percent)}%` : 'Unknown'}</strong>
-                    <small>{memory.available_mb != null ? `${displayMetric(memory.available_mb)} MB available` : 'host snapshot pending'}</small>
+                    <span><FaServer />Host pressure</span>
+                    <strong>{memoryLabel}</strong>
+                    <small>{pressure.high_load ? 'high-load guard active' : `${displayMetric(pressure.collector_mode, 'normal')} collector`}</small>
                   </div>
                   <div>
-                    <label>Collector</label>
-                    <strong>{displayMetric(pressure.collector_mode, 'unknown')}</strong>
-                    <small>{pressure.high_load ? 'high-load guard active' : 'normal guard posture'}</small>
-                  </div>
-                  <div>
-                    <label>Command Server</label>
-                    <strong>{commandServer.enabled ? 'enabled' : 'disabled'}</strong>
+                    <span><FaTerminal />Command channel</span>
+                    <strong>{commandLabel}</strong>
                     <small>{displayMetric(commandServer.public_base_url || commandServer.port, 'no command URL')}</small>
                   </div>
                 </div>
-                <div className="agent-capability-strip">
-                  {(agent.capabilities || []).slice(0, 8).map((capability) => <span key={capability}>{capability.replace(/_/g, ' ')}</span>)}
-                  {!agent.capabilities?.length ? <span>No capabilities reported yet</span> : null}
+                <div className="agent-capability-panel">
+                  <div className="section-title-row">
+                    <h4>Capabilities</h4>
+                    <span>{agent.capabilities?.length ? `${agent.capabilities.length} reported` : 'Awaiting report'}</span>
+                  </div>
+                  <div className="agent-capability-strip">
+                    {(agent.capabilities || []).slice(0, 6).map((capability) => <span key={capability}>{capability.replace(/_/g, ' ')}</span>)}
+                    {(agent.capabilities || []).length > 6 ? <span>{(agent.capabilities || []).length - 6} more</span> : null}
+                    {!agent.capabilities?.length ? <span>No capabilities reported yet</span> : null}
+                  </div>
                 </div>
                 <div className="agent-service-list">
                   <div className="section-title-row">
@@ -8637,9 +8914,15 @@ const NexusPage: React.FC = () => {
                           setWorkspaceTab('services');
                         }}
                       >
-                        <span>{String(service.service_name || serviceId)}</span>
-                        <strong>{String(service.lifecycle_stage || 'uncertified').replace(/_/g, ' ')}</strong>
-                        <small>{service.has_heartbeat ? 'heartbeat live' : 'awaiting heartbeat'}</small>
+                        <span className="agent-service-status" aria-hidden="true" />
+                        <div className="agent-service-copy">
+                          <strong>{String(service.service_name || serviceId)}</strong>
+                          <small>{serviceId} / {service.has_heartbeat ? 'heartbeat live' : 'awaiting heartbeat'}</small>
+                        </div>
+                        <div className="agent-service-state">
+                          <span>{String(service.lifecycle_stage || 'uncertified').replace(/_/g, ' ')}</span>
+                          <strong>{service.has_heartbeat ? 'Signal live' : 'Awaiting signal'}</strong>
+                        </div>
                       </button>
                     );
                   })}
@@ -8685,18 +8968,18 @@ const NexusPage: React.FC = () => {
               </div>
             </div>
             <div className="agent-token-grid">
-              <div className={`agent-token-card ${agentTokenStatus?.configured ? 'ready' : 'pending'}`}>
-                <span>Status</span>
+              <div className={`agent-token-card agent-token-primary ${agentTokenStatus?.configured ? 'ready' : 'pending'}`}>
+                <span>Trust gate</span>
                 <strong>{agentTokenStatus?.configured ? 'Configured' : 'Not configured'}</strong>
                 <small>{agentTokenStatus?.source || 'unknown'} credential source</small>
               </div>
-              <div className="agent-token-card">
-                <span>Token hint</span>
+              <div className="agent-token-card agent-token-line">
+                <span>Credential trace</span>
                 <strong>{agentTokenStatus?.token_prefix || 'No token issued'}</strong>
                 <small>{agentTokenStatus?.token_id ? `id ${agentTokenStatus.token_id}` : 'Generated token appears once only.'}</small>
               </div>
-              <div className="agent-token-card">
-                <span>Last used</span>
+              <div className="agent-token-card agent-token-line">
+                <span>Last accepted call</span>
                 <strong>{agentTokenStatus?.last_used_at ? formatDateTime(agentTokenStatus.last_used_at) : 'Never'}</strong>
                 <small>{agentTokenStatus?.usage_count || 0} authenticated agent call(s)</small>
               </div>
@@ -8719,32 +9002,27 @@ const NexusPage: React.FC = () => {
           </section>
         ) : null}
 
-        <div className="nexus-grid">
+        <div className="nexus-grid onboarding-overview-grid">
           <div className="nexus-panel nexus-shell">
             <div className="panel-head">
               <h2>Fabric Readiness</h2>
               <span>{fabricSummary?.sync_health || 'idle'}</span>
             </div>
-            <div className="summary-grid summary-grid-compact">
-              <div className="summary-tile">
-                <label>Cataloged Services</label>
-                <strong>{fabricSummary?.total_services || 0}</strong>
-                <small>Shared SentinelOps DB records</small>
+            <div className="onboarding-command-strip">
+              <div>
+                <span>Catalog posture</span>
+                <strong>{fabricSummary?.total_services ? `${fabricSummary.total_services} services` : 'Empty catalog'}</strong>
+                <small>{fabricSummary?.mapped_network_services || 0} mapped to Network Sentinel</small>
               </div>
-              <div className="summary-tile">
-                <label>Network Mapped</label>
-                <strong>{fabricSummary?.mapped_network_services || 0}</strong>
-                <small>Ready for live bootstrap sync</small>
+              <div>
+                <span>Diagnostics lane</span>
+                <strong>{fabricSummary?.diagnostics_ready_services ? 'Ready' : 'Needs contracts'}</strong>
+                <small>{fabricSummary?.diagnostics_ready_services || 0} service contracts can run diagnostics</small>
               </div>
-              <div className="summary-tile">
-                <label>Diagnostics Ready</label>
-                <strong>{fabricSummary?.diagnostics_ready_services || 0}</strong>
-                <small>Service contracts meet diagnostics stage</small>
-              </div>
-              <div className="summary-tile">
-                <label>Restart Ready</label>
-                <strong>{fabricSummary?.restart_ready_services || 0}</strong>
-                <small>Human-approved safe restart only</small>
+              <div>
+                <span>Guarded control</span>
+                <strong>{fabricSummary?.restart_ready_services ? 'Available' : 'Locked'}</strong>
+                <small>{fabricSummary?.restart_ready_services || 0} services are restart-ready</small>
               </div>
             </div>
             <div className={`nexus-banner ${fabricSummary?.sync_health === 'error' ? 'error' : 'warning'}`}>
@@ -8776,7 +9054,7 @@ const NexusPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="nexus-grid">
+        <div className="nexus-grid onboarding-inventory-grid">
           <div className="nexus-panel nexus-shell">
             <div className="panel-head">
               <h2>Certification Lanes</h2>
@@ -8875,32 +9153,33 @@ const NexusPage: React.FC = () => {
       </div>
 
       <div className="boot-preview-console">
-        <div className="boot-console-orbit" aria-hidden="true">
-          <span className="orbit-node node-idc">USSD</span>
-          <span className="orbit-node node-arx">IDC</span>
-          <span className="orbit-node node-log">LOG</span>
-          <span className="orbit-node node-risk">RISK</span>
-          <span className="orbit-link link-one" />
-          <span className="orbit-link link-two" />
-          <span className="orbit-link link-three" />
-          <div className="orbit-core">
+        <div className="boot-command-board" aria-hidden="true">
+          <div className="boot-core-row">
             <img src={nexusMark} alt="" aria-hidden="true" />
-            <strong>Nexus Core</strong>
-            <small>Correlation engine</small>
+            <span>
+              <strong>Nexus core</strong>
+              <small>Correlation engine waking</small>
+            </span>
+          </div>
+          <div className="boot-lane-grid">
+            <span><strong>DB</strong><small>contracts</small></span>
+            <span><strong>NET</strong><small>evidence</small></span>
+            <span><strong>LOG</strong><small>signals</small></span>
+            <span><strong>RISK</strong><small>ranking</small></span>
           </div>
         </div>
         <div className="boot-signal-grid">
           <div>
-            <span>Signals</span>
-            <strong>metrics / logs / traces</strong>
+            <span>Evidence</span>
+            <strong>signals aligned</strong>
           </div>
           <div>
             <span>Graph</span>
-            <strong>dependencies + blast radius</strong>
+            <strong>dependencies hydrated</strong>
           </div>
           <div>
             <span>Guardrails</span>
-            <strong>human-approved actions</strong>
+            <strong>actions locked</strong>
           </div>
         </div>
       </div>
@@ -8912,8 +9191,6 @@ const NexusPage: React.FC = () => {
       <div className="nexus-page nexus-page--restricted">
         <div className="nexus-page-ambient" aria-hidden="true">
           <div className="nexus-ambient-grid" />
-          <div className="nexus-ambient-orb orb-primary" />
-          <div className="nexus-ambient-orb orb-secondary" />
         </div>
         <div className="nexus-surface" />
         <section className="nexus-shell nexus-access-denied">
@@ -8936,9 +9213,6 @@ const NexusPage: React.FC = () => {
       <div className="nexus-page nexus-page--booting">
         <div className="nexus-page-ambient" aria-hidden="true">
           <div className="nexus-ambient-grid" />
-          <div className="nexus-ambient-orb orb-primary" />
-          <div className="nexus-ambient-orb orb-secondary" />
-          <div className="nexus-ambient-orb orb-tertiary" />
         </div>
         <div className="nexus-surface" />
         {renderNexusBootPreview()}
@@ -8950,9 +9224,6 @@ const NexusPage: React.FC = () => {
     <div className="nexus-page">
       <div className="nexus-page-ambient" aria-hidden="true">
         <div className="nexus-ambient-grid" />
-        <div className="nexus-ambient-orb orb-primary" />
-        <div className="nexus-ambient-orb orb-secondary" />
-        <div className="nexus-ambient-orb orb-tertiary" />
       </div>
       <div className="nexus-surface" />
       <section className="nexus-hero nexus-shell">
@@ -8969,17 +9240,22 @@ const NexusPage: React.FC = () => {
             </div>
           </div>
           <p>
-            Correlate failures, manage dependency clusters, certify service contracts, and wire light extraction, formatting, shipping,
-            diagnostics, and guarded restart endpoints directly from the shared SentinelOps data plane.
+            Correlate live failures, service contracts, database dependencies, light agents, and guarded recovery lanes from the same
+            SentinelOps evidence plane.
           </p>
-          <div className="nexus-hero-chip-row">
-            <span className="hero-chip">Workspace {workspaceLabel}</span>
-            <span className={`hero-chip status-${(fabricSummary?.sync_health || 'idle').toLowerCase()}`}>Sync {syncHealthLabel}</span>
-            <span className="hero-chip">{mappedServices}/{Math.max(totalServices, 1)} mapped</span>
-            <span className="hero-chip">{totalClusters} dependency clusters</span>
-            <span className="hero-chip">{totalFlows} business flows</span>
-            <span className="hero-chip">{databaseServices.length} database contracts</span>
-            <span className="hero-chip">Time {timezoneLabel}</span>
+          <div className="nexus-command-strip" aria-label="Nexus command context">
+            <span>
+              <small>Workspace</small>
+              <strong>{workspaceLabel}</strong>
+            </span>
+            <span className={`sync-${(fabricSummary?.sync_health || 'idle').toLowerCase()}`}>
+              <small>Fabric Sync</small>
+              <strong>{syncHealthLabel}</strong>
+            </span>
+            <span>
+              <small>Time Zone</small>
+              <strong>{timezoneLabel}</strong>
+            </span>
           </div>
           <div className="nexus-hero-actions">
             <button type="button" className="primary-action" onClick={() => void refreshEverything()} disabled={loading}>
@@ -9015,23 +9291,18 @@ const NexusPage: React.FC = () => {
               </div>
               <div className="command-stream-item">
                 <span>Diagnostics lane</span>
-                <strong>{fabricSummary?.diagnostics_ready_services || 0} ready</strong>
+                <strong>{fabricSummary?.diagnostics_ready_services ? 'Ready' : 'Needs mapping'}</strong>
               </div>
               <div className="command-stream-item">
-                <span>Task Center handoff</span>
-                <strong>Live</strong>
+                <span>Control posture</span>
+                <strong>{canOperateNexus ? 'Human-approved actions' : 'Read-only evidence'}</strong>
               </div>
             </div>
-            <div className="nexus-operating-loop" aria-label="Nexus OSEMN operating loop">
-              {intelligenceLoop.map((stage, index) => (
-                <div key={stage.label} className="operating-loop-step">
-                  <span className="loop-index">{String(index + 1).padStart(2, '0')}</span>
-                  <div>
-                    <strong>{stage.label}</strong>
-                    <small>{stage.detail} - {stage.signal}</small>
-                  </div>
-                </div>
-              ))}
+            <div className="nexus-control-lanes" aria-label="Nexus control lanes">
+              <span><FaBroadcastTower /> Incidents</span>
+              <span><FaServer /> Services</span>
+              <span><FaDatabase /> Databases</span>
+              <span><FaPlug /> Agents</span>
             </div>
           </div>
         </div>
@@ -9060,11 +9331,11 @@ const NexusPage: React.FC = () => {
           <FaSearch />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search incidents, services, clusters, flows, or dependencies..." />
         </label>
-        <div className="nexus-toolbar-copy">
-          <span className="toolbar-pill"><FaSignal /> Graph-aware correlation</span>
-          <span className="toolbar-pill"><FaDatabase /> SentinelOps DB control plane</span>
-          <span className="toolbar-pill"><FaLink /> Catalog-driven extraction and restart lanes</span>
-        </div>
+        {query ? (
+          <button type="button" className="nexus-clear-search" onClick={() => setQuery('')}>
+            Clear
+          </button>
+        ) : null}
       </section>
 
       <div className="nexus-tabs-shell nexus-shell workspace-tabs-shell">
