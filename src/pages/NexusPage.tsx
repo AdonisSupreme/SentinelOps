@@ -872,6 +872,7 @@ const NexusPage: React.FC = () => {
   const [rolloverAssessment, setRolloverAssessment] = useState<RolloverAssessment | null>(null);
   const [rolloverChallenge, setRolloverChallenge] = useState<RolloverChallenge | null>(null);
   const [rolloverOtpCode, setRolloverOtpCode] = useState('');
+  const [rolloverControlError, setRolloverControlError] = useState<string | null>(null);
   const [rolloverReason, setRolloverReason] = useState('');
   const [rolloverReminderDateTime, setRolloverReminderDateTime] = useState('');
   const [rolloverReminderRecipients, setRolloverReminderRecipients] = useState('');
@@ -917,6 +918,7 @@ const NexusPage: React.FC = () => {
   const liveRefreshInFlightRef = useRef(false);
   const logTailRefreshInFlightRef = useRef(false);
   const serviceControlAutoSubmitRef = useRef<string | null>(null);
+  const rolloverAutoSubmitRef = useRef<string | null>(null);
   const editorDirtyRef = useRef<NexusEditorDirtyState>(createCleanEditorDirty());
   const editorHydrationRef = useRef<Record<NexusEditorKind, string | null>>({
     service: null,
@@ -2281,6 +2283,7 @@ const NexusPage: React.FC = () => {
     setRolloverConnectionTest(null);
     setRolloverChallenge(null);
     setRolloverOtpCode('');
+    setRolloverControlError(null);
   };
 
   const closeClusterModal = () => {
@@ -3247,19 +3250,24 @@ const NexusPage: React.FC = () => {
     const environmentId = rolloverDraft.environment_id.trim();
     if (!environmentId) return;
     setCatalogBusy('rollover-challenge');
+    setRolloverControlError(null);
+    rolloverAutoSubmitRef.current = null;
     try {
       const challenge = await nexusApi.requestRolloverChallenge(environmentId, rolloverReason || 'Operator-approved environment rollover.');
       setRolloverChallenge(challenge);
       setRolloverOtpCode('');
+      setRolloverControlError(null);
       addNotification({
         type: 'success',
         message: `Nexus sent a rollover verification code to ${challenge.email}.`,
         priority: 'high',
       });
     } catch (err: any) {
+      const detail = err?.response?.data?.detail || err?.message || 'Nexus could not open the rollover OTP gate.';
+      setRolloverControlError(detail);
       addNotification({
         type: 'error',
-        message: err?.response?.data?.detail || err?.message || 'Nexus could not open the rollover OTP gate.',
+        message: detail,
         priority: 'high',
       });
     } finally {
@@ -3267,11 +3275,21 @@ const NexusPage: React.FC = () => {
     }
   };
 
-  const executeRollover = async () => {
+  const handleRolloverOtpCodeChange = (value: string) => {
+    const sanitized = value.replace(/\D/g, '').slice(0, 6);
+    if (sanitized.length < 6) {
+      rolloverAutoSubmitRef.current = null;
+    }
+    setRolloverControlError(null);
+    setRolloverOtpCode(sanitized);
+  };
+
+  const executeRollover = useCallback(async () => {
     if (!rolloverChallenge) {
       return;
     }
     setCatalogBusy('rollover-execute');
+    setRolloverControlError(null);
     try {
       const execution = await nexusApi.executeRollover(
         rolloverChallenge.environment_id,
@@ -3289,15 +3307,33 @@ const NexusPage: React.FC = () => {
         priority: execution.status === 'COMPLETED' ? 'high' : 'medium',
       });
     } catch (err: any) {
+      const detail = err?.response?.data?.detail || err?.message || 'Nexus could not verify or execute the rollover request.';
+      setRolloverControlError(detail);
       addNotification({
         type: 'error',
-        message: err?.response?.data?.detail || err?.message || 'Nexus could not verify or execute the rollover request.',
+        message: detail,
         priority: 'high',
       });
     } finally {
       setCatalogBusy(null);
     }
-  };
+  }, [addNotification, loadWorkspace, rolloverAssessment, rolloverChallenge, rolloverOtpCode, rolloverReason]);
+
+  useEffect(() => {
+    rolloverAutoSubmitRef.current = null;
+  }, [rolloverChallenge?.challenge_id]);
+
+  useEffect(() => {
+    if (!rolloverChallenge || rolloverOtpCode.length !== 6 || catalogBusy === 'rollover-execute') {
+      return;
+    }
+    const submitKey = `${rolloverChallenge.challenge_id}:${rolloverOtpCode}`;
+    if (rolloverAutoSubmitRef.current === submitKey) {
+      return;
+    }
+    rolloverAutoSubmitRef.current = submitKey;
+    void executeRollover();
+  }, [catalogBusy, executeRollover, rolloverChallenge, rolloverOtpCode]);
 
   const scheduleRolloverReminder = async () => {
     const environmentId = rolloverDraft.environment_id.trim();
@@ -4808,6 +4844,85 @@ const NexusPage: React.FC = () => {
       </div>
     );
   })();
+
+  const rolloverOtpModal = rolloverChallenge ? (
+    <div className="nexus-modal-backdrop service-control-otp-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-rollover-control-title">
+      <section className="nexus-modal nexus-service-control-modal nexus-shell">
+        <button
+          type="button"
+          className="nexus-modal-close"
+          onClick={() => {
+            setRolloverChallenge(null);
+            setRolloverOtpCode('');
+            setRolloverControlError(null);
+          }}
+          aria-label="Close rollover verification"
+        >
+          <FaTimesCircle />
+        </button>
+        <div className="service-control-otp-hero">
+          <div className="ai-brief-orb" aria-hidden="true">
+            <span />
+            <span />
+            <FaKey />
+          </div>
+          <div className="my-div">
+            <span className="panel-kicker">Nexus Rollover Verification</span>
+            <h2 id="nexus-rollover-control-title">ROLLOVER {rolloverChallenge.environment_name}</h2>
+            <p>
+              Nexus sent a one-time verification code to {rolloverChallenge.email}. Enter it here to run the OTP-approved Oracle configuration rollover.
+            </p>
+          </div>
+        </div>
+        <div className="service-control-otp-grid">
+          <div>
+            <label>
+              <span>One-time code</span>
+              <input
+                value={rolloverOtpCode}
+                onChange={(event) => handleRolloverOtpCodeChange(event.target.value)}
+                placeholder="000000"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                autoFocus
+              />
+            </label>
+            <small>
+              Expires {formatRelativeMinutes(rolloverChallenge.expires_at)}. Nexus verifies automatically when six digits are entered.
+            </small>
+          </div>
+          <div className="service-control-otp-summary">
+            <span>Environment</span>
+            <strong>{rolloverChallenge.environment_id}</strong>
+            <span>Action</span>
+            <strong>ROLLOVER</strong>
+          </div>
+        </div>
+        {rolloverControlError ? <div className="nexus-banner error">{rolloverControlError}</div> : null}
+        <div className="service-control-otp-actions">
+          <button
+            type="button"
+            className="secondary-action"
+            onClick={() => {
+              setRolloverChallenge(null);
+              setRolloverOtpCode('');
+              setRolloverControlError(null);
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="primary-action"
+            disabled={rolloverOtpCode.length < 6 || catalogBusy === 'rollover-execute'}
+            onClick={() => void executeRollover()}
+          >
+            <FaShieldAlt /> {catalogBusy === 'rollover-execute' ? 'Verifying...' : 'Confirm ROLLOVER'}
+          </button>
+        </div>
+      </section>
+    </div>
+  ) : null;
 
   const renderServiceLiveDashboard = () => {
     if (!selectedService) {
@@ -6875,72 +6990,6 @@ const NexusPage: React.FC = () => {
                 onClick={() => void executeServiceControl()}
               >
                 <FaShieldAlt /> {serviceControlBusy?.startsWith('execute') ? 'Verifying...' : `Verify ${serviceControlChallenge.operation.toUpperCase()}`}
-              </button>
-            </div>
-          </section>
-        </div>
-      ) : null}
-
-      {rolloverChallenge ? (
-        <div className="nexus-modal-backdrop service-control-otp-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-rollover-control-title">
-          <section className="nexus-modal nexus-service-control-modal nexus-shell">
-            <button
-              type="button"
-              className="nexus-modal-close"
-              onClick={() => {
-                setRolloverChallenge(null);
-                setRolloverOtpCode('');
-              }}
-              aria-label="Close rollover verification"
-            >
-              <FaTimesCircle />
-            </button>
-            <div className="service-control-otp-hero">
-              <div className="ai-brief-orb" aria-hidden="true">
-                <span />
-                <span />
-                <FaKey />
-              </div>
-              <div className='my-div'>
-                <span className="panel-kicker">Nexus Rollover Verification</span>
-                <h2 id="nexus-rollover-control-title">ROLLOVER {rolloverChallenge.environment_name}</h2>
-                <p>
-                  Nexus sent a one-time verification code to {rolloverChallenge.email}. Enter it here to run the OTP-approved Oracle configuration rollover.
-                </p>
-              </div>
-            </div>
-            <div className="service-control-otp-grid">
-              <div>
-                <label>
-                  <span>One-time code</span>
-                  <input
-                    value={rolloverOtpCode}
-                    onChange={(event) => setRolloverOtpCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="000000"
-                    inputMode="numeric"
-                    autoFocus
-                  />
-                </label>
-                <small>Expires {formatRelativeMinutes(rolloverChallenge.expires_at)}. Codes are single-use and bound to this environment.</small>
-              </div>
-              <div className="service-control-otp-summary">
-                <span>Environment</span>
-                <strong>{rolloverChallenge.environment_id}</strong>
-                <span>Action</span>
-                <strong>ROLLOVER</strong>
-              </div>
-            </div>
-            <div className="service-control-otp-actions">
-              <button type="button" className="secondary-action" onClick={() => setRolloverChallenge(null)}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="primary-action"
-                disabled={rolloverOtpCode.length < 6 || catalogBusy === 'rollover-execute'}
-                onClick={() => void executeRollover()}
-              >
-                <FaShieldAlt /> {catalogBusy === 'rollover-execute' ? 'Verifying...' : 'Confirm ROLLOVER'}
               </button>
             </div>
           </section>
@@ -9381,6 +9430,7 @@ const NexusPage: React.FC = () => {
       {activeWorkspace !== 'incidents' ? renderIncidentCommandModal() : null}
       {sourceExplorerModal}
       {logTailModal}
+      {rolloverOtpModal}
 
       <PageGuide guide={pageGuides.nexus} />
     </div>

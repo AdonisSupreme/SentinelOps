@@ -25,6 +25,80 @@ export type NexusCertificationStage =
   | 'restart_ready';
 export type NexusSyncHealth = 'idle' | 'success' | 'warning' | 'error';
 export type ManagedSopStatus = 'draft' | 'needs_review' | 'approved' | 'deprecated';
+export type NexusRTGSAgeLane = '0_24H' | '24_48H' | '48_72H' | '72_96H' | 'OVER_96H';
+export type NexusRTGSFileState =
+  | 'FOUND_ACTIVE'
+  | 'FOUND_BACKUP_PRIMARY'
+  | 'FOUND_BACKUP_SECONDARY'
+  | 'FOUND_BOTH_MATCH'
+  | 'CONFLICT'
+  | 'ABSENT'
+  | 'AGENT_UNREACHABLE'
+  | 'CHECK_INCOMPLETE';
+
+export interface NexusRTGSFileEvidence {
+  peer_id: string;
+  peer_role: string;
+  location: 'ACTIVE' | 'BACKUP_PRIMARY' | 'BACKUP_SECONDARY';
+  state: string;
+  file_name?: string | null;
+  file_path?: string | null;
+  size_bytes?: number | null;
+  modified_at?: string | null;
+  sha256?: string | null;
+  inspected_at: string;
+  message?: string | null;
+}
+
+export interface NexusRTGSTransactionCase {
+  transaction_id: string;
+  status: string;
+  entry_date: string;
+  age_hours: number;
+  age_lane: NexusRTGSAgeLane;
+  branch_code?: string | null;
+  entry_sequence?: string | null;
+  message_type: string;
+  queue_instance_ids: string[];
+  file_state: NexusRTGSFileState;
+  recommendation: string;
+  files: NexusRTGSFileEvidence[];
+  settlement_note: string;
+  warnings: string[];
+  assessed_at: string;
+}
+
+export interface NexusRTGSAssessment {
+  assessment_id: string;
+  trigger: 'scheduled' | 'manual';
+  assessed_at: string;
+  transaction_count: number;
+  cases: NexusRTGSTransactionCase[];
+  status: 'COMPLETED' | 'PARTIAL' | 'FAILED';
+  message?: string | null;
+}
+
+export interface NexusRTGSSchedule {
+  schedule_id: string;
+  label: string;
+  local_time: string;
+  timezone: string;
+  enabled: boolean;
+  last_triggered_at?: string | null;
+  created_by: string;
+}
+
+export interface NexusRTGSActionResult {
+  action_id: string;
+  action: 'copy' | 'regenerate';
+  status: 'REQUESTED' | 'COMPLETED' | 'BLOCKED' | 'FAILED' | 'NOOP';
+  requested_by: string;
+  transaction_id: string;
+  message: string;
+  evidence: NexusRTGSFileEvidence[];
+  verification: Record<string, unknown>;
+  created_at: string;
+}
 
 export interface RestartPolicy {
   allow_restart: boolean;
@@ -908,6 +982,48 @@ nexusApiClient.interceptors.response.use(
 );
 
 class NexusApi {
+  async getLatestRTGSAssessment() {
+    const response = await nexusApiClient.get<{ assessment: NexusRTGSAssessment | null }>('/api/v1/nexus/trustlink/rtgs/latest');
+    return response.data.assessment;
+  }
+
+  async assessRTGSTransactions(requestedBy?: string) {
+    const response = await nexusApiClient.post<NexusRTGSAssessment>('/api/v1/nexus/trustlink/rtgs/assess', {
+      requested_by: requestedBy || null,
+    });
+    return response.data;
+  }
+
+  async listRTGSSchedules() {
+    const response = await nexusApiClient.get<{ schedules: NexusRTGSSchedule[] }>('/api/v1/nexus/trustlink/rtgs/schedules');
+    return response.data.schedules;
+  }
+
+  async createRTGSSchedule(payload: { label: string; local_time: string; timezone: string; enabled: boolean }) {
+    const response = await nexusApiClient.post<NexusRTGSSchedule>('/api/v1/nexus/trustlink/rtgs/schedules', payload);
+    return response.data;
+  }
+
+  async updateRTGSSchedule(scheduleId: string, payload: { label: string; local_time: string; timezone: string; enabled: boolean }) {
+    const response = await nexusApiClient.put<NexusRTGSSchedule>(`/api/v1/nexus/trustlink/rtgs/schedules/${scheduleId}`, payload);
+    return response.data;
+  }
+
+  async deleteRTGSSchedule(scheduleId: string) {
+    await nexusApiClient.delete(`/api/v1/nexus/trustlink/rtgs/schedules/${scheduleId}`);
+  }
+
+  async executeRTGSAction(payload: {
+    transaction_ids: string[];
+    action: 'copy' | 'regenerate';
+    reason: string;
+    idempotency_key?: string | null;
+    confirm_over_96h?: boolean;
+  }) {
+    const response = await nexusApiClient.post<{ results: NexusRTGSActionResult[] }>('/api/v1/nexus/trustlink/rtgs/actions', payload);
+    return response.data.results;
+  }
+
   async listIncidents() {
     const response = await nexusApiClient.get<{ incidents: NexusIncident[] }>('/api/v1/nexus/incidents');
     return response.data.incidents;

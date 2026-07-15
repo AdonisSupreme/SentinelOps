@@ -5,6 +5,7 @@ import {
   FiArrowDownCircle,
   FiCheckCircle,
   FiClock,
+  FiCopy,
   FiDatabase,
   FiEye,
   FiFileText,
@@ -19,6 +20,7 @@ import {
 import PageGuide from '../components/ui/PageGuide';
 import { pageGuides } from '../content/pageGuides';
 import centralizedWebSocketManager from '../services/centralizedWebSocketManager';
+import nexusApi, { NexusRTGSAssessment, NexusRTGSTransactionCase } from '../services/nexusApi';
 import trustlinkApi, {
   TrustlinkRunDetail,
   TrustlinkRunListItem,
@@ -28,7 +30,7 @@ import trustlinkApi, {
 import './TrustlinkOperationsPage.css';
 
 type PipelineStageName = TrustlinkStep['step_name'] | 'DOWNLOAD';
-type TrustlinkTab = 'pipeline' | 'today' | 'evidence' | 'history';
+type TrustlinkTab = 'pipeline' | 'today' | 'evidence' | 'history' | 'rtgs';
 type LiveConnectionState = 'connecting' | 'connected' | 'reconnecting' | 'offline';
 
 interface PipelineTimelineItem {
@@ -90,6 +92,7 @@ const TABS: Array<{ id: TrustlinkTab; label: string; icon: React.ReactNode }> = 
   { id: 'today', label: "Today's Run", icon: <FiActivity /> },
   { id: 'evidence', label: 'Evidence', icon: <FiShield /> },
   { id: 'history', label: 'History', icon: <FiFileText /> },
+  { id: 'rtgs', label: 'RTGS recovery', icon: <FiShield /> },
 ];
 
 const TrustlinkOperationsPreview: React.FC = () => (
@@ -356,6 +359,32 @@ const buildPipelineTimeline = (
   });
 };
 
+const RTGS_LANE_LABELS: Record<string, string> = {
+  '0_24H': '0–24 hours',
+  '24_48H': '24–48 hours',
+  '48_72H': '48–72 hours',
+  '72_96H': '72–96 hours',
+  OVER_96H: 'Older than 96 hours',
+};
+
+const rtgsCaseTone = (item: NexusRTGSTransactionCase): string => {
+  if (item.file_state === 'CONFLICT' || item.file_state === 'AGENT_UNREACHABLE' || item.age_lane === 'OVER_96H') return 'failed';
+  if (item.file_state === 'ABSENT') return 'warning';
+  if (item.file_state === 'FOUND_BACKUP_PRIMARY') return 'success';
+  return 'running';
+};
+
+const rtgsFileLabel = (state: NexusRTGSTransactionCase['file_state']): string => ({
+  FOUND_ACTIVE: 'Already active',
+  FOUND_BACKUP_PRIMARY: 'Primary backup ready',
+  FOUND_BACKUP_SECONDARY: 'Secondary backup only',
+  FOUND_BOTH_MATCH: 'Both backups match',
+  CONFLICT: 'Peer conflict',
+  ABSENT: 'No peer file found',
+  AGENT_UNREACHABLE: 'Peer check unavailable',
+  CHECK_INCOMPLETE: 'Inspection incomplete',
+}[state] || state);
+
 const TrustlinkOperationsPage: React.FC = () => {
   const [nowTick, setNowTick] = useState(() => new Date());
   const [initialLoading, setInitialLoading] = useState(true);
@@ -375,9 +404,40 @@ const TrustlinkOperationsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showOverwriteWarning, setShowOverwriteWarning] = useState(false);
   const [pendingFileDeleteRun, setPendingFileDeleteRun] = useState<TrustlinkRunListItem | null>(null);
+  const [rtgsAssessment, setRtgsAssessment] = useState<NexusRTGSAssessment | null>(null);
+  const [rtgsLoading, setRtgsLoading] = useState(false);
+  const [rtgsActionLoading, setRtgsActionLoading] = useState(false);
+  const [selectedRTGSIds, setSelectedRTGSIds] = useState<string[]>([]);
+  const [rtgsReason, setRtgsReason] = useState('');
+  const [rtgsAction, setRtgsAction] = useState<'copy' | 'regenerate'>('copy');
+  const [rtgsActionMessage, setRtgsActionMessage] = useState<string | null>(null);
+  const [rtgsSchedules, setRtgsSchedules] = useState<Array<{ schedule_id: string; label: string; local_time: string; timezone: string; enabled: boolean }>>([]);
+  const [scheduleLabel, setScheduleLabel] = useState('Custom checkpoint');
+  const [scheduleTime, setScheduleTime] = useState('18:00');
 
   const displayRun = selectedRun || todayStatus?.run || null;
   const selectedRunId = displayRun?.id || null;
+
+  const loadRTGS = useCallback(async (manual = false) => {
+    setRtgsLoading(true);
+    setRtgsActionMessage(null);
+    try {
+      const assessment = manual
+        ? await nexusApi.assessRTGSTransactions()
+        : await nexusApi.getLatestRTGSAssessment();
+      setRtgsAssessment(assessment);
+      setRtgsSchedules(await nexusApi.listRTGSSchedules());
+      setSelectedRTGSIds([]);
+    } catch (e) {
+      setRtgsActionMessage(getErrorMessage(e));
+    } finally {
+      setRtgsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'rtgs' && !rtgsAssessment) void loadRTGS();
+  }, [activeTab, loadRTGS, rtgsAssessment]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNowTick(new Date()), 30_000);
@@ -771,6 +831,60 @@ const TrustlinkOperationsPage: React.FC = () => {
     await handleDeleteFile(runId);
   };
 
+  const handleRTGSAction = async () => {
+    if (!selectedRTGSIds.length) {
+      setRtgsActionMessage('Select at least one transaction before requesting an action.');
+      return;
+    }
+    if (rtgsReason.trim().length < 8) {
+      setRtgsActionMessage('Add an operator reason or change reference before requesting an action.');
+      return;
+    }
+    setRtgsActionLoading(true);
+    setRtgsActionMessage(null);
+    try {
+      const results = await nexusApi.executeRTGSAction({
+        transaction_ids: selectedRTGSIds,
+        action: rtgsAction,
+        reason: rtgsReason.trim(),
+        idempotency_key: `rtgs-${rtgsAction}-${Date.now()}`,
+        confirm_over_96h: selectedRTGSIds.some((id) => rtgsAssessment?.cases.find((item) => item.transaction_id === id)?.age_lane === 'OVER_96H'),
+      });
+      const completed = results.filter((item) => item.status === 'COMPLETED').length;
+      setRtgsActionMessage(`${completed} of ${results.length} requested action(s) completed. Re-run assessment to refresh settlement state.`);
+      setSelectedRTGSIds([]);
+    } catch (e) {
+      setRtgsActionMessage(getErrorMessage(e));
+    } finally {
+      setRtgsActionLoading(false);
+    }
+  };
+
+  const handleAddRTGSSchedule = async () => {
+    if (!scheduleLabel.trim()) return;
+    try {
+      const schedule = await nexusApi.createRTGSSchedule({
+        label: scheduleLabel.trim(),
+        local_time: scheduleTime,
+        timezone: 'Africa/Johannesburg',
+        enabled: true,
+      });
+      setRtgsSchedules((current) => [...current, schedule]);
+      setRtgsActionMessage(`Checkpoint ${schedule.local_time} added.`);
+    } catch (e) {
+      setRtgsActionMessage(getErrorMessage(e));
+    }
+  };
+
+  const handleToggleRTGSSchedule = async (schedule: { schedule_id: string; label: string; local_time: string; timezone: string; enabled: boolean }) => {
+    try {
+      const updated = await nexusApi.updateRTGSSchedule(schedule.schedule_id, { ...schedule, enabled: !schedule.enabled });
+      setRtgsSchedules((current) => current.map((item) => item.schedule_id === updated.schedule_id ? updated : item));
+    } catch (e) {
+      setRtgsActionMessage(getErrorMessage(e));
+    }
+  };
+
   const selectRun = async (runId: string, nextTab?: TrustlinkTab) => {
     setActionLoading(true);
     setActionLabel('Loading run intelligence');
@@ -816,6 +930,122 @@ const TrustlinkOperationsPage: React.FC = () => {
       <strong>{value}</strong>
     </div>
   );
+
+  const renderRTGSPanel = () => {
+    const cases = rtgsAssessment?.cases || [];
+    const lanes = ['0_24H', '24_48H', '48_72H', '72_96H', 'OVER_96H'];
+    return (
+      <div className="trustlink-tab-panel trustlink-rtgs-panel">
+        <article className="trustlink-card rtgs-command-card">
+          <div className="trustlink-card-header">
+            <div>
+              <span className="trustlink-card-kicker"><FiShield /> RTGS in-transit recovery</span>
+              <h2>Evidence before movement</h2>
+              <p>Assess current core status against both peer file lanes. Copy and regeneration stay operator-gated.</p>
+            </div>
+            <div className="rtgs-command-actions">
+              <span className={`trustlink-status-pill tone-${rtgsAssessment?.status === 'COMPLETED' ? 'success' : 'warning'}`}>
+                {rtgsAssessment ? `${rtgsAssessment.transaction_count} in transit` : 'No assessment'}
+              </span>
+              <button className="trustlink-btn primary" type="button" onClick={() => void loadRTGS(true)} disabled={rtgsLoading}>
+                <FiRefreshCcw /> {rtgsLoading ? 'Assessing' : 'Assess now'}
+              </button>
+            </div>
+          </div>
+
+          {rtgsAssessment && (
+            <div className="rtgs-assessment-line">
+              <span>Last assessment {formatDateTime(rtgsAssessment.assessed_at)}</span>
+              <span>{rtgsAssessment.status === 'PARTIAL' ? 'Peer evidence is incomplete' : 'Peer evidence is complete'}</span>
+            </div>
+          )}
+          <div className="rtgs-schedule-strip">
+            <div><span className="trustlink-card-kicker">Checkpoints</span><strong>Assessment cadence</strong></div>
+            <div className="rtgs-schedule-list">
+              {rtgsSchedules.map((schedule) => (
+                <button type="button" className={`rtgs-schedule-chip ${schedule.enabled ? 'active' : ''}`} key={schedule.schedule_id} onClick={() => void handleToggleRTGSSchedule(schedule)} title="Toggle checkpoint">
+                  <strong>{schedule.local_time}</strong><span>{schedule.label}</span>
+                </button>
+              ))}
+            </div>
+            <div className="rtgs-schedule-add">
+              <input value={scheduleLabel} onChange={(event) => setScheduleLabel(event.target.value)} aria-label="Checkpoint label" />
+              <input type="time" value={scheduleTime} onChange={(event) => setScheduleTime(event.target.value)} aria-label="Checkpoint time" />
+              <button type="button" className="trustlink-inline-btn" onClick={() => void handleAddRTGSSchedule()}>+ Add checkpoint</button>
+            </div>
+          </div>
+          {rtgsActionMessage && <div className="trustlink-error rtgs-feedback"><FiAlertTriangle /><span>{rtgsActionMessage}</span></div>}
+        </article>
+
+        {!rtgsAssessment && !rtgsLoading && (
+          <article className="trustlink-empty-state rtgs-empty-state">
+            <span className="trustlink-empty-icon"><FiTarget /></span>
+            <h2>Assessment has not run yet</h2>
+            <p>The first read-only checkpoint will list every current IN_TRANSIT transaction newest first.</p>
+            <button className="trustlink-btn primary" type="button" onClick={() => void loadRTGS(true)}><FiPlay /> Start assessment</button>
+          </article>
+        )}
+
+        {rtgsAssessment && (
+          <>
+            <section className="rtgs-action-rail">
+              <div>
+                <span className="trustlink-card-kicker">Operator action</span>
+                <strong>{selectedRTGSIds.length ? `${selectedRTGSIds.length} selected` : 'Select a case below'}</strong>
+              </div>
+              <select value={rtgsAction} onChange={(event) => setRtgsAction(event.target.value as 'copy' | 'regenerate')} aria-label="RTGS action">
+                <option value="copy">Copy primary backup to Outward1</option>
+                <option value="regenerate">Regenerate through approved Oracle package</option>
+              </select>
+              <input value={rtgsReason} onChange={(event) => setRtgsReason(event.target.value)} placeholder="Reason or change reference" aria-label="RTGS action reason" />
+              <button className="trustlink-btn primary" type="button" onClick={() => void handleRTGSAction()} disabled={rtgsActionLoading || !selectedRTGSIds.length}>
+                <FiCopy /> {rtgsActionLoading ? 'Working' : 'Request action'}
+              </button>
+            </section>
+
+            <div className="rtgs-lane-grid">
+              {lanes.map((lane) => {
+                const laneCases = cases.filter((item) => item.age_lane === lane);
+                if (!laneCases.length) return null;
+                return (
+                  <section className={`rtgs-lane rtgs-lane-${lane.toLowerCase()}`} key={lane}>
+                    <div className="rtgs-lane-heading">
+                      <div><span className="trustlink-card-kicker">Age lane</span><h3>{RTGS_LANE_LABELS[lane]}</h3></div>
+                      <span>{laneCases.length}</span>
+                    </div>
+                    <div className="rtgs-case-list">
+                      {laneCases.map((item) => {
+                        const checked = selectedRTGSIds.includes(item.transaction_id);
+                        return (
+                          <article className={`rtgs-case-card tone-${rtgsCaseTone(item)} ${checked ? 'selected' : ''}`} key={item.transaction_id}>
+                            <label className="rtgs-case-select">
+                              <input type="checkbox" checked={checked} onChange={() => setSelectedRTGSIds((current) => checked ? current.filter((id) => id !== item.transaction_id) : [...current, item.transaction_id])} />
+                              <span />
+                            </label>
+                            <div className="rtgs-case-main">
+                              <div className="rtgs-case-topline"><strong>{item.transaction_id}</strong><span>{item.age_hours.toFixed(1)}h</span></div>
+                              <p>{rtgsFileLabel(item.file_state)} <span>·</span> {item.recommendation.replaceAll('_', ' ')}</p>
+                              <small>{formatDateTime(item.entry_date)} · {item.branch_code || 'Branch unknown'} · {item.entry_sequence || 'Sequence unknown'}</small>
+                              {item.warnings[0] && <em>{item.warnings[0]}</em>}
+                            </div>
+                            <div className="rtgs-case-evidence">
+                              {item.files.filter((file) => file.file_path).slice(0, 2).map((file) => (
+                                <div key={`${file.peer_id}-${file.location}-${file.file_name}`}><span>{file.location.replaceAll('_', ' ')}</span><strong>{file.file_name}</strong><small>{file.sha256?.slice(0, 12) || 'checksum unavailable'}</small></div>
+                              ))}
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
 
   const renderPipelineNodes = (items: PipelineTimelineItem[]) => (
     <div className="trustlink-pipeline-map">
@@ -920,7 +1150,7 @@ const TrustlinkOperationsPage: React.FC = () => {
             </button>
           </div>
 
-          {!hasRunData ? (
+          {!hasRunData && activeTab !== 'rtgs' ? (
             <section className="trustlink-empty-state">
               <span className="trustlink-empty-icon"><FiDatabase /></span>
               <h2>No TrustLink run is available yet</h2>
@@ -928,6 +1158,10 @@ const TrustlinkOperationsPage: React.FC = () => {
               <button className="trustlink-btn primary" onClick={handleRunNow} disabled={actionLoading}>
                 <FiPlay />
                 Trigger First Run
+              </button>
+              <button className="trustlink-btn secondary" type="button" onClick={() => setActiveTab('rtgs')}>
+                <FiShield />
+                Open RTGS Recovery
               </button>
             </section>
           ) : (
@@ -982,6 +1216,8 @@ const TrustlinkOperationsPage: React.FC = () => {
                   </article>
                 </div>
               )}
+
+              {activeTab === 'rtgs' && renderRTGSPanel()}
 
               {activeTab === 'today' && (
                 <div className="trustlink-tab-panel trustlink-today-panel">
