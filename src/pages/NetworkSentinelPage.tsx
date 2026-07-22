@@ -37,6 +37,7 @@ import {
   formatPercent,
   formatSince,
   patchLiveService,
+  stabilizeNetworkServices,
   statusClass,
   statusPriority,
 } from './NetworkSentinelPage.helpers';
@@ -157,13 +158,18 @@ const NetworkSentinelPage: React.FC = () => {
   const loadCommandCenter = useCallback(async (showSpinner = false) => {
     if (showSpinner) setLoading(true);
     const data = await networkSentinelApi.getCommandCenter();
-    setSnapshot(data);
+    let stableData = data;
+    setSnapshot((current) => {
+      const services = stabilizeNetworkServices(data.services, current?.services || []);
+      stableData = { ...data, services, overview: { ...deriveOverview(services), recent_event_count: data.overview.recent_event_count } };
+      return stableData;
+    });
     setSelectedId((current) => {
-      return current && data.services.some((service) => service.id === current) ? current : data.services[0]?.id || null;
+      return current && stableData.services.some((service) => service.id === current) ? current : stableData.services[0]?.id || null;
     });
     setError(null);
     setLoading(false);
-    return data;
+    return stableData;
   }, []);
 
   const loadInvestigation = useCallback(async (serviceId: string, silent = false) => {

@@ -26,29 +26,6 @@ export type NexusCertificationStage =
 export type NexusSyncHealth = 'idle' | 'success' | 'warning' | 'error';
 export type ManagedSopStatus = 'draft' | 'needs_review' | 'approved' | 'deprecated';
 export type NexusRTGSAgeLane = '0_24H' | '24_48H' | '48_72H' | '72_96H' | 'OVER_96H';
-export type NexusRTGSFileState =
-  | 'FOUND_ACTIVE'
-  | 'FOUND_BACKUP_PRIMARY'
-  | 'FOUND_BACKUP_SECONDARY'
-  | 'FOUND_BOTH_MATCH'
-  | 'CONFLICT'
-  | 'ABSENT'
-  | 'AGENT_UNREACHABLE'
-  | 'CHECK_INCOMPLETE';
-
-export interface NexusRTGSFileEvidence {
-  peer_id: string;
-  peer_role: string;
-  location: 'ACTIVE' | 'BACKUP_PRIMARY' | 'BACKUP_SECONDARY';
-  state: string;
-  file_name?: string | null;
-  file_path?: string | null;
-  size_bytes?: number | null;
-  modified_at?: string | null;
-  sha256?: string | null;
-  inspected_at: string;
-  message?: string | null;
-}
 
 export interface NexusRTGSTransactionCase {
   transaction_id: string;
@@ -60,9 +37,8 @@ export interface NexusRTGSTransactionCase {
   entry_sequence?: string | null;
   message_type: string;
   queue_instance_ids: string[];
-  file_state: NexusRTGSFileState;
+  regeneration_ready: boolean;
   recommendation: string;
-  files: NexusRTGSFileEvidence[];
   settlement_note: string;
   warnings: string[];
   assessed_at: string;
@@ -75,12 +51,14 @@ export interface NexusRTGSAssessment {
   transaction_count: number;
   cases: NexusRTGSTransactionCase[];
   status: 'COMPLETED' | 'PARTIAL' | 'FAILED';
+  interpretation?: string | null;
   message?: string | null;
 }
 
 export interface NexusRTGSSchedule {
   schedule_id: string;
   label: string;
+  interval_minutes: 30 | 60;
   local_time: string;
   timezone: string;
   enabled: boolean;
@@ -90,14 +68,46 @@ export interface NexusRTGSSchedule {
 
 export interface NexusRTGSActionResult {
   action_id: string;
-  action: 'copy' | 'regenerate';
+  action: 'regenerate';
   status: 'REQUESTED' | 'COMPLETED' | 'BLOCKED' | 'FAILED' | 'NOOP';
   requested_by: string;
   transaction_id: string;
   message: string;
-  evidence: NexusRTGSFileEvidence[];
   verification: Record<string, unknown>;
   created_at: string;
+}
+
+export interface NexusRTGSRegenerationHistoryEntry {
+  action_id: string;
+  transaction_id: string;
+  status: 'REQUESTED' | 'COMPLETED' | 'BLOCKED' | 'FAILED' | 'NOOP';
+  requested_by: string;
+  reason: string;
+  mode: 'manual' | 'automatic';
+  message: string;
+  verification: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface NexusRTGSAutoRegenerationPolicy {
+  policy_key: string;
+  enabled: boolean;
+  window_days: number;
+  updated_by: string;
+  updated_at: string;
+  last_run_at?: string | null;
+  last_attempted_count: number;
+  last_completed_count: number;
+  last_run_status: 'NEVER' | 'COMPLETED' | 'PARTIAL' | 'FAILED';
+}
+
+export interface NexusRTGSAutoRegenerationAuditEntry {
+  audit_id: string;
+  previous_enabled: boolean;
+  enabled: boolean;
+  changed_by: string;
+  changed_at: string;
+  window_days: number;
 }
 
 export interface RestartPolicy {
@@ -999,12 +1009,12 @@ class NexusApi {
     return response.data.schedules;
   }
 
-  async createRTGSSchedule(payload: { label: string; local_time: string; timezone: string; enabled: boolean }) {
+  async createRTGSSchedule(payload: { label: string; interval_minutes: 30 | 60; local_time?: string; timezone?: string; enabled: boolean }) {
     const response = await nexusApiClient.post<NexusRTGSSchedule>('/api/v1/nexus/trustlink/rtgs/schedules', payload);
     return response.data;
   }
 
-  async updateRTGSSchedule(scheduleId: string, payload: { label: string; local_time: string; timezone: string; enabled: boolean }) {
+  async updateRTGSSchedule(scheduleId: string, payload: { label: string; interval_minutes: 30 | 60; local_time?: string; timezone?: string; enabled: boolean }) {
     const response = await nexusApiClient.put<NexusRTGSSchedule>(`/api/v1/nexus/trustlink/rtgs/schedules/${scheduleId}`, payload);
     return response.data;
   }
@@ -1015,13 +1025,36 @@ class NexusApi {
 
   async executeRTGSAction(payload: {
     transaction_ids: string[];
-    action: 'copy' | 'regenerate';
     reason: string;
     idempotency_key?: string | null;
     confirm_over_96h?: boolean;
   }) {
     const response = await nexusApiClient.post<{ results: NexusRTGSActionResult[] }>('/api/v1/nexus/trustlink/rtgs/actions', payload);
     return response.data.results;
+  }
+
+  async listRTGSRegenerationHistory(limit = 100) {
+    const response = await nexusApiClient.get<{ entries: NexusRTGSRegenerationHistoryEntry[] }>('/api/v1/nexus/trustlink/rtgs/history', {
+      params: { limit },
+    });
+    return response.data.entries;
+  }
+
+  async getRTGSAutoRegenerationPolicy() {
+    const response = await nexusApiClient.get<NexusRTGSAutoRegenerationPolicy>('/api/v1/nexus/trustlink/rtgs/auto-regeneration');
+    return response.data;
+  }
+
+  async updateRTGSAutoRegenerationPolicy(enabled: boolean) {
+    const response = await nexusApiClient.put<NexusRTGSAutoRegenerationPolicy>('/api/v1/nexus/trustlink/rtgs/auto-regeneration', { enabled });
+    return response.data;
+  }
+
+  async listRTGSAutoRegenerationAudit(limit = 100) {
+    const response = await nexusApiClient.get<{ entries: NexusRTGSAutoRegenerationAuditEntry[] }>('/api/v1/nexus/trustlink/rtgs/auto-regeneration/audit', {
+      params: { limit },
+    });
+    return response.data.entries;
   }
 
   async listIncidents() {

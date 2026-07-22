@@ -24,6 +24,47 @@ const healthScore: Record<Status, number> = {
 
 export const statusClass = (status?: string | null) => (status || 'UNKNOWN').toLowerCase();
 
+const knownStatuses = new Set<Status>(['UP', 'DEGRADED', 'DOWN']);
+
+const normalizeStatus = (value: unknown): Status | null => {
+  const normalized = String(value || '').toUpperCase() as Status;
+  return normalized === 'UP' || normalized === 'DEGRADED' || normalized === 'DOWN' || normalized === 'UNKNOWN'
+    ? normalized
+    : null;
+};
+
+const isEmptyUnknownStatus = (status?: NetworkServiceCard['status'] | null) => {
+  if (!status || status.overall_status !== 'UNKNOWN') return false;
+  return !status.last_checked_at
+    && !status.reason
+    && status.icmp_up == null
+    && status.tcp_up == null
+    && status.icmp_latency_ms == null
+    && status.tcp_latency_ms == null
+    && Number(status.consecutive_failures || 0) === 0;
+};
+
+export const stabilizeNetworkServices = (
+  incomingServices: NetworkServiceCard[],
+  previousServices: NetworkServiceCard[] = [],
+): NetworkServiceCard[] => {
+  const previousById = new Map(previousServices.map((service) => [service.id, service]));
+  return incomingServices.map((service) => {
+    const previous = previousById.get(service.id);
+    if (!previous?.status || !knownStatuses.has(previous.status.overall_status)) {
+      return service;
+    }
+    if (!isEmptyUnknownStatus(service.status)) {
+      return service;
+    }
+    return {
+      ...service,
+      status: previous.status,
+      active_outage: service.active_outage || previous.active_outage || null,
+    };
+  });
+};
+
 export const formatDateTime = (value?: string | null) => {
   return formatDateTimeInApplicationTimeZone(value, '--');
 };
@@ -95,21 +136,40 @@ export const deriveOverview = (services: NetworkServiceCard[]) => {
 };
 
 export const patchLiveService = (service: NetworkServiceCard, update: Record<string, unknown>): NetworkServiceCard => {
-  const overallStatus = (update.overall_status as Status | undefined) || service.status?.overall_status || 'UNKNOWN';
+  const incomingStatus = normalizeStatus(update.overall_status);
+  const hasRealSample =
+    Boolean(update.last_checked_at)
+    || update.icmp_up != null
+    || update.tcp_up != null
+    || update.icmp_latency_ms != null
+    || update.tcp_latency_ms != null
+    || Number(update.consecutive_failures || 0) > 0;
+  const previousStatus = service.status;
+  const preservePreviousStatus = incomingStatus === 'UNKNOWN'
+    && previousStatus
+    && knownStatuses.has(previousStatus.overall_status)
+    && !hasRealSample;
+  const overallStatus = preservePreviousStatus
+    ? previousStatus.overall_status
+    : incomingStatus || service.status?.overall_status || 'UNKNOWN';
   return {
     ...service,
     status: {
-      last_checked_at: (update.last_checked_at as string | null) ?? service.status?.last_checked_at ?? null,
-      icmp_up: (update.icmp_up as boolean | null) ?? service.status?.icmp_up ?? null,
-      icmp_bytes: (update.icmp_bytes as number | null) ?? service.status?.icmp_bytes ?? null,
-      icmp_latency_ms: (update.icmp_latency_ms as number | null) ?? service.status?.icmp_latency_ms ?? null,
-      icmp_ttl: (update.icmp_ttl as number | null) ?? service.status?.icmp_ttl ?? null,
-      tcp_up: (update.tcp_up as boolean | null) ?? service.status?.tcp_up ?? null,
-      tcp_latency_ms: (update.tcp_latency_ms as number | null) ?? service.status?.tcp_latency_ms ?? null,
+      last_checked_at: preservePreviousStatus
+        ? previousStatus?.last_checked_at ?? null
+        : (update.last_checked_at as string | null) ?? service.status?.last_checked_at ?? null,
+      icmp_up: preservePreviousStatus ? previousStatus?.icmp_up ?? null : (update.icmp_up as boolean | null) ?? service.status?.icmp_up ?? null,
+      icmp_bytes: preservePreviousStatus ? previousStatus?.icmp_bytes ?? null : (update.icmp_bytes as number | null) ?? service.status?.icmp_bytes ?? null,
+      icmp_latency_ms: preservePreviousStatus ? previousStatus?.icmp_latency_ms ?? null : (update.icmp_latency_ms as number | null) ?? service.status?.icmp_latency_ms ?? null,
+      icmp_ttl: preservePreviousStatus ? previousStatus?.icmp_ttl ?? null : (update.icmp_ttl as number | null) ?? service.status?.icmp_ttl ?? null,
+      tcp_up: preservePreviousStatus ? previousStatus?.tcp_up ?? null : (update.tcp_up as boolean | null) ?? service.status?.tcp_up ?? null,
+      tcp_latency_ms: preservePreviousStatus ? previousStatus?.tcp_latency_ms ?? null : (update.tcp_latency_ms as number | null) ?? service.status?.tcp_latency_ms ?? null,
       overall_status: overallStatus,
-      reason: (update.reason as string | null) ?? service.status?.reason ?? null,
-      consecutive_failures: (update.consecutive_failures as number | undefined) ?? service.status?.consecutive_failures ?? 0,
-      last_state_change_at: (update.last_state_change_at as string | null) ?? service.status?.last_state_change_at ?? null,
+      reason: preservePreviousStatus ? previousStatus?.reason ?? null : (update.reason as string | null) ?? service.status?.reason ?? null,
+      consecutive_failures: preservePreviousStatus ? previousStatus?.consecutive_failures ?? 0 : (update.consecutive_failures as number | undefined) ?? service.status?.consecutive_failures ?? 0,
+      last_state_change_at: preservePreviousStatus
+        ? previousStatus?.last_state_change_at ?? null
+        : (update.last_state_change_at as string | null) ?? service.status?.last_state_change_at ?? null,
     },
     active_outage:
       overallStatus === 'DOWN'
