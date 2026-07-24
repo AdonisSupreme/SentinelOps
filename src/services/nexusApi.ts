@@ -661,6 +661,8 @@ export type NexusServiceControlOperation = 'start' | 'stop' | 'restart';
 export type RolloverEnvironmentType = 'uat' | 'dr' | 'sandbox' | 'test' | 'production_clone' | 'other';
 export type RolloverAssessmentStatus = 'unknown' | 'aligned' | 'requires_rollover' | 'drift' | 'error';
 export type RolloverRuleStatus = 'aligned' | 'requires_change' | 'no_match' | 'skipped' | 'error';
+export type RolloverRuleOperation = 'replace' | 'set';
+export type RolloverRuleConditionOperator = 'equals' | 'in' | 'like';
 export type RolloverExecutionStatus = 'PENDING' | 'APPROVED' | 'COMPLETED' | 'BLOCKED' | 'FAILED' | 'NOOP';
 export type RolloverReminderStatus = 'scheduled' | 'cancelled' | 'notified';
 
@@ -694,12 +696,28 @@ export interface RolloverConnectionProfile {
   metadata: Record<string, unknown>;
 }
 
+export interface RolloverRuleCondition {
+  column_name: string;
+  operator: RolloverRuleConditionOperator;
+  values: string[];
+}
+
+export interface RolloverRuleAssignment {
+  column_name: string;
+  source_value?: string;
+  target_value: string;
+}
+
 export interface RolloverReplacementRule {
   rule_id: string;
   table_name: string;
   column_name: string;
+  operation?: RolloverRuleOperation;
   source_value: string;
   target_value: string;
+  assignments?: RolloverRuleAssignment[];
+  conditions?: RolloverRuleCondition[];
+  allow_unscoped?: boolean;
   description?: string | null;
   enabled: boolean;
   sequence: number;
@@ -730,8 +748,11 @@ export interface RolloverRuleAssessment {
   rule_id: string;
   table_name: string;
   column_name: string;
+  operation?: RolloverRuleOperation;
   source_value: string;
   target_value: string;
+  assignments?: RolloverRuleAssignment[];
+  conditions?: RolloverRuleCondition[];
   status: RolloverRuleStatus;
   source_matches: number;
   target_matches: number;

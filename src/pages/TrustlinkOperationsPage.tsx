@@ -1166,9 +1166,9 @@ const TrustlinkOperationsPage: React.FC = () => {
           <div className="rtgs-policy-storage-alert">
             <FiDatabase />
             <div>
-              <strong>Automation storage is not initialized</strong>
-              <span>Apply <code>2026_07_add_nexus_rtgs_auto_regeneration.sql</code>, restart Nexus, then refresh this workspace.</span>
-              {rtgsControlError && <small>{rtgsControlError}</small>}
+              <strong>Automation policy is unavailable</strong>
+              <span>{rtgsControlError || 'The Nexus runtime could not read its automatic regeneration policy.'}</span>
+              <small>Verify the Nexus database target and role, reapply <code>2026_07_add_nexus_rtgs_auto_regeneration.sql</code>, then restart Nexus.</small>
             </div>
           </div>
         )}

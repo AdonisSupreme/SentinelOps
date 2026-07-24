@@ -79,6 +79,8 @@ import nexusApi, {
   RolloverExecution,
   RolloverReminder,
   RolloverReplacementRule,
+  RolloverRuleAssignment,
+  RolloverRuleCondition,
   RootCauseCandidate,
   ServiceEndpointConfig,
   ServiceGraphContext,
@@ -604,6 +606,10 @@ const cloneRolloverEnvironment = (environment: RolloverEnvironment): RolloverEnv
   },
   rules: (environment.rules || []).map((rule) => ({
     ...rule,
+    operation: rule.operation || 'replace',
+    assignments: rule.assignments || [],
+    conditions: rule.conditions || [],
+    allow_unscoped: Boolean(rule.allow_unscoped),
     metadata: { ...(rule.metadata || {}) },
   })),
   metadata: { ...(environment.metadata || {}) },
@@ -795,6 +801,90 @@ const parseJsonInput = (value: string, label: string) => {
   }
 };
 
+const stringifyRolloverConditions = (conditions?: RolloverRuleCondition[]) =>
+  JSON.stringify(conditions || [], null, 2);
+
+const stringifyRolloverAssignments = (assignments?: RolloverRuleAssignment[]) =>
+  JSON.stringify(assignments || [], null, 2);
+
+const rolloverConditionTextMap = (environment: RolloverEnvironment) =>
+  Object.fromEntries(
+    (environment.rules || []).map((rule, index) => [
+      rule.rule_id || `rollover-rule-${index + 1}`,
+      stringifyRolloverConditions(rule.conditions),
+    ]),
+  );
+
+const rolloverAssignmentTextMap = (environment: RolloverEnvironment) =>
+  Object.fromEntries(
+    (environment.rules || []).map((rule, index) => [
+      rule.rule_id || `rollover-rule-${index + 1}`,
+      stringifyRolloverAssignments(rule.assignments),
+    ]),
+  );
+
+const parseRolloverConditionsInput = (value: string, label: string): RolloverRuleCondition[] => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return [];
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch (error: any) {
+    throw new Error(error?.message || `${label} is not valid JSON.`);
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error(`${label} must be a JSON array.`);
+  }
+  return parsed.map((condition, index) => {
+    const item = condition as Partial<RolloverRuleCondition>;
+    const columnName = String(item.column_name || '').trim().toUpperCase();
+    const operator = item.operator || 'equals';
+    const values = Array.isArray(item.values)
+      ? item.values.map((entry) => String(entry).trim()).filter(Boolean)
+      : [];
+    if (!columnName || !['equals', 'in', 'like'].includes(operator) || !values.length) {
+      throw new Error(`${label} item ${index + 1} needs column_name, operator, and values.`);
+    }
+    return {
+      column_name: columnName,
+      operator: operator as RolloverRuleCondition['operator'],
+      values,
+    };
+  });
+};
+
+const parseRolloverAssignmentsInput = (value: string, label: string): RolloverRuleAssignment[] => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return [];
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch (error: any) {
+    throw new Error(error?.message || `${label} is not valid JSON.`);
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error(`${label} must be a JSON array.`);
+  }
+  return parsed.map((assignment, index) => {
+    const item = assignment as Partial<RolloverRuleAssignment>;
+    const columnName = String(item.column_name || '').trim().toUpperCase();
+    const sourceValue = String(item.source_value || '').trim();
+    const targetValue = String(item.target_value || '').trim();
+    if (!columnName || !targetValue) {
+      throw new Error(`${label} item ${index + 1} needs column_name and target_value.`);
+    }
+    return {
+      column_name: columnName,
+      source_value: sourceValue,
+      target_value: targetValue,
+    };
+  });
+};
+
 const NexusPage: React.FC = () => {
   const { user } = useAuth();
   const { applicationTimeZone } = useAppConfig();
@@ -865,6 +955,12 @@ const NexusPage: React.FC = () => {
   const [flowMetadataText, setFlowMetadataText] = useState('{}');
   const [edgeMetadataText, setEdgeMetadataText] = useState('{}');
   const [rolloverMetadataText, setRolloverMetadataText] = useState('{}');
+  const [rolloverConditionTextByRule, setRolloverConditionTextByRule] = useState<Record<string, string>>(() =>
+    rolloverConditionTextMap(createEmptyRolloverEnvironment()),
+  );
+  const [rolloverAssignmentTextByRule, setRolloverAssignmentTextByRule] = useState<Record<string, string>>(() =>
+    rolloverAssignmentTextMap(createEmptyRolloverEnvironment()),
+  );
   const [rolloverCredentialPassword, setRolloverCredentialPassword] = useState('');
   const [databaseTestPassword, setDatabaseTestPassword] = useState('');
   const [databaseConnectionTest, setDatabaseConnectionTest] = useState<DatabaseConnectionTestResult | null>(null);
@@ -1497,8 +1593,11 @@ const NexusPage: React.FC = () => {
     }
     if (!selectedRolloverEnvironmentId || !rolloverEnvironments.length) {
       setSelectedRolloverEnvironmentId(null);
-      setRolloverDraft(createEmptyRolloverEnvironment());
+      const draft = createEmptyRolloverEnvironment();
+      setRolloverDraft(draft);
       setRolloverMetadataText('{}');
+      setRolloverConditionTextByRule(rolloverConditionTextMap(draft));
+      setRolloverAssignmentTextByRule(rolloverAssignmentTextMap(draft));
       setRolloverConnectionTest(null);
       markEditorHydrated('rollover', null);
       return;
@@ -1506,8 +1605,11 @@ const NexusPage: React.FC = () => {
     const nextEnvironment = rolloverEnvironments.find((environment) => environment.environment_id === selectedRolloverEnvironmentId);
     if (!nextEnvironment) {
       setSelectedRolloverEnvironmentId(null);
-      setRolloverDraft(createEmptyRolloverEnvironment());
+      const draft = createEmptyRolloverEnvironment();
+      setRolloverDraft(draft);
       setRolloverMetadataText('{}');
+      setRolloverConditionTextByRule(rolloverConditionTextMap(draft));
+      setRolloverAssignmentTextByRule(rolloverAssignmentTextMap(draft));
       setRolloverConnectionTest(null);
       markEditorHydrated('rollover', null);
       return;
@@ -1515,8 +1617,11 @@ const NexusPage: React.FC = () => {
     if (shouldSkipDraftHydration('rollover', selectedRolloverEnvironmentId)) {
       return;
     }
-    setRolloverDraft(cloneRolloverEnvironment(nextEnvironment));
+    const draft = cloneRolloverEnvironment(nextEnvironment);
+    setRolloverDraft(draft);
     setRolloverMetadataText(stringifyObject(nextEnvironment.metadata));
+    setRolloverConditionTextByRule(rolloverConditionTextMap(draft));
+    setRolloverAssignmentTextByRule(rolloverAssignmentTextMap(draft));
     setRolloverCredentialPassword('');
     setRolloverAssessment(null);
     setRolloverConnectionTest(null);
@@ -2276,8 +2381,11 @@ const NexusPage: React.FC = () => {
     setCreatingRolloverEnvironment(false);
     setSelectedRolloverEnvironmentId(null);
     setRolloverPanelMode('command');
-    setRolloverDraft(createEmptyRolloverEnvironment());
+    const draft = createEmptyRolloverEnvironment();
+    setRolloverDraft(draft);
     setRolloverMetadataText('{}');
+    setRolloverConditionTextByRule(rolloverConditionTextMap(draft));
+    setRolloverAssignmentTextByRule(rolloverAssignmentTextMap(draft));
     setRolloverCredentialPassword('');
     setRolloverAssessment(null);
     setRolloverConnectionTest(null);
@@ -3064,6 +3172,8 @@ const NexusPage: React.FC = () => {
     const draft = createEmptyRolloverEnvironment();
     setRolloverDraft(draft);
     setRolloverMetadataText(stringifyObject(draft.metadata));
+    setRolloverConditionTextByRule(rolloverConditionTextMap(draft));
+    setRolloverAssignmentTextByRule(rolloverAssignmentTextMap(draft));
     setRolloverCredentialPassword('');
     setRolloverAssessment(null);
     setRolloverConnectionTest(null);
@@ -3106,17 +3216,33 @@ const NexusPage: React.FC = () => {
           metadata: rolloverDraft.connection.metadata || {},
         },
         rules: rolloverDraft.rules
-          .map((rule, index) => ({
-            ...rule,
-            rule_id: rule.rule_id.trim() || `rollover-rule-${index + 1}`,
-            table_name: rule.table_name.trim().toUpperCase(),
-            column_name: rule.column_name.trim().toUpperCase(),
-            source_value: rule.source_value.trim(),
-            target_value: rule.target_value.trim(),
-            description: rule.description?.trim() || '',
-            sequence: Number(rule.sequence || (index + 1) * 10),
-            metadata: rule.metadata || {},
-          }))
+          .map((rule, index) => {
+            const ruleId = rule.rule_id.trim() || `rollover-rule-${index + 1}`;
+            const operation = rule.operation || 'replace';
+            const conditions = parseRolloverConditionsInput(
+              rolloverConditionTextByRule[rule.rule_id] ?? stringifyRolloverConditions(rule.conditions),
+              `${ruleId} conditions`,
+            );
+            const assignments = parseRolloverAssignmentsInput(
+              rolloverAssignmentTextByRule[rule.rule_id] ?? stringifyRolloverAssignments(rule.assignments),
+              `${ruleId} extra assignments`,
+            );
+            return {
+              ...rule,
+              rule_id: ruleId,
+              table_name: rule.table_name.trim().toUpperCase(),
+              column_name: rule.column_name.trim().toUpperCase(),
+              operation,
+              source_value: rule.source_value.trim(),
+              target_value: rule.target_value.trim(),
+              assignments,
+              conditions,
+              allow_unscoped: Boolean(rule.allow_unscoped),
+              description: rule.description?.trim() || '',
+              sequence: Number(rule.sequence || (index + 1) * 10),
+              metadata: rule.metadata || {},
+            };
+          })
           .sort((left, right) => left.sequence - right.sequence),
         notes: rolloverDraft.notes?.trim() || '',
         updated_by: actor,
@@ -3128,8 +3254,24 @@ const NexusPage: React.FC = () => {
       if (!payload.rules.length) {
         throw new Error('At least one rollover rule is required.');
       }
-      if (payload.rules.some((rule) => rule.enabled && (!rule.table_name || !rule.column_name || !rule.source_value || !rule.target_value))) {
-        throw new Error('Every enabled rollover rule needs a table, column, source value, and target value.');
+      if (payload.rules.some((rule) => rule.enabled && (!rule.table_name || !rule.column_name || !rule.target_value))) {
+        throw new Error('Every enabled rollover rule needs a table, column, and target value.');
+      }
+      if (payload.rules.some((rule) => rule.enabled && (rule.operation || 'replace') === 'replace' && !rule.source_value)) {
+        throw new Error('Every enabled REPLACE rollover rule needs a source value.');
+      }
+      if (payload.rules.some((rule) => rule.enabled && (rule.operation || 'replace') === 'replace' && (rule.assignments || []).length)) {
+        throw new Error('Extra assignments are only supported for SET rollover rules.');
+      }
+      if (payload.rules.some((rule) => (
+        rule.enabled
+        && (rule.operation || 'replace') === 'set'
+        && !rule.source_value
+        && !(rule.assignments || []).some((assignment) => assignment.source_value)
+        && !(rule.conditions || []).length
+        && !rule.allow_unscoped
+      ))) {
+        throw new Error('Unscoped SET rollover rules must either have conditions, a source value, or explicit unscoped approval.');
       }
       const saved = await nexusApi.upsertRolloverEnvironment({
         ...payload,
@@ -3400,14 +3542,26 @@ const NexusPage: React.FC = () => {
           rule_id: `rollover-rule-${nextSequence}`,
           table_name: '',
           column_name: '',
+          operation: 'replace',
           source_value: '',
           target_value: '',
+          assignments: [],
+          conditions: [],
+          allow_unscoped: false,
           description: '',
           enabled: true,
           sequence: nextSequence,
           metadata: {},
         },
       ],
+    }));
+    setRolloverConditionTextByRule((current) => ({
+      ...current,
+      [`rollover-rule-${nextSequence}`]: '[]',
+    }));
+    setRolloverAssignmentTextByRule((current) => ({
+      ...current,
+      [`rollover-rule-${nextSequence}`]: '[]',
     }));
     markEditorDirty('rollover');
   };
@@ -3417,6 +3571,16 @@ const NexusPage: React.FC = () => {
       ...current,
       rules: current.rules.filter((rule) => rule.rule_id !== ruleId),
     }));
+    setRolloverConditionTextByRule((current) => {
+      const next = { ...current };
+      delete next[ruleId];
+      return next;
+    });
+    setRolloverAssignmentTextByRule((current) => {
+      const next = { ...current };
+      delete next[ruleId];
+      return next;
+    });
     markEditorDirty('rollover');
   };
 
@@ -5828,11 +5992,41 @@ const NexusPage: React.FC = () => {
                       <div className="field-grid">
                         <label>
                           <span>Rule ID</span>
-                          <input value={rule.rule_id} onChange={(event) => setRolloverDraft((current) => ({ ...current, rules: current.rules.map((item, itemIndex) => itemIndex === index ? { ...item, rule_id: event.target.value } : item) }))} />
+                          <input
+                            value={rule.rule_id}
+                            onChange={(event) => {
+                              const previousKey = rule.rule_id;
+                              const nextKey = event.target.value;
+                              setRolloverDraft((current) => ({ ...current, rules: current.rules.map((item, itemIndex) => itemIndex === index ? { ...item, rule_id: nextKey } : item) }));
+                              setRolloverConditionTextByRule((current) => {
+                                if (!previousKey || previousKey === nextKey || !(previousKey in current)) {
+                                  return current;
+                                }
+                                const next = { ...current, [nextKey]: current[previousKey] };
+                                delete next[previousKey];
+                                return next;
+                              });
+                              setRolloverAssignmentTextByRule((current) => {
+                                if (!previousKey || previousKey === nextKey || !(previousKey in current)) {
+                                  return current;
+                                }
+                                const next = { ...current, [nextKey]: current[previousKey] };
+                                delete next[previousKey];
+                                return next;
+                              });
+                            }}
+                          />
                         </label>
                         <label>
                           <span>Sequence</span>
                           <input type="number" value={rule.sequence} onChange={(event) => setRolloverDraft((current) => ({ ...current, rules: current.rules.map((item, itemIndex) => itemIndex === index ? { ...item, sequence: Number(event.target.value || 0) } : item) }))} />
+                        </label>
+                        <label>
+                          <span>Operation</span>
+                          <select value={rule.operation || 'replace'} onChange={(event) => setRolloverDraft((current) => ({ ...current, rules: current.rules.map((item, itemIndex) => itemIndex === index ? { ...item, operation: event.target.value as 'replace' | 'set' } : item) }))}>
+                            <option value="replace">REPLACE source text</option>
+                            <option value="set">SET exact value</option>
+                          </select>
                         </label>
                         <label>
                           <span>Table</span>
@@ -5843,7 +6037,7 @@ const NexusPage: React.FC = () => {
                           <input value={rule.column_name} onChange={(event) => setRolloverDraft((current) => ({ ...current, rules: current.rules.map((item, itemIndex) => itemIndex === index ? { ...item, column_name: event.target.value } : item) }))} />
                         </label>
                         <label>
-                          <span>Source Value</span>
+                          <span>{(rule.operation || 'replace') === 'set' ? 'Current Value Optional' : 'Source Value'}</span>
                           <input value={rule.source_value} onChange={(event) => setRolloverDraft((current) => ({ ...current, rules: current.rules.map((item, itemIndex) => itemIndex === index ? { ...item, source_value: event.target.value } : item) }))} />
                         </label>
                         <label>
@@ -5851,6 +6045,45 @@ const NexusPage: React.FC = () => {
                           <input value={rule.target_value} onChange={(event) => setRolloverDraft((current) => ({ ...current, rules: current.rules.map((item, itemIndex) => itemIndex === index ? { ...item, target_value: event.target.value } : item) }))} />
                         </label>
                       </div>
+                      <label className="field-span">
+                        <span>Conditions JSON</span>
+                        <textarea
+                          value={rolloverConditionTextByRule[rule.rule_id] ?? stringifyRolloverConditions(rule.conditions)}
+                          onChange={(event) => {
+                            setRolloverConditionTextByRule((current) => ({
+                              ...current,
+                              [rule.rule_id]: event.target.value,
+                            }));
+                            markEditorDirty('rollover');
+                          }}
+                          placeholder='[{"column_name":"ID","operator":"in","values":["22","42"]}]'
+                        />
+                      </label>
+                      <label className="field-span">
+                        <span>Extra SET Assignments JSON</span>
+                        <textarea
+                          value={rolloverAssignmentTextByRule[rule.rule_id] ?? stringifyRolloverAssignments(rule.assignments)}
+                          onChange={(event) => {
+                            setRolloverAssignmentTextByRule((current) => ({
+                              ...current,
+                              [rule.rule_id]: event.target.value,
+                            }));
+                            markEditorDirty('rollover');
+                          }}
+                          placeholder='[{"column_name":"DCPROP_IP2","source_value":"192.168.1.113","target_value":"192.168.254.95"}]'
+                        />
+                      </label>
+                      <label className={`checkbox-field compact ${rule.allow_unscoped ? 'checked' : ''}`}>
+                        <input
+                          type="checkbox"
+                          checked={Boolean(rule.allow_unscoped)}
+                          onChange={(event) => setRolloverDraft((current) => ({
+                            ...current,
+                            rules: current.rules.map((item, itemIndex) => itemIndex === index ? { ...item, allow_unscoped: event.target.checked } : item),
+                          }))}
+                        />
+                        <span>Allow unscoped SET when this rule intentionally updates every row.</span>
+                      </label>
                       <label className="field-span">
                         <span>Description</span>
                         <input value={rule.description || ''} onChange={(event) => setRolloverDraft((current) => ({ ...current, rules: current.rules.map((item, itemIndex) => itemIndex === index ? { ...item, description: event.target.value } : item) }))} />
