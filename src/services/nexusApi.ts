@@ -711,6 +711,8 @@ export interface RolloverRuleAssignment {
 export interface RolloverSchemaProfile {
   schema_id: string;
   schema_name: string;
+  username: string;
+  password_set: boolean;
   label?: string | null;
   description?: string | null;
   enabled: boolean;
@@ -753,6 +755,7 @@ export interface RolloverEnvironment {
 
 export interface RolloverEnvironmentPayload extends RolloverEnvironment {
   credential_password?: string | null;
+  schema_credential_passwords?: Record<string, string>;
 }
 
 export interface RolloverRuleAssessment {
@@ -1247,19 +1250,21 @@ class NexusApi {
     return response.data.services;
   }
 
-  async assessRolloverEnvironment(environmentId: string, requestedBy: string, credentialPassword?: string) {
+  async assessRolloverEnvironment(environmentId: string, requestedBy: string, credentialPassword?: string, schemaCredentialPasswords?: Record<string, string>) {
     const response = await nexusApiClient.post<RolloverAssessment>(`/api/v1/nexus/rollover/environments/${environmentId}/assess`, {
       requested_by: requestedBy,
       credential_password: credentialPassword || null,
+      schema_credential_passwords: schemaCredentialPasswords || {},
     });
     return response.data;
   }
 
-  async testRolloverConnection(environmentId: string, requestedBy: string, credentialPassword?: string, rolloverConnection?: RolloverConnectionProfile) {
+  async testRolloverConnection(environmentId: string, requestedBy: string, credentialPassword?: string, rolloverConnection?: RolloverConnectionProfile, schemaId?: string) {
     const response = await nexusApiClient.post<DatabaseConnectionTestResult>(`/api/v1/nexus/rollover/environments/${environmentId}/test-connection`, {
       requested_by: requestedBy,
       credential_password: credentialPassword || null,
       rollover_connection: rolloverConnection || null,
+      schema_id: schemaId || null,
     });
     return response.data;
   }

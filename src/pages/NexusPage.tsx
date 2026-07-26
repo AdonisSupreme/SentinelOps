@@ -608,6 +608,8 @@ const cloneRolloverEnvironment = (environment: RolloverEnvironment): RolloverEnv
   },
   schema_profiles: (environment.schema_profiles || []).map((profile) => ({
     ...profile,
+    username: profile.username || '',
+    password_set: Boolean(profile.password_set),
     enabled: profile.enabled !== false,
     metadata: { ...(profile.metadata || {}) },
   })),
@@ -970,9 +972,11 @@ const NexusPage: React.FC = () => {
     rolloverAssignmentTextMap(createEmptyRolloverEnvironment()),
   );
   const [rolloverCredentialPassword, setRolloverCredentialPassword] = useState('');
+  const [rolloverSchemaCredentialPasswords, setRolloverSchemaCredentialPasswords] = useState<Record<string, string>>({});
   const [databaseTestPassword, setDatabaseTestPassword] = useState('');
   const [databaseConnectionTest, setDatabaseConnectionTest] = useState<DatabaseConnectionTestResult | null>(null);
   const [rolloverConnectionTest, setRolloverConnectionTest] = useState<DatabaseConnectionTestResult | null>(null);
+  const [rolloverSchemaConnectionTests, setRolloverSchemaConnectionTests] = useState<Record<string, DatabaseConnectionTestResult>>({});
   const [rolloverAssessment, setRolloverAssessment] = useState<RolloverAssessment | null>(null);
   const [rolloverChallenge, setRolloverChallenge] = useState<RolloverChallenge | null>(null);
   const [rolloverOtpCode, setRolloverOtpCode] = useState('');
@@ -1607,6 +1611,8 @@ const NexusPage: React.FC = () => {
       setRolloverConditionTextByRule(rolloverConditionTextMap(draft));
       setRolloverAssignmentTextByRule(rolloverAssignmentTextMap(draft));
       setRolloverConnectionTest(null);
+      setRolloverSchemaCredentialPasswords({});
+      setRolloverSchemaConnectionTests({});
       markEditorHydrated('rollover', null);
       return;
     }
@@ -1619,6 +1625,8 @@ const NexusPage: React.FC = () => {
       setRolloverConditionTextByRule(rolloverConditionTextMap(draft));
       setRolloverAssignmentTextByRule(rolloverAssignmentTextMap(draft));
       setRolloverConnectionTest(null);
+      setRolloverSchemaCredentialPasswords({});
+      setRolloverSchemaConnectionTests({});
       markEditorHydrated('rollover', null);
       return;
     }
@@ -1631,6 +1639,8 @@ const NexusPage: React.FC = () => {
     setRolloverConditionTextByRule(rolloverConditionTextMap(draft));
     setRolloverAssignmentTextByRule(rolloverAssignmentTextMap(draft));
     setRolloverCredentialPassword('');
+    setRolloverSchemaCredentialPasswords({});
+    setRolloverSchemaConnectionTests({});
     setRolloverAssessment(null);
     setRolloverConnectionTest(null);
     setRolloverChallenge(null);
@@ -2395,8 +2405,10 @@ const NexusPage: React.FC = () => {
     setRolloverConditionTextByRule(rolloverConditionTextMap(draft));
     setRolloverAssignmentTextByRule(rolloverAssignmentTextMap(draft));
     setRolloverCredentialPassword('');
+    setRolloverSchemaCredentialPasswords({});
     setRolloverAssessment(null);
     setRolloverConnectionTest(null);
+    setRolloverSchemaConnectionTests({});
     setRolloverChallenge(null);
     setRolloverOtpCode('');
     setRolloverControlError(null);
@@ -3183,8 +3195,10 @@ const NexusPage: React.FC = () => {
     setRolloverConditionTextByRule(rolloverConditionTextMap(draft));
     setRolloverAssignmentTextByRule(rolloverAssignmentTextMap(draft));
     setRolloverCredentialPassword('');
+    setRolloverSchemaCredentialPasswords({});
     setRolloverAssessment(null);
     setRolloverConnectionTest(null);
+    setRolloverSchemaConnectionTests({});
     setRolloverChallenge(null);
     setRolloverOtpCode('');
     setRolloverPanelMode('configuration');
@@ -3228,6 +3242,8 @@ const NexusPage: React.FC = () => {
             ...profile,
             schema_id: profile.schema_id.trim().toUpperCase(),
             schema_name: profile.schema_name.trim().toUpperCase(),
+            username: (profile.username || '').trim(),
+            password_set: Boolean(profile.password_set || rolloverSchemaCredentialPasswords[profile.schema_id]),
             label: profile.label?.trim() || '',
             description: profile.description?.trim() || '',
             enabled: profile.enabled !== false,
@@ -3283,6 +3299,12 @@ const NexusPage: React.FC = () => {
       if (enabledSchemaProfiles.some((profile) => !profile.schema_id || !profile.schema_name)) {
         throw new Error('Every enabled rollover schema profile needs a schema key and Oracle schema name.');
       }
+      if (enabledSchemaProfiles.some((profile) => !profile.username)) {
+        throw new Error('Every enabled rollover schema profile needs its Oracle username.');
+      }
+      if (enabledSchemaProfiles.some((profile) => !profile.password_set && !rolloverSchemaCredentialPasswords[profile.schema_id]?.trim())) {
+        throw new Error('Every enabled rollover schema profile needs a stored password or a password entered before saving.');
+      }
       if (enabledSchemaProfiles.length > 1) {
         const validSchemaIds = new Set(schemaIds);
         const missingSchemaRules = payload.rules.filter((rule) => rule.enabled && !rule.schema_id).map((rule) => rule.rule_id);
@@ -3318,6 +3340,11 @@ const NexusPage: React.FC = () => {
       const saved = await nexusApi.upsertRolloverEnvironment({
         ...payload,
         credential_password: rolloverCredentialPassword.trim() || null,
+        schema_credential_passwords: Object.fromEntries(
+          Object.entries(rolloverSchemaCredentialPasswords)
+            .map(([schemaId, password]) => [schemaId.trim().toUpperCase(), password.trim()])
+            .filter(([schemaId, password]) => schemaId && password),
+        ),
       });
       markEditorHydrated('rollover', saved.environment_id);
       await loadWorkspace();
@@ -3325,6 +3352,8 @@ const NexusPage: React.FC = () => {
       setSelectedRolloverEnvironmentId(saved.environment_id);
       setRolloverPanelMode('command');
       setRolloverCredentialPassword('');
+      setRolloverSchemaCredentialPasswords({});
+      setRolloverSchemaConnectionTests({});
       addNotification({
         type: 'success',
         message: `${saved.environment_name} rollover profile was saved.`,
@@ -3377,7 +3406,16 @@ const NexusPage: React.FC = () => {
     }
     setCatalogBusy('rollover-assess');
     try {
-      const assessment = await nexusApi.assessRolloverEnvironment(environmentId, actor, rolloverCredentialPassword.trim() || undefined);
+      const assessment = await nexusApi.assessRolloverEnvironment(
+        environmentId,
+        actor,
+        rolloverCredentialPassword.trim() || undefined,
+        Object.fromEntries(
+          Object.entries(rolloverSchemaCredentialPasswords)
+            .map(([schemaId, password]) => [schemaId.trim().toUpperCase(), password.trim()])
+            .filter(([schemaId, password]) => schemaId && password),
+        ),
+      );
       setRolloverAssessment(assessment);
       addNotification({
         type: assessment.status === 'aligned' ? 'success' : assessment.status === 'requires_rollover' ? 'warning' : 'info',
@@ -3419,6 +3457,48 @@ const NexusPage: React.FC = () => {
       addNotification({
         type: 'error',
         message: err?.response?.data?.detail || err?.message || 'Rollover connection test failed.',
+        priority: 'high',
+      });
+    } finally {
+      setCatalogBusy(null);
+    }
+  };
+
+  const testRolloverSchemaConnection = async (schemaId: string) => {
+    const environmentId = rolloverDraft.environment_id.trim();
+    const normalizedSchemaId = schemaId.trim().toUpperCase();
+    if (!environmentId || creatingRolloverEnvironment) {
+      addNotification({ type: 'warning', message: 'Save or select a rollover environment before testing schema credentials.', priority: 'medium' });
+      return;
+    }
+    const profile = (rolloverDraft.schema_profiles || []).find((item) => item.schema_id.trim().toUpperCase() === normalizedSchemaId);
+    if (!profile) {
+      addNotification({ type: 'error', message: `Unknown rollover schema ${normalizedSchemaId}.`, priority: 'high' });
+      return;
+    }
+    if (!profile.username?.trim()) {
+      addNotification({ type: 'warning', message: `${normalizedSchemaId} needs an Oracle username before testing.`, priority: 'medium' });
+      return;
+    }
+    setCatalogBusy(`rollover-test-schema-${normalizedSchemaId}`);
+    try {
+      const result = await nexusApi.testRolloverConnection(
+        environmentId,
+        actor,
+        rolloverSchemaCredentialPasswords[normalizedSchemaId]?.trim() || undefined,
+        rolloverDraft.connection,
+        normalizedSchemaId,
+      );
+      setRolloverSchemaConnectionTests((current) => ({ ...current, [normalizedSchemaId]: result }));
+      addNotification({
+        type: result.connected ? 'success' : 'error',
+        message: `${normalizedSchemaId}: ${result.message}`,
+        priority: result.connected ? 'medium' : 'high',
+      });
+    } catch (err: any) {
+      addNotification({
+        type: 'error',
+        message: err?.response?.data?.detail || err?.message || `${normalizedSchemaId} connection test failed.`,
         priority: 'high',
       });
     } finally {
@@ -3613,9 +3693,11 @@ const NexusPage: React.FC = () => {
     const nextIndex = (rolloverDraft.schema_profiles || []).length + 1;
     const schemaId = nextIndex === 1 ? 'ARX' : nextIndex === 2 ? 'IDC' : `SCHEMA${nextIndex}`;
     const nextProfile: RolloverSchemaProfile = {
-      schema_id: schemaId,
-      schema_name: schemaId,
-      label: schemaId,
+    schema_id: schemaId,
+    schema_name: schemaId,
+    username: '',
+    password_set: false,
+    label: schemaId,
       description: '',
       enabled: true,
       metadata: {},
@@ -3635,6 +3717,16 @@ const NexusPage: React.FC = () => {
         rule.schema_id === schemaId ? { ...rule, schema_id: '' } : rule
       )),
     }));
+    setRolloverSchemaCredentialPasswords((current) => {
+      const next = { ...current };
+      delete next[schemaId];
+      return next;
+    });
+    setRolloverSchemaConnectionTests((current) => {
+      const next = { ...current };
+      delete next[schemaId];
+      return next;
+    });
     markEditorDirty('rollover');
   };
 
@@ -5550,7 +5642,12 @@ const NexusPage: React.FC = () => {
     const assessmentStatus = rolloverAssessment?.status || 'not_assessed';
     const activeRules = rolloverDraft.rules.filter((rule) => rule.enabled);
     const activeSchemaProfiles = (rolloverDraft.schema_profiles || []).filter((profile) => profile.enabled !== false);
-    const credentialReady = rolloverDraft.connection.password_set || Boolean(rolloverCredentialPassword);
+    const schemaCredentialReady = activeSchemaProfiles.every((profile) => (
+      profile.password_set || Boolean(rolloverSchemaCredentialPasswords[profile.schema_id]?.trim())
+    ));
+    const credentialReady = activeSchemaProfiles.length
+      ? schemaCredentialReady
+      : rolloverDraft.connection.password_set || Boolean(rolloverCredentialPassword);
     const latestExecution = selectedRolloverExecutions[0];
     const commandDisabled = !rolloverDraft.environment_id.trim() || catalogBusy === 'rollover-challenge';
     const executeDisabled = !canOperateNexus || commandDisabled || creatingRolloverEnvironment;
@@ -6088,6 +6185,22 @@ const NexusPage: React.FC = () => {
                                     rule.schema_id === previousSchemaId ? { ...rule, schema_id: nextSchemaId } : rule
                                   )),
                                 }));
+                                setRolloverSchemaCredentialPasswords((current) => {
+                                  if (!previousSchemaId || previousSchemaId === nextSchemaId || !(previousSchemaId in current)) {
+                                    return current;
+                                  }
+                                  const next = { ...current, [nextSchemaId]: current[previousSchemaId] };
+                                  delete next[previousSchemaId];
+                                  return next;
+                                });
+                                setRolloverSchemaConnectionTests((current) => {
+                                  if (!previousSchemaId || previousSchemaId === nextSchemaId || !(previousSchemaId in current)) {
+                                    return current;
+                                  }
+                                  const next = { ...current, [nextSchemaId]: current[previousSchemaId] };
+                                  delete next[previousSchemaId];
+                                  return next;
+                                });
                               }}
                               placeholder="ARX"
                             />
@@ -6103,6 +6216,31 @@ const NexusPage: React.FC = () => {
                                 )),
                               }))}
                               placeholder="ARX_OWNER"
+                            />
+                          </label>
+                          <label>
+                            <span>Oracle Username</span>
+                            <input
+                              value={profile.username || ''}
+                              onChange={(event) => setRolloverDraft((current) => ({
+                                ...current,
+                                schema_profiles: (current.schema_profiles || []).map((item, itemIndex) => (
+                                  itemIndex === index ? { ...item, username: event.target.value } : item
+                                )),
+                              }))}
+                              placeholder="ARX_USER"
+                            />
+                          </label>
+                          <label>
+                            <span>Password</span>
+                            <input
+                              type="password"
+                              value={rolloverSchemaCredentialPasswords[profile.schema_id] || ''}
+                              onChange={(event) => setRolloverSchemaCredentialPasswords((current) => ({
+                                ...current,
+                                [profile.schema_id]: event.target.value,
+                              }))}
+                              placeholder={profile.password_set ? 'Stored credential retained' : 'Required before execution'}
                             />
                           </label>
                           <label>
@@ -6131,6 +6269,26 @@ const NexusPage: React.FC = () => {
                               placeholder="User management and authentication configuration"
                             />
                           </label>
+                        </div>
+                        <div className="connection-test-panel">
+                          <div>
+                            <strong>{profile.password_set || rolloverSchemaCredentialPasswords[profile.schema_id]?.trim() ? 'Schema credential ready' : 'Schema credential needed'}</strong>
+                            <span>{profile.schema_id || 'schema'} connects as {profile.username || 'username pending'} and runs in {profile.schema_name || 'schema pending'}.</span>
+                          </div>
+                          <button
+                            type="button"
+                            className="secondary-action compact"
+                            onClick={() => void testRolloverSchemaConnection(profile.schema_id)}
+                            disabled={catalogBusy === `rollover-test-schema-${profile.schema_id}`}
+                          >
+                            <FaPlug /> {catalogBusy === `rollover-test-schema-${profile.schema_id}` ? 'Testing...' : 'Test Schema Login'}
+                          </button>
+                          {rolloverSchemaConnectionTests[profile.schema_id] ? (
+                            <div className={`nexus-banner compact ${rolloverSchemaConnectionTests[profile.schema_id].connected ? 'success' : 'error'}`}>
+                              <strong>{rolloverSchemaConnectionTests[profile.schema_id].connected ? 'Oracle login verified' : 'Oracle login failed'}</strong>
+                              <span>{rolloverSchemaConnectionTests[profile.schema_id].message}</span>
+                            </div>
+                          ) : null}
                         </div>
                         {canManageNexus ? (
                           <button type="button" className="danger-action compact" onClick={() => removeRolloverSchemaProfile(profile.schema_id)}>
@@ -6305,6 +6463,11 @@ const NexusPage: React.FC = () => {
                       ) : null}
                     </div>
                   ))}
+                  {canManageNexus ? (
+                    <button type="button" className="secondary-action compact" onClick={addRolloverRule}>
+                      <FaPlus /> Rule
+                    </button>
+                  ) : null}
                 </div>
               </div>
 
