@@ -81,6 +81,7 @@ import nexusApi, {
   RolloverReplacementRule,
   RolloverRuleAssignment,
   RolloverRuleCondition,
+  RolloverSchemaProfile,
   RootCauseCandidate,
   ServiceEndpointConfig,
   ServiceGraphContext,
@@ -588,6 +589,7 @@ const createEmptyRolloverEnvironment = (): RolloverEnvironment => {
     owner_team: 'Intellect',
     enabled: true,
     connection: createEmptyRolloverConnection(),
+    schema_profiles: [],
     rules: defaultUat2RolloverRules(),
     notes: 'Seeded from the UAT2 rollover scripts and post-rollover workbook state.',
     created_at: now,
@@ -604,8 +606,14 @@ const cloneRolloverEnvironment = (environment: RolloverEnvironment): RolloverEnv
     ...(environment.connection || {}),
     metadata: { ...(environment.connection?.metadata || {}) },
   },
+  schema_profiles: (environment.schema_profiles || []).map((profile) => ({
+    ...profile,
+    enabled: profile.enabled !== false,
+    metadata: { ...(profile.metadata || {}) },
+  })),
   rules: (environment.rules || []).map((rule) => ({
     ...rule,
+    schema_id: rule.schema_id || '',
     operation: rule.operation || 'replace',
     assignments: rule.assignments || [],
     conditions: rule.conditions || [],
@@ -3215,6 +3223,17 @@ const NexusPage: React.FC = () => {
           port: Number(rolloverDraft.connection.port || 1521),
           metadata: rolloverDraft.connection.metadata || {},
         },
+        schema_profiles: (rolloverDraft.schema_profiles || [])
+          .map((profile) => ({
+            ...profile,
+            schema_id: profile.schema_id.trim().toUpperCase(),
+            schema_name: profile.schema_name.trim().toUpperCase(),
+            label: profile.label?.trim() || '',
+            description: profile.description?.trim() || '',
+            enabled: profile.enabled !== false,
+            metadata: profile.metadata || {},
+          }))
+          .filter((profile) => profile.schema_id || profile.schema_name),
         rules: rolloverDraft.rules
           .map((rule, index) => {
             const ruleId = rule.rule_id.trim() || `rollover-rule-${index + 1}`;
@@ -3230,6 +3249,7 @@ const NexusPage: React.FC = () => {
             return {
               ...rule,
               rule_id: ruleId,
+              schema_id: rule.schema_id?.trim().toUpperCase() || '',
               table_name: rule.table_name.trim().toUpperCase(),
               column_name: rule.column_name.trim().toUpperCase(),
               operation,
@@ -3253,6 +3273,28 @@ const NexusPage: React.FC = () => {
       }
       if (!payload.rules.length) {
         throw new Error('At least one rollover rule is required.');
+      }
+      const enabledSchemaProfiles = (payload.schema_profiles || []).filter((profile) => profile.enabled !== false);
+      const schemaIds = enabledSchemaProfiles.map((profile) => profile.schema_id);
+      const duplicateSchemaIds = schemaIds.filter((schemaId, index) => schemaIds.indexOf(schemaId) !== index);
+      if (duplicateSchemaIds.length) {
+        throw new Error(`Duplicate rollover schema keys: ${Array.from(new Set(duplicateSchemaIds)).join(', ')}.`);
+      }
+      if (enabledSchemaProfiles.some((profile) => !profile.schema_id || !profile.schema_name)) {
+        throw new Error('Every enabled rollover schema profile needs a schema key and Oracle schema name.');
+      }
+      if (enabledSchemaProfiles.length > 1) {
+        const validSchemaIds = new Set(schemaIds);
+        const missingSchemaRules = payload.rules.filter((rule) => rule.enabled && !rule.schema_id).map((rule) => rule.rule_id);
+        const invalidSchemaRules = payload.rules
+          .filter((rule) => rule.enabled && rule.schema_id && !validSchemaIds.has(rule.schema_id))
+          .map((rule) => rule.rule_id);
+        if (missingSchemaRules.length) {
+          throw new Error(`Multi-schema rollover requires every enabled rule to choose a schema. Missing: ${missingSchemaRules.join(', ')}.`);
+        }
+        if (invalidSchemaRules.length) {
+          throw new Error(`Some rollover rules reference schema keys that are not configured: ${invalidSchemaRules.join(', ')}.`);
+        }
       }
       if (payload.rules.some((rule) => rule.enabled && (!rule.table_name || !rule.column_name || !rule.target_value))) {
         throw new Error('Every enabled rollover rule needs a table, column, and target value.');
@@ -3540,6 +3582,7 @@ const NexusPage: React.FC = () => {
         ...current.rules,
         {
           rule_id: `rollover-rule-${nextSequence}`,
+          schema_id: current.schema_profiles?.length === 1 ? current.schema_profiles[0].schema_id : '',
           table_name: '',
           column_name: '',
           operation: 'replace',
@@ -3562,6 +3605,35 @@ const NexusPage: React.FC = () => {
     setRolloverAssignmentTextByRule((current) => ({
       ...current,
       [`rollover-rule-${nextSequence}`]: '[]',
+    }));
+    markEditorDirty('rollover');
+  };
+
+  const addRolloverSchemaProfile = () => {
+    const nextIndex = (rolloverDraft.schema_profiles || []).length + 1;
+    const schemaId = nextIndex === 1 ? 'ARX' : nextIndex === 2 ? 'IDC' : `SCHEMA${nextIndex}`;
+    const nextProfile: RolloverSchemaProfile = {
+      schema_id: schemaId,
+      schema_name: schemaId,
+      label: schemaId,
+      description: '',
+      enabled: true,
+      metadata: {},
+    };
+    setRolloverDraft((current) => ({
+      ...current,
+      schema_profiles: [...(current.schema_profiles || []), nextProfile],
+    }));
+    markEditorDirty('rollover');
+  };
+
+  const removeRolloverSchemaProfile = (schemaId: string) => {
+    setRolloverDraft((current) => ({
+      ...current,
+      schema_profiles: (current.schema_profiles || []).filter((profile) => profile.schema_id !== schemaId),
+      rules: current.rules.map((rule) => (
+        rule.schema_id === schemaId ? { ...rule, schema_id: '' } : rule
+      )),
     }));
     markEditorDirty('rollover');
   };
@@ -5477,6 +5549,7 @@ const NexusPage: React.FC = () => {
   const renderRolloverWorkspace = () => {
     const assessmentStatus = rolloverAssessment?.status || 'not_assessed';
     const activeRules = rolloverDraft.rules.filter((rule) => rule.enabled);
+    const activeSchemaProfiles = (rolloverDraft.schema_profiles || []).filter((profile) => profile.enabled !== false);
     const credentialReady = rolloverDraft.connection.password_set || Boolean(rolloverCredentialPassword);
     const latestExecution = selectedRolloverExecutions[0];
     const commandDisabled = !rolloverDraft.environment_id.trim() || catalogBusy === 'rollover-challenge';
@@ -5639,6 +5712,11 @@ const NexusPage: React.FC = () => {
                       <small>{rolloverDraft.rules.length} saved in contract</small>
                     </div>
                     <div>
+                      <span>Schemas</span>
+                      <strong>{activeSchemaProfiles.length || 1}</strong>
+                      <small>{activeSchemaProfiles.length ? activeSchemaProfiles.map((profile) => profile.schema_id).join(', ') : (rolloverDraft.connection.schema_name || 'connection default')}</small>
+                    </div>
+                    <div>
                       <span>Credential</span>
                       <strong>{credentialReady ? 'Ready' : 'Needed'}</strong>
                       <small>{rolloverDraft.connection.username || 'No Oracle username'}</small>
@@ -5700,6 +5778,7 @@ const NexusPage: React.FC = () => {
                           <div className='super-fine-div'>
                             <strong>{result.rule_id} </strong>
                             <span>{result.table_name}.{result.column_name}</span>
+                            {result.schema_id || result.schema_name ? <span>{result.schema_id || 'schema'}: {result.schema_name || result.schema_id}</span> : null}
                           </div>
                           <div className="rollover-result-counts">
                             <span>source {result.source_matches}</span>
@@ -5960,8 +6039,120 @@ const NexusPage: React.FC = () => {
               <div className="form-section">
                 <div className="panel-head compact">
                   <div>
+                    <h3>Rollover Schemas</h3>
+                    <p>Use this when one DR environment spans multiple Oracle schemas. One schema means rules inherit it; multiple schemas require each enabled rule to choose one.</p>
+                  </div>
+                  {canManageNexus ? (
+                    <button type="button" className="secondary-action compact" onClick={addRolloverSchemaProfile}>
+                      <FaPlus /> Schema
+                    </button>
+                  ) : null}
+                </div>
+                {(rolloverDraft.schema_profiles || []).length ? (
+                  <div className="rollover-rule-list compact">
+                    {(rolloverDraft.schema_profiles || []).map((profile, index) => (
+                      <div key={`${profile.schema_id}-${index}`} className="rollover-rule-card schema-profile-card">
+                        <div className="rollover-rule-head">
+                          <strong>{profile.label || profile.schema_id || `Schema ${index + 1}`}</strong>
+                          <label className={`checkbox-field compact ${profile.enabled !== false ? 'checked' : ''}`}>
+                            <input
+                              type="checkbox"
+                              checked={profile.enabled !== false}
+                              onChange={(event) => {
+                                const checked = event.target.checked;
+                                setRolloverDraft((current) => ({
+                                  ...current,
+                                  schema_profiles: (current.schema_profiles || []).map((item, itemIndex) => (
+                                    itemIndex === index ? { ...item, enabled: checked } : item
+                                  )),
+                                }));
+                              }}
+                            />
+                            <span>Enabled</span>
+                          </label>
+                        </div>
+                        <div className="field-grid">
+                          <label>
+                            <span>Schema Key</span>
+                            <input
+                              value={profile.schema_id}
+                              onChange={(event) => {
+                                const previousSchemaId = profile.schema_id;
+                                const nextSchemaId = event.target.value.toUpperCase();
+                                setRolloverDraft((current) => ({
+                                  ...current,
+                                  schema_profiles: (current.schema_profiles || []).map((item, itemIndex) => (
+                                    itemIndex === index ? { ...item, schema_id: nextSchemaId } : item
+                                  )),
+                                  rules: current.rules.map((rule) => (
+                                    rule.schema_id === previousSchemaId ? { ...rule, schema_id: nextSchemaId } : rule
+                                  )),
+                                }));
+                              }}
+                              placeholder="ARX"
+                            />
+                          </label>
+                          <label>
+                            <span>Oracle Schema Name</span>
+                            <input
+                              value={profile.schema_name}
+                              onChange={(event) => setRolloverDraft((current) => ({
+                                ...current,
+                                schema_profiles: (current.schema_profiles || []).map((item, itemIndex) => (
+                                  itemIndex === index ? { ...item, schema_name: event.target.value.toUpperCase() } : item
+                                )),
+                              }))}
+                              placeholder="ARX_OWNER"
+                            />
+                          </label>
+                          <label>
+                            <span>Label</span>
+                            <input
+                              value={profile.label || ''}
+                              onChange={(event) => setRolloverDraft((current) => ({
+                                ...current,
+                                schema_profiles: (current.schema_profiles || []).map((item, itemIndex) => (
+                                  itemIndex === index ? { ...item, label: event.target.value } : item
+                                )),
+                              }))}
+                              placeholder="ARX"
+                            />
+                          </label>
+                          <label className="field-span">
+                            <span>Description</span>
+                            <input
+                              value={profile.description || ''}
+                              onChange={(event) => setRolloverDraft((current) => ({
+                                ...current,
+                                schema_profiles: (current.schema_profiles || []).map((item, itemIndex) => (
+                                  itemIndex === index ? { ...item, description: event.target.value } : item
+                                )),
+                              }))}
+                              placeholder="User management and authentication configuration"
+                            />
+                          </label>
+                        </div>
+                        {canManageNexus ? (
+                          <button type="button" className="danger-action compact" onClick={() => removeRolloverSchemaProfile(profile.schema_id)}>
+                            <FaTrashAlt /> Remove Schema
+                          </button>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="nexus-banner compact info">
+                    <strong>Single-schema mode</strong>
+                    <span>Leave this empty when all rules run under the Oracle connection schema above.</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="form-section">
+                <div className="panel-head compact">
+                  <div>
                     <h3>Rollover Rules</h3>
-                    <p>Each enabled rule is assessed with count checks, then executed as a bound Oracle REPLACE update after OTP.</p>
+                    <p>Each enabled rule is assessed with count checks, pinned to its schema when needed, then executed as bound Oracle SQL after OTP.</p>
                   </div>
                   {canManageNexus ? (
                     <button type="button" className="secondary-action compact" onClick={addRolloverRule}>
@@ -6028,6 +6219,25 @@ const NexusPage: React.FC = () => {
                             <option value="set">SET exact value</option>
                           </select>
                         </label>
+                        {(rolloverDraft.schema_profiles || []).length ? (
+                          <label>
+                            <span>Schema</span>
+                            <select
+                              value={rule.schema_id || ''}
+                              onChange={(event) => setRolloverDraft((current) => ({
+                                ...current,
+                                rules: current.rules.map((item, itemIndex) => itemIndex === index ? { ...item, schema_id: event.target.value } : item),
+                              }))}
+                            >
+                              <option value="">{(rolloverDraft.schema_profiles || []).length === 1 ? 'Inherit configured schema' : 'Select schema'}</option>
+                              {(rolloverDraft.schema_profiles || []).filter((profile) => profile.enabled !== false).map((profile) => (
+                                <option key={profile.schema_id} value={profile.schema_id}>
+                                  {profile.label || profile.schema_id} ({profile.schema_name})
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        ) : null}
                         <label>
                           <span>Table</span>
                           <input value={rule.table_name} onChange={(event) => setRolloverDraft((current) => ({ ...current, rules: current.rules.map((item, itemIndex) => itemIndex === index ? { ...item, table_name: event.target.value } : item) }))} />

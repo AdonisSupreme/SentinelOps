@@ -708,8 +708,18 @@ export interface RolloverRuleAssignment {
   target_value: string;
 }
 
+export interface RolloverSchemaProfile {
+  schema_id: string;
+  schema_name: string;
+  label?: string | null;
+  description?: string | null;
+  enabled: boolean;
+  metadata: Record<string, unknown>;
+}
+
 export interface RolloverReplacementRule {
   rule_id: string;
+  schema_id?: string | null;
   table_name: string;
   column_name: string;
   operation?: RolloverRuleOperation;
@@ -732,6 +742,7 @@ export interface RolloverEnvironment {
   owner_team?: string | null;
   enabled: boolean;
   connection: RolloverConnectionProfile;
+  schema_profiles?: RolloverSchemaProfile[];
   rules: RolloverReplacementRule[];
   notes?: string | null;
   created_at: string;
@@ -746,6 +757,8 @@ export interface RolloverEnvironmentPayload extends RolloverEnvironment {
 
 export interface RolloverRuleAssessment {
   rule_id: string;
+  schema_id?: string | null;
+  schema_name?: string | null;
   table_name: string;
   column_name: string;
   operation?: RolloverRuleOperation;
