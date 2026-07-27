@@ -38,6 +38,7 @@ import nexusApi, {
 import trustlinkApi, {
   TrustlinkRunDetail,
   TrustlinkRunListItem,
+  TrustlinkPipelineConfig,
   TrustlinkStep,
   TrustlinkTodayStatusResponse,
 } from '../services/trustlinkApi';
@@ -61,6 +62,8 @@ interface PipelineTimelineItem {
   duration: string;
   meta: string;
 }
+
+type TrustlinkIngestSource = 'idc' | 'digipay';
 
 const PIPELINE_ORDER: PipelineStageName[] = [
   'IDC_EXTRACTION',
@@ -140,6 +143,14 @@ const TrustlinkOperationsPreview: React.FC = () => (
           {Array.from({ length: 4 }).map((_, index) => (
             <div key={index} className="trustlink-skel-block trustlink-skel-action" />
           ))}
+        </div>
+        <div className="trustlink-skel-source-route">
+          <div>
+            <div className="trustlink-skel-line trustlink-skel-kicker" />
+            <div className="trustlink-skel-line trustlink-skel-meta" />
+          </div>
+          <div className="trustlink-skel-block" />
+          <div className="trustlink-skel-block" />
         </div>
         <div className="trustlink-skel-tabs">
           {Array.from({ length: 4 }).map((_, index) => (
@@ -248,6 +259,7 @@ const normalizeVisualStatus = (status?: string | null): string => {
   if (normalized === 'exists' || normalized === 'duplicate') return 'warning';
   if (normalized === 'failed') return 'failed';
   if (normalized === 'running') return 'running';
+  if (normalized === 'skipped') return 'neutral';
   if (normalized === 'none') return 'neutral';
   return 'pending';
 };
@@ -261,6 +273,7 @@ const prettyStatus = (status?: string | null): string => {
   if (normalized === 'exists') return 'Already exists';
   if (normalized === 'running') return 'Running';
   if (normalized === 'failed') return 'Failed';
+  if (normalized === 'skipped') return 'Skipped';
   if (normalized === 'none') return 'No run';
   return 'Pending';
 };
@@ -271,7 +284,7 @@ const isTrustlinkStepName = (value: unknown): value is TrustlinkStep['step_name'
 
 const normalizeStepStatusFromPayload = (value: unknown): TrustlinkStep['status'] => {
   const status = String(value || 'pending').toLowerCase();
-  if (status === 'running' || status === 'completed' || status === 'failed') return status;
+  if (status === 'running' || status === 'completed' || status === 'skipped' || status === 'failed') return status;
   return 'pending';
 };
 
@@ -470,6 +483,9 @@ const TrustlinkOperationsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showOverwriteWarning, setShowOverwriteWarning] = useState(false);
   const [pendingFileDeleteRun, setPendingFileDeleteRun] = useState<TrustlinkRunListItem | null>(null);
+  const [pipelineConfig, setPipelineConfig] = useState<TrustlinkPipelineConfig | null>(null);
+  const [sourceConfigLoading, setSourceConfigLoading] = useState(false);
+  const [sourceConfigMessage, setSourceConfigMessage] = useState<string | null>(null);
   const [rtgsAssessment, setRtgsAssessment] = useState<NexusRTGSAssessment | null>(null);
   const [rtgsLoading, setRtgsLoading] = useState(false);
   const [rtgsActionLoading, setRtgsActionLoading] = useState(false);
@@ -587,13 +603,23 @@ const TrustlinkOperationsPage: React.FC = () => {
     if (!isSilent) setError(null);
 
     try {
-      const [today, history] = await Promise.all([
+      const sourceConfigRequest = trustlinkApi.getPipelineConfig()
+        .then((config) => ({ config, error: null as unknown }))
+        .catch((configError: unknown) => ({ config: null, error: configError }));
+      const [today, history, sourceConfigResult] = await Promise.all([
         trustlinkApi.getTodayStatus(),
         trustlinkApi.listRuns(50, 0),
+        sourceConfigRequest,
       ]);
 
       setTodayStatus(today);
       setRuns(history);
+      if (sourceConfigResult.config) {
+        setPipelineConfig(sourceConfigResult.config);
+        setSourceConfigMessage(null);
+      } else {
+        setSourceConfigMessage('Source controls are not initialized. Apply the TrustLink source-control migration, then refresh.');
+      }
 
       const runId = today.run?.id || history[0]?.id;
       if (runId) {
@@ -640,6 +666,17 @@ const TrustlinkOperationsPage: React.FC = () => {
       const payload = event?.type === 'CHECKLIST_UPDATE' ? event?.data : event;
       if (payload?.type !== 'trustlink_update') return;
 
+      if (payload?.event === 'pipeline_config') {
+        setPipelineConfig({
+          config_key: 'account-extraction',
+          idc_enabled: Boolean(payload.idc_enabled),
+          digipay_enabled: Boolean(payload.digipay_enabled),
+          updated_by: String(payload.updated_by || 'system'),
+          updated_at: asPayloadString(payload.updated_at),
+        });
+        return;
+      }
+
       const eventRunId: string | undefined = payload?.run_id;
       if (!eventRunId) return;
 
@@ -672,9 +709,9 @@ const TrustlinkOperationsPage: React.FC = () => {
             ...mergedSteps[existingIndex],
             ...nextStep,
             id: nextStep.id || mergedSteps[existingIndex].id,
-            row_count: nextStep.row_count || mergedSteps[existingIndex].row_count,
-            duration_ms: nextStep.duration_ms || mergedSteps[existingIndex].duration_ms,
-            started_at: nextStep.started_at || mergedSteps[existingIndex].started_at,
+            row_count: nextStep.status === 'skipped' ? 0 : nextStep.row_count || mergedSteps[existingIndex].row_count,
+            duration_ms: nextStep.status === 'skipped' ? 0 : nextStep.duration_ms || mergedSteps[existingIndex].duration_ms,
+            started_at: nextStep.status === 'skipped' ? null : nextStep.started_at || mergedSteps[existingIndex].started_at,
             completed_at: nextStep.completed_at || mergedSteps[existingIndex].completed_at,
           };
           return mergedSteps;
@@ -760,9 +797,15 @@ const TrustlinkOperationsPage: React.FC = () => {
   );
 
   const completionCount = useMemo(
-    () => timeline.filter((item) => item.statusKey === 'completed').length,
+    () => timeline.filter((item) => item.statusKey === 'completed' || item.statusKey === 'skipped').length,
     [timeline],
   );
+
+  const sourceRouteLabel = useMemo(() => {
+    if (!pipelineConfig) return 'Route unavailable';
+    if (pipelineConfig.idc_enabled && pipelineConfig.digipay_enabled) return 'IDC + DigiPay';
+    return pipelineConfig.idc_enabled ? 'IDC only' : 'DigiPay only';
+  }, [pipelineConfig]);
 
   const totalDuration = getRunDurationMs(displayRun);
   const currentStatus = displayRun?.status || todayStatus?.status || 'none';
@@ -816,6 +859,34 @@ const TrustlinkOperationsPage: React.FC = () => {
     } finally {
       setActionLoading(false);
       setActionLabel(null);
+    }
+  };
+
+  const handleToggleIngest = async (source: TrustlinkIngestSource) => {
+    if (!isAdmin || !pipelineConfig || sourceConfigLoading) return;
+
+    const nextIdcEnabled = source === 'idc' ? !pipelineConfig.idc_enabled : pipelineConfig.idc_enabled;
+    const nextDigipayEnabled = source === 'digipay' ? !pipelineConfig.digipay_enabled : pipelineConfig.digipay_enabled;
+    if (!nextIdcEnabled && !nextDigipayEnabled) {
+      setSourceConfigMessage('Keep at least one ingest source enabled.');
+      return;
+    }
+
+    setSourceConfigLoading(true);
+    setSourceConfigMessage(null);
+    try {
+      const updated = await trustlinkApi.updatePipelineConfig(nextIdcEnabled, nextDigipayEnabled);
+      setPipelineConfig(updated);
+      const nextRoute = updated.idc_enabled && updated.digipay_enabled
+        ? 'IDC + DigiPay'
+        : updated.idc_enabled
+          ? 'IDC only'
+          : 'DigiPay only';
+      setSourceConfigMessage(`Next extraction route: ${nextRoute}.`);
+    } catch (e) {
+      setSourceConfigMessage(getErrorMessage(e));
+    } finally {
+      setSourceConfigLoading(false);
     }
   };
 
@@ -1450,6 +1521,8 @@ const TrustlinkOperationsPage: React.FC = () => {
       {items.map((item) => {
         const progress = item.statusKey === 'completed'
           ? 100
+          : item.statusKey === 'skipped'
+            ? 100
           : item.statusKey === 'running'
             ? 58
             : item.statusKey === 'failed'
@@ -1468,7 +1541,7 @@ const TrustlinkOperationsPage: React.FC = () => {
             <div className="trustlink-progress-track" aria-label={`${item.title} progress`}>
               <span className="trustlink-progress-fill" style={{ width: `${progress}%` }} />
             </div>
-            <p>{item.statusKey === 'running' ? 'Processing current source data...' : item.statusKey === 'completed' ? 'Stage evidence recorded.' : item.statusKey === 'failed' ? 'Stage requires operator review.' : 'Waiting for the previous stage.'}</p>
+            <p>{item.statusKey === 'running' ? 'Processing current source data...' : item.statusKey === 'completed' ? 'Stage evidence recorded.' : item.statusKey === 'skipped' ? 'Bypassed by the source route for this run.' : item.statusKey === 'failed' ? 'Stage requires operator review.' : 'Waiting for the previous stage.'}</p>
           </article>
         );
       })}
@@ -1565,6 +1638,58 @@ const TrustlinkOperationsPage: React.FC = () => {
               )}
               <button className="trustlink-btn danger" onClick={() => setShowOverwriteWarning(true)} disabled={actionLoading}><FiZap /> Overwrite</button>
             </div>
+
+            <section className="trustlink-source-route" aria-labelledby="trustlink-source-route-title">
+              <div className="trustlink-source-route-copy">
+                <span className="trustlink-panel-kicker"><FiDatabase /> Source route</span>
+                <strong id="trustlink-source-route-title">{sourceRouteLabel}</strong>
+                <small>The next run preserves the same TrustLink file contract and omits only records from a bypassed source.</small>
+              </div>
+              <div className="trustlink-source-switches" aria-label="TrustLink ingest sources">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={Boolean(pipelineConfig?.idc_enabled)}
+                  className={`trustlink-source-switch ${!pipelineConfig ? 'unavailable' : pipelineConfig.idc_enabled ? 'enabled' : 'bypassed'}`}
+                  onClick={() => void handleToggleIngest('idc')}
+                  disabled={
+                    !isAdmin
+                    || !pipelineConfig
+                    || sourceConfigLoading
+                    || currentStatus === 'running'
+                    || (pipelineConfig.idc_enabled && !pipelineConfig.digipay_enabled)
+                  }
+                  title={!pipelineConfig ? 'Source route unavailable' : !isAdmin ? 'Administrator control' : pipelineConfig.idc_enabled && !pipelineConfig.digipay_enabled ? 'At least one ingest source must remain enabled' : currentStatus === 'running' ? 'Route locked while extraction is active' : 'Include or bypass IDC on the next extraction'}
+                >
+                  <span className="trustlink-source-switch-icon"><FiDatabase /></span>
+                  <span><small>Oracle core</small><strong>IDC ingest</strong></span>
+                  <em>{!pipelineConfig ? 'Unavailable' : pipelineConfig.idc_enabled ? 'Included' : 'Bypassed'}</em>
+                </button>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={Boolean(pipelineConfig?.digipay_enabled)}
+                  className={`trustlink-source-switch ${!pipelineConfig ? 'unavailable' : pipelineConfig.digipay_enabled ? 'enabled' : 'bypassed'}`}
+                  onClick={() => void handleToggleIngest('digipay')}
+                  disabled={
+                    !isAdmin
+                    || !pipelineConfig
+                    || sourceConfigLoading
+                    || currentStatus === 'running'
+                    || (pipelineConfig.digipay_enabled && !pipelineConfig.idc_enabled)
+                  }
+                  title={!pipelineConfig ? 'Source route unavailable' : !isAdmin ? 'Administrator control' : pipelineConfig.digipay_enabled && !pipelineConfig.idc_enabled ? 'At least one ingest source must remain enabled' : currentStatus === 'running' ? 'Route locked while extraction is active' : 'Include or bypass DigiPay on the next extraction'}
+                >
+                  <span className="trustlink-source-switch-icon"><FiActivity /></span>
+                  <span><small>Payments house</small><strong>DigiPay ingest</strong></span>
+                  <em>{!pipelineConfig ? 'Unavailable' : pipelineConfig.digipay_enabled ? 'Included' : 'Bypassed'}</em>
+                </button>
+              </div>
+              <div className="trustlink-source-route-foot">
+                <span>{!pipelineConfig ? 'Route controls unavailable' : currentStatus === 'running' ? 'Route locked while extraction is active.' : isAdmin ? 'Admin route control' : 'Read-only route'}</span>
+                <span>{sourceConfigMessage || (pipelineConfig?.updated_at ? `Changed by ${pipelineConfig.updated_by} / ${formatDateTime(pipelineConfig.updated_at)}` : 'Default paired route')}</span>
+              </div>
+            </section>
 
             {!hasRunData ? (
               <section className="trustlink-empty-state">

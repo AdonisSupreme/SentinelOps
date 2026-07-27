@@ -34,7 +34,7 @@ export interface TrustlinkStep {
   id: number;
   run_id: string;
   step_name: 'IDC_EXTRACTION' | 'DIGIPAY_EXTRACTION' | 'TRANSFORMATION' | 'VALIDATION' | 'FILE_SAVE';
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: 'pending' | 'running' | 'completed' | 'skipped' | 'failed';
   row_count: number;
   duration_ms: number;
   metadata: Record<string, unknown>;
@@ -60,6 +60,14 @@ export interface TrustlinkTodayStatusResponse {
   run?: TrustlinkRunDetail | null;
   has_file: boolean;
   options: Array<'download' | 'overwrite'>;
+}
+
+export interface TrustlinkPipelineConfig {
+  config_key: 'account-extraction';
+  idc_enabled: boolean;
+  digipay_enabled: boolean;
+  updated_by: string;
+  updated_at?: string | null;
 }
 
 export interface TrustlinkFileDeleteResponse {
@@ -102,10 +110,21 @@ const normalizeStepStatus = (value: unknown): TrustlinkStep['status'] => {
   const status = asString(value, 'pending').toLowerCase();
 
   if (status === 'success') return 'completed';
-  if (status === 'running' || status === 'completed' || status === 'failed') {
+  if (status === 'running' || status === 'completed' || status === 'skipped' || status === 'failed') {
     return status;
   }
   return 'pending';
+};
+
+const normalizePipelineConfig = (value: unknown): TrustlinkPipelineConfig => {
+  const config = asRecord(value);
+  return {
+    config_key: 'account-extraction',
+    idc_enabled: Boolean(config.idc_enabled),
+    digipay_enabled: Boolean(config.digipay_enabled),
+    updated_by: asString(config.updated_by, 'system'),
+    updated_at: asNullableString(config.updated_at),
+  };
 };
 
 const normalizeRunType = (value: unknown): TrustlinkRunListItem['run_type'] => (
@@ -208,6 +227,22 @@ const normalizeStartResponse = (value: unknown): TrustlinkRunStartResponse => {
 };
 
 export const trustlinkApi = {
+  async getPipelineConfig(): Promise<TrustlinkPipelineConfig> {
+    const response = await api.get('/api/v1/trustlink/pipeline/config');
+    return normalizePipelineConfig(response.data);
+  },
+
+  async updatePipelineConfig(
+    idcEnabled: boolean,
+    digipayEnabled: boolean,
+  ): Promise<TrustlinkPipelineConfig> {
+    const response = await api.put('/api/v1/trustlink/pipeline/config', {
+      idc_enabled: idcEnabled,
+      digipay_enabled: digipayEnabled,
+    });
+    return normalizePipelineConfig(response.data);
+  },
+
   async listRuns(limit = 50, offset = 0): Promise<TrustlinkRunListItem[]> {
     const response = await api.get('/api/v1/trustlink/runs', {
       params: { limit, offset },

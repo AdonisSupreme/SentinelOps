@@ -5801,6 +5801,7 @@ const NexusPage: React.FC = () => {
                     <div>
                       <span>Oracle target</span>
                       <strong>{rolloverDraft.connection.host || rolloverDraft.connection.dsn || 'Not configured'}</strong>
+                      <strong>{credentialReady ? 'Ready' : 'Needed'}</strong>
                       <small>{rolloverDraft.connection.service_name || rolloverDraft.connection.schema_name || rolloverDraft.connection.username || 'Connection identity pending'}</small>
                     </div>
                     <div>
@@ -5812,11 +5813,6 @@ const NexusPage: React.FC = () => {
                       <span>Schemas</span>
                       <strong>{activeSchemaProfiles.length || 1}</strong>
                       <small>{activeSchemaProfiles.length ? activeSchemaProfiles.map((profile) => profile.schema_id).join(', ') : (rolloverDraft.connection.schema_name || 'connection default')}</small>
-                    </div>
-                    <div>
-                      <span>Credential</span>
-                      <strong>{credentialReady ? 'Ready' : 'Needed'}</strong>
-                      <small>{rolloverDraft.connection.username || 'No Oracle username'}</small>
                     </div>
                   </div>
                   <div className="rollover-guardrail-copy">
