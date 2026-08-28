@@ -109,6 +109,7 @@ const certificationOptions = ['catalog_only', 'observe_only', 'correlate_ready',
 const NEXUS_SECTION_ID = '7bd4144d-68d8-4ac3-897d-245941612daf';
 
 type WorkspaceTab = 'incidents' | 'services' | 'agents' | 'databases' | 'rollover' | 'clusters' | 'flows' | 'dependencies' | 'sops' | 'onboarding';
+const workspaceTabIds = new Set<WorkspaceTab>(['incidents', 'services', 'agents', 'databases', 'rollover', 'clusters', 'flows', 'dependencies', 'sops', 'onboarding']);
 type NexusDetailTab = 'overview' | 'topology' | 'evidence' | 'actions' | 'procedure' | 'outcome';
 type IncidentTimelineFilter = 'all' | 'active' | 'shift' | 'last_24h' | 'older';
 
@@ -1039,7 +1040,10 @@ const NexusPage: React.FC = () => {
 
   const deferredQuery = useDeferredValue(query.trim().toLowerCase());
   const selectedIncidentId = searchParams.get('incident');
-  const activeWorkspace = (searchParams.get('workspace') as WorkspaceTab | null) || 'incidents';
+  const requestedWorkspace = searchParams.get('workspace');
+  const activeWorkspace: WorkspaceTab = requestedWorkspace && workspaceTabIds.has(requestedWorkspace as WorkspaceTab)
+    ? requestedWorkspace as WorkspaceTab
+    : 'incidents';
   const selectedTabParam = searchParams.get('tab');
   const actor = user?.username || user?.email || 'sentinel-operator';
   const userRole = (user?.role || '').toLowerCase();
@@ -10001,7 +10005,7 @@ const NexusPage: React.FC = () => {
               onClick={() => setWorkspaceTab(tab.id)}
             >
               <span className="nexus-tab-label">{tab.icon}{tab.label}</span>
-              <span className="nexus-tab-count">{tab.count}</span>
+              {tab.count !== null ? <span className="nexus-tab-count">{tab.count}</span> : null}
             </button>
           ))}
         </div>
@@ -10027,7 +10031,9 @@ const NexusPage: React.FC = () => {
                       ? renderDependenciesWorkspace()
                       : activeWorkspace === 'sops'
                         ? renderSopsWorkspace()
-                        : renderOnboardingWorkspace()}
+                        : activeWorkspace === 'onboarding'
+                          ? renderOnboardingWorkspace()
+                          : null}
 
       {activeWorkspace !== 'incidents' ? renderIncidentCommandModal() : null}
       {sourceExplorerModal}

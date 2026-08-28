@@ -1,10 +1,9 @@
 // src/services/centralizedWebSocketManager.ts
 // Centralized WebSocket manager that handles multiple endpoints with shared connection infrastructure
 
-import { ChecklistUpdateEvent } from './websocketService';
-import { resolveWebSocketBaseUrl } from '../config/env';
+import { resolveNexusWebSocketBaseUrl, resolveWebSocketBaseUrl } from '../config/env';
 
-type WebSocketEndpoint = 'checklists' | 'notifications' | 'tasks';
+type WebSocketEndpoint = 'checklists' | 'notifications' | 'tasks' | 'funds-custody';
 type ConnectionState = 'CONNECTING' | 'OPEN' | 'CLOSING' | 'CLOSED';
 
 interface CentralizedEvent {
@@ -73,7 +72,7 @@ class CentralizedWebSocketManager {
 
   private cleanupExistingConnections() {
     console.log('🧹 Cleaning up existing WebSocket connections for HMR');
-    const endpoints: WebSocketEndpoint[] = ['checklists', 'notifications', 'tasks'];
+    const endpoints: WebSocketEndpoint[] = ['checklists', 'notifications', 'tasks', 'funds-custody'];
     endpoints.forEach(endpoint => {
       const existingWs = this.connections.get(endpoint);
       if (existingWs) {
@@ -91,7 +90,7 @@ class CentralizedWebSocketManager {
   }
 
   private initializeConnectionStates() {
-    const endpoints: WebSocketEndpoint[] = ['checklists', 'notifications', 'tasks'];
+    const endpoints: WebSocketEndpoint[] = ['checklists', 'notifications', 'tasks', 'funds-custody'];
     endpoints.forEach(endpoint => {
       this.connections.set(endpoint, null);
       this.connectionStates.set(endpoint, 'CLOSED');
@@ -260,7 +259,7 @@ class CentralizedWebSocketManager {
    * Disconnect from all endpoints
    */
   disconnectAll() {
-    const endpoints: WebSocketEndpoint[] = ['checklists', 'notifications'];
+    const endpoints: WebSocketEndpoint[] = ['checklists', 'notifications', 'tasks', 'funds-custody'];
     endpoints.forEach(endpoint => this.disconnect(endpoint));
   }
 
@@ -328,17 +327,19 @@ class CentralizedWebSocketManager {
     return {
       checklists: this.connectionStates.get('checklists') || 'CLOSED',
       notifications: this.connectionStates.get('notifications') || 'CLOSED',
-      tasks: this.connectionStates.get('tasks') || 'CLOSED'
+      tasks: this.connectionStates.get('tasks') || 'CLOSED',
+      'funds-custody': this.connectionStates.get('funds-custody') || 'CLOSED'
     };
   }
 
   private buildWebSocketUrl(endpoint: WebSocketEndpoint): string {
-    const baseUrl = resolveWebSocketBaseUrl();
+    const baseUrl = endpoint === 'funds-custody' ? resolveNexusWebSocketBaseUrl() : resolveWebSocketBaseUrl();
 
     const endpointPaths = {
       checklists: '/api/v1/checklists/ws',
       notifications: '/api/v1/notifications/ws',
-      tasks: '/api/v1/tasks/ws'
+      tasks: '/api/v1/tasks/ws',
+      'funds-custody': '/api/v1/nexus/clearing/ws'
     };
 
     const wsUrl = `${baseUrl}${endpointPaths[endpoint]}?token=${encodeURIComponent(this.authToken!)}`;
@@ -358,6 +359,8 @@ class CentralizedWebSocketManager {
       this.handleNotificationMessage(normalizedData);
     } else if (endpoint === 'tasks') {
       this.handleTaskMessage(normalizedData);
+    } else if (endpoint === 'funds-custody' && normalizedData.type === 'CUSTODY_UPDATE') {
+      console.log('Funds Custody realtime update received');
     }
 
     // Notify general subscribers
@@ -465,6 +468,10 @@ class CentralizedWebSocketManager {
 
   private startHeartbeat(endpoint: WebSocketEndpoint) {
     this.stopHeartbeat(endpoint);
+
+    if (endpoint === 'funds-custody') {
+      return;
+    }
 
     const timer = setInterval(() => {
       if (!this.isConnected(endpoint)) {

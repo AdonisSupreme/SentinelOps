@@ -23,6 +23,8 @@ import TemplateManagerPage from './pages/TemplateManagerPage';
 import TrustlinkOperationsPage from './pages/TrustlinkOperationsPage';
 import NetworkSentinelPage from './pages/NetworkSentinelPage';
 import NexusPage from './pages/NexusPage';
+import FundsCustodyPage from './pages/FundsCustodyPage';
+import ReportsPage from './pages/ReportsPage';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import ScrollToTop from './components/ui/ScrollToTop';
@@ -62,6 +64,8 @@ function App() {
                           <Route path="/trustlink" element={<TrustlinkOperationsPage />} />
                           <Route path="/network-sentinel" element={<NetworkSentinelPage />} />
                           <Route path="/nexus" element={<NexusPage />} />
+                          <Route path="/funds-custody" element={<FundsCustodyPage />} />
+                          <Route path="/reports" element={<ReportsPage />} />
                           <Route path="/performance" element={<PerformancePage />} />
                           <Route path="/users" element={<UserManagementPage />} />
                           <Route path="/team" element={<AdvancedTeamManagementPage />} />

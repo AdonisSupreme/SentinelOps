@@ -4,8 +4,10 @@ import {
   FaArrowDown,
   FaBars,
   FaBook,
+  FaBalanceScale,
   FaBroadcastTower,
   FaClipboardList,
+  FaFileCsv,
   FaRoute,
   FaShieldAlt,
   FaSignal,
@@ -64,6 +66,7 @@ const Header: React.FC = () => {
   const isAdmin = user?.role?.toLowerCase() === 'admin';
   const isManager = ['admin', 'manager', 'supervisor'].includes((user?.role || '').toLowerCase());
   const hasNexusAccess = user?.section_id === SECTION_MANUAL_ID && isAdmin;
+  const hasReportingAccess = user?.section_id === SECTION_MANUAL_ID;
 
   const isActiveItem = (item: MenuItem) => {
     if (!item.path) return false;
@@ -120,13 +123,34 @@ const Header: React.FC = () => {
         caption: 'Open module',
         activeCaption: 'Current command view',
       },
+      {
+        id: 'funds-custody',
+        path: '/funds-custody',
+        label: 'Funds Custody',
+        icon: <FaBalanceScale />,
+        description: 'Controlled unauthorized-debit evidence, maker-checker custody, guarded execution, and immutable financial audit.',
+        caption: 'Open custody workspace',
+        activeCaption: 'Current custody view',
+      },
+      {
+        id: 'reports',
+        path: '/reports',
+        label: 'Reports',
+        icon: <FaFileCsv />,
+        description: 'Controlled regulatory extracts, scheduled delivery, same-day artifact custody, and accountable reruns.',
+        caption: 'Open reporting workspace',
+        activeCaption: 'Current reporting view',
+      },
     ],
     [],
   );
 
   const navItems: MenuItem[] = useMemo(
-    () => baseNavItems.filter((item) => item.id !== 'nexus' || hasNexusAccess),
-    [baseNavItems, hasNexusAccess],
+    () => baseNavItems.filter((item) => {
+      if (item.id === 'reports') return hasReportingAccess;
+      return !['nexus', 'funds-custody'].includes(item.id) || hasNexusAccess;
+    }),
+    [baseNavItems, hasNexusAccess, hasReportingAccess],
   );
 
   const profileItems: MenuItem[] = useMemo(

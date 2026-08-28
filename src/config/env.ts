@@ -44,3 +44,16 @@ export const resolveWebSocketBaseUrl = (): string => {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   return `${protocol}//${window.location.host}`;
 };
+
+export const resolveNexusWebSocketBaseUrl = (): string => {
+  const explicitBaseUrl = optionalUrl(process.env.REACT_APP_NEXUS_WS_BASE_URL);
+  if (explicitBaseUrl) {
+    return toWebSocketUrl(explicitBaseUrl);
+  }
+
+  if (NEXUS_API_BASE_URL && /^https?:\/\//i.test(NEXUS_API_BASE_URL)) {
+    return toWebSocketUrl(NEXUS_API_BASE_URL);
+  }
+
+  return resolveWebSocketBaseUrl();
+};

@@ -35,7 +35,11 @@ export type PageGuideVisualType =
   | 'dependencyEdges'
   | 'lightAgents'
   | 'sops'
-  | 'rollover';
+  | 'rollover'
+  | 'clearingBatch'
+  | 'clearingAccount'
+  | 'clearingExecution'
+  | 'clearingAudit';
 
 export interface PageGuideHeroStat {
   label: string;
@@ -93,6 +97,18 @@ export interface PageGuideDefinition {
   decisionRules?: PageGuideDecisionRule[];
   featureTree?: PageGuideTreeBranch[];
   examples?: PageGuideExample[];
+  walkthroughKicker?: string;
+  walkthroughTitle?: string;
+  walkthroughIntro?: string;
+  featureTreeKicker?: string;
+  featureTreeTitle?: string;
+  featureTreeIntro?: string;
+  decisionKicker?: string;
+  decisionTitle?: string;
+  decisionIntro?: string;
+  examplesKicker?: string;
+  examplesTitle?: string;
+  examplesIntro?: string;
 }
 
 interface PageGuideProps {
@@ -358,6 +374,69 @@ const renderNexusVisual = (type: PageGuideVisualType) => {
           </div>
         </>
       );
+    case 'clearingBatch':
+      return (
+        <>
+          <div className="nexus-guide-visual-topbar">
+            <span>Finance custody</span>
+            <strong>Source file becomes sealed evidence</strong>
+          </div>
+          <div className="nexus-guide-contract">
+            <span><b>01</b><em>validate rows</em></span>
+            <span><b>02</b><em>hash source</em></span>
+            <span><b>03</b><em>reconcile Oracle</em></span>
+            <span><b>04</b><em>classify safely</em></span>
+          </div>
+        </>
+      );
+    case 'clearingAccount':
+      return (
+        <>
+          <div className="nexus-guide-visual-topbar">
+            <span>Account explorer</span>
+            <strong>Map identity before reading value</strong>
+          </div>
+          <div className="nexus-guide-db-card">
+            <FaDatabase />
+            <span>External account</span>
+            <strong>FACNO mapping and physical rows</strong>
+            <em>balances, debits, credits, queue evidence</em>
+          </div>
+        </>
+      );
+    case 'clearingExecution':
+      return (
+        <>
+          <div className="nexus-guide-visual-topbar">
+            <span>Execution custody</span>
+            <strong>Maker, checker, sealed payload</strong>
+          </div>
+          <div className="nexus-guide-actionbar">
+            <span>Submit</span>
+            <span>Approve</span>
+            <span className="primary">Execute</span>
+          </div>
+          <div className="nexus-guide-gate-list">
+            <span>write gate</span>
+            <span>row lock</span>
+            <span>atomic commit</span>
+          </div>
+        </>
+      );
+    case 'clearingAudit':
+      return (
+        <>
+          <div className="nexus-guide-visual-topbar">
+            <span>Custody trail</span>
+            <strong>Every human and system decision</strong>
+          </div>
+          <div className="nexus-guide-timeline">
+            <span><b>12:58</b><em>batch imported by maker</em></span>
+            <span><b>13:06</b><em>payload approved by checker</em></span>
+            <span><b>13:09</b><em>Oracle mutation committed</em></span>
+          </div>
+        </>
+      );
     default:
       return null;
   }
@@ -424,9 +503,9 @@ const PageGuide: React.FC<PageGuideProps> = ({ guide }) => {
       {guide.visualWalkthrough?.length ? (
         <section className="nexus-guide-section">
           <div className="nexus-guide-section-heading">
-            <span><FaProjectDiagram /> Guided Nexus path</span>
-            <h4>Operate the whole intelligence fabric, not just the open incident</h4>
-            <p>Each block points to the exact Nexus surface, the action that matters there, and the operational trap to avoid.</p>
+            <span><FaProjectDiagram /> {guide.walkthroughKicker || 'Guided Nexus path'}</span>
+            <h4>{guide.walkthroughTitle || 'Operate the whole intelligence fabric, not just the open incident'}</h4>
+            <p>{guide.walkthroughIntro || 'Each block points to the exact Nexus surface, the action that matters there, and the operational trap to avoid.'}</p>
           </div>
           <div className="nexus-guide-walkthrough">
             {guide.visualWalkthrough.map((item) => (
@@ -458,9 +537,9 @@ const PageGuide: React.FC<PageGuideProps> = ({ guide }) => {
       {guide.featureTree?.length ? (
         <section className="nexus-guide-section">
           <div className="nexus-guide-section-heading">
-            <span><FaNetworkWired /> Full feature tree</span>
-            <h4>The Nexus mental model</h4>
-            <p>Use this tree when you are deciding where a question belongs and which record needs to be corrected.</p>
+            <span><FaNetworkWired /> {guide.featureTreeKicker || 'Full feature tree'}</span>
+            <h4>{guide.featureTreeTitle || 'The Nexus mental model'}</h4>
+            <p>{guide.featureTreeIntro || 'Use this tree when you are deciding where a question belongs and which record needs to be corrected.'}</p>
           </div>
           <div className="nexus-guide-tree">
             {guide.featureTree.map((branch) => (
@@ -481,9 +560,9 @@ const PageGuide: React.FC<PageGuideProps> = ({ guide }) => {
       {guide.decisionRules?.length ? (
         <section className="nexus-guide-section">
           <div className="nexus-guide-section-heading">
-            <span><FaShieldAlt /> Decision rules</span>
-            <h4>What to do, what to avoid, and when to stop</h4>
-            <p>These are the rules that keep Nexus useful under pressure instead of turning it into a noisy command panel.</p>
+            <span><FaShieldAlt /> {guide.decisionKicker || 'Decision rules'}</span>
+            <h4>{guide.decisionTitle || 'What to do, what to avoid, and when to stop'}</h4>
+            <p>{guide.decisionIntro || 'These are the rules that keep Nexus useful under pressure instead of turning it into a noisy command panel.'}</p>
           </div>
           <div className="nexus-guide-decision-grid">
             {guide.decisionRules.map((rule) => (
@@ -518,9 +597,9 @@ const PageGuide: React.FC<PageGuideProps> = ({ guide }) => {
       {guide.examples?.length ? (
         <section className="nexus-guide-section">
           <div className="nexus-guide-section-heading">
-            <span><FaBrain /> Applicable examples</span>
-            <h4>How experienced operators read Nexus</h4>
-            <p>These examples show how the same evidence changes meaning when graph scope, flow scope, and source layer are read correctly.</p>
+            <span><FaBrain /> {guide.examplesKicker || 'Applicable examples'}</span>
+            <h4>{guide.examplesTitle || 'How experienced operators read Nexus'}</h4>
+            <p>{guide.examplesIntro || 'These examples show how the same evidence changes meaning when graph scope, flow scope, and source layer are read correctly.'}</p>
           </div>
           <div className="nexus-guide-examples">
             {guide.examples.map((example) => (
