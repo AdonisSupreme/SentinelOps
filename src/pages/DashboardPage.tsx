@@ -18,7 +18,7 @@ import {
   FaUserShield,
 } from 'react-icons/fa';
 import { FaArrowTrendUp } from 'react-icons/fa6';
-import { DashboardHeader, ChecklistCard, QuickActions, DashboardSkeleton } from '../components/dashboard';
+import { DashboardHeader, ChecklistCard, QuickActions, DashboardSkeleton, OperationalTransparency } from '../components/dashboard';
 import type { QuickActionSignal } from '../components/dashboard/QuickActions';
 import PageGuide from '../components/ui/PageGuide';
 import { pageGuides } from '../content/pageGuides';
@@ -528,6 +528,8 @@ const DashboardPage: React.FC = () => {
           ))}
         </div>
       </section>
+
+      <OperationalTransparency />
 
       <div className="dashboard-grid command-grid">
         <div className="dashboard-left command-main">

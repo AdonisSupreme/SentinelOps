@@ -10,13 +10,14 @@ export const pageGuides: Record<string, PageGuideDefinition> = {
     intro: 'The dashboard is the lightest way to understand the current operational day. It pulls the live command picture into one deck so you can see posture, pressure, and action paths without hunting across multiple pages.',
     sections: [
       { title: 'Operational State', body: 'The hero metrics show readiness, execution, containment, and staffing so you can judge the day in seconds.' },
-      { title: 'Shift Radar', body: 'Each shift panel shows staffing, active work, and whether the shift is running cleanly or starting to drift.' },
+      { title: 'Funds Movement', body: 'The live transparency band shows sealed clearing decisions awaiting authorization alongside hovering arrivals, processed work, net queue movement, and the active robot window.' },
       { title: 'Command Threads', body: 'These cards represent today\'s active checklist threads. Open one when you need item-level progress, exceptions, or participant context.' },
       { title: 'Matrix and Actions', body: 'Use the matrix, attention queue, handover summary, and quick actions to move from awareness into the next operational step.' },
     ],
     workflow: [
       'Start with Operational State to understand the day\'s overall posture.',
-      'Scan Shift Radar and the matrix for pressure, missing coverage, or stalled execution.',
+      'Read Funds Movement as an equation: arrivals explain new hovering load, processed work shows robot throughput, and net movement reveals whether the queue is really draining.',
+      'Open Execution Desk when checker custody is waiting, or Hovering Monitor when robot movement stalls or overdue dates accumulate.',
       'Open the right command thread or use a quick action once you know where intervention is needed.',
     ],
     tip: 'This page is for command awareness. Once the issue is clear, shift into the checklist, task, or monitoring workspace to act with detail.',

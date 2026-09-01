@@ -75,6 +75,7 @@ interface AuditYearGroup {
 interface Props {
   actor: string;
   userRole: string;
+  initialView?: WorkspaceView;
 }
 
 const safeStates = new Set<ClearingReconciliationState>(['READY', 'READY_WITH_RESIDUAL', 'SAFE_EXTRA_QUEUE']);
@@ -402,9 +403,9 @@ const sourceFileToBase64 = (file: File) =>
     reader.readAsDataURL(file);
   });
 
-const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole }) => {
+const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initialView = 'control' }) => {
   const { addNotification } = useNotifications();
-  const [view, setView] = useState<WorkspaceView>('control');
+  const [view, setView] = useState<WorkspaceView>(initialView);
   const [overview, setOverview] = useState<ClearingOverview | null>(null);
   const [batches, setBatches] = useState<ClearingBatchSummary[]>([]);
   const [batch, setBatch] = useState<ClearingBatch | null>(null);
@@ -429,6 +430,7 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole }) => 
   const [importIdentityKind, setImportIdentityKind] = useState<AccountLookupMode>('ACCOUNT');
   const [batchName, setBatchName] = useState('');
   const [financeReference, setFinanceReference] = useState('');
+
   const [command, setCommand] = useState<CommandKind | null>(null);
   const [commandBatchId, setCommandBatchId] = useState<string | null>(null);
   const [changeReference, setChangeReference] = useState('');
@@ -441,6 +443,10 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole }) => 
   const [directAmount, setDirectAmount] = useState('');
   const [directReference, setDirectReference] = useState('');
   const [directNote, setDirectNote] = useState('');
+
+  useEffect(() => {
+    setView(initialView);
+  }, [initialView]);
 
   const refreshBatch = useCallback(async (batchId: string) => {
     const next = await clearingApi.getBatch(batchId);

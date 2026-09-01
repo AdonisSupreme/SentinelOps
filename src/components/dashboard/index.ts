@@ -5,6 +5,7 @@ export { default as QuickActions } from './QuickActions';
 export { default as LiveActivity } from './LiveActivity';
 export { default as GamificationPanel } from './GamificationPanel';
 export { DashboardSkeleton } from './DashboardSkeleton';
+export { default as OperationalTransparency } from './OperationalTransparency';
 export { DatabaseStatsSkeleton } from './DatabaseStatsSkeleton';
 export { ChecklistsSkeleton } from './ChecklistsSkeleton';
 export { PerformanceSkeleton } from './PerformanceSkeleton';
