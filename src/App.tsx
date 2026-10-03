@@ -1,3 +1,5 @@
+import { AccessProvider, PageAccess } from './contexts/AccessContext';
+import AccessManagementPage from './pages/AccessManagementPage';
 // src/App.tsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
@@ -40,7 +42,7 @@ function App() {
       <Router>
         <ThemeProvider>
           <AuthProvider>
-            <AppConfigProvider>
+            <AccessProvider><AppConfigProvider>
               <NotificationProvider>
                 <ChecklistProvider>
                 <GlobalStyles />
@@ -55,23 +57,24 @@ function App() {
                         
                         {/* Protected Routes */}
                         <Route element={<PrivateRoute />}>
-                          <Route path="/" element={<DashboardPage />} />
-                          <Route path="/database-stats" element={<DatabaseStatsPage />} />
-                          <Route path="/checklists" element={<ChecklistsPage />} />
-                          <Route path="/checklist/:id" element={<ChecklistPage />} />
-                          <Route path="/tasks" element={<TaskCenterPage />} />
-                          <Route path="/templates" element={<TemplateManagerPage />} />
-                          <Route path="/trustlink" element={<TrustlinkOperationsPage />} />
-                          <Route path="/network-sentinel" element={<NetworkSentinelPage />} />
-                          <Route path="/nexus" element={<NexusPage />} />
-                          <Route path="/funds-custody" element={<FundsCustodyPage />} />
-                          <Route path="/reports" element={<ReportsPage />} />
-                          <Route path="/performance" element={<PerformancePage />} />
-                          <Route path="/users" element={<UserManagementPage />} />
-                          <Route path="/team" element={<AdvancedTeamManagementPage />} />
-                          <Route path="/schedule" element={<UserScheduleDashboard />} />
-                          <Route path="/settings" element={<ProfileSettingsPage />} />
-                          <Route path="/manual" element={<SentinelManualPage />} />
+                          <Route path="/" element={<PageAccess><DashboardPage /></PageAccess>} />
+                          <Route path="/database-stats" element={<PageAccess><DatabaseStatsPage /></PageAccess>} />
+                          <Route path="/checklists" element={<PageAccess><ChecklistsPage /></PageAccess>} />
+                          <Route path="/checklist/:id" element={<PageAccess><ChecklistPage /></PageAccess>} />
+                          <Route path="/tasks" element={<PageAccess><TaskCenterPage /></PageAccess>} />
+                          <Route path="/templates" element={<PageAccess><TemplateManagerPage /></PageAccess>} />
+                          <Route path="/trustlink" element={<PageAccess><TrustlinkOperationsPage /></PageAccess>} />
+                          <Route path="/network-sentinel" element={<PageAccess><NetworkSentinelPage /></PageAccess>} />
+                          <Route path="/nexus" element={<PageAccess><NexusPage /></PageAccess>} />
+                          <Route path="/funds-custody" element={<PageAccess><FundsCustodyPage /></PageAccess>} />
+                          <Route path="/reports" element={<PageAccess><ReportsPage /></PageAccess>} />
+                          <Route path="/performance" element={<PageAccess><PerformancePage /></PageAccess>} />
+                          <Route path="/access" element={<PageAccess><AccessManagementPage /></PageAccess>} />
+                          <Route path="/users" element={<PageAccess><UserManagementPage /></PageAccess>} />
+                          <Route path="/team" element={<PageAccess><AdvancedTeamManagementPage /></PageAccess>} />
+                          <Route path="/schedule" element={<PageAccess><UserScheduleDashboard /></PageAccess>} />
+                          <Route path="/settings" element={<PageAccess><ProfileSettingsPage /></PageAccess>} />
+                          <Route path="/manual" element={<PageAccess><SentinelManualPage /></PageAccess>} />
                         </Route>
 
                         <Route path="*" element={<NotFoundPage />} />
@@ -85,7 +88,7 @@ function App() {
                 <ScrollToTop />
                 </ChecklistProvider>
               </NotificationProvider>
-            </AppConfigProvider>
+            </AppConfigProvider></AccessProvider>
           </AuthProvider>
         </ThemeProvider>
       </Router>

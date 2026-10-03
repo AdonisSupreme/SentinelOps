@@ -469,6 +469,25 @@ export interface NexusIncident {
   verdict?: IncidentVerdict | null;
 }
 
+export interface NexusIncidentNotificationSettings {
+  enabled: boolean;
+  notify_current_shift: boolean;
+  in_app_enabled: boolean;
+  email_enabled: boolean;
+  notify_on_recovery: boolean;
+  additional_email_recipients: string[];
+  schema_ready: boolean;
+  smtp_configured: boolean;
+  active_shift_recipient_count: number;
+  additional_email_recipient_count: number;
+  pending_deliveries: number;
+  last_delivery_status?: string | null;
+  last_delivery_at?: string | null;
+  last_delivery_error?: string | null;
+  updated_at?: string | null;
+  updated_by?: string | null;
+}
+
 export interface GraphNode {
   service_id: string;
   service_name: string;
@@ -1097,6 +1116,19 @@ class NexusApi {
   async listIncidents() {
     const response = await nexusApiClient.get<{ incidents: NexusIncident[] }>('/api/v1/nexus/incidents');
     return response.data.incidents;
+  }
+
+  async getIncidentNotificationSettings() {
+    const response = await nexusApiClient.get<NexusIncidentNotificationSettings>('/api/v1/nexus/notifications/settings');
+    return response.data;
+  }
+
+  async updateIncidentNotificationSettings(payload: Pick<
+    NexusIncidentNotificationSettings,
+    'enabled' | 'notify_current_shift' | 'in_app_enabled' | 'email_enabled' | 'notify_on_recovery' | 'additional_email_recipients'
+  >) {
+    const response = await nexusApiClient.put<NexusIncidentNotificationSettings>('/api/v1/nexus/notifications/settings', payload);
+    return response.data;
   }
 
   async getIncident(incidentId: string) {

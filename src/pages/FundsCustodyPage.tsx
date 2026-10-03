@@ -1,17 +1,18 @@
+import { useAccess } from '../contexts/AccessContext';
 import React from 'react';
 import { FaBalanceScale, FaShieldAlt } from 'react-icons/fa';
 import { useSearchParams } from 'react-router-dom';
 import UnauthorizedClearingWorkspace from '../components/nexus/UnauthorizedClearingWorkspace';
 import { useAuth } from '../contexts/AuthContext';
-import { SECTION_MANUAL_ID } from '../content/sentinelManual';
 import '../components/nexus/UnauthorizedClearingWorkspace.css';
 
 const FundsCustodyPage: React.FC = () => {
   const { user } = useAuth();
+  const { canAccessModule } = useAccess();
   const [searchParams] = useSearchParams();
   const actor = user?.username || user?.email || 'sentinel-operator';
   const userRole = (user?.role || '').toLowerCase();
-  const hasCustodyAccess = user?.section_id === SECTION_MANUAL_ID && userRole === 'admin';
+  const hasCustodyAccess = canAccessModule('funds_custody.workspace') && userRole === 'admin';
   const initialWorkspace = searchParams.get('workspace') === 'execution' ? 'execution' : 'control';
 
   if (!hasCustodyAccess) {

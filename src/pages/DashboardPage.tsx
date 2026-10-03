@@ -1,3 +1,4 @@
+import { useAccess, ModuleAccess } from '../contexts/AccessContext';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -19,7 +20,6 @@ import {
 } from 'react-icons/fa';
 import { FaArrowTrendUp } from 'react-icons/fa6';
 import { DashboardHeader, ChecklistCard, QuickActions, DashboardSkeleton, OperationalTransparency } from '../components/dashboard';
-import type { QuickActionSignal } from '../components/dashboard/QuickActions';
 import PageGuide from '../components/ui/PageGuide';
 import { pageGuides } from '../content/pageGuides';
 import { useAuth } from '../contexts/AuthContext';
@@ -250,7 +250,12 @@ const toneFromDatabaseStatus = (status?: string | null): SignalTone => {
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const { snapshot, loading, refresh, error } = useDashboardSnapshot();
+  const { canAccessModule, canAccessPage } = useAccess();
+  const { snapshot, loading, refresh, error } = useDashboardSnapshot(30000, canAccessModule('checklists.execution'));
+  const visibleSignal = (signal: {id:string;to:string}) => {
+    const key = ({'action-load':'task_manager.tasks',tasks:'task_manager.tasks',trustlink:'trustlink.daily_extraction',database:'database.statistics',fabric:'nexus.dashboard',network:'network_sentinel.monitoring'} as Record<string,string>)[signal.id];
+    return canAccessPage(signal.to) && (!key || canAccessModule(key));
+  };
   const [opsData, setOpsData] = useState<OpsData>(() => initialOpsData());
 
   const loadOpsData = useCallback(async (background = false) => {
@@ -266,12 +271,12 @@ const DashboardPage: React.FC = () => {
       nexusAgentsResult,
       networkResult,
     ] = await Promise.allSettled([
-      loadTaskSignal(),
-      trustlinkApi.getTodayStatus(),
-      dashboardApi.getDashboardStats(),
-      nexusApi.getFabricSummary(),
-      nexusApi.listLightAgents(),
-      networkSentinelApi.getCommandCenter(),
+      canAccessModule('task_manager.tasks') ? loadTaskSignal() : Promise.resolve(null),
+      canAccessModule('trustlink.daily_extraction') ? trustlinkApi.getTodayStatus() : Promise.resolve(null),
+      canAccessModule('database.statistics') ? dashboardApi.getDashboardStats() : Promise.resolve(null),
+      canAccessModule('nexus.dashboard') ? nexusApi.getFabricSummary() : Promise.resolve(null),
+      canAccessModule('nexus.agents') ? nexusApi.listLightAgents() : Promise.resolve([]),
+      canAccessModule('network_sentinel.monitoring') ? networkSentinelApi.getCommandCenter() : Promise.resolve(null),
     ]);
 
     setOpsData((current) => {
@@ -288,7 +293,7 @@ const DashboardPage: React.FC = () => {
         lastUpdated: new Date(),
       };
     });
-  }, []);
+  }, [canAccessModule]);
 
   useEffect(() => {
     void loadOpsData(false);
@@ -358,21 +363,26 @@ const DashboardPage: React.FC = () => {
   const commandSignals = useMemo<CommandSignal[]>(() => [
     {
       id: 'action-load',
-      label: 'Action load',
-      value: formatInteger(taskOpenLoad + commandMetrics.open_critical_items),
-      meta: `${formatInteger(opsData.taskSignal?.overdue_tasks)} overdue tasks / ${formatInteger(commandMetrics.open_critical_items)} checklist critical`,
+      label: 'Task queue',
+      value: opsData.taskSignal ? formatInteger(taskOpenLoad) : '--',
+      meta: `${formatInteger(opsData.taskSignal?.overdue_tasks)} overdue / ${formatInteger(opsData.taskSignal?.in_progress_tasks)} in progress`,
       to: '/tasks',
-      tone: opsData.taskSignal?.overdue_tasks || commandMetrics.open_critical_items ? 'danger' : 'ok',
+      tone: !opsData.taskSignal ? 'neutral' : opsData.taskSignal.overdue_tasks ? 'danger' : 'ok',
       icon: <FaTasks />,
     },
     {
       id: 'fabric',
-      label: 'Nexus + Network',
-      value: formatInteger(networkImpaired + nexusActiveIncidents),
-      meta: `${formatInteger(networkImpaired)} impaired monitors / ${formatInteger(nexusActiveIncidents)} Nexus incidents`,
+      label: 'Nexus incidents',
+      value: opsData.nexusFabric ? formatInteger(nexusActiveIncidents) : '--',
+      meta: `${formatInteger(activeNexusAgents)} agents online / ${formatInteger(staleNexusAgents)} stale`,
       to: '/nexus',
-      tone: networkImpaired + nexusActiveIncidents > 0 ? 'watch' : 'ok',
+      tone: !opsData.nexusFabric ? 'neutral' : nexusActiveIncidents > 0 || staleNexusAgents > 0 ? 'watch' : 'ok',
       icon: <FaProjectDiagram />,
+    },
+    {
+      id: 'network', label: 'Network health', value: networkOverview ? formatPercent(networkOverview.fleet_pulse) : '--',
+      meta: `${formatInteger(networkImpaired)} impaired monitors`, to: '/network-sentinel',
+      tone: !networkOverview ? 'neutral' : networkImpaired ? 'watch' : 'ok', icon: <FaSignal />,
     },
     {
       id: 'database',
@@ -397,68 +407,13 @@ const DashboardPage: React.FC = () => {
       icon: <FaLink />,
     },
   ], [
-    commandMetrics.open_critical_items,
+    commandMetrics.open_critical_items, activeNexusAgents, staleNexusAgents, networkOverview, opsData.nexusFabric,
     databaseMetrics?.usage_percentage,
     databasePrediction,
     databaseStatus,
     networkImpaired,
     nexusActiveIncidents,
     opsData.taskSignal,
-    taskOpenLoad,
-    trustlinkRun,
-    trustlinkStatus,
-  ]);
-
-  const operatorSignals = useMemo<QuickActionSignal[]>(() => [
-    {
-      id: 'tasks',
-      label: opsData.taskSignal?.source === 'mine' ? 'My task queue' : 'Task queue',
-      value: formatInteger(taskOpenLoad),
-      detail: `${formatInteger(opsData.taskSignal?.overdue_tasks)} overdue / ${formatPercent(opsData.taskSignal?.completion_rate)} closure`,
-      to: '/tasks',
-      tone: opsData.taskSignal?.overdue_tasks ? 'danger' : taskOpenLoad ? 'watch' : 'ok',
-      icon: <FaTasks />,
-    },
-    {
-      id: 'trustlink',
-      label: 'TrustLink',
-      value: prettyTrustlinkStatus(trustlinkStatus),
-      detail: trustlinkRun ? `${formatInteger(trustlinkRun.total_rows)} rows processed today` : 'Open run console',
-      to: '/trustlink',
-      tone: toneFromTrustlinkStatus(trustlinkStatus),
-      icon: <FaLink />,
-    },
-    {
-      id: 'database',
-      label: 'Database',
-      value: databasePrediction ? `${formatInteger(databasePrediction.daysRemaining)}d` : '--',
-      detail: databasePrediction
-        ? `${databasePrediction.status} runway / ${formatPercent(databaseMetrics?.usage_percentage)} used`
-        : 'Capacity telemetry pending',
-      to: '/database-stats',
-      tone: toneFromDatabaseStatus(databaseStatus),
-      icon: <FaDatabase />,
-    },
-    {
-      id: 'fabric',
-      label: 'Nexus fabric',
-      value: formatInteger(networkImpaired + nexusActiveIncidents),
-      detail: `${formatInteger(activeNexusAgents)}/${formatInteger(opsData.nexusAgents.length)} agents online / ${formatInteger(networkOverview?.fleet_pulse)}% pulse`,
-      to: '/nexus',
-      tone: networkImpaired + nexusActiveIncidents > 0 || staleNexusAgents > 0 ? 'watch' : 'ok',
-      icon: <FaProjectDiagram />,
-    },
-  ], [
-    activeNexusAgents,
-    databaseMetrics?.usage_percentage,
-    databasePrediction,
-    databaseStatus,
-    networkImpaired,
-    networkOverview?.fleet_pulse,
-    nexusActiveIncidents,
-    opsData.nexusAgents.length,
-    opsData.taskSignal,
-    staleNexusAgents,
     taskOpenLoad,
     trustlinkRun,
     trustlinkStatus,
@@ -466,21 +421,25 @@ const DashboardPage: React.FC = () => {
 
   const fabricRows = useMemo(() => [
     {
+      module: 'network_sentinel.monitoring',
       label: 'Network pulse',
       value: formatPercent(networkOverview?.fleet_pulse),
       detail: `${formatInteger(networkOverview?.enabled_services)} of ${formatInteger(networkOverview?.total_services)} monitors enabled`,
     },
     {
+      module: 'network_sentinel.monitoring',
       label: 'Impaired services',
       value: formatInteger(networkOverview?.impaired_services),
       detail: `${formatInteger(networkOverview?.down_services)} down / ${formatInteger(networkOverview?.degraded_services)} degraded`,
     },
     {
+      module: 'nexus.dashboard',
       label: 'Nexus incidents',
       value: formatInteger(opsData.nexusFabric?.active_incidents),
       detail: `${formatInteger(opsData.nexusFabric?.diagnostics_ready_services)} diagnostics-ready services`,
     },
     {
+      module: 'nexus.agents',
       label: 'Light agents',
       value: `${formatInteger(activeNexusAgents)}/${formatInteger(opsData.nexusAgents.length)}`,
       detail: staleNexusAgents ? `${formatInteger(staleNexusAgents)} stale agent heartbeat(s)` : 'Agent heartbeat lane nominal',
@@ -510,13 +469,13 @@ const DashboardPage: React.FC = () => {
 
       <section className="ops-command-strip">
         <div className="ops-command-title">
-          <span><FaShieldAlt /> Live command board</span>
+          <span><FaShieldAlt /> Operations overview</span>
           <strong>{commandMetrics.posture_label}</strong>
           <small>{operationalDayLabel} / refreshed {lastUpdatedLabel}</small>
         </div>
 
         <div className="ops-signal-grid">
-          {commandSignals.map((signal) => (
+          {commandSignals.filter(visibleSignal).map((signal) => (
             <Link key={signal.id} to={signal.to} className={`ops-signal-card tone-${signal.tone}`}>
               <span className="ops-signal-icon">{signal.icon}</span>
               <span className="ops-signal-copy">
@@ -531,9 +490,9 @@ const DashboardPage: React.FC = () => {
 
       <OperationalTransparency />
 
-      <div className="dashboard-grid command-grid">
-        <div className="dashboard-left command-main">
-          <section className="dashboard-section command-panel command-panel-threads">
+      <div className="dashboard-grid command-grid" style={canAccessModule('checklists.execution') ? undefined : {gridTemplateColumns:'minmax(0, 1fr)'}}>
+        {canAccessModule('checklists.execution') && <div className="dashboard-left command-main">
+          <ModuleAccess module="checklists.execution"><section className="dashboard-section command-panel command-panel-threads">
             <div className="section-header command-section-header">
               <h2>
                 <FaClipboardCheck /> Operational Day Threads
@@ -554,9 +513,9 @@ const DashboardPage: React.FC = () => {
                 checklistThreads.map((thread) => <ChecklistCard key={thread.id} thread={thread} />)
               )}
             </div>
-          </section>
+          </section></ModuleAccess>
 
-          <section className="dashboard-section command-panel command-matrix-panel">
+          <ModuleAccess module="checklists.execution"><section className="dashboard-section command-panel command-matrix-panel">
             <div className="section-header command-section-header">
               <h2>
                 <FaSignal /> Operational Matrix
@@ -585,9 +544,9 @@ const DashboardPage: React.FC = () => {
                 <small>active shifts missing operator presence</small>
               </article>
             </div>
-          </section>
+          </section></ModuleAccess>
 
-          <section className="dashboard-section command-panel">
+          <ModuleAccess module="checklists.execution"><section className="dashboard-section command-panel">
             <div className="section-header command-section-header">
               <h2>
                 <FaArrowTrendUp /> Handover Summary
@@ -612,9 +571,9 @@ const DashboardPage: React.FC = () => {
                 ))
               )}
             </div>
-          </section>
+          </section></ModuleAccess>
 
-          <section className="dashboard-section command-panel command-stance-panel">
+          <ModuleAccess module="checklists.execution"><section className="dashboard-section command-panel command-stance-panel">
             <div className="stance-row">
               <FaBolt />
               <span>Execution</span>
@@ -630,17 +589,16 @@ const DashboardPage: React.FC = () => {
               <span>Staffed</span>
               <strong>{formatInteger(Math.max(commandMetrics.active_instances - commandMetrics.coverage_gap_count, 0))}/{formatInteger(commandMetrics.active_instances)}</strong>
             </div>
-          </section>
-        </div>
+          </section></ModuleAccess>
+        </div>}
 
         <div className="dashboard-right command-side">
-          <QuickActions
+          <ModuleAccess module="checklists.execution"><QuickActions
             onRefresh={refreshEverything}
             existingThreads={checklistThreads}
-            signals={operatorSignals}
-          />
+          /></ModuleAccess>
 
-          <section className="dashboard-section command-panel">
+          <ModuleAccess module="checklists.execution"><section className="dashboard-section command-panel">
             <div className="section-header command-section-header">
               <h2>
                 <FaExclamationTriangle /> Attention Queue
@@ -665,9 +623,9 @@ const DashboardPage: React.FC = () => {
                 ))
               )}
             </div>
-          </section>
+          </section></ModuleAccess>
 
-          <section className="dashboard-section command-panel fabric-panel">
+          <ModuleAccess module="nexus.dashboard"><section className="dashboard-section command-panel fabric-panel">
             <div className="section-header command-section-header">
               <h2>
                 <FaServer /> Sentinel Fabric
@@ -676,7 +634,7 @@ const DashboardPage: React.FC = () => {
             </div>
 
             <div className="fabric-lanes">
-              {fabricRows.map((row) => (
+              {fabricRows.filter(row => canAccessModule(row.module)).map((row) => (
                 <article key={row.label} className="fabric-lane">
                   <span>{row.label}</span>
                   <strong>{row.value}</strong>
@@ -684,7 +642,7 @@ const DashboardPage: React.FC = () => {
                 </article>
               ))}
             </div>
-          </section>
+          </section></ModuleAccess>
           
         </div>
       </div>

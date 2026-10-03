@@ -21,7 +21,7 @@ export const DashboardSkeleton: React.FC = () => {
         </div>
 
         <div className="dash-skel-signal-grid">
-          {Array.from({ length: 4 }).map((_, index) => (
+          {Array.from({ length: 5 }).map((_, index) => (
             <article key={index} className="dash-skel-signal-card">
               <div className="dash-skel-block dash-icon" />
               <div className="dash-skel-signal-copy">
@@ -101,22 +101,10 @@ export const DashboardSkeleton: React.FC = () => {
               <div className="dash-skel-block dash-small-icon" />
             </div>
             <div className="dash-skel-action-grid">
-              {Array.from({ length: 6 }).map((_, index) => (
+              {Array.from({ length: 2 }).map((_, index) => (
                 <div key={index} className="dash-skel-action-btn">
                   <div className="dash-skel-block dash-small-icon" />
                   <div className="dash-skel-line dash-label" />
-                </div>
-              ))}
-            </div>
-            <div className="dash-skel-live-stack">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="dash-skel-live-row">
-                  <div className="dash-skel-block dash-small-icon" />
-                  <div>
-                    <div className="dash-skel-line dash-label" />
-                    <div className="dash-skel-line dash-meta" />
-                  </div>
-                  <div className="dash-skel-chip" />
                 </div>
               ))}
             </div>

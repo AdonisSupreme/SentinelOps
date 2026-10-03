@@ -1,7 +1,9 @@
+import { useAccess, ModuleAccess } from '../contexts/AccessContext';
 import React, { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   FaBook,
+  FaBell,
   FaBroadcastTower,
   FaCalendarAlt,
   FaCheckCircle,
@@ -11,6 +13,7 @@ import {
   FaCopy,
   FaDatabase,
   FaExclamationTriangle,
+  FaEnvelope,
   FaKey,
   FaLink,
   FaNetworkWired,
@@ -63,6 +66,7 @@ import nexusApi, {
   NexusAgentTokenStatus,
   NexusEvidence,
   NexusIncident,
+  NexusIncidentNotificationSettings,
   NexusLightAgentSummary,
   NexusRiskLevel,
   NexusServiceLogTail,
@@ -106,7 +110,6 @@ const databaseRoleOptions = ['', 'primary', 'standby', 'replica', 'read_replica'
 const databaseAccessModeOptions = ['', 'read_only', 'read_write', 'write_heavy', 'admin', 'reporting'];
 const criticalityOptions = ['critical', 'high', 'medium', 'low'];
 const certificationOptions = ['catalog_only', 'observe_only', 'correlate_ready', 'diagnostics_ready', 'restart_ready'];
-const NEXUS_SECTION_ID = '7bd4144d-68d8-4ac3-897d-245941612daf';
 
 type WorkspaceTab = 'incidents' | 'services' | 'agents' | 'databases' | 'rollover' | 'clusters' | 'flows' | 'dependencies' | 'sops' | 'onboarding';
 const workspaceTabIds = new Set<WorkspaceTab>(['incidents', 'services', 'agents', 'databases', 'rollover', 'clusters', 'flows', 'dependencies', 'sops', 'onboarding']);
@@ -898,6 +901,8 @@ const parseRolloverAssignmentsInput = (value: string, label: string): RolloverRu
 
 const NexusPage: React.FC = () => {
   const { user } = useAuth();
+  const { canAccessModule, canAccessPage } = useAccess();
+  const canWorkspace = useCallback((workspace: string) => canAccessModule('nexus.' + workspace), [canAccessModule]);
   const { applicationTimeZone } = useAppConfig();
   const { addNotification } = useNotifications();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -914,6 +919,13 @@ const NexusPage: React.FC = () => {
   const [indexedSops, setIndexedSops] = useState<IndexedSop[]>([]);
   const [sopCorpusSummary, setSopCorpusSummary] = useState<{ indexed: number; chunks: number }>({ indexed: 0, chunks: 0 });
   const [fabricSummary, setFabricSummary] = useState<FabricSummary | null>(null);
+  const [incidentNotificationSettings, setIncidentNotificationSettings] = useState<NexusIncidentNotificationSettings | null>(null);
+  const [incidentNotificationDraft, setIncidentNotificationDraft] = useState<NexusIncidentNotificationSettings | null>(null);
+  const [incidentNotificationEmails, setIncidentNotificationEmails] = useState('');
+  const [incidentNotificationModalOpen, setIncidentNotificationModalOpen] = useState(false);
+  const [incidentNotificationBusy, setIncidentNotificationBusy] = useState(false);
+  const [incidentNotificationError, setIncidentNotificationError] = useState<string | null>(null);
+  const [incidentNotificationLoadError, setIncidentNotificationLoadError] = useState<string | null>(null);
   const [agentTokenStatus, setAgentTokenStatus] = useState<NexusAgentTokenStatus | null>(null);
   const [generatedAgentToken, setGeneratedAgentToken] = useState<NexusAgentTokenGenerateResponse | null>(null);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
@@ -1043,11 +1055,11 @@ const NexusPage: React.FC = () => {
   const requestedWorkspace = searchParams.get('workspace');
   const activeWorkspace: WorkspaceTab = requestedWorkspace && workspaceTabIds.has(requestedWorkspace as WorkspaceTab)
     ? requestedWorkspace as WorkspaceTab
-    : 'incidents';
+    : Array.from(workspaceTabIds).find(canWorkspace) || 'incidents';
   const selectedTabParam = searchParams.get('tab');
   const actor = user?.username || user?.email || 'sentinel-operator';
   const userRole = (user?.role || '').toLowerCase();
-  const hasNexusSectionAccess = (user as any)?.section_id === NEXUS_SECTION_ID;
+  const hasNexusSectionAccess = canAccessPage('/nexus');
   const canManageNexus = userRole === 'admin';
   const canOperateNexus = ['admin', 'manager', 'supervisor'].includes(userRole);
   const activeDetailTab: NexusDetailTab =
@@ -1110,7 +1122,7 @@ const NexusPage: React.FC = () => {
     return networkServiceId ? `/network-sentinel?service=${networkServiceId}&tab=evidence` : null;
   }, [selectedIncident?.suspected_root_service, serviceMap]);
 
-  const workspaceLabel = workspaceLabels[activeWorkspace] || 'Incidents';
+  const workspaceLabel = canWorkspace(activeWorkspace) ? workspaceLabels[activeWorkspace] : 'Fabric overview';
 
   const syncHealthLabel = (fabricSummary?.sync_health || 'idle').toUpperCase();
   const lastSyncLabel = formatDateTime(fabricSummary?.last_sync_at);
@@ -1223,20 +1235,22 @@ const NexusPage: React.FC = () => {
         rolloverReminderData,
         indexedSopData,
         tokenStatusData,
+        notificationSettingsData,
       ] = await Promise.all([
-        nexusApi.listIncidents(),
-        nexusApi.listServices(),
-        nexusApi.listLightAgents(),
-        nexusApi.listClusters(),
-        nexusApi.listBusinessFlows(),
-        nexusApi.listDependencies(),
-        nexusApi.getFabricSummary(),
-        nexusApi.listManagedSops(false),
-        nexusApi.listRolloverEnvironments(),
-        nexusApi.listRolloverExecutions(),
-        nexusApi.listRolloverReminders(),
-        nexusApi.listIndexedSops(),
-        canManageNexus ? nexusApi.getAgentTokenStatus() : Promise.resolve(null),
+        (canAccessModule('nexus.incidents') ? nexusApi.listIncidents() : Promise.resolve([])),
+        ((['nexus.services','nexus.databases','nexus.onboarding'].some(canAccessModule)) ? nexusApi.listServices() : Promise.resolve([])),
+        (canAccessModule('nexus.agents') ? nexusApi.listLightAgents() : Promise.resolve([])),
+        (canAccessModule('nexus.clusters') ? nexusApi.listClusters() : Promise.resolve([])),
+        (canAccessModule('nexus.flows') ? nexusApi.listBusinessFlows() : Promise.resolve([])),
+        (canAccessModule('nexus.dependencies') ? nexusApi.listDependencies() : Promise.resolve([])),
+        (canAccessModule('nexus.dashboard') ? nexusApi.getFabricSummary() : Promise.resolve(null)),
+        (canAccessModule('nexus.sops') ? nexusApi.listManagedSops(false) : Promise.resolve([])),
+        (canAccessModule('nexus.rollover') ? nexusApi.listRolloverEnvironments() : Promise.resolve([])),
+        (canAccessModule('nexus.rollover') ? nexusApi.listRolloverExecutions() : Promise.resolve([])),
+        (canAccessModule('nexus.rollover') ? nexusApi.listRolloverReminders() : Promise.resolve([])),
+        (canAccessModule('nexus.sops') ? nexusApi.listIndexedSops() : Promise.resolve({sops: [], summary: {indexed:0,chunks:0}})),
+        canManageNexus && canAccessModule('nexus.onboarding') ? nexusApi.getAgentTokenStatus() : Promise.resolve(null),
+        (canAccessModule('nexus.incidents') ? nexusApi.getIncidentNotificationSettings().catch(() => null) : Promise.resolve(null)),
       ]);
 
       const orderedIncidents = [...incidentData].sort((left, right) => {
@@ -1306,6 +1320,10 @@ const NexusPage: React.FC = () => {
         setSopCorpusSummary(indexedSopData.summary);
         setFabricSummary(summaryData);
         setAgentTokenStatus(tokenStatusData);
+        setIncidentNotificationSettings(notificationSettingsData);
+        setIncidentNotificationLoadError(
+          notificationSettingsData ? null : 'The notification control plane is temporarily unavailable.',
+        );
       });
       setError(null);
     } catch (err: any) {
@@ -1317,13 +1335,13 @@ const NexusPage: React.FC = () => {
         setLoading(false);
       }
     }
-  }, [canManageNexus]);
+  }, [canManageNexus, canAccessModule]);
 
   const refreshOperationalPulse = useCallback(async () => {
     try {
       const [incidentData, summaryData] = await Promise.all([
-        nexusApi.listIncidents(),
-        nexusApi.getFabricSummary(),
+        (canAccessModule('nexus.incidents') ? nexusApi.listIncidents() : Promise.resolve([])),
+        (canAccessModule('nexus.dashboard') ? nexusApi.getFabricSummary() : Promise.resolve(null)),
       ]);
       const orderedIncidents = [...incidentData].sort((left, right) => {
         const statusRank = (status: string) => (status === 'OPEN' ? 4 : status === 'MONITORING' ? 3 : status === 'AWAITING_VERDICT' ? 2 : 1);
@@ -1345,7 +1363,7 @@ const NexusPage: React.FC = () => {
     } catch {
       // Keep the last known live state on transient pulse failures.
     }
-  }, []);
+  }, [canAccessModule]);
 
   useEffect(() => {
     if (!user) {
@@ -2116,8 +2134,9 @@ const NexusPage: React.FC = () => {
       { id: 'dependencies' as const, label: 'Dependencies', icon: <FaCodeBranch />, count: dependencies.length },
       { id: 'sops' as const, label: 'SOPs', icon: <FaBook />, count: sopCorpusSummary.indexed || indexedSops.length },
       { id: 'onboarding' as const, label: 'Onboarding', icon: <FaCloudUploadAlt />, count: fabricSummary?.restart_ready_services || 0 },
-    ],
+    ].filter(tab => canWorkspace(tab.id)),
     [
+      canWorkspace,
       businessFlows.length,
       clusters.length,
       databaseServices.length,
@@ -2332,6 +2351,7 @@ const NexusPage: React.FC = () => {
   }, [services]);
 
   const setWorkspaceTab = (workspace: WorkspaceTab) => {
+    if (!canWorkspace(workspace)) return;
     const nextParams = new URLSearchParams(searchParams.toString());
     nextParams.set('workspace', workspace);
     setSearchParams(nextParams, { replace: true });
@@ -2456,6 +2476,66 @@ const NexusPage: React.FC = () => {
       message: 'Only SentinelOps administrators can modify the Nexus catalog and control-plane configuration.',
       priority: 'medium',
     });
+  };
+
+  const openIncidentNotificationSettings = () => {
+    if (!canManageNexus) {
+      notifyAdminOnly();
+      return;
+    }
+    if (incidentNotificationSettings) {
+      setIncidentNotificationDraft({ ...incidentNotificationSettings });
+      setIncidentNotificationEmails(incidentNotificationSettings.additional_email_recipients.join('\n'));
+    }
+    setIncidentNotificationError(null);
+    setIncidentNotificationModalOpen(true);
+  };
+
+  const saveIncidentNotificationSettings = async () => {
+    if (!canManageNexus || !incidentNotificationDraft) {
+      notifyAdminOnly();
+      return;
+    }
+    const additionalRecipients = Array.from(
+      new Set(
+        incidentNotificationEmails
+          .split(/[\s,;]+/)
+          .map((recipient) => recipient.trim().toLowerCase())
+          .filter(Boolean),
+      ),
+    );
+    setIncidentNotificationBusy(true);
+    setIncidentNotificationError(null);
+    try {
+      const saved = await nexusApi.updateIncidentNotificationSettings({
+        enabled: incidentNotificationDraft.enabled,
+        notify_current_shift: incidentNotificationDraft.notify_current_shift,
+        in_app_enabled: incidentNotificationDraft.in_app_enabled,
+        email_enabled: incidentNotificationDraft.email_enabled,
+        notify_on_recovery: incidentNotificationDraft.notify_on_recovery,
+        additional_email_recipients: additionalRecipients,
+      });
+      setIncidentNotificationSettings(saved);
+      setIncidentNotificationDraft(saved);
+      setIncidentNotificationEmails(saved.additional_email_recipients.join('\n'));
+      setIncidentNotificationModalOpen(false);
+      addNotification({
+        type: 'success',
+        message: saved.enabled
+          ? 'Nexus incident notifications are armed for the configured recipients.'
+          : 'Nexus incident notifications are paused by an administrator.',
+        priority: 'medium',
+      });
+    } catch (err: any) {
+      setIncidentNotificationError(
+        err?.response?.data?.detail
+        || err?.response?.data?.error?.message
+        || err?.message
+        || 'Nexus notification settings could not be saved.',
+      );
+    } finally {
+      setIncidentNotificationBusy(false);
+    }
   };
 
   const refreshEverything = async () => {
@@ -4798,7 +4878,7 @@ const NexusPage: React.FC = () => {
 
           <div className="nexus-tabs-shell nexus-shell">
             <div className="nexus-tablist" role="tablist" aria-label="Sentinel Nexus detail sections">
-              {detailTabs.map((tab) => (
+              {detailTabs.filter(tab => tab.id !== 'procedure' || canAccessModule('nexus.sops')).map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
@@ -4832,6 +4912,80 @@ const NexusPage: React.FC = () => {
 
   const renderIncidentWorkspace = () => (
     <div className="nexus-card-workspace">
+      <section
+        className={`nexus-notification-mesh nexus-shell ${
+          incidentNotificationLoadError || !incidentNotificationSettings?.schema_ready
+            ? 'setup-required'
+            : incidentNotificationSettings.enabled
+              ? 'armed'
+              : 'paused'
+        }`}
+        aria-label="Nexus incident notification status"
+      >
+        <div className="notification-mesh-beacon" aria-hidden="true">
+          <FaBell />
+          <span />
+        </div>
+        <div className="notification-mesh-copy">
+          <span className="panel-kicker">Incident Notification Mesh</span>
+          <strong>
+            {incidentNotificationLoadError
+              ? 'Notification control plane unavailable'
+              : !incidentNotificationSettings?.schema_ready
+              ? 'Notification setup required'
+              : incidentNotificationSettings.enabled
+                ? 'Armed for immediate incident delivery'
+                : 'Paused by an administrator'}
+          </strong>
+          <small>
+            {incidentNotificationLoadError
+              ? 'Incident intelligence remains operational while this isolated delivery component reconnects.'
+              : !incidentNotificationSettings?.schema_ready
+              ? 'Apply the Nexus notification migration to activate durable delivery.'
+              : incidentNotificationSettings.notify_current_shift
+                ? `${incidentNotificationSettings.active_shift_recipient_count} active-shift operator(s) in scope`
+                : 'Current-shift delivery is disabled'}
+          </small>
+        </div>
+        <div className="notification-mesh-telemetry">
+          <span>
+            <small>Channels</small>
+            <strong>
+              {incidentNotificationSettings
+                ? [
+                  incidentNotificationSettings.in_app_enabled ? 'In-app' : null,
+                  incidentNotificationSettings.email_enabled ? 'Email' : null,
+                ].filter(Boolean).join(' + ') || 'None'
+                : 'Loading'}
+            </strong>
+          </span>
+          <span>
+            <small>Extra email</small>
+            <strong>{incidentNotificationSettings?.additional_email_recipient_count || 0}</strong>
+          </span>
+          <span>
+            <small>Queue</small>
+            <strong>{incidentNotificationSettings?.pending_deliveries || 0} pending</strong>
+          </span>
+          <span>
+            <small>Last delivery</small>
+            <strong>{incidentNotificationSettings?.last_delivery_status?.replace(/_/g, ' ') || 'No events yet'}</strong>
+          </span>
+        </div>
+        {canManageNexus ? (
+          <button
+            type="button"
+            className="notification-mesh-configure"
+            onClick={openIncidentNotificationSettings}
+            disabled={Boolean(incidentNotificationLoadError)}
+            title={incidentNotificationLoadError || undefined}
+          >
+            <FaShieldAlt /> Configure
+          </button>
+        ) : (
+          <span className="notification-mesh-readonly"><FaShieldAlt /> Admin controlled</span>
+        )}
+      </section>
       <section className="nexus-panel nexus-shell nexus-deck-panel">
         <div className="panel-head">
           <div>
@@ -5666,9 +5820,9 @@ const NexusPage: React.FC = () => {
               <p>Open an environment, assess drift, then execute ROLLOVER only through the OTP gate.</p>
             </div>
             {canManageNexus ? (
-              <button type="button" className="secondary-action" onClick={startNewRolloverEnvironment}>
+              <ModuleAccess module="nexus.rollover" ><button type="button" className="secondary-action" onClick={startNewRolloverEnvironment}>
                 <FaPlus /> New
-              </button>
+              </button></ModuleAccess>
             ) : (
               <span className="readonly-pill">Operator view</span>
             )}
@@ -5927,9 +6081,9 @@ const NexusPage: React.FC = () => {
                           <span>{service.certification.lifecycle_stage.replace(/_/g, ' ')}</span>
                         </div>
                         <p>{service.service_id} | {service.service_type} | {service.criticality}</p>
-                        <button type="button" className="secondary-action compact" onClick={() => openLinkedServiceContract(service.service_id)}>
+                        <ModuleAccess module="nexus.services" ><button type="button" className="secondary-action compact" onClick={() => openLinkedServiceContract(service.service_id)}>
                           <FaWrench /> Open Contract
-                        </button>
+                        </button></ModuleAccess>
                       </div>
                     ))}
                     {!rolloverLinkedServices.length ? <div className="empty-state compact">No services match this rollover environment yet.</div> : null}
@@ -9267,12 +9421,12 @@ const NexusPage: React.FC = () => {
           <div className="management-actions">
             {canManageNexus ? (
               <>
-                <button type="button" className="primary-action" onClick={startNewDatabaseService}>
+                <ModuleAccess module="nexus.services" ><button type="button" className="primary-action" onClick={startNewDatabaseService}>
                   <FaPlus /> New DB Service
-                </button>
-                <button type="button" className="secondary-action" onClick={startNewDatabaseDependency}>
+                </button></ModuleAccess>
+                <ModuleAccess module="nexus.dependencies" ><button type="button" className="secondary-action" onClick={startNewDatabaseDependency}>
                   <FaCodeBranch /> New DB Edge
-                </button>
+                </button></ModuleAccess>
               </>
             ) : (
               <span className="readonly-pill">Operator view</span>
@@ -9328,7 +9482,7 @@ const NexusPage: React.FC = () => {
                     <span><small>Scope</small><strong>{profile.schemas?.length ? `${profile.schemas.length} schema${profile.schemas.length === 1 ? '' : 's'}` : 'No schemas'} / {profile.safe_diagnostics?.length ? `${profile.safe_diagnostics.length} diagnostics` : 'No diagnostics'}</strong></span>
                   </div>
                   <div className="database-card-actions">
-                    <button
+                    <ModuleAccess module="nexus.services" ><button
                       type="button"
                       className="secondary-action"
                       onClick={() => {
@@ -9338,7 +9492,7 @@ const NexusPage: React.FC = () => {
                       }}
                     >
                       <FaServer /> Edit Service
-                    </button>
+                    </button></ModuleAccess>
                   </div>
                 </article>
               );
@@ -9383,7 +9537,7 @@ const NexusPage: React.FC = () => {
                     <span><small>Guardrails</small><strong>{access.expected_error_codes?.length ? `${access.expected_error_codes.length} expected errors` : access.statement_timeout_ms ? `${access.statement_timeout_ms} ms timeout` : `${edge.timeout_budget_ms || 'No'} edge budget`}</strong></span>
                   </div>
                   <div className="database-card-actions">
-                    <button
+                    <ModuleAccess module="nexus.dependencies" ><button
                       type="button"
                       className="secondary-action"
                       onClick={() => {
@@ -9393,7 +9547,7 @@ const NexusPage: React.FC = () => {
                       }}
                     >
                       <FaCodeBranch /> Edit Edge
-                    </button>
+                    </button></ModuleAccess>
                   </div>
                 </article>
               );
@@ -9451,7 +9605,7 @@ const NexusPage: React.FC = () => {
           </div>
           <div className="database-gap-queue">
             {servicesMissingDatabaseDeclaration.map((service) => (
-              <button
+              <React.Fragment key={service.service_id}>{canWorkspace('services') ? <button
                 key={service.service_id}
                 type="button"
                 className="database-gap-row"
@@ -9464,7 +9618,11 @@ const NexusPage: React.FC = () => {
                 <span>{service.service_name || service.service_id}</span>
                 <strong>{service.environment || 'environment unset'}</strong>
                 <small>Declare database contract</small>
-              </button>
+              </button> : <div className="database-gap-row">
+                <span>{service.service_name || service.service_id}</span>
+                <strong>{service.environment || 'environment unset'}</strong>
+                <small>Declare database contract</small>
+              </div>}</React.Fragment>
             ))}
           </div>
         </section>
@@ -9559,7 +9717,7 @@ const NexusPage: React.FC = () => {
                   {agent.services.map((service) => {
                     const serviceId = String(service.service_id || '');
                     return (
-                      <button
+                      <React.Fragment key={serviceId}>{canWorkspace('services') ? <button
                         key={serviceId}
                         type="button"
                         className={`agent-service-row ${service.has_heartbeat ? 'reporting' : 'missing'}`}
@@ -9578,7 +9736,17 @@ const NexusPage: React.FC = () => {
                           <span>{String(service.lifecycle_stage || 'uncertified').replace(/_/g, ' ')}</span>
                           <strong>{service.has_heartbeat ? 'Signal live' : 'Awaiting signal'}</strong>
                         </div>
-                      </button>
+                      </button> : <div className={`agent-service-row ${service.has_heartbeat ? 'reporting' : 'missing'}`}>
+                        <span className="agent-service-status" aria-hidden="true" />
+                        <div className="agent-service-copy">
+                          <strong>{String(service.service_name || serviceId)}</strong>
+                          <small>{serviceId} / {service.has_heartbeat ? 'heartbeat live' : 'awaiting heartbeat'}</small>
+                        </div>
+                        <div className="agent-service-state">
+                          <span>{String(service.lifecycle_stage || 'uncertified').replace(/_/g, ' ')}</span>
+                          <strong>{service.has_heartbeat ? 'Signal live' : 'Awaiting signal'}</strong>
+                        </div>
+                      </div>}</React.Fragment>
                     );
                   })}
                   {!agent.services.length ? <div className="empty-state compact">This agent has not reported watched services yet.</div> : null}
@@ -9724,7 +9892,7 @@ const NexusPage: React.FC = () => {
                   </div>
                   <div className="stage-card-list">
                     {(servicesByStage[stage] || []).map((service) => (
-                      <button
+                      <React.Fragment key={service.service_id}>{canWorkspace('services') ? <button
                         key={service.service_id}
                         type="button"
                         className="stage-card"
@@ -9735,7 +9903,9 @@ const NexusPage: React.FC = () => {
                         }}
                       >
                         {service.service_name}
-                      </button>
+                      </button> : <div className="stage-card">
+                        {service.service_name}
+                      </div>}</React.Fragment>
                     ))}
                     {!servicesByStage[stage]?.length ? <span className="context-empty">No services yet.</span> : null}
                   </div>
@@ -9841,6 +10011,134 @@ const NexusPage: React.FC = () => {
     </section>
   );
 
+  const incidentNotificationSettingsModal = incidentNotificationModalOpen ? (
+    <div className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-notification-settings-title">
+      <section className="nexus-modal nexus-notification-modal nexus-shell">
+        <button
+          type="button"
+          className="nexus-modal-close"
+          onClick={() => setIncidentNotificationModalOpen(false)}
+          aria-label="Close incident notification settings"
+        >
+          <FaTimesCircle />
+        </button>
+        <div className="notification-modal-head">
+          <div className="notification-modal-orbit" aria-hidden="true"><FaBell /></div>
+          <div>
+            <span className="panel-kicker">Nexus Administrative Control</span>
+            <h2 id="nexus-notification-settings-title">Incident Notification Mesh</h2>
+            <p>Control immediate incident and recovery delivery without touching the Light Agent or slowing evidence ingestion.</p>
+          </div>
+          <span className={`notification-master-state ${incidentNotificationDraft?.enabled ? 'armed' : 'paused'}`}>
+            {incidentNotificationDraft?.enabled ? 'Armed' : 'Paused'}
+          </span>
+        </div>
+
+        {!incidentNotificationDraft?.schema_ready ? (
+          <div className="nexus-banner warning">
+            <strong>Database migration required.</strong>
+            <span>Apply `2026_19_add_nexus_incident_notifications.sql` to the shared SentinelOps database, then refresh Nexus.</span>
+          </div>
+        ) : null}
+
+        {incidentNotificationDraft ? (
+          <div className="notification-modal-body">
+            <label className="notification-master-toggle">
+              <span>
+                <strong>Incident notifications</strong>
+                <small>One administrative kill switch. Correlation and incident retention continue when delivery is paused.</small>
+              </span>
+              <input
+                type="checkbox"
+                checked={incidentNotificationDraft.enabled}
+                onChange={(event) => setIncidentNotificationDraft({ ...incidentNotificationDraft, enabled: event.target.checked })}
+              />
+              <i aria-hidden="true" />
+            </label>
+
+            <div className="notification-channel-grid">
+              <label>
+                <span className="notification-channel-icon"><FaBroadcastTower /></span>
+                <span><strong>Current shift</strong><small>Resolve recipients from the active checklist shift at event time.</small></span>
+                <input
+                  type="checkbox"
+                  checked={incidentNotificationDraft.notify_current_shift}
+                  onChange={(event) => setIncidentNotificationDraft({ ...incidentNotificationDraft, notify_current_shift: event.target.checked })}
+                />
+              </label>
+              <label>
+                <span className="notification-channel-icon"><FaBell /></span>
+                <span><strong>In-app alert</strong><small>Store a deep-linked notification and push it to connected operators.</small></span>
+                <input
+                  type="checkbox"
+                  checked={incidentNotificationDraft.in_app_enabled}
+                  onChange={(event) => setIncidentNotificationDraft({ ...incidentNotificationDraft, in_app_enabled: event.target.checked })}
+                />
+              </label>
+              <label>
+                <span className="notification-channel-icon"><FaEnvelope /></span>
+                <span><strong>Email alert</strong><small>Deliver the incident brief through the configured SentinelOps SMTP relay.</small></span>
+                <input
+                  type="checkbox"
+                  checked={incidentNotificationDraft.email_enabled}
+                  onChange={(event) => setIncidentNotificationDraft({ ...incidentNotificationDraft, email_enabled: event.target.checked })}
+                />
+              </label>
+              <label>
+                <span className="notification-channel-icon"><FaCheckCircle /></span>
+                <span><strong>Recovery signal</strong><small>Notify the same audience when operational impact ends.</small></span>
+                <input
+                  type="checkbox"
+                  checked={incidentNotificationDraft.notify_on_recovery}
+                  onChange={(event) => setIncidentNotificationDraft({ ...incidentNotificationDraft, notify_on_recovery: event.target.checked })}
+                />
+              </label>
+            </div>
+
+            <label className="notification-recipient-field">
+              <span><FaEnvelope /> Additional email recipients</span>
+              <small>One address per line, or separate addresses with commas or semicolons. Duplicates are removed automatically.</small>
+              <textarea
+                rows={5}
+                value={incidentNotificationEmails}
+                onChange={(event) => setIncidentNotificationEmails(event.target.value)}
+                placeholder={'service-owner@company.com\nmanagement@company.com'}
+              />
+            </label>
+
+            <div className="notification-delivery-health">
+              <span><small>Active shift reach</small><strong>{incidentNotificationDraft.active_shift_recipient_count} operator(s)</strong></span>
+              <span><small>SMTP relay</small><strong>{incidentNotificationDraft.smtp_configured ? 'Configured' : 'Not configured'}</strong></span>
+              <span><small>Durable queue</small><strong>{incidentNotificationDraft.pending_deliveries} pending</strong></span>
+              <span><small>Last result</small><strong>{incidentNotificationDraft.last_delivery_status?.replace(/_/g, ' ') || 'No delivery yet'}</strong></span>
+            </div>
+
+            {incidentNotificationDraft.email_enabled && !incidentNotificationDraft.smtp_configured ? (
+              <div className="nexus-banner warning">
+                <strong>Email delivery is not ready.</strong>
+                <span>Configure `SMTP_HOST` and `SMTP_FROM` in the Nexus environment. In-app delivery remains independent.</span>
+              </div>
+            ) : null}
+            {incidentNotificationError ? <div className="nexus-banner error">{incidentNotificationError}</div> : null}
+            <div className="notification-modal-actions">
+              <button type="button" className="secondary-action" onClick={() => setIncidentNotificationModalOpen(false)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="primary-action"
+                disabled={incidentNotificationBusy || !incidentNotificationDraft.schema_ready}
+                onClick={() => void saveIncidentNotificationSettings()}
+              >
+                <FaSave /> {incidentNotificationBusy ? 'Saving...' : 'Save notification posture'}
+              </button>
+            </div>
+          </div>
+        ) : <div className="empty-state">Loading notification configuration...</div>}
+      </section>
+    </div>
+  ) : null;
+
   if (user && !hasNexusSectionAccess) {
     return (
       <div className="nexus-page nexus-page--restricted">
@@ -9856,7 +10154,7 @@ const NexusPage: React.FC = () => {
           <h1>Sentinel Nexus is limited to the authorized SentinelOps section.</h1>
           <p>
             Your account can continue using the rest of SentinelOps, but Nexus incident intelligence, service-fabric views,
-            and action controls are available only to section {NEXUS_SECTION_ID}.
+            and action controls follow your section’s assigned modules.
           </p>
         </section>
       </div>
@@ -9881,7 +10179,7 @@ const NexusPage: React.FC = () => {
         <div className="nexus-ambient-grid" />
       </div>
       <div className="nexus-surface" />
-      <section className="nexus-hero nexus-shell">
+      <section className="nexus-hero nexus-shell" style={canAccessModule('nexus.dashboard') ? undefined : {gridTemplateColumns:'minmax(0, 1fr)'}}> 
         <div className="nexus-hero-copy">
           <div className="nexus-hero-hero-container">
             <div className="nexus-logo-container">
@@ -9903,10 +10201,10 @@ const NexusPage: React.FC = () => {
               <small>Workspace</small>
               <strong>{workspaceLabel}</strong>
             </span>
-            <span className={`sync-${(fabricSummary?.sync_health || 'idle').toLowerCase()}`}>
+            <ModuleAccess module="nexus.dashboard"><span className={`sync-${(fabricSummary?.sync_health || 'idle').toLowerCase()}`}>
               <small>Fabric Sync</small>
               <strong>{syncHealthLabel}</strong>
-            </span>
+            </span></ModuleAccess>
             <span>
               <small>Time Zone</small>
               <strong>{timezoneLabel}</strong>
@@ -9917,20 +10215,20 @@ const NexusPage: React.FC = () => {
               <FaSyncAlt /> {loading ? 'Refreshing...' : 'Refresh Nexus'}
             </button>
             {canManageNexus ? (
-              <button type="button" className="secondary-action" onClick={() => void syncNetworkSentinel()} disabled={syncBusy}>
+              <ModuleAccess module="nexus.onboarding" ><button type="button" className="secondary-action" onClick={() => void syncNetworkSentinel()} disabled={syncBusy}>
                 <FaNetworkWired /> {syncBusy ? 'Syncing...' : 'Sync Network Sentinel'}
-              </button>
+              </button></ModuleAccess>
             ) : null}
-            <button type="button" className="secondary-action" onClick={() => setWorkspaceTab('services')}>
+            <ModuleAccess module="nexus.services" ><button type="button" className="secondary-action" onClick={() => setWorkspaceTab('services')}>
               <FaServer /> Open Catalog
-            </button>
-            <button type="button" className="secondary-action" onClick={() => setWorkspaceTab('databases')}>
+            </button></ModuleAccess>
+            <ModuleAccess module="nexus.databases" ><button type="button" className="secondary-action" onClick={() => setWorkspaceTab('databases')}>
               <FaDatabase /> Database Fabric
-            </button>
+            </button></ModuleAccess>
           </div>
         </div>
 
-        <div className="nexus-hero-aside">
+        <ModuleAccess module="nexus.dashboard"><div className="nexus-hero-aside">
           <div className="nexus-command-panel">
             <div className="nexus-command-head">
               <div className='my-pic'>
@@ -9960,16 +10258,16 @@ const NexusPage: React.FC = () => {
               <span><FaPlug /> Agents</span>
             </div>
           </div>
-        </div>
+        </div></ModuleAccess>
       </section>
 
-      <section className="nexus-linked-consoles nexus-shell" aria-label="Linked Sentinel Nexus consoles">
+      {nexusLinkedConsoles.some(consoleLink => canAccessPage(consoleLink.to)) && <section className="nexus-linked-consoles nexus-shell" aria-label="Linked Sentinel Nexus consoles">
         <div className="nexus-linked-copy">
           <span>Linked consoles</span>
           <strong>Telemetry and monitoring now launch from Nexus</strong>
         </div>
         <div className="nexus-linked-grid">
-          {nexusLinkedConsoles.map((consoleLink) => (
+          {nexusLinkedConsoles.filter(consoleLink => canAccessPage(consoleLink.to)).map((consoleLink) => (
             <Link key={consoleLink.to} to={consoleLink.to} className="nexus-linked-card">
               <span className="nexus-linked-icon">{consoleLink.icon}</span>
               <span>
@@ -9979,9 +10277,9 @@ const NexusPage: React.FC = () => {
             </Link>
           ))}
         </div>
-      </section>
+      </section>}
 
-      <section className="nexus-toolbar nexus-shell">
+      {workspaceTabs.length > 0 && <section className="nexus-toolbar nexus-shell">
         <label className="nexus-search">
           <FaSearch />
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search incidents, services, clusters, flows, or dependencies..." />
@@ -9991,9 +10289,9 @@ const NexusPage: React.FC = () => {
             Clear
           </button>
         ) : null}
-      </section>
+      </section>}
 
-      <div className="nexus-tabs-shell nexus-shell workspace-tabs-shell">
+      {workspaceTabs.length > 0 && <div className="nexus-tabs-shell nexus-shell workspace-tabs-shell">
         <div className="nexus-tablist" role="tablist" aria-label="Sentinel Nexus workspaces">
           {workspaceTabs.map((tab) => (
             <button
@@ -10009,11 +10307,11 @@ const NexusPage: React.FC = () => {
             </button>
           ))}
         </div>
-      </div>
+      </div>}
 
       {error ? <div className="nexus-shell nexus-banner error">{error}</div> : null}
 
-      {activeWorkspace === 'incidents'
+      {!canWorkspace(activeWorkspace) ? null : activeWorkspace === 'incidents'
         ? renderIncidentWorkspace()
         : activeWorkspace === 'services'
           ? renderServicesWorkspace()
@@ -10035,10 +10333,11 @@ const NexusPage: React.FC = () => {
                           ? renderOnboardingWorkspace()
                           : null}
 
-      {activeWorkspace !== 'incidents' ? renderIncidentCommandModal() : null}
+      {canAccessModule('nexus.incidents') && activeWorkspace !== 'incidents' ? renderIncidentCommandModal() : null}
       {sourceExplorerModal}
       {logTailModal}
       {rolloverOtpModal}
+      {incidentNotificationSettingsModal}
 
       <PageGuide guide={pageGuides.nexus} />
     </div>

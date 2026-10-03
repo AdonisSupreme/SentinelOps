@@ -3,11 +3,11 @@ import axios, { AxiosResponse } from 'axios';
 import {
   SignInRequest,
   SignInResponse,
-  MeResponse,
   LogoutResponse,
   BackendError,
 } from '../contracts/generated/api.types';
 import { API_BASE_URL } from '../config/env';
+import type { SessionUser } from '../types/access';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -59,11 +59,11 @@ api.interceptors.response.use(
 
 // Auth Service
 export const authService = {
-  login: (payload: SignInRequest): Promise<AxiosResponse<SignInResponse>> =>
-    api.post<SignInResponse>('/auth/signin', payload),
+  login: (payload: SignInRequest): Promise<AxiosResponse<SignInResponse & { user: SessionUser }>> =>
+    api.post<SignInResponse & { user: SessionUser }>('/auth/signin', payload),
 
-  getProfile: (): Promise<AxiosResponse<MeResponse>> =>
-    api.get<MeResponse>('/auth/me'),
+  getProfile: (): Promise<AxiosResponse<SessionUser>> =>
+    api.get<SessionUser>('/auth/me'),
 
   logout: (): Promise<AxiosResponse<LogoutResponse>> =>
     api.post<LogoutResponse>('/auth/logout'),

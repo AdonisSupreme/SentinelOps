@@ -59,35 +59,35 @@
   background-size: 44px 44px, 44px 44px, auto;
 }
 
-.team-command-strip,
-.team-board-panel,
-.insight-panel,
-.team-skel-panel,
-.modal-content,
-.access-guard {
+.advanced-team-mgmt-page .team-command-strip,
+.advanced-team-mgmt-page .team-board-panel,
+.advanced-team-mgmt-page .insight-panel,
+.advanced-team-mgmt-page .team-skel-panel,
+.advanced-team-mgmt-page .team-modal-content,
+.advanced-team-mgmt-page .access-guard {
   border: 1px solid var(--team-border);
   border-radius: 8px;
   background: var(--team-surface);
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
 }
 
-[data-theme='dark'] .team-command-strip,
-[data-theme='dark'] .team-board-panel,
-[data-theme='dark'] .insight-panel,
-[data-theme='dark'] .team-skel-panel,
-[data-theme='dark'] .modal-content,
-[data-theme='dark'] .access-guard {
+[data-theme='dark'] .advanced-team-mgmt-page .team-command-strip,
+[data-theme='dark'] .advanced-team-mgmt-page .team-board-panel,
+[data-theme='dark'] .advanced-team-mgmt-page .insight-panel,
+[data-theme='dark'] .advanced-team-mgmt-page .team-skel-panel,
+[data-theme='dark'] .advanced-team-mgmt-page .team-modal-content,
+[data-theme='dark'] .advanced-team-mgmt-page .access-guard {
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
 }
 
-.team-command-strip {
+.advanced-team-mgmt-page .team-command-strip {
   display: grid;
   grid-template-columns: minmax(220px, 0.26fr) minmax(0, 1fr);
   gap: 1rem;
   padding: 1rem;
 }
 
-.team-command-title {
+.advanced-team-mgmt-page .team-command-title {
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -97,14 +97,14 @@
   border-left: 4px solid var(--team-green);
 }
 
-.team-command-title span,
-.team-signal-copy small,
-.panel-kicker,
-.toolbar-label,
-.team-board-ledger em,
-.panel-meta span,
-.day-label,
-.form-group label {
+.advanced-team-mgmt-page .team-command-title span,
+.advanced-team-mgmt-page .team-signal-copy small,
+.advanced-team-mgmt-page .team-panel-kicker,
+.advanced-team-mgmt-page .team-toolbar-label,
+.advanced-team-mgmt-page .team-board-ledger em,
+.advanced-team-mgmt-page .team-panel-meta span,
+.advanced-team-mgmt-page .day-label,
+.advanced-team-mgmt-page .team-form-group label {
   color: var(--team-muted);
   font-size: 0.72rem;
   font-weight: 800;
@@ -112,42 +112,42 @@
   text-transform: uppercase;
 }
 
-.team-command-title span,
-.panel-kicker,
-.toolbar-label,
-.assignment-meta span,
-.pattern-shift-source {
+.advanced-team-mgmt-page .team-command-title span,
+.advanced-team-mgmt-page .team-panel-kicker,
+.advanced-team-mgmt-page .team-toolbar-label,
+.advanced-team-mgmt-page .assignment-meta span,
+.advanced-team-mgmt-page .pattern-shift-source {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
 }
 
-.team-command-title span svg,
-.panel-kicker svg,
-.toolbar-label svg {
+.advanced-team-mgmt-page .team-command-title span svg,
+.advanced-team-mgmt-page .team-panel-kicker svg,
+.advanced-team-mgmt-page .team-toolbar-label svg {
   color: var(--team-green);
 }
 
-.team-command-title strong {
+.advanced-team-mgmt-page .team-command-title strong {
   color: var(--team-ink);
   font-size: clamp(1.45rem, 2vw, 2rem);
   line-height: 1;
   overflow-wrap: anywhere;
 }
 
-.team-command-title small {
+.advanced-team-mgmt-page .team-command-title small {
   color: var(--team-muted);
   font-size: 0.84rem;
   overflow-wrap: anywhere;
 }
 
-.team-signal-grid {
+.advanced-team-mgmt-page .team-signal-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
-.team-signal-card {
+.advanced-team-mgmt-page .team-signal-card {
   position: relative;
   display: flex;
   min-width: 0;
@@ -160,7 +160,7 @@
   overflow: hidden;
 }
 
-.team-signal-card::before {
+.advanced-team-mgmt-page .team-signal-card::before {
   content: '';
   position: absolute;
   inset: 0 auto 0 0;
@@ -168,19 +168,19 @@
   background: var(--team-cyan);
 }
 
-.team-signal-card.tone-ok::before {
+.advanced-team-mgmt-page .team-signal-card.tone-ok::before {
   background: var(--team-green);
 }
 
-.team-signal-card.tone-watch::before {
+.advanced-team-mgmt-page .team-signal-card.tone-watch::before {
   background: var(--team-amber);
 }
 
-.team-signal-card.tone-danger::before {
+.advanced-team-mgmt-page .team-signal-card.tone-danger::before {
   background: var(--team-red);
 }
 
-.team-signal-icon {
+.advanced-team-mgmt-page .team-signal-icon {
   display: inline-flex;
   flex: 0 0 2.4rem;
   align-items: center;
@@ -192,36 +192,36 @@
   background: rgba(8, 145, 178, 0.1);
 }
 
-.tone-ok .team-signal-icon {
+.advanced-team-mgmt-page .tone-ok .team-signal-icon {
   color: var(--team-green);
   background: rgba(15, 159, 115, 0.1);
 }
 
-.tone-watch .team-signal-icon {
+.advanced-team-mgmt-page .tone-watch .team-signal-icon {
   color: var(--team-amber);
   background: rgba(217, 119, 6, 0.12);
 }
 
-.tone-danger .team-signal-icon {
+.advanced-team-mgmt-page .tone-danger .team-signal-icon {
   color: var(--team-red);
   background: rgba(220, 38, 38, 0.12);
 }
 
-.team-signal-copy {
+.advanced-team-mgmt-page .team-signal-copy {
   display: flex;
   min-width: 0;
   flex-direction: column;
   gap: 0.18rem;
 }
 
-.team-signal-copy strong {
+.advanced-team-mgmt-page .team-signal-copy strong {
   color: var(--team-ink);
   font-size: 1.12rem;
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
 
-.team-signal-copy em {
+.advanced-team-mgmt-page .team-signal-copy em {
   color: var(--team-muted);
   font-size: 0.82rem;
   font-style: normal;
@@ -229,22 +229,22 @@
   overflow-wrap: anywhere;
 }
 
-.team-command-layout {
+.advanced-team-mgmt-page .team-command-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.42fr) minmax(320px, 0.62fr);
   gap: 1rem;
   align-items: start;
 }
 
-.team-board-panel,
-.insight-panel {
+.advanced-team-mgmt-page .team-board-panel,
+.advanced-team-mgmt-page .insight-panel {
   display: grid;
   gap: 0.9rem;
   min-width: 0;
   padding: 1rem;
 }
 
-.panel-head {
+.advanced-team-mgmt-page .team-panel-head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -252,42 +252,42 @@
   min-width: 0;
 }
 
-.panel-head > div,
-.modal-header > div {
+.advanced-team-mgmt-page .team-panel-head > div,
+.advanced-team-mgmt-page .team-modal-header > div {
   display: grid;
   gap: 0.22rem;
   min-width: 0;
 }
 
-.panel-kicker {
+.advanced-team-mgmt-page .team-panel-kicker {
   width: fit-content;
 }
 
-.panel-head h2,
-.panel-head h3,
-.modal-header h2,
-.pattern-preview h4 {
+.advanced-team-mgmt-page .team-panel-head h2,
+.advanced-team-mgmt-page .team-panel-head h3,
+.advanced-team-mgmt-page .team-modal-header h2,
+.advanced-team-mgmt-page .pattern-preview h4 {
   margin: 0;
   color: var(--team-ink);
   line-height: 1.2;
 }
 
-.panel-head h2 {
+.advanced-team-mgmt-page .team-panel-head h2 {
   font-size: 1.2rem;
 }
 
-.panel-head.compact h3 {
+.advanced-team-mgmt-page .team-panel-head.compact h3 {
   font-size: 1.04rem;
 }
 
-.panel-meta {
+.advanced-team-mgmt-page .team-panel-meta {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.45rem;
 }
 
-.panel-meta span {
+.advanced-team-mgmt-page .team-panel-meta span {
   display: inline-flex;
   max-width: 100%;
   padding: 0.36rem 0.52rem;
@@ -300,13 +300,13 @@
   white-space: nowrap;
 }
 
-.team-control-grid {
+.advanced-team-mgmt-page .team-control-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(150px, 0.36fr) minmax(210px, 0.44fr);
   gap: 0.75rem;
 }
 
-.toolbar-block {
+.advanced-team-mgmt-page .team-toolbar-block {
   display: grid;
   gap: 0.55rem;
   min-width: 0;
@@ -316,32 +316,32 @@
   background: var(--team-strong);
 }
 
-.toolbar-block.compact strong {
+.advanced-team-mgmt-page .team-toolbar-block.compact strong {
   color: var(--team-ink);
   font-size: 1rem;
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
 
-.view-presets,
-.team-action-row,
-.pagination-controls,
-.form-actions,
-.modal-mode-switch,
-.pattern-actions {
+.advanced-team-mgmt-page .view-presets,
+.advanced-team-mgmt-page .team-action-row,
+.advanced-team-mgmt-page .pagination-controls,
+.advanced-team-mgmt-page .team-form-actions,
+.advanced-team-mgmt-page .team-modal-mode-switch,
+.advanced-team-mgmt-page .team-pattern-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.preset-btn,
-.btn-primary-glow,
-.btn-secondary,
-.btn-close,
-.btn-icon,
-.modal-mode-switch button,
-.pattern-shift-source button,
-.pattern-list-trigger {
+.advanced-team-mgmt-page .preset-btn,
+.advanced-team-mgmt-page .team-btn-primary-glow,
+.advanced-team-mgmt-page .team-btn-secondary,
+.advanced-team-mgmt-page .team-btn-close,
+.advanced-team-mgmt-page .team-btn-icon,
+.advanced-team-mgmt-page .team-modal-mode-switch button,
+.advanced-team-mgmt-page .pattern-shift-source button,
+.advanced-team-mgmt-page .pattern-list-trigger {
   font: inherit;
   transition:
     border-color var(--transition-fast, 160ms ease),
@@ -352,10 +352,10 @@
     opacity var(--transition-fast, 160ms ease);
 }
 
-.preset-btn,
-.btn-secondary,
-.modal-mode-switch button,
-.pattern-shift-source button {
+.advanced-team-mgmt-page .preset-btn,
+.advanced-team-mgmt-page .team-btn-secondary,
+.advanced-team-mgmt-page .team-modal-mode-switch button,
+.advanced-team-mgmt-page .pattern-shift-source button {
   min-height: 2.45rem;
   padding: 0.55rem 0.75rem;
   border: 1px solid var(--team-border);
@@ -366,22 +366,22 @@
   font-weight: 800;
 }
 
-.preset-btn.active,
-.modal-mode-switch button.active {
+.advanced-team-mgmt-page .preset-btn.active,
+.advanced-team-mgmt-page .team-modal-mode-switch button.active {
   border-color: rgba(15, 159, 115, 0.38);
   background: linear-gradient(135deg, #155e75 0%, #166534 100%);
   color: #ffffff;
 }
 
-.btn-primary-glow,
-.btn-secondary {
+.advanced-team-mgmt-page .team-btn-primary-glow,
+.advanced-team-mgmt-page .team-btn-secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
 }
 
-.btn-primary-glow {
+.advanced-team-mgmt-page .team-btn-primary-glow {
   min-height: 2.55rem;
   padding: 0.58rem 0.85rem;
   border: 1px solid rgba(15, 159, 115, 0.38);
@@ -392,33 +392,33 @@
   font-weight: 900;
 }
 
-.preset-btn:hover,
-.btn-primary-glow:hover:not(:disabled),
-.btn-secondary:hover:not(:disabled),
-.btn-icon:hover:not(:disabled),
-.pattern-list-item:hover,
-.modal-mode-switch button:hover,
-.pattern-shift-source button:hover {
+.advanced-team-mgmt-page .preset-btn:hover,
+.advanced-team-mgmt-page .team-btn-primary-glow:hover:not(:disabled),
+.advanced-team-mgmt-page .team-btn-secondary:hover:not(:disabled),
+.advanced-team-mgmt-page .team-btn-icon:hover:not(:disabled),
+.advanced-team-mgmt-page .pattern-list-item:hover,
+.advanced-team-mgmt-page .team-modal-mode-switch button:hover,
+.advanced-team-mgmt-page .pattern-shift-source button:hover {
   border-color: rgba(8, 145, 178, 0.36);
   transform: translateY(-1px);
 }
 
-.btn-primary-glow:disabled,
-.btn-secondary:disabled,
-.preset-btn:disabled,
-.btn-icon:disabled,
-.modal-mode-switch button:disabled {
+.advanced-team-mgmt-page .team-btn-primary-glow:disabled,
+.advanced-team-mgmt-page .team-btn-secondary:disabled,
+.advanced-team-mgmt-page .preset-btn:disabled,
+.advanced-team-mgmt-page .team-btn-icon:disabled,
+.advanced-team-mgmt-page .team-modal-mode-switch button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.team-board-ledger {
+.advanced-team-mgmt-page .team-board-ledger {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.6rem;
 }
 
-.team-board-ledger span {
+.advanced-team-mgmt-page .team-board-ledger span {
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -430,33 +430,33 @@
   background: var(--team-strong);
 }
 
-.team-board-ledger span:nth-child(2) {
+.advanced-team-mgmt-page .team-board-ledger span:nth-child(2) {
   border-left-color: var(--team-green);
 }
 
-.team-board-ledger span:nth-child(3) {
+.advanced-team-mgmt-page .team-board-ledger span:nth-child(3) {
   border-left-color: var(--team-violet);
 }
 
-.team-board-ledger span:nth-child(4) {
+.advanced-team-mgmt-page .team-board-ledger span:nth-child(4) {
   border-left-color: var(--team-amber);
 }
 
-.team-board-ledger strong {
+.advanced-team-mgmt-page .team-board-ledger strong {
   color: var(--team-ink);
   font-size: 1.05rem;
   line-height: 1;
   overflow-wrap: anywhere;
 }
 
-.team-board-ledger em {
+.advanced-team-mgmt-page .team-board-ledger em {
   font-style: normal;
 }
 
-.section-select,
-.form-select,
-.form-input,
-.pagination-select {
+.advanced-team-mgmt-page .section-select,
+.advanced-team-mgmt-page .team-form-select,
+.advanced-team-mgmt-page .team-form-input,
+.advanced-team-mgmt-page .pagination-select {
   width: 100%;
   min-height: 2.55rem;
   padding: 0.55rem 0.75rem;
@@ -470,9 +470,9 @@
     background var(--transition-fast, 160ms ease);
 }
 
-.section-select,
-.form-select,
-.pagination-select {
+.advanced-team-mgmt-page .section-select,
+.advanced-team-mgmt-page .team-form-select,
+.advanced-team-mgmt-page .pagination-select {
   appearance: none;
   background-image:
     linear-gradient(45deg, transparent 50%, currentColor 50%),
@@ -485,30 +485,30 @@
   padding-right: 2.25rem;
 }
 
-.section-select option,
-.form-select option,
-.pagination-select option {
+.advanced-team-mgmt-page .section-select option,
+.advanced-team-mgmt-page .team-form-select option,
+.advanced-team-mgmt-page .pagination-select option {
   background: var(--team-option-bg);
   color: var(--team-option-text);
 }
 
-.section-select:hover,
-.form-select:hover,
-.form-input:hover,
-.pagination-select:hover {
+.advanced-team-mgmt-page .section-select:hover,
+.advanced-team-mgmt-page .team-form-select:hover,
+.advanced-team-mgmt-page .team-form-input:hover,
+.advanced-team-mgmt-page .pagination-select:hover {
   border-color: rgba(8, 145, 178, 0.36);
 }
 
-.section-select:focus,
-.form-select:focus,
-.form-input:focus,
-.pagination-select:focus {
+.advanced-team-mgmt-page .section-select:focus,
+.advanced-team-mgmt-page .team-form-select:focus,
+.advanced-team-mgmt-page .team-form-input:focus,
+.advanced-team-mgmt-page .pagination-select:focus {
   outline: none;
   border-color: rgba(15, 159, 115, 0.46);
   box-shadow: 0 0 0 3px rgba(15, 159, 115, 0.12);
 }
 
-.schedule-state {
+.advanced-team-mgmt-page .schedule-state {
   display: grid;
   min-height: 260px;
   place-items: center;
@@ -517,34 +517,34 @@
   text-align: center;
 }
 
-.schedule-state svg {
+.advanced-team-mgmt-page .schedule-state svg {
   margin-bottom: 0.65rem;
   color: var(--team-cyan);
   font-size: 1.7rem;
 }
 
-.schedule-state h3,
-.schedule-state p {
+.advanced-team-mgmt-page .schedule-state h3,
+.advanced-team-mgmt-page .schedule-state p {
   margin: 0;
 }
 
-.schedule-state p {
+.advanced-team-mgmt-page .schedule-state p {
   margin-top: 0.35rem;
   max-width: 36rem;
   line-height: 1.5;
 }
 
-.schedule-day-stack {
+.advanced-team-mgmt-page .schedule-day-stack {
   display: grid;
   gap: 0.75rem;
 }
 
-.schedule-day-stack.refreshing {
+.advanced-team-mgmt-page .schedule-day-stack.refreshing {
   opacity: 0.66;
   transition: opacity var(--transition-fast, 160ms ease);
 }
 
-.day-cluster {
+.advanced-team-mgmt-page .day-cluster {
   display: grid;
   gap: 0.75rem;
   min-width: 0;
@@ -555,11 +555,11 @@
   background: var(--team-strong);
 }
 
-.day-cluster.weekend {
+.advanced-team-mgmt-page .day-cluster.weekend {
   border-left-color: var(--team-violet);
 }
 
-.day-cluster-head {
+.advanced-team-mgmt-page .day-cluster-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -567,25 +567,25 @@
   min-width: 0;
 }
 
-.day-cluster-head h3 {
+.advanced-team-mgmt-page .day-cluster-head h3 {
   margin: 0.2rem 0 0;
   color: var(--team-ink);
   font-size: 1.02rem;
 }
 
-.day-cluster-head strong {
+.advanced-team-mgmt-page .day-cluster-head strong {
   flex: 0 0 auto;
   color: var(--team-muted);
   font-size: 0.82rem;
 }
 
-.assignment-grid {
+.advanced-team-mgmt-page .assignment-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 0.6rem;
 }
 
-.assignment-card {
+.advanced-team-mgmt-page .assignment-card {
   display: grid;
   gap: 0.6rem;
   min-width: 0;
@@ -595,7 +595,7 @@
   background: rgba(100, 116, 139, 0.06);
 }
 
-.assignment-card-head {
+.advanced-team-mgmt-page .assignment-card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -603,17 +603,17 @@
   min-width: 0;
 }
 
-.assignment-card > strong {
+.advanced-team-mgmt-page .assignment-card > strong {
   color: var(--team-ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.shift-chip,
-.shift-badge,
-.off-day-badge,
-.analytics-item em {
+.advanced-team-mgmt-page .shift-chip,
+.advanced-team-mgmt-page .shift-badge,
+.advanced-team-mgmt-page .off-day-badge,
+.advanced-team-mgmt-page .analytics-item em {
   display: inline-flex;
   max-width: 100%;
   align-items: center;
@@ -632,23 +632,23 @@
   white-space: nowrap;
 }
 
-.off-day-badge {
+.advanced-team-mgmt-page .off-day-badge {
   color: var(--team-violet);
 }
 
-.assignment-meta {
+.advanced-team-mgmt-page .assignment-meta {
   display: grid;
   gap: 0.28rem;
 }
 
-.assignment-meta span {
+.advanced-team-mgmt-page .assignment-meta span {
   color: var(--team-muted);
   font-size: 0.82rem;
   letter-spacing: 0;
   text-transform: none;
 }
 
-.schedule-pagination {
+.advanced-team-mgmt-page .schedule-pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -657,57 +657,57 @@
   border-top: 1px solid var(--team-border);
 }
 
-.pagination-summary {
+.advanced-team-mgmt-page .pagination-summary {
   display: grid;
   gap: 0.2rem;
 }
 
-.pagination-summary strong {
+.advanced-team-mgmt-page .pagination-summary strong {
   color: var(--team-ink);
   font-size: 1.08rem;
 }
 
-.pagination-summary span,
-.pattern-list-item span,
-.roster-item span,
-.analytics-item span,
-.shift-config-item span,
-.insight-empty {
+.advanced-team-mgmt-page .pagination-summary span,
+.advanced-team-mgmt-page .pattern-list-item span,
+.advanced-team-mgmt-page .team-roster-item span,
+.advanced-team-mgmt-page .analytics-item span,
+.advanced-team-mgmt-page .shift-config-item span,
+.advanced-team-mgmt-page .insight-empty {
   color: var(--team-muted);
   font-size: 0.84rem;
   line-height: 1.45;
 }
 
-.pagination-controls {
+.advanced-team-mgmt-page .pagination-controls {
   align-items: center;
   justify-content: flex-end;
 }
 
-.pagination-select {
+.advanced-team-mgmt-page .pagination-select {
   width: auto;
   min-width: 8.5rem;
 }
 
-.team-insights {
+.advanced-team-mgmt-page .team-insights {
   display: grid;
   gap: 1rem;
   min-width: 0;
   align-content: start;
 }
 
-.roster-list,
-.analytics-list,
-.pattern-list,
-.shift-config-list {
+.advanced-team-mgmt-page .roster-list,
+.advanced-team-mgmt-page .analytics-list,
+.advanced-team-mgmt-page .pattern-list,
+.advanced-team-mgmt-page .shift-config-list {
   display: grid;
   gap: 0.55rem;
   min-width: 0;
 }
 
-.roster-item,
-.analytics-item,
-.pattern-list-item,
-.shift-config-item {
+.advanced-team-mgmt-page .team-roster-item,
+.advanced-team-mgmt-page .analytics-item,
+.advanced-team-mgmt-page .pattern-list-item,
+.advanced-team-mgmt-page .shift-config-item {
   min-width: 0;
   padding: 0.75rem;
   border: 1px solid var(--team-border);
@@ -715,15 +715,15 @@
   background: var(--team-strong);
 }
 
-.roster-item,
-.analytics-item {
+.advanced-team-mgmt-page .team-roster-item,
+.advanced-team-mgmt-page .analytics-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.7rem;
 }
 
-.avatar-badge {
+.advanced-team-mgmt-page .team-avatar-badge {
   display: inline-flex;
   flex: 0 0 2.35rem;
   align-items: center;
@@ -736,57 +736,57 @@
   font-weight: 900;
 }
 
-.roster-item > div:last-child,
-.analytics-item > div,
-.pattern-list-trigger > div,
-.shift-config-item > div {
+.advanced-team-mgmt-page .team-roster-item > div:last-child,
+.advanced-team-mgmt-page .analytics-item > div,
+.advanced-team-mgmt-page .pattern-list-trigger > div,
+.advanced-team-mgmt-page .shift-config-item > div {
   display: grid;
   gap: 0.1rem;
   min-width: 0;
 }
 
-.roster-item strong,
-.analytics-item strong,
-.pattern-list-item strong,
-.shift-config-item strong {
+.advanced-team-mgmt-page .team-roster-item strong,
+.advanced-team-mgmt-page .analytics-item strong,
+.advanced-team-mgmt-page .pattern-list-item strong,
+.advanced-team-mgmt-page .shift-config-item strong {
   color: var(--team-ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.analytics-item em {
+.advanced-team-mgmt-page .analytics-item em {
   flex: 0 0 auto;
   color: var(--team-green);
   font-style: normal;
 }
 
-.shift-config-item {
+.advanced-team-mgmt-page .shift-config-item {
   display: grid;
   grid-template-columns: 0.85rem minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.75rem;
 }
 
-.shift-color-dot {
+.advanced-team-mgmt-page .shift-color-dot {
   width: 0.75rem;
   height: 2.35rem;
   border: 1px solid color-mix(in srgb, var(--team-ink) 16%, transparent);
   border-radius: 999px;
 }
 
-.pattern-list-item {
+.advanced-team-mgmt-page .pattern-list-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.pattern-list-item.active {
+.advanced-team-mgmt-page .pattern-list-item.active {
   border-color: rgba(15, 159, 115, 0.38);
   border-left: 4px solid var(--team-green);
 }
 
-.pattern-list-trigger {
+.advanced-team-mgmt-page .pattern-list-trigger {
   flex: 1;
   min-width: 0;
   border: 0;
@@ -796,7 +796,7 @@
   text-align: left;
 }
 
-.btn-icon {
+.advanced-team-mgmt-page .team-btn-icon {
   display: inline-flex;
   flex: 0 0 2.15rem;
   align-items: center;
@@ -810,11 +810,11 @@
   cursor: pointer;
 }
 
-.btn-icon.danger {
+.advanced-team-mgmt-page .team-btn-icon.danger {
   color: var(--team-red);
 }
 
-.modal-overlay {
+.advanced-team-mgmt-page .team-modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 1050;
@@ -826,17 +826,17 @@
   backdrop-filter: blur(10px);
 }
 
-.modal-content {
+.advanced-team-mgmt-page .team-modal-content {
   width: min(760px, 96vw);
   max-height: 90vh;
   overflow: auto;
 }
 
-.modal-content.large {
+.advanced-team-mgmt-page .team-modal-content.large {
   width: min(920px, 96vw);
 }
 
-.modal-header {
+.advanced-team-mgmt-page .team-modal-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -845,7 +845,7 @@
   border-bottom: 1px solid var(--team-border);
 }
 
-.btn-close {
+.advanced-team-mgmt-page .team-btn-close {
   display: inline-flex;
   flex: 0 0 2.35rem;
   align-items: center;
@@ -859,60 +859,60 @@
   cursor: pointer;
 }
 
-.btn-close:hover {
+.advanced-team-mgmt-page .team-btn-close:hover {
   color: var(--team-ink);
 }
 
-.modal-mode-switch {
+.advanced-team-mgmt-page .team-modal-mode-switch {
   padding: 0.8rem 1rem 0;
 }
 
-.assignment-form,
-.simple-form {
+.advanced-team-mgmt-page .assignment-form,
+.advanced-team-mgmt-page .simple-form {
   display: grid;
   gap: 0.85rem;
   padding: 0.9rem 1rem 1rem;
 }
 
-.form-group {
+.advanced-team-mgmt-page .team-form-group {
   display: grid;
   gap: 0.45rem;
   min-width: 0;
 }
 
-.form-row {
+.advanced-team-mgmt-page .team-form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
-.form-actions {
+.advanced-team-mgmt-page .team-form-actions {
   justify-content: flex-end;
   padding-top: 0.25rem;
 }
 
-.pattern-preview,
-.user-selector,
-.pattern-editor-day,
-.pattern-shift-source {
+.advanced-team-mgmt-page .pattern-preview,
+.advanced-team-mgmt-page .team-user-selector,
+.advanced-team-mgmt-page .pattern-editor-day,
+.advanced-team-mgmt-page .pattern-shift-source {
   border: 1px solid var(--team-border);
   border-radius: 8px;
   background: var(--team-strong);
 }
 
-.pattern-preview {
+.advanced-team-mgmt-page .pattern-preview {
   display: grid;
   gap: 0.75rem;
   padding: 0.8rem;
 }
 
-.pattern-days {
+.advanced-team-mgmt-page .pattern-days {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 0.55rem;
 }
 
-.pattern-day {
+.advanced-team-mgmt-page .pattern-day {
   display: grid;
   gap: 0.5rem;
   min-width: 0;
@@ -923,14 +923,14 @@
   text-align: center;
 }
 
-.pattern-day strong {
+.advanced-team-mgmt-page .pattern-day strong {
   color: var(--team-ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.user-selector {
+.advanced-team-mgmt-page .team-user-selector {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   gap: 0.5rem;
@@ -939,7 +939,7 @@
   padding: 0.65rem;
 }
 
-.user-checkbox {
+.advanced-team-mgmt-page .team-user-checkbox {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -955,62 +955,62 @@
     color var(--transition-fast, 160ms ease);
 }
 
-.user-checkbox:hover {
+.advanced-team-mgmt-page .team-user-checkbox:hover {
   border-color: rgba(8, 145, 178, 0.28);
   color: var(--team-ink);
 }
 
-.user-checkbox input {
+.advanced-team-mgmt-page .team-user-checkbox input {
   accent-color: var(--team-green);
 }
 
-.user-checkbox span {
+.advanced-team-mgmt-page .team-user-checkbox span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.pattern-shift-source {
+.advanced-team-mgmt-page .pattern-shift-source {
   flex-wrap: wrap;
   padding: 0.75rem;
   color: var(--team-muted);
 }
 
-.pattern-shift-source svg {
+.advanced-team-mgmt-page .pattern-shift-source svg {
   color: var(--team-cyan);
 }
 
-.pattern-shift-source span {
+.advanced-team-mgmt-page .pattern-shift-source span {
   flex: 1;
   min-width: 180px;
 }
 
-.pattern-editor-grid {
+.advanced-team-mgmt-page .pattern-editor-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 0.55rem;
 }
 
-.pattern-editor-day {
+.advanced-team-mgmt-page .pattern-editor-day {
   display: grid;
   gap: 0.55rem;
   min-width: 0;
   padding: 0.75rem;
 }
 
-.pattern-editor-day > strong {
+.advanced-team-mgmt-page .pattern-editor-day > strong {
   color: var(--team-ink);
 }
 
-.shift-color-input {
+.advanced-team-mgmt-page .shift-color-input {
   display: grid;
   grid-template-columns: 3rem minmax(0, 1fr);
   gap: 0.65rem;
   align-items: center;
 }
 
-.shift-color-input input[type='color'] {
+.advanced-team-mgmt-page .shift-color-input input[type='color'] {
   width: 3rem;
   height: 3rem;
   padding: 0.25rem;
@@ -1020,7 +1020,7 @@
   cursor: pointer;
 }
 
-.access-guard {
+.advanced-team-mgmt-page .access-guard {
   display: flex;
   min-height: 60vh;
   flex-direction: column;
@@ -1031,36 +1031,36 @@
   text-align: center;
 }
 
-.access-guard svg {
+.advanced-team-mgmt-page .access-guard svg {
   color: var(--team-cyan);
   font-size: 2rem;
 }
 
-.access-guard h2,
-.access-guard p {
+.advanced-team-mgmt-page .access-guard h2,
+.advanced-team-mgmt-page .access-guard p {
   margin: 0;
 }
 
-.access-guard p {
+.advanced-team-mgmt-page .access-guard p {
   color: var(--team-muted);
   max-width: 36rem;
 }
 
-.team-skel-command-copy,
-.team-skel-signal-copy,
-.team-skel-list {
+.advanced-team-mgmt-page .team-skel-command-copy,
+.advanced-team-mgmt-page .team-skel-signal-copy,
+.advanced-team-mgmt-page .team-skel-list {
   display: grid;
   gap: 0.45rem;
   min-width: 0;
 }
 
-.team-skel-signal-grid {
+.advanced-team-mgmt-page .team-skel-signal-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
-.team-skel-signal-card {
+.advanced-team-mgmt-page .team-skel-signal-card {
   display: flex;
   gap: 0.7rem;
   min-width: 0;
@@ -1070,31 +1070,31 @@
   background: var(--team-strong);
 }
 
-.team-skel-board-head {
+.advanced-team-mgmt-page .team-skel-board-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.team-skel-action-row,
-.team-skel-control-grid {
+.advanced-team-mgmt-page .team-skel-action-row,
+.advanced-team-mgmt-page .team-skel-control-grid {
   display: flex;
   gap: 0.5rem;
 }
 
-.team-skel-control-grid {
+.advanced-team-mgmt-page .team-skel-control-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(150px, 0.36fr) minmax(210px, 0.44fr);
   gap: 0.75rem;
 }
 
-.schedule-skeleton-stack {
+.advanced-team-mgmt-page .schedule-skeleton-stack {
   display: grid;
   gap: 0.75rem;
 }
 
-.schedule-skeleton-cluster {
+.advanced-team-mgmt-page .schedule-skeleton-cluster {
   display: grid;
   gap: 0.75rem;
   padding: 0.85rem;
@@ -1103,28 +1103,28 @@
   background: var(--team-strong);
 }
 
-.schedule-skeleton-grid {
+.advanced-team-mgmt-page .schedule-skeleton-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 0.6rem;
 }
 
-.team-skel-line,
-.team-skel-block,
-.team-skel-control,
-.team-skel-row,
-.schedule-skeleton-card {
+.advanced-team-mgmt-page .team-skel-line,
+.advanced-team-mgmt-page .team-skel-block,
+.advanced-team-mgmt-page .team-skel-control,
+.advanced-team-mgmt-page .team-skel-row,
+.advanced-team-mgmt-page .schedule-skeleton-card {
   position: relative;
   overflow: hidden;
   border-radius: 8px;
   background: var(--team-fill);
 }
 
-.team-skel-line::after,
-.team-skel-block::after,
-.team-skel-control::after,
-.team-skel-row::after,
-.schedule-skeleton-card::after {
+.advanced-team-mgmt-page .team-skel-line::after,
+.advanced-team-mgmt-page .team-skel-block::after,
+.advanced-team-mgmt-page .team-skel-control::after,
+.advanced-team-mgmt-page .team-skel-row::after,
+.advanced-team-mgmt-page .schedule-skeleton-card::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -1132,93 +1132,93 @@
   animation: teamSkeletonSweep 1.35s ease-in-out infinite;
 }
 
-.team-skel-kicker {
+.advanced-team-mgmt-page .team-skel-kicker {
   width: 8rem;
   height: 0.72rem;
 }
 
-.team-skel-title {
+.advanced-team-mgmt-page .team-skel-title {
   width: min(82%, 16rem);
   height: 1.9rem;
 }
 
-.team-skel-meta {
+.advanced-team-mgmt-page .team-skel-meta {
   width: min(92%, 20rem);
   height: 0.82rem;
 }
 
-.team-skel-label {
+.advanced-team-mgmt-page .team-skel-label {
   width: 5.4rem;
   height: 0.72rem;
 }
 
-.team-skel-value {
+.advanced-team-mgmt-page .team-skel-value {
   width: 4.5rem;
   height: 1.25rem;
 }
 
-.team-skel-panel-title {
+.advanced-team-mgmt-page .team-skel-panel-title {
   width: min(70%, 14rem);
   height: 1.25rem;
 }
 
-.team-skel-icon {
+.advanced-team-mgmt-page .team-skel-icon {
   flex: 0 0 2.4rem;
   width: 2.4rem;
   height: 2.4rem;
 }
 
-.team-skel-action {
+.advanced-team-mgmt-page .team-skel-action {
   width: 6.5rem;
   height: 2.45rem;
 }
 
-.team-skel-control {
+.advanced-team-mgmt-page .team-skel-control {
   height: 4.75rem;
 }
 
-.skeleton-day-head {
+.advanced-team-mgmt-page .skeleton-day-head {
   width: 13rem;
   height: 1.15rem;
 }
 
-.schedule-skeleton-card {
+.advanced-team-mgmt-page .schedule-skeleton-card {
   min-height: 7rem;
 }
 
-.team-skel-row {
+.advanced-team-mgmt-page .team-skel-row {
   height: 3rem;
 }
 
-.modal-content::-webkit-scrollbar,
-.user-selector::-webkit-scrollbar {
+.advanced-team-mgmt-page .team-modal-content::-webkit-scrollbar,
+.advanced-team-mgmt-page .team-user-selector::-webkit-scrollbar {
   width: 10px;
 }
 
-.modal-content::-webkit-scrollbar-track,
-.user-selector::-webkit-scrollbar-track {
+.advanced-team-mgmt-page .team-modal-content::-webkit-scrollbar-track,
+.advanced-team-mgmt-page .team-user-selector::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.modal-content::-webkit-scrollbar-thumb,
-.user-selector::-webkit-scrollbar-thumb {
+.advanced-team-mgmt-page .team-modal-content::-webkit-scrollbar-thumb,
+.advanced-team-mgmt-page .team-user-selector::-webkit-scrollbar-thumb {
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.26);
 }
 
 @media (max-width: 1380px) {
-  .team-command-strip,
-  .team-command-layout {
+  .advanced-team-mgmt-page .team-command-strip,
+  .advanced-team-mgmt-page .team-command-layout {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 1080px) {
-  .team-signal-grid,
-  .team-skel-signal-grid,
-  .team-board-ledger,
-  .team-skel-control-grid,
-  .team-control-grid {
+  .advanced-team-mgmt-page .team-signal-grid,
+  .advanced-team-mgmt-page .team-skel-signal-grid,
+  .advanced-team-mgmt-page .team-board-ledger,
+  .advanced-team-mgmt-page .team-skel-control-grid,
+  .advanced-team-mgmt-page .team-control-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1228,27 +1228,27 @@
     padding: 0 0.75rem 1rem;
   }
 
-  .panel-head,
-  .schedule-pagination {
+  .advanced-team-mgmt-page .team-panel-head,
+  .advanced-team-mgmt-page .schedule-pagination {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .panel-meta,
-  .pagination-controls {
+  .advanced-team-mgmt-page .team-panel-meta,
+  .advanced-team-mgmt-page .pagination-controls {
     justify-content: flex-start;
   }
 
-  .form-row,
-  .assignment-grid {
+  .advanced-team-mgmt-page .team-form-row,
+  .advanced-team-mgmt-page .assignment-grid {
     grid-template-columns: 1fr;
   }
 
-  .shift-config-item {
+  .advanced-team-mgmt-page .shift-config-item {
     grid-template-columns: 0.85rem minmax(0, 1fr);
   }
 
-  .shift-config-item .pattern-actions {
+  .advanced-team-mgmt-page .shift-config-item .team-pattern-actions {
     grid-column: 2;
   }
 }
@@ -1259,46 +1259,46 @@
     padding: 0 0.5rem 0.9rem;
   }
 
-  .team-command-strip,
-  .team-board-panel,
-  .insight-panel,
-  .modal-content,
-  .access-guard {
+  .advanced-team-mgmt-page .team-command-strip,
+  .advanced-team-mgmt-page .team-board-panel,
+  .advanced-team-mgmt-page .insight-panel,
+  .advanced-team-mgmt-page .team-modal-content,
+  .advanced-team-mgmt-page .access-guard {
     padding: 0.8rem;
   }
 
-  .modal-content {
+  .advanced-team-mgmt-page .team-modal-content {
     padding: 0;
   }
 
-  .team-signal-grid,
-  .team-skel-signal-grid,
-  .team-board-ledger,
-  .team-control-grid,
-  .team-skel-control-grid {
+  .advanced-team-mgmt-page .team-signal-grid,
+  .advanced-team-mgmt-page .team-skel-signal-grid,
+  .advanced-team-mgmt-page .team-board-ledger,
+  .advanced-team-mgmt-page .team-control-grid,
+  .advanced-team-mgmt-page .team-skel-control-grid {
     grid-template-columns: 1fr;
   }
 
-  .team-action-row,
-  .view-presets,
-  .form-actions,
-  .modal-mode-switch,
-  .pagination-controls {
+  .advanced-team-mgmt-page .team-action-row,
+  .advanced-team-mgmt-page .view-presets,
+  .advanced-team-mgmt-page .team-form-actions,
+  .advanced-team-mgmt-page .team-modal-mode-switch,
+  .advanced-team-mgmt-page .pagination-controls {
     flex-direction: column;
   }
 
-  .preset-btn,
-  .btn-primary-glow,
-  .btn-secondary,
-  .modal-mode-switch button,
-  .pagination-select {
+  .advanced-team-mgmt-page .preset-btn,
+  .advanced-team-mgmt-page .team-btn-primary-glow,
+  .advanced-team-mgmt-page .team-btn-secondary,
+  .advanced-team-mgmt-page .team-modal-mode-switch button,
+  .advanced-team-mgmt-page .pagination-select {
     width: 100%;
   }
 
-  .day-cluster-head,
-  .roster-item,
-  .analytics-item,
-  .pattern-list-item {
+  .advanced-team-mgmt-page .day-cluster-head,
+  .advanced-team-mgmt-page .team-roster-item,
+  .advanced-team-mgmt-page .analytics-item,
+  .advanced-team-mgmt-page .pattern-list-item {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -1309,18 +1309,67 @@
     padding-inline: 0.35rem;
   }
 
-  .team-command-title {
+  .advanced-team-mgmt-page .team-command-title {
     padding-left: 0.65rem;
   }
 
-  .team-signal-card,
-  .team-skel-signal-card,
-  .assignment-card-head {
+  .advanced-team-mgmt-page .team-signal-card,
+  .advanced-team-mgmt-page .team-skel-signal-card,
+  .advanced-team-mgmt-page .assignment-card-head {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .shift-color-input {
+  .advanced-team-mgmt-page .shift-color-input {
     grid-template-columns: 1fr;
   }
 }
+
+/* Schedule explorer and timeline. All rules stay inside this workspace. */
+.advanced-team-mgmt-page { --team-ink:#172b40; --team-muted:#586f85; background:var(--bg-primary); }
+[data-theme='dark'] .advanced-team-mgmt-page { --team-ink:#edf3fa; --team-muted:#acbed2; background:var(--bg-primary); }
+.advanced-team-mgmt-page :is(h2,h3,h4) { font-family:inherit; letter-spacing:-.025em; color:var(--team-ink); background:none; -webkit-text-fill-color:currentColor; }
+.advanced-team-mgmt-page :is(h2,h3,h4)::after { display:none; }
+.advanced-team-mgmt-page :is(.team-board-panel,.insight-panel,.team-command-strip) { border-radius:16px; }
+.advanced-team-mgmt-page .team-control-grid { grid-template-columns:minmax(0,1fr) auto auto; }
+.advanced-team-mgmt-page .view-presets { flex-wrap:wrap; }
+.advanced-team-mgmt-page .preset-btn { font-size:12px; padding:9px 12px; border-radius:8px; }
+.advanced-team-mgmt-page .schedule-explorer { display:grid; gap:14px; margin:0 0 18px; padding:16px; border:1px solid var(--team-border); background:var(--team-strong); border-radius:12px; }
+.advanced-team-mgmt-page :is(.schedule-filter-row,.schedule-date-range) { display:flex; align-items:end; gap:12px; flex-wrap:wrap; }
+.advanced-team-mgmt-page .schedule-explorer label { display:grid; gap:7px; color:var(--team-muted); font-size:11px; font-weight:650; flex:1 1 170px; }
+.advanced-team-mgmt-page .schedule-explorer :is(input,select) { width:100%; min-height:40px; padding:9px 12px; border:1px solid var(--team-border); border-radius:8px; background:var(--team-surface); color:var(--team-ink); font:inherit; font-size:13px; color-scheme:light; }
+[data-theme='dark'] .advanced-team-mgmt-page :is(input,select) { color-scheme:dark; }
+.advanced-team-mgmt-page .schedule-result-count, .advanced-team-mgmt-page .schedule-date-range small { font-size:11px; color:var(--team-muted); padding:12px 0; }
+.advanced-team-mgmt-page .day-cluster { display:grid; grid-template-columns:140px minmax(0,1fr); border:0; border-bottom:1px solid var(--team-border); border-radius:0; background:transparent; padding:18px 0; gap:20px; }
+.advanced-team-mgmt-page .day-cluster-head { display:flex; flex-direction:column; justify-content:flex-start; gap:8px; padding:8px 0 8px 14px; border-left:3px solid var(--team-cyan); }
+.advanced-team-mgmt-page .day-cluster.weekend .day-cluster-head { border-color:var(--team-violet); }
+.advanced-team-mgmt-page .day-cluster-head strong { font-size:10px; font-weight:500; }
+.advanced-team-mgmt-page .assignment-grid { grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:8px; }
+.advanced-team-mgmt-page .assignment-card { border-radius:12px; padding:14px; background:var(--team-strong); gap:8px; }
+.advanced-team-mgmt-page .assignment-card > strong { font-size:13px; }.advanced-team-mgmt-page .assignment-meta { font-size:11px; }
+.advanced-team-mgmt-page .team-modal-content { background:var(--team-strong); color:var(--team-ink); border-radius:20px; width:min(760px,calc(100vw - 32px)); }
+.advanced-team-mgmt-page .team-modal-content.large { width:min(860px,calc(100vw - 32px)); }
+.advanced-team-mgmt-page .team-modal-header { background:var(--team-surface); padding:22px 26px; }
+.advanced-team-mgmt-page .team-modal-header h2 { font-size:24px; margin:8px 0 0; }
+.advanced-team-mgmt-page .assignment-form { padding:0 26px 24px; gap:20px; }
+.advanced-team-mgmt-page .team-modal-mode-switch { padding:20px 26px; }
+.advanced-team-mgmt-page .team-form-group > label { color:var(--team-ink); font-size:12px; font-weight:650; letter-spacing:.025em; text-transform:none; }
+.advanced-team-mgmt-page :is(.team-form-input,.team-form-select) { color:var(--team-ink); background:var(--team-surface); min-height:44px; padding:11px 13px; border:1px solid var(--team-border); border-radius:9px; font-size:13px; }
+.advanced-team-mgmt-page select option { background:var(--team-option-bg); color:var(--team-option-text); }
+.advanced-team-mgmt-page .team-user-selector { grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); padding:10px; }
+.advanced-team-mgmt-page .team-user-checkbox { color:var(--team-ink); font-size:12px; text-transform:none; letter-spacing:0; padding:12px; }
+.advanced-team-mgmt-page .team-user-checkbox input { width:18px; height:18px; accent-color:#199c95; }
+.advanced-team-mgmt-page .pattern-feedback { display:flex; align-items:center; gap:12px; font-size:12px; color:var(--team-muted); }
+.advanced-team-mgmt-page :is(button,input,select):focus-visible { outline:2px solid var(--team-cyan); outline-offset:3px; }
+@media(max-width:760px) { .advanced-team-mgmt-page .team-control-grid { grid-template-columns:1fr; }.advanced-team-mgmt-page .day-cluster { grid-template-columns:1fr; gap:12px; }.advanced-team-mgmt-page .day-cluster-head { flex-direction:row; justify-content:space-between; }.advanced-team-mgmt-page .assignment-grid { grid-template-columns:1fr; }.advanced-team-mgmt-page .team-modal-header { padding:18px; }.advanced-team-mgmt-page .assignment-form { padding:0 18px 20px; } }
+.advanced-team-mgmt-page .team-panel-head .team-panel-meta { display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:6px; }
+.advanced-team-mgmt-page .team-board-ledger { display:flex; flex-wrap:wrap; gap:16px; padding:0 0 10px; border-bottom:1px solid var(--team-border); }
+.advanced-team-mgmt-page .team-board-ledger span { flex-direction:row; align-items:center; gap:6px; padding:0; border:0; border-radius:0; background:none; }
+.advanced-team-mgmt-page .team-board-ledger em { font-size:10px; font-weight:500; letter-spacing:.03em; }
+.advanced-team-mgmt-page .team-board-ledger strong { font-size:12px; }
+.advanced-team-mgmt-page .assignment-form .team-form-group { margin:0; padding:0; }
+.advanced-team-mgmt-page .assignment-form label { margin:0; }
+.advanced-team-mgmt-page .assignment-form .team-user-checkbox { text-transform:none; letter-spacing:0; }
+.advanced-team-mgmt-page .assignment-form .team-form-actions { margin:0; padding-top:4px; }
+@media(min-width:1050px) { .advanced-team-mgmt-page .team-command-strip { grid-template-columns:220px minmax(0,1fr); }.advanced-team-mgmt-page .team-signal-card { padding:12px; }.advanced-team-mgmt-page .team-signal-icon { display:none; } }
+@media(max-width:560px) { .advanced-team-mgmt-page .view-presets { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }.advanced-team-mgmt-page .team-modal-mode-switch { flex-direction:row; }.advanced-team-mgmt-page .team-modal-mode-switch button { width:auto; flex:1; } }

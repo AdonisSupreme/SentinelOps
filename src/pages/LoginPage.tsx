@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import {
   FaArrowRight,
   FaEnvelope,
+  FaEye,
+  FaEyeSlash,
   FaLock,
   FaSatelliteDish,
   FaShieldAlt,
@@ -13,6 +15,7 @@ import '../styles/LoginPage.css';
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login, adAvailability, refreshAdAvailability } = useAuth();
@@ -61,12 +64,19 @@ const LoginPage: React.FC = () => {
 
       <section className="sops-login-panel">
         <aside className="sops-login-intel">
-          <span className="sops-intel-kicker">SentinelOps Command Layer</span>
-          <h1>One place to see the operation clearly.</h1>
+          <span className="sops-intel-kicker">Clarity. Continuity. Control.</span>
+          <h1>Your operation.<br /><span>In focus.</span></h1>
           <p>
-            SentinelOps brings live oversight, shift continuity, task execution, and operational accountability into a
-            single command space so every team starts informed, responds faster, and leaves a cleaner handover behind.
+            A clear view of what matters. A connected team. Every shift ready for what comes next.
           </p>
+
+          <div className="sops-login-visual" aria-hidden="true">
+            <div className="sops-orbit orbit-outer" /><div className="sops-orbit orbit-inner" />
+            <div className="sops-orbit-core"><FaShieldAlt /><span>SENTINEL<span>OPS</span></span></div>
+            <span className="sops-orbit-node node-a">01 <b>Observe</b></span>
+            <span className="sops-orbit-node node-b">02 <b>Coordinate</b></span>
+            <span className="sops-orbit-node node-c">03 <b>Deliver</b></span>
+          </div>
 
           <div className="sops-auth-route-card">
             <div className="sops-auth-route-header">
@@ -106,11 +116,12 @@ const LoginPage: React.FC = () => {
 
         <div className="sops-login-card">
           <div className="sops-card-head">
-            <h2>Sign In</h2>
-            <p>Continue into the workspace where people, priorities, and proof stay aligned.</p>
+            <span className="sops-signin-eyebrow">Your workspace awaits</span>
+            <h2>Welcome back.</h2>
+            <p>Sign in to continue to SentinelOps.</p>
           </div>
 
-          {error && <div className="sops-alert sops-alert-error">{error}</div>}
+          {error && <div role="alert" className="sops-alert sops-alert-error">{error}</div>}
 
           <form onSubmit={handleSubmit}>
             <label className="sops-field-label" htmlFor="login-email">Email</label>
@@ -132,13 +143,14 @@ const LoginPage: React.FC = () => {
               <FaLock className="sops-input-icon" />
               <input
                 id="login-password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 required
               />
+              <button className="sops-password-toggle" type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} onClick={() => setShowPassword((value) => !value)}>{showPassword ? <FaEyeSlash /> : <FaEye />}</button>
             </div>
 
             <button
@@ -146,10 +158,11 @@ const LoginPage: React.FC = () => {
               className="sops-btn-primary"
               disabled={isLoading}
             >
-              <span>{isLoading ? 'Authenticating...' : 'Access SentinelOps'}</span>
+              <span>{isLoading ? 'Signing in…' : 'Sign in'}</span>
               {!isLoading && <FaArrowRight />}
             </button>
           </form>
+          <div className="sops-login-assurance"><FaShieldAlt /><span>Your workspace access follows your assigned section.</span></div>
         </div>
       </section>
     </div>

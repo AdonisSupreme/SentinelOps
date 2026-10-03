@@ -1,3 +1,5 @@
+import { useAccess } from '../contexts/AccessContext';
+import HoveringSettingsWorkspace from '../components/reports/HoveringSettingsWorkspace';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FaCalendarCheck,
@@ -18,7 +20,6 @@ import { useSearchParams } from 'react-router-dom';
 import HoveringQueueWorkspace from '../components/reports/HoveringQueueWorkspace';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
-import { SECTION_MANUAL_ID } from '../content/sentinelManual';
 import reportsApi, { CRBArtifact, CRBOverview, CRBReportDefinition, CRBRun } from '../services/reportsApi';
 import './ReportsPage.css';
 
@@ -86,6 +87,7 @@ const ReportsSkeleton: React.FC = () => (
 
 const ReportsPage: React.FC = () => {
   const { user } = useAuth();
+  const { canAccessModule } = useAccess();
   const { addNotification } = useNotifications();
   const [searchParams, setSearchParams] = useSearchParams();
   const [overview, setOverview] = useState<CRBOverview | null>(null);
@@ -98,11 +100,11 @@ const ReportsPage: React.FC = () => {
   const role = (user?.role || '').toLowerCase();
   const isAdmin = role === 'admin';
   const canExtract = ['admin', 'manager', 'supervisor'].includes(role);
-  const canManageHoveringPasswords = ['admin', 'manager', 'user'].includes(role);
-  const hasAccess = user?.section_id === SECTION_MANUAL_ID;
-  const workspace = searchParams.get('workspace') === 'hovering' ? 'hovering' : 'crb';
+  const canManageHoveringPasswords = canAccessModule('reports.hovering_settings') && ['admin', 'manager', 'user'].includes(role);
+  const hasAccess = ['reports.crb','reports.hovering','reports.hovering_settings'].some(canAccessModule);
+  const workspace = searchParams.get('workspace') || (canAccessModule('reports.crb') ? 'crb' : canAccessModule('reports.hovering') ? 'hovering' : 'settings');
 
-  const openWorkspace = (next: 'crb' | 'hovering') => {
+  const openWorkspace = (next: 'crb' | 'hovering' | 'settings') => {
     const params = new URLSearchParams(searchParams);
     if (next === 'crb') params.delete('workspace');
     else params.set('workspace', next);
@@ -124,12 +126,12 @@ const ReportsPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!hasAccess || workspace !== 'crb') {
+    if (!canAccessModule('reports.crb') || workspace !== 'crb') {
       setLoading(false);
       return;
     }
     void load();
-  }, [hasAccess, load, workspace]);
+  }, [canAccessModule, load, workspace]);
 
   useEffect(() => {
     if (workspace !== 'crb' || !overview?.latest_run || !activeRunStatuses.has(overview.latest_run.status)) return undefined;
@@ -219,12 +221,13 @@ const ReportsPage: React.FC = () => {
 
       <nav className="reports-workspace-rail" aria-label="Reporting workspaces">
         <span>Workspaces</span>
-        <button type="button" className={workspace === 'crb' ? 'active' : ''} aria-current={workspace === 'crb' ? 'page' : undefined} onClick={() => openWorkspace('crb')}>
+        {canAccessModule('reports.crb') && (<button type="button" className={workspace === 'crb' ? 'active' : ''} aria-current={workspace === 'crb' ? 'page' : undefined} onClick={() => openWorkspace('crb')}>
           <b>01</b><FaFileCsv /><span><strong>CRB extracts</strong><small>LMS regulatory delivery</small></span>
-        </button>
-        <button type="button" className={workspace === 'hovering' ? 'active' : ''} aria-current={workspace === 'hovering' ? 'page' : undefined} onClick={() => openWorkspace('hovering')}>
+        </button>)}
+        {canAccessModule('reports.hovering') && (<button type="button" className={workspace === 'hovering' ? 'active' : ''} aria-current={workspace === 'hovering' ? 'page' : undefined} onClick={() => openWorkspace('hovering')}>
           <b>02</b><FaRobot /><span><strong>Hovering queue</strong><small>Loan ledger movement</small></span>
-        </button>
+        </button>)}
+        {canAccessModule('reports.hovering_settings') && <button onClick={() => openWorkspace('settings')}>Robot settings</button>}
       </nav>
 
       {workspace === 'crb' && error ? (
@@ -235,7 +238,7 @@ const ReportsPage: React.FC = () => {
         </div>
       ) : null}
 
-      {workspace === 'hovering' ? (
+      {workspace === 'settings' ? <HoveringSettingsWorkspace isAdmin={isAdmin} refreshNonce={hoverRefreshNonce} /> : workspace === 'hovering' ? (
         <HoveringQueueWorkspace isAdmin={isAdmin} canOperate={hasAccess} canManagePasswords={canManageHoveringPasswords} refreshNonce={hoverRefreshNonce} />
       ) : loading ? (
         <ReportsSkeleton />

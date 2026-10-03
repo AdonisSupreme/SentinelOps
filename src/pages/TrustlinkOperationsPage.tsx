@@ -1,3 +1,5 @@
+import { useSearchParams } from 'react-router-dom';
+import { useAccess, ModuleAccess } from '../contexts/AccessContext';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FiActivity,
@@ -465,12 +467,25 @@ const chunkRTGSIds = (ids: string[]): string[][] => {
 
 const TrustlinkOperationsPage: React.FC = () => {
   const { user } = useAuth();
+  const [accessSearchParams] = useSearchParams();
+  const { canAccessModule } = useAccess();
+  const canPipeline = canAccessModule('trustlink.daily_extraction');
+  const canHistory = canAccessModule('trustlink.run_history');
+  const canManual = canAccessModule('trustlink.manual_run');
+  const canConfig = canAccessModule('trustlink.configuration');
+  const canRTGS = canAccessModule('trustlink.rtgs');
+  const extractionAccess = canPipeline || canHistory || canManual || canConfig;
+  const initialTab: TrustlinkTab = canPipeline || canManual || canConfig ? 'pipeline' : canHistory ? 'history' : 'rtgs';
   const isAdmin = (user?.role || '').toLowerCase() === 'admin';
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionLabel, setActionLabel] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TrustlinkTab>('pipeline');
+  const [activeTab, setActiveTab] = useState<TrustlinkTab>((['pipeline','history','rtgs'].includes(accessSearchParams.get('tab') || '') ? accessSearchParams.get('tab') : initialTab) as TrustlinkTab);
+  const requestedTab = accessSearchParams.get('tab');
+  useEffect(() => {
+    if (requestedTab === 'pipeline' || requestedTab === 'history' || requestedTab === 'rtgs') setActiveTab(requestedTab);
+  }, [requestedTab]);
   const [liveConnectionState, setLiveConnectionState] = useState<LiveConnectionState>('connecting');
   const [todayStatus, setTodayStatus] = useState<TrustlinkTodayStatusResponse | null>(null);
   const [runs, setRuns] = useState<TrustlinkRunListItem[]>([]);
@@ -569,8 +584,8 @@ const TrustlinkOperationsPage: React.FC = () => {
   }, [loadRTGSControlData]);
 
   useEffect(() => {
-    if (activeTab === 'rtgs' && !rtgsAssessment) void loadRTGS();
-  }, [activeTab, loadRTGS, rtgsAssessment]);
+    if (canRTGS && activeTab === 'rtgs' && !rtgsAssessment) void loadRTGS();
+  }, [activeTab, loadRTGS, rtgsAssessment, canRTGS]);
 
   useEffect(() => {
     if (!rtgsAssessment) return;
@@ -603,12 +618,12 @@ const TrustlinkOperationsPage: React.FC = () => {
     if (!isSilent) setError(null);
 
     try {
-      const sourceConfigRequest = trustlinkApi.getPipelineConfig()
+      const sourceConfigRequest = (canConfig || canPipeline ? trustlinkApi.getPipelineConfig() : Promise.resolve(null))
         .then((config) => ({ config, error: null as unknown }))
         .catch((configError: unknown) => ({ config: null, error: configError }));
       const [today, history, sourceConfigResult] = await Promise.all([
-        trustlinkApi.getTodayStatus(),
-        trustlinkApi.listRuns(50, 0),
+        canPipeline || canManual ? trustlinkApi.getTodayStatus() : Promise.resolve(null),
+        canHistory ? trustlinkApi.listRuns(50, 0) : Promise.resolve([]),
         sourceConfigRequest,
       ]);
 
@@ -621,8 +636,8 @@ const TrustlinkOperationsPage: React.FC = () => {
         setSourceConfigMessage('Source controls are not initialized. Apply the TrustLink source-control migration, then refresh.');
       }
 
-      const runId = today.run?.id || history[0]?.id;
-      if (runId) {
+      const runId = today?.run?.id || history[0]?.id;
+      if (runId && (canPipeline || canHistory)) {
         await loadRun(runId);
       } else {
         setSelectedRun(null);
@@ -637,13 +652,15 @@ const TrustlinkOperationsPage: React.FC = () => {
       if (isInitial) setInitialLoading(false);
       if (!isInitial) setRefreshing(false);
     }
-  }, [loadRun]);
+  }, [loadRun, canPipeline, canManual, canHistory, canConfig]);
 
   useEffect(() => {
-    void hydrate({ initial: true });
-  }, [hydrate]);
+    if (extractionAccess) void hydrate({ initial: true });
+    else setInitialLoading(false);
+  }, [hydrate, extractionAccess]);
 
   useEffect(() => {
+    if (!canPipeline && !canHistory) return;
     const unsubscribe = centralizedWebSocketManager.subscribe('checklists', (event: any) => {
       if (event?.type === 'connected' || event?.type === 'CONNECTION_ESTABLISHED') {
         setLiveConnectionState('connected');
@@ -771,13 +788,13 @@ const TrustlinkOperationsPage: React.FC = () => {
       void (async () => {
         try {
           const [today, history] = await Promise.all([
-            trustlinkApi.getTodayStatus(),
-            trustlinkApi.listRuns(50, 0),
+            canPipeline || canManual ? trustlinkApi.getTodayStatus() : Promise.resolve(null),
+            canHistory ? trustlinkApi.listRuns(50, 0) : Promise.resolve([]),
           ]);
           setTodayStatus(today);
           setRuns(history);
 
-          if (!selectedRunId || selectedRunId === eventRunId || today.run?.id === eventRunId) {
+          if (!selectedRunId || selectedRunId === eventRunId || today?.run?.id === eventRunId) {
             await loadRun(eventRunId);
           }
         } catch {
@@ -789,7 +806,7 @@ const TrustlinkOperationsPage: React.FC = () => {
     });
 
     return unsubscribe;
-  }, [loadRun, selectedRunId]);
+  }, [loadRun, selectedRunId, canPipeline, canManual, canHistory]);
 
   const timeline = useMemo(
     () => buildPipelineTimeline(displayRun, steps, todayStatus?.has_file),
@@ -1585,17 +1602,17 @@ const TrustlinkOperationsPage: React.FC = () => {
 
       <nav className="trustlink-workspace-nav" aria-label="TrustLink workspaces">
         <span className="trustlink-workspace-label">Workspaces</span>
-        <button
+        {extractionAccess && (<button
           type="button"
           className={activeWorkspace === 'extraction' ? 'active' : ''}
           aria-current={activeWorkspace === 'extraction' ? 'page' : undefined}
-          onClick={() => setActiveTab('pipeline')}
+          onClick={() => setActiveTab(canPipeline || canManual || canConfig ? 'pipeline' : 'history')}
         >
           <small>01</small>
           <FiLayers />
           <strong>Account extraction</strong>
-        </button>
-        <button
+        </button>)}
+        {canRTGS && (<button
           type="button"
           className={activeWorkspace === 'rtgs' ? 'active' : ''}
           aria-current={activeWorkspace === 'rtgs' ? 'page' : undefined}
@@ -1604,7 +1621,7 @@ const TrustlinkOperationsPage: React.FC = () => {
           <small>02</small>
           <FiShield />
           <strong>RTGS recovery</strong>
-        </button>
+        </button>)}
         <span className="trustlink-workspace-rule" aria-hidden="true" />
       </nav>
 
@@ -1615,7 +1632,7 @@ const TrustlinkOperationsPage: React.FC = () => {
         </div>
       )}
 
-      <section className={`trustlink-layout workspace-${activeWorkspace} ${activeTab === 'history' ? 'full-width' : ''}`}>
+      <section className={`trustlink-layout workspace-${activeWorkspace} ${activeTab === 'history' || (!canPipeline && activeWorkspace === 'extraction') ? 'full-width' : ''}`}>
         {activeWorkspace === 'extraction' ? (
           <div className="trustlink-board-panel">
             <div className="trustlink-panel-head">
@@ -1631,15 +1648,15 @@ const TrustlinkOperationsPage: React.FC = () => {
             </div>
 
             <div className="trustlink-command-actions">
-              <button className="trustlink-btn primary" onClick={handleRunNow} disabled={actionLoading}><FiPlay /> Run Extraction</button>
+              <ModuleAccess module="trustlink.manual_run"><button className="trustlink-btn primary" onClick={handleRunNow} disabled={actionLoading}><FiPlay /> Run Extraction</button></ModuleAccess>
               <button className="trustlink-btn secondary" onClick={() => void hydrate()} disabled={actionLoading}><FiRefreshCcw /> Refresh</button>
-              {displayRun?.file_present && displayRun.id && (
+              {(canPipeline || canHistory) && displayRun?.file_present && displayRun.id && (
                 <button className="trustlink-btn ghost" onClick={() => void handleDownload(displayRun.id, displayRun.file_name)} disabled={actionLoading}><FiArrowDownCircle /> Download Export</button>
               )}
-              <button className="trustlink-btn danger" onClick={() => setShowOverwriteWarning(true)} disabled={actionLoading}><FiZap /> Overwrite</button>
+              <ModuleAccess module="trustlink.manual_run"><button className="trustlink-btn danger" onClick={() => setShowOverwriteWarning(true)} disabled={actionLoading}><FiZap /> Overwrite</button></ModuleAccess>
             </div>
 
-            <section className="trustlink-source-route" aria-labelledby="trustlink-source-route-title">
+            <ModuleAccess module="trustlink.configuration"><section className="trustlink-source-route" aria-labelledby="trustlink-source-route-title">
               <div className="trustlink-source-route-copy">
                 <span className="trustlink-panel-kicker"><FiDatabase /> Source route</span>
                 <strong id="trustlink-source-route-title">{sourceRouteLabel}</strong>
@@ -1689,26 +1706,26 @@ const TrustlinkOperationsPage: React.FC = () => {
                 <span>{!pipelineConfig ? 'Route controls unavailable' : currentStatus === 'running' ? 'Route locked while extraction is active.' : isAdmin ? 'Admin route control' : 'Read-only route'}</span>
                 <span>{sourceConfigMessage || (pipelineConfig?.updated_at ? `Changed by ${pipelineConfig.updated_by} / ${formatDateTime(pipelineConfig.updated_at)}` : 'Default paired route')}</span>
               </div>
-            </section>
+            </section></ModuleAccess>
 
-            {!hasRunData ? (
+            {(canPipeline || canHistory) && (!hasRunData ? (
               <section className="trustlink-empty-state">
                 <span className="trustlink-empty-icon"><FiDatabase /></span>
                 <h2>No TrustLink run is available yet</h2>
                 <p>The account delivery surface is ready for its first extraction.</p>
-                <button className="trustlink-btn primary" onClick={handleRunNow} disabled={actionLoading}><FiPlay /> Trigger First Run</button>
+                <ModuleAccess module="trustlink.manual_run"><button className="trustlink-btn primary" onClick={handleRunNow} disabled={actionLoading}><FiPlay /> Trigger First Run</button></ModuleAccess>
               </section>
             ) : (
               <section className="trustlink-tabs-shell">
                 <div className="trustlink-tabs extraction-tabs" role="tablist" aria-label="Account extraction sections">
-                  {EXTRACTION_TABS.map((tab) => (
+                  {EXTRACTION_TABS.filter(tab => tab.id === 'pipeline' ? canPipeline : canHistory).map((tab) => (
                     <button key={tab.id} type="button" role="tab" aria-selected={activeTab === tab.id} className={`trustlink-tab-btn ${activeTab === tab.id ? 'active' : ''}`} onClick={() => setActiveTab(tab.id)}>
                       {tab.icon}<span>{tab.label}</span>
                     </button>
                   ))}
                 </div>
 
-                {activeTab === 'pipeline' && (
+                {activeTab === 'pipeline' && canPipeline && (
                   <div className="trustlink-tab-panel trustlink-pipeline-panel">
                     <article className="trustlink-card trustlink-card-wide extraction-live-card">
                       <div className="trustlink-card-header">
@@ -1740,7 +1757,7 @@ const TrustlinkOperationsPage: React.FC = () => {
                   </div>
                 )}
 
-                {activeTab === 'history' && (
+                {activeTab === 'history' && canHistory && (
                   <div className="trustlink-tab-panel">
                     <section className="trustlink-history">
                       <div className="trustlink-card-header">
@@ -1777,7 +1794,7 @@ const TrustlinkOperationsPage: React.FC = () => {
                               <div className="history-item-actions">
                                 <button className="trustlink-inline-btn" onClick={(event) => { event.stopPropagation(); void openRunInspector(run.id); }} disabled={inspectorLoading}><FiEye /> Inspect run</button>
                                 {run.file_present && <button className="trustlink-inline-btn" onClick={(event) => { event.stopPropagation(); void handleDownload(run.id, run.file_name); }}><FiArrowDownCircle /> Download</button>}
-                                {canDeleteRunFile(run, runs) && <button className="trustlink-inline-btn danger" onClick={(event) => { event.stopPropagation(); setPendingFileDeleteRun(run); }}>Delete file</button>}
+                                {canHistory && canDeleteRunFile(run, runs) && <button className="trustlink-inline-btn danger" onClick={(event) => { event.stopPropagation(); setPendingFileDeleteRun(run); }}>Delete file</button>}
                               </div>
                             </article>
                           );
@@ -1787,13 +1804,13 @@ const TrustlinkOperationsPage: React.FC = () => {
                   </div>
                 )}
               </section>
-            )}
+            ))}
           </div>
         ) : (
           <div className="trustlink-rtgs-workspace">{renderRTGSPanel()}</div>
         )}
 
-        {activeWorkspace === 'rtgs' ? renderRTGSLaneRail(rtgsAssessment?.cases || []) : activeTab === 'pipeline' ? (
+        {activeWorkspace === 'rtgs' ? renderRTGSLaneRail(rtgsAssessment?.cases || []) : activeTab === 'pipeline' && canPipeline ? (
           <aside className="trustlink-side-rail extraction-side-rail">
             <article className="trustlink-side-card cadence-card">
               <div className="trustlink-panel-head compact">

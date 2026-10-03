@@ -25,7 +25,7 @@ const isNetworkBootstrapError = (err: unknown) => {
   );
 };
 
-export const useDashboardSnapshot = (pollIntervalMs: number = DEFAULT_POLL_INTERVAL_MS) => {
+export const useDashboardSnapshot = (pollIntervalMs: number = DEFAULT_POLL_INTERVAL_MS, enabled = true) => {
   const [snapshot, setSnapshot] = useState<OperationalDashboardSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -39,6 +39,7 @@ export const useDashboardSnapshot = (pollIntervalMs: number = DEFAULT_POLL_INTER
   }, [snapshot]);
 
   const refresh = useCallback(async ({ background = false }: RefreshOptions = {}) => {
+    if (!enabled) return null;
     if (inFlightRefreshRef.current) {
       return inFlightRefreshRef.current;
     }
@@ -92,7 +93,7 @@ export const useDashboardSnapshot = (pollIntervalMs: number = DEFAULT_POLL_INTER
 
     inFlightRefreshRef.current = refreshPromise;
     return refreshPromise;
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
     void refresh().catch(() => undefined);

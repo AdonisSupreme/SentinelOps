@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { NEXUS_API_BASE_URL } from '../config/env';
+import { createOperationUuid } from '../utils/operationId';
 
 export type ClearingBatchStatus =
   | 'IMPORTED'
@@ -449,7 +450,7 @@ class ClearingApi {
     const response = await client.post<ClearingBatch | ClearingExecution>(`/api/v1/nexus/clearing/batches/${batchId}/approval`, {
       approve,
       note,
-      idempotency_key: approve ? `approval:${batchId}:${crypto.randomUUID()}` : undefined,
+      idempotency_key: approve ? `approval:${batchId}:${createOperationUuid()}` : undefined,
     });
     return response.data;
   }

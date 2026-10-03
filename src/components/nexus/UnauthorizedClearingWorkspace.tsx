@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   FaArchive,
   FaBalanceScale,
+  FaBan,
   FaBook,
   FaCheck,
   FaCheckCircle,
@@ -157,7 +158,7 @@ const auditEventTitle = (eventType: string) => {
     execution_failed: 'Execution Stopped',
     execution_created: 'Execution Started',
     batch_approved: 'Payload Approved',
-    batch_rejected: 'Payload Returned',
+    batch_rejected: 'Payload Rejected',
     batch_submitted: 'Payload Submitted',
     batch_reconciled: 'Oracle Evidence Verified',
     specific_record_policy_changed: 'Specific Record Policy Changed',
@@ -402,6 +403,12 @@ const sourceFileToBase64 = (file: File) =>
     reader.onerror = () => reject(reader.error || new Error('The selected source file could not be read.'));
     reader.readAsDataURL(file);
   });
+
+const executionFailureMessage = (execution: ClearingExecution) => {
+  if (execution.error_message) return execution.error_message;
+  const status = execution.status.replace(/_/g, ' ').toLowerCase();
+  return `Approval was recorded, but the guarded Oracle execution ended as ${status}. Inspect the custody evidence before taking another action.`;
+};
 
 const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initialView = 'control' }) => {
   const { addNotification } = useNotifications();
@@ -759,15 +766,19 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
       `command-${command}`,
       async () => {
         const targetBatchId = commandBatchId || batch?.batch_id;
+        let approvalFailure: string | null = null;
         if (!targetBatchId && command !== 'rollback') return;
         if (command === 'submit' && batch) {
           await clearingApi.submit(batch.batch_id, changeReference, commandNote);
           setChangeReference('');
           await refreshBatch(batch.batch_id);
         } else if ((command === 'approve' || command === 'reject') && targetBatchId) {
-          await clearingApi.decideApproval(targetBatchId, command === 'approve', commandNote);
+          const decision = await clearingApi.decideApproval(targetBatchId, command === 'approve', commandNote);
           await refreshBatch(targetBatchId);
           setExecutions(await clearingApi.listExecutions());
+          if (command === 'approve' && 'execution_id' in decision && decision.status !== 'COMMITTED') {
+            approvalFailure = executionFailureMessage(decision);
+          }
         } else if (command === 'rollback' && rollbackExecutionId) {
           await clearingApi.rollback(rollbackExecutionId, commandNote);
           setExecutions(await clearingApi.listExecutions());
@@ -776,13 +787,14 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
         setAudit(await clearingApi.listAudit());
         setCommand(null);
         setCommandBatchId(null);
+        if (approvalFailure) throw new Error(approvalFailure);
       },
       command === 'submit'
         ? 'Batch transferred to checker custody.'
         : command === 'approve'
           ? 'Payload approved. The guarded Oracle mutation completed and entered custody.'
           : command === 'reject'
-            ? 'Batch returned to the maker.'
+            ? 'Payload rejected and returned to the maker. No Oracle mutation was attempted.'
             : command === 'rollback'
               ? 'Compensating reversal committed and audited.'
               : 'Authorized Oracle clearing completed.',
@@ -1755,10 +1767,10 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
               </div>
               <div className="authorization-queue-actions">
                 <button type="button" onClick={() => openCommand('approve', undefined, item.batch_id)} disabled={!!busy}>
-                  <FaUserCheck /> Review
+                  <FaUserCheck /> Review & approve
                 </button>
-                <button type="button" className="return" onClick={() => openCommand('reject', undefined, item.batch_id)} disabled={!!busy} title="Return to maker">
-                  <FaUndo />
+                <button type="button" className="reject" onClick={() => openCommand('reject', undefined, item.batch_id)} disabled={!!busy} title="Reject sealed payload">
+                  <FaBan /> Reject
                 </button>
               </div>
             </article>
@@ -2309,11 +2321,11 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
         <div className="clearing-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setCommand(null)}>
           <section className="clearing-modal clearing-command-modal" role="dialog" aria-modal="true" aria-labelledby="clearing-command-title">
             <header>
-              <span>{command === 'rollback' ? <FaUndo /> : <FaUserCheck />}</span>
+              <span>{command === 'rollback' ? <FaUndo /> : command === 'reject' ? <FaBan /> : <FaUserCheck />}</span>
               <div className='new-fine-div'>
                 <small>SentinelOps custody handoff</small>
                 <h2 id="clearing-command-title">
-                  {command === 'submit' ? 'Submit exact selection' : command === 'approve' ? 'Approve and commit' : command === 'reject' ? 'Return to maker' : 'Compensating reversal'}
+                  {command === 'submit' ? 'Submit exact selection' : command === 'approve' ? 'Approve and commit' : command === 'reject' ? 'Reject sealed payload' : 'Compensating reversal'}
                 </h2>
               </div>
               <button type="button" onClick={() => setCommand(null)} title="Close"><FaTimes /></button>
@@ -2349,13 +2361,15 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
                 </label>
               ) : null}
               <label>
-                <span>{command === 'approve' || command === 'reject' ? 'Checker note' : 'Reason and evidence reference'}</span>
+                <span>{command === 'reject' ? 'Rejection reason' : command === 'approve' ? 'Checker note' : 'Reason and evidence reference'}</span>
                 <textarea
                   value={commandNote}
                   onChange={(event) => setCommandNote(event.target.value)}
                   placeholder={
                     command === 'rollback'
                         ? 'State why the committed execution must be compensated...'
+                        : command === 'reject'
+                          ? 'State precisely why this sealed payload must return to the maker...'
                         : 'Record the decision context...'
                   }
                   rows={5}
@@ -2365,6 +2379,12 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
                 <div className="clearing-execute-warning">
                   <FaLock />
                   <p>Approval immediately starts the guarded mutation. SentinelOps locks and revalidates every sealed Oracle row; any mismatch rolls back the complete payload.</p>
+                </div>
+              ) : null}
+              {command === 'reject' ? (
+                <div className="clearing-execute-warning rejection">
+                  <FaBan />
+                  <p>Rejection records this checker decision and its reason, returns the batch to the maker, and does not execute any Oracle mutation.</p>
                 </div>
               ) : null}
               {command === 'rollback' ? (
@@ -2378,7 +2398,7 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
               <button type="button" className="secondary" onClick={() => setCommand(null)}>Cancel</button>
               <button
                 type="button"
-                className={command === 'approve' ? 'approve-command' : ''}
+                className={command === 'approve' ? 'approve-command' : command === 'reject' ? 'reject-command' : ''}
                 onClick={() => void executeCommand()}
                 disabled={
                   !!busy ||
@@ -2387,8 +2407,8 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
                   (command === 'rollback' && commandNote.trim().length < 12)
                 }
               >
-                {command === 'rollback' ? <FaUndo /> : command === 'approve' ? <FaCheck /> : <FaUserCheck />}
-                {busy?.startsWith('command-') ? 'Working...' : command === 'submit' ? 'Transfer to checker' : command === 'approve' ? 'Approve and execute' : command === 'reject' ? 'Return batch' : 'Commit reversal'}
+                {command === 'rollback' ? <FaUndo /> : command === 'approve' ? <FaCheck /> : command === 'reject' ? <FaBan /> : <FaUserCheck />}
+                {busy?.startsWith('command-') ? 'Working...' : command === 'submit' ? 'Transfer to checker' : command === 'approve' ? 'Approve and execute' : command === 'reject' ? 'Reject payload' : 'Commit reversal'}
               </button>
             </footer>
           </section>

@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAccess } from '../../contexts/AccessContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import type { ChecklistTemplate, DashboardChecklistThread } from '../../services/checklistApi';
 import { checklistApi } from '../../services/checklistApi';
 import {
-  FaDatabase,
-  FaLink,
-  FaNetworkWired,
   FaPlus,
-  FaProjectDiagram,
   FaSyncAlt,
-  FaTasks,
   FaUsers,
 } from 'react-icons/fa';
 import { normalizeShiftCode } from '../../utils/shiftUtils';
@@ -19,24 +15,14 @@ import './QuickActions.css';
 import TemplateListSkeleton from './TemplateListSkeleton';
 import '../checklist/ChecklistPageSkeleton.css';
 
-export interface QuickActionSignal {
-  id: string;
-  label: string;
-  value: string;
-  detail: string;
-  to: string;
-  tone?: 'ok' | 'watch' | 'danger' | 'neutral';
-  icon: React.ReactNode;
-}
-
 interface QuickActionsProps {
   onRefresh?: () => void | Promise<void>;
   existingThreads?: DashboardChecklistThread[];
-  signals?: QuickActionSignal[];
 }
 
-const QuickActions: React.FC<QuickActionsProps> = ({ onRefresh, existingThreads = [], signals = [] }) => {
+const QuickActions: React.FC<QuickActionsProps> = ({ onRefresh, existingThreads = [] }) => {
   const navigate = useNavigate();
+  const { canAccessPage } = useAccess();
   const { user } = useAuth();
   const { addNotification } = useNotifications();
   const [isLoading, setIsLoading] = useState(false);
@@ -171,11 +157,6 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefresh, existingThreads 
     }
   };
 
-  const handleTasks = () => navigate('/tasks');
-  const handleTrustlink = () => navigate('/trustlink');
-  const handleNexus = () => navigate('/nexus');
-  const handleNetwork = () => navigate('/network-sentinel');
-  const handleDatabase = () => navigate('/database-stats');
   const handleWorkforce = () => navigate('/team');
   const handleRefresh = () => {
     if (onRefresh) {
@@ -186,7 +167,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefresh, existingThreads 
   return (
     <div className="quick-actions">
       <div className="quick-actions-header">
-        <h3>Operator Actions</h3>
+        <h3>Shift actions</h3>
         <button className="refresh-btn" onClick={handleRefresh} title="Refresh dashboard">
           <FaSyncAlt />
         </button>
@@ -200,61 +181,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onRefresh, existingThreads 
           </button>
         )}
 
-        <button className="qa-action-btn qa-secondary" onClick={handleTasks}>
-          <FaTasks />
-          <span>Tasks</span>
-        </button>
-
-        <button className="qa-action-btn qa-secondary" onClick={handleTrustlink}>
-          <FaLink />
-          <span>TrustLink</span>
-        </button>
-
-        <button className="qa-action-btn qa-secondary" onClick={handleNexus}>
-          <FaProjectDiagram />
-          <span>Nexus</span>
-        </button>
-
-        <button className="qa-action-btn qa-secondary" onClick={handleNetwork}>
-          <FaNetworkWired />
-          <span>Network</span>
-        </button>
-
-        <button className="qa-action-btn qa-secondary" onClick={handleDatabase}>
-          <FaDatabase />
-          <span>Database</span>
-        </button>
-
-        <button className="qa-action-btn qa-secondary" onClick={handleWorkforce}>
+        {canAccessPage('/team') && <button className="qa-action-btn qa-secondary" onClick={handleWorkforce}>
           <FaUsers />
-          <span>Workforce</span>
-        </button>
+          <span>Plan coverage</span>
+        </button>}
       </div>
-
-      {signals.length > 0 && (
-        <div className="operator-signal-stack">
-          <div className="operator-signal-heading">
-            <span>Live queue</span>
-            <small>Open the source console</small>
-          </div>
-
-          {signals.map((signal) => (
-            <button
-              key={signal.id}
-              type="button"
-              className={`operator-signal-item tone-${signal.tone || 'neutral'}`}
-              onClick={() => navigate(signal.to)}
-            >
-              <span className="operator-signal-icon">{signal.icon}</span>
-              <span className="operator-signal-copy">
-                <strong>{signal.label}</strong>
-                <small>{signal.detail}</small>
-              </span>
-              <em>{signal.value}</em>
-            </button>
-          ))}
-        </div>
-      )}
 
       {showModal && (
         <div className="qa-modal-overlay" onClick={() => setShowModal(false)}>

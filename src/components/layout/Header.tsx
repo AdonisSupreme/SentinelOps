@@ -1,3 +1,4 @@
+import { useAccess } from '../../contexts/AccessContext';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -18,7 +19,6 @@ import {
   FaUserShield,
 } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
-import { SECTION_MANUAL_ID } from '../../content/sentinelManual';
 import ThemeToggle from '../ui/ThemeToggle';
 import NotificationCenter from '../notifications/NotificationCenter';
 import Logo from '../../logo.png';
@@ -53,6 +53,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
+  const { canAccessPage } = useAccess();
   const [navMenuOpen, setNavMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [hoveredNavItem, setHoveredNavItem] = useState<MenuItem | null>(null);
@@ -65,8 +66,6 @@ const Header: React.FC = () => {
 
   const isAdmin = user?.role?.toLowerCase() === 'admin';
   const isManager = ['admin', 'manager', 'supervisor'].includes((user?.role || '').toLowerCase());
-  const hasNexusAccess = user?.section_id === SECTION_MANUAL_ID && isAdmin;
-  const hasReportingAccess = user?.section_id === SECTION_MANUAL_ID;
 
   const isActiveItem = (item: MenuItem) => {
     if (!item.path) return false;
@@ -145,13 +144,7 @@ const Header: React.FC = () => {
     [],
   );
 
-  const navItems: MenuItem[] = useMemo(
-    () => baseNavItems.filter((item) => {
-      if (item.id === 'reports') return hasReportingAccess;
-      return !['nexus', 'funds-custody'].includes(item.id) || hasNexusAccess;
-    }),
-    [baseNavItems, hasNexusAccess, hasReportingAccess],
-  );
+  const navItems: MenuItem[] = useMemo(() => baseNavItems.filter(item => !item.path || canAccessPage(item.path)), [baseNavItems, canAccessPage]);
 
   const profileItems: MenuItem[] = useMemo(
     () => [
@@ -198,6 +191,15 @@ const Header: React.FC = () => {
       ...(isAdmin
         ? [
             {
+              id: 'access',
+              path: '/access',
+              label: 'Section & Module Access',
+              icon: <FaUserShield />,
+              description: 'Assign shared workspaces to sections and inspect effective access.',
+              caption: 'Manage section access',
+              activeCaption: 'Current access workspace',
+            } satisfies MenuItem,
+            {
               id: 'users',
               path: '/users',
               label: 'User Management',
@@ -208,8 +210,8 @@ const Header: React.FC = () => {
             } satisfies MenuItem,
           ]
         : []),
-    ],
-    [isAdmin, isManager],
+    ].filter(item => canAccessPage(item.path)),
+    [isAdmin, isManager, canAccessPage],
   );
 
   useEffect(() => {

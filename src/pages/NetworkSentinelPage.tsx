@@ -1,3 +1,4 @@
+import { useAccess, ModuleAccess } from '../contexts/AccessContext';
 import React, { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -96,10 +97,13 @@ const sortNetworkServices = (services: NetworkServiceCard[]) => [...services].so
 
 const NetworkSentinelPage: React.FC = () => {
   const { user } = useAuth();
+  const { canAccessModule } = useAccess();
+  const canMonitoring = canAccessModule('network_sentinel.monitoring');
+  const canHistory = canAccessModule('network_sentinel.outage_history');
   const { applicationTimeZone } = useAppConfig();
   const { addNotification } = useNotifications();
   const [searchParams, setSearchParams] = useSearchParams();
-  const isManagerOrAdmin = ['admin', 'manager'].includes((user?.role || '').toLowerCase());
+  const isManagerOrAdmin = canAccessModule('network_sentinel.configuration') && ['admin', 'manager'].includes((user?.role || '').toLowerCase());
   const isAdmin = (user?.role || '').toLowerCase() === 'admin';
 
   const [snapshot, setSnapshot] = useState<NetworkCommandCenterResponse | null>(null);
@@ -108,7 +112,7 @@ const NetworkSentinelPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [investigationLoading, setInvestigationLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<DetailTab>('signal');
+  const [tab, setTab] = useState<DetailTab>(canMonitoring ? 'signal' : 'timeline');
   const [serviceQuery, setServiceQuery] = useState('');
   const [environmentFilter, setEnvironmentFilter] = useState('');
   const [groupFilter, setGroupFilter] = useState<string>(ALL_GROUPS);
@@ -173,6 +177,7 @@ const NetworkSentinelPage: React.FC = () => {
   }, []);
 
   const loadInvestigation = useCallback(async (serviceId: string, silent = false) => {
+    if (!canMonitoring && !canHistory) return;
     const now = Date.now();
     if (investigationInFlightRef.current === serviceId) return;
     if (
@@ -194,7 +199,7 @@ const NetworkSentinelPage: React.FC = () => {
       }
       setInvestigationLoading(false);
     }
-  }, []);
+  }, [canMonitoring, canHistory]);
 
   useEffect(() => {
     loadCommandCenter(true).catch(() => {
@@ -222,14 +227,14 @@ const NetworkSentinelPage: React.FC = () => {
     const nextParams = new URLSearchParams(searchParams);
     if (selectedId) nextParams.set('service', selectedId);
     else nextParams.delete('service');
-    if (tab !== 'signal') nextParams.set('tab', tab);
+    if (tab !== 'signal' && canHistory) nextParams.set('tab', tab);
     else nextParams.delete('tab');
 
     if (nextParams.toString() !== searchParams.toString()) {
       lastLocallySyncedServiceRef.current = selectedId;
       setSearchParams(nextParams, { replace: true });
     }
-  }, [searchParams, selectedId, setSearchParams, tab]);
+  }, [searchParams, selectedId, setSearchParams, tab, canHistory]);
 
   useEffect(() => {
     const poller = window.setInterval(() => {
@@ -266,6 +271,7 @@ const NetworkSentinelPage: React.FC = () => {
   }, [scheduleInvestigationRefresh]);
 
   useEffect(() => {
+    if (!canMonitoring) return;
     const token = localStorage.getItem('token');
     if (!token) return;
     const socket = new WebSocket(`${resolveWebSocketBaseUrl()}/api/v1/network-sentinel/ws?token=${encodeURIComponent(token)}&min_interval_seconds=0.6`);
@@ -291,7 +297,7 @@ const NetworkSentinelPage: React.FC = () => {
       if (detailRefreshTimerRef.current) window.clearTimeout(detailRefreshTimerRef.current);
       if (snapshotRefreshTimerRef.current) window.clearTimeout(snapshotRefreshTimerRef.current);
     };
-  }, []);
+  }, [canMonitoring]);
 
   const environments = useMemo(() => Array.from(new Set((snapshot?.services || []).map((service) => service.environment).filter(Boolean) as string[])).sort(), [snapshot?.services]);
   const environmentScopedServices = useMemo(
@@ -723,17 +729,17 @@ const NetworkSentinelPage: React.FC = () => {
                     <code>{formatNetworkEndpoint(service)}</code>
                     <span>{formatMonitorMode(service)}</span>
                   </div>
-                  <div className="network-service-facts">
+                  <ModuleAccess module="network_sentinel.monitoring"><div className="network-service-facts">
                     <div><span>Signal</span><strong>{formatLatencyPair(service)}</strong></div>
                     <div><span>Availability</span><strong>{formatPercent(service.metrics.uptime_percent_24h)}</strong></div>
                     <div><span>Posture</span><strong>{formatServicePosture(service)}</strong></div>
-                  </div>
+                  </div></ModuleAccess>
                 </button>
               );
             })}
           </div>
 
-          <div className="subpanels">
+          <ModuleAccess module="network_sentinel.outage_history"><div className="subpanels">
             <div className="network-shell subpanel">
               <div className="network-subpanel-command">
                 <div><span>Incident lane</span><h2>Active Incidents</h2></div>
@@ -764,7 +770,7 @@ const NetworkSentinelPage: React.FC = () => {
                 {!snapshot?.recent_events.length ? <div className="list-empty">Major events will appear here.</div> : null}
               </div>
             </div>
-          </div>
+          </div></ModuleAccess>
         </section>
 
         <aside className="detail-column network-shell">
@@ -777,8 +783,8 @@ const NetworkSentinelPage: React.FC = () => {
               </div>
               <strong className={`status-pill ${statusClass(selectedCard.status?.overall_status)}`}>{selectedCard.status?.overall_status || 'UNKNOWN'}</strong>
             </div>
-            <div className="detail-actions">{isManagerOrAdmin ? <button onClick={runCheckNow} disabled={checkNowBusy}><FaBolt /> {checkNowBusy ? 'Checking...' : 'Check now'}</button> : null}{isManagerOrAdmin ? <button onClick={toggleEnabled} disabled={toggleBusy}>{toggleBusy ? 'Working...' : selectedCard.enabled ? 'Disable' : 'Enable'}</button> : null}{isManagerOrAdmin ? <button onClick={openEdit}>Edit</button> : null}<button onClick={downloadEvidenceText} disabled={evidenceDownloading}><FaDownload /> {evidenceDownloading ? 'Preparing...' : 'Evidence TXT'}</button>{isAdmin ? <button className="danger-action" onClick={deleteService} disabled={deleteBusy}>{deleteBusy ? 'Deleting...' : 'Delete'}</button> : null}</div>
-            <div className="network-detail-strip">
+            <div className="detail-actions">{isManagerOrAdmin ? <button onClick={runCheckNow} disabled={checkNowBusy}><FaBolt /> {checkNowBusy ? 'Checking...' : 'Check now'}</button> : null}{isManagerOrAdmin ? <button onClick={toggleEnabled} disabled={toggleBusy}>{toggleBusy ? 'Working...' : selectedCard.enabled ? 'Disable' : 'Enable'}</button> : null}{isManagerOrAdmin ? <button onClick={openEdit}>Edit</button> : null}{canMonitoring && (<button onClick={downloadEvidenceText} disabled={evidenceDownloading}><FaDownload /> {evidenceDownloading ? 'Preparing...' : 'Evidence TXT'}</button>)}{isAdmin ? <button className="danger-action" onClick={deleteService} disabled={deleteBusy}>{deleteBusy ? 'Deleting...' : 'Delete'}</button> : null}</div>
+            <ModuleAccess module="network_sentinel.monitoring"><div className="network-detail-strip">
               <div>
                 <span><FaSignal /> Signal</span>
                 <strong>{formatPercent(investigation?.metrics.availability_percent_24h ?? selectedCard.metrics.uptime_percent_24h)}</strong>
@@ -794,8 +800,12 @@ const NetworkSentinelPage: React.FC = () => {
                 <strong>{formatServicePosture(selectedCard)}</strong>
                 <small>Since {formatSince(selectedCard.status?.last_state_change_at)}</small>
               </div>
-            </div>
-            <div className="detail-tabs"><button className={tab === 'signal' ? 'active' : ''} onClick={() => setTab('signal')}>Signal</button><button className={tab === 'timeline' ? 'active' : ''} onClick={() => setTab('timeline')}>Timeline</button><button className={tab === 'evidence' ? 'active' : ''} onClick={() => setTab('evidence')}>Evidence</button></div>
+            </div></ModuleAccess>
+            {(canMonitoring || canHistory) && <div className="detail-tabs">
+              {canMonitoring && <button className={tab === 'signal' ? 'active' : ''} onClick={() => setTab('signal')}>Signal</button>}
+              {canHistory && <button className={tab === 'timeline' ? 'active' : ''} onClick={() => setTab('timeline')}>Timeline</button>}
+              {canMonitoring && <button className={tab === 'evidence' ? 'active' : ''} onClick={() => setTab('evidence')}>Evidence</button>}
+            </div>}
             {investigationLoading ? <div className="network-shell inner-loading">Refreshing diagnostics...</div> : null}
             {tab === 'signal' ? <div className="tab-content"><div className="signal-panel"><div className="panel-head"><h3>Sampled Availability</h3><span>{signalLabel}</span></div><SignalBand samples={normalizedSamples} /></div><div className="signal-panel"><div className="panel-head"><h3>Latency Envelope</h3><span>{formatLatency(investigation?.metrics.avg_icmp_latency_ms_24h || investigation?.metrics.avg_tcp_latency_ms_24h)}</span></div><LatencyChart samples={normalizedSamples} /></div></div> : null}
             {tab === 'timeline' ? <div className="tab-content two-column"><div className="timeline-panel"><div className="panel-head"><div className="timeline-panel-title"><h3>Major Events Archive</h3><span>{historicalEvents.length}</span></div><button className="timeline-focus-button" onClick={() => setTodayEventsOpen(true)} type="button"><span>View today's events</span><strong>{todaysEvents.length}</strong></button></div><div className="timeline-list">{historicalEvents.map((event) => <div key={event.id} className={`timeline-entry ${event.severity.toLowerCase()}`}><strong>{event.title}</strong><span>{formatDateTime(event.created_at)}</span><p>{event.summary || 'No summary provided.'}</p></div>)}{!historicalEvents.length ? <div className="list-empty">Older retained major events will appear here after today's activity rolls over.</div> : null}</div></div><div className="timeline-panel"><div className="panel-head"><div className="timeline-panel-title"><h3>Outage Ledger Archive</h3><span>{historicalOutages.length}</span></div><button className="timeline-focus-button" onClick={() => setOutageLedgerOpen(true)} type="button"><span>View today's outages</span><strong>{todaysOutages.length}</strong></button></div><div className="timeline-list">{historicalOutages.map((outage) => <div key={outage.id} className={`timeline-entry ${outage.ended_at ? 'info' : 'critical'}`}><strong>{outage.ended_at ? 'Resolved incident' : 'Active incident'}</strong><span>{formatDateTime(outage.started_at)}</span><p>{outage.ended_at ? `Resolved in ${formatDuration(outage.duration_seconds)}` : `Ongoing for ${formatSince(outage.started_at)}`}</p></div>)}{!historicalOutages.length ? <div className="list-empty">Older retained outages will appear here once today's incidents roll over.</div> : null}</div></div></div> : null}
@@ -804,8 +814,8 @@ const NetworkSentinelPage: React.FC = () => {
         </aside>
       </div>
 
-      {todayEventsOpen ? <div className="editor-backdrop" onClick={() => setTodayEventsOpen(false)}><div className="editor-card network-shell outage-ledger-modal" onClick={(event) => event.stopPropagation()}><div className="panel-head"><div className='my-div'><h3>Today's Major Events</h3><span>{selectedCard?.name || 'Focused asset'}</span></div><button type="button" onClick={() => setTodayEventsOpen(false)}>Close</button></div><div className="timeline-list outage-ledger-list">{todaysEvents.map((event) => <div key={event.id} className={`timeline-entry ${event.severity.toLowerCase()}`}><strong>{event.title}</strong><span>{formatDateTime(event.created_at)}</span><p>{event.summary || 'No summary provided.'}</p></div>)}{!todaysEvents.length ? <div className="list-empty">No major events recorded today for this service.</div> : null}</div></div></div> : null}
-      {outageLedgerOpen ? <div className="editor-backdrop" onClick={() => setOutageLedgerOpen(false)}><div className="editor-card network-shell outage-ledger-modal" onClick={(event) => event.stopPropagation()}><div className="panel-head"><div className='my-div'><h3>Today's Outages</h3><span>{selectedCard?.name || 'Focused asset'}</span></div><button type="button" onClick={() => setOutageLedgerOpen(false)}>Close</button></div><div className="timeline-list outage-ledger-list">{todaysOutages.map((outage) => <div key={outage.id} className={`timeline-entry ${outage.ended_at ? 'info' : 'critical'}`}><strong>{outage.ended_at ? 'Resolved incident' : 'Active incident'}</strong><span>{formatDateTime(outage.started_at)}</span><p>{outage.ended_at ? `Resolved in ${formatDuration(outage.duration_seconds)}` : `Ongoing for ${formatSince(outage.started_at)}`}</p></div>)}{!todaysOutages.length ? <div className="list-empty">No outages recorded today for this service.</div> : null}</div></div></div> : null}
+      {canHistory && todayEventsOpen ? <div className="editor-backdrop" onClick={() => setTodayEventsOpen(false)}><div className="editor-card network-shell outage-ledger-modal" onClick={(event) => event.stopPropagation()}><div className="panel-head"><div className='my-div'><h3>Today's Major Events</h3><span>{selectedCard?.name || 'Focused asset'}</span></div><button type="button" onClick={() => setTodayEventsOpen(false)}>Close</button></div><div className="timeline-list outage-ledger-list">{todaysEvents.map((event) => <div key={event.id} className={`timeline-entry ${event.severity.toLowerCase()}`}><strong>{event.title}</strong><span>{formatDateTime(event.created_at)}</span><p>{event.summary || 'No summary provided.'}</p></div>)}{!todaysEvents.length ? <div className="list-empty">No major events recorded today for this service.</div> : null}</div></div></div> : null}
+      {canHistory && outageLedgerOpen ? <div className="editor-backdrop" onClick={() => setOutageLedgerOpen(false)}><div className="editor-card network-shell outage-ledger-modal" onClick={(event) => event.stopPropagation()}><div className="panel-head"><div className='my-div'><h3>Today's Outages</h3><span>{selectedCard?.name || 'Focused asset'}</span></div><button type="button" onClick={() => setOutageLedgerOpen(false)}>Close</button></div><div className="timeline-list outage-ledger-list">{todaysOutages.map((outage) => <div key={outage.id} className={`timeline-entry ${outage.ended_at ? 'info' : 'critical'}`}><strong>{outage.ended_at ? 'Resolved incident' : 'Active incident'}</strong><span>{formatDateTime(outage.started_at)}</span><p>{outage.ended_at ? `Resolved in ${formatDuration(outage.duration_seconds)}` : `Ongoing for ${formatSince(outage.started_at)}`}</p></div>)}{!todaysOutages.length ? <div className="list-empty">No outages recorded today for this service.</div> : null}</div></div></div> : null}
 
       {editorOpen ? (
         <div className="editor-backdrop" onClick={() => setEditorOpen(false)}>

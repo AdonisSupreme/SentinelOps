@@ -5542,9 +5542,8 @@
   font-weight: 900;
 }
 
-.authorization-queue-actions button.return {
-  width: 34px;
-  padding: 0;
+.authorization-queue-actions button.reject {
+  padding: 6px 9px;
   color: #9a283c;
   background: #fff3f5;
   border-color: #e8b5bd;
@@ -5700,6 +5699,19 @@
   border-color: var(--clear-green);
 }
 
+.clearing-modal > footer button.reject-command {
+  color: #ffffff;
+  background: #b4233c;
+  border-color: #b4233c;
+}
+
+.clearing-execute-warning.rejection {
+  color: #7f2533;
+  background: #fff4f5;
+  border-color: #edbcc3;
+  border-left-color: #b4233c;
+}
+
 [data-theme="dark"] .clearing-nothing-outstanding,
 [data-theme="dark"] .account-cleared-posture {
   color: #78dfc5;
@@ -5780,28 +5792,35 @@
   filter: none;
 }
 
-[data-theme="dark"] .authorization-queue-actions button.return {
+[data-theme="dark"] .authorization-queue-actions button.reject {
   color: #ff9eb5;
   background: #2b1821;
   border-color: #784052;
 }
 
-[data-theme="dark"] .authorization-queue-actions button.return:hover:not(:disabled) {
+[data-theme="dark"] .authorization-queue-actions button.reject:hover:not(:disabled) {
   color: #ffd4df;
   background: #3a1d29;
   border-color: #a4536c;
 }
 
-[data-theme="dark"] .authorization-queue-actions button.return:focus-visible,
+[data-theme="dark"] .authorization-queue-actions button.reject:focus-visible,
 [data-theme="dark"] .authorization-queue-seal:focus-visible {
   outline: 2px solid #64dce8;
   outline-offset: 2px;
 }
 
-[data-theme="dark"] .authorization-queue-actions button.return:disabled {
+[data-theme="dark"] .authorization-queue-actions button.reject:disabled {
   color: #8f6673;
   background: #21171c;
   border-color: #51313b;
+}
+
+[data-theme="dark"] .clearing-execute-warning.rejection {
+  color: #ffc0ce;
+  background: #2b1821;
+  border-color: #784052;
+  border-left-color: #ff6f91;
 }
 
 [data-theme="dark"] .specific-record-policy > span {

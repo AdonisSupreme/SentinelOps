@@ -1,150 +1,150 @@
-/* Text Visibility Fix for Dark Theme - SentinelOps */
+/* Template Manager contrast fixes. Keep these overrides inside their workspace; broad dark selectors override unrelated page themes. */
 
 /* Force proper text colors in dark theme */
-[data-theme="dark"] {
+[data-theme="dark"] :where(.stm-template-manager-page) {
   /* Ensure all text elements use dark theme colors */
   color: var(--text-primary);
 }
 
 /* Common text elements that might have visibility issues */
-[data-theme="dark"] h1,
-[data-theme="dark"] h2,
-[data-theme="dark"] h3,
-[data-theme="dark"] h4,
-[data-theme="dark"] h5,
-[data-theme="dark"] h6 {
+[data-theme="dark"] :where(.stm-template-manager-page) h1,
+[data-theme="dark"] :where(.stm-template-manager-page) h2,
+[data-theme="dark"] :where(.stm-template-manager-page) h3,
+[data-theme="dark"] :where(.stm-template-manager-page) h4,
+[data-theme="dark"] :where(.stm-template-manager-page) h5,
+[data-theme="dark"] :where(.stm-template-manager-page) h6 {
   color: var(--text-primary) !important;
 }
 
-[data-theme="dark"] p,
-[data-theme="dark"] span,
-[data-theme="dark"] div,
-[data-theme="dark"] label,
-[data-theme="dark"] button,
-[data-theme="dark"] input,
-[data-theme="dark"] textarea,
-[data-theme="dark"] select {
+[data-theme="dark"] :where(.stm-template-manager-page) p,
+[data-theme="dark"] :where(.stm-template-manager-page) span,
+[data-theme="dark"] :where(.stm-template-manager-page) div,
+[data-theme="dark"] :where(.stm-template-manager-page) label,
+[data-theme="dark"] :where(.stm-template-manager-page) button,
+[data-theme="dark"] :where(.stm-template-manager-page) input,
+[data-theme="dark"] :where(.stm-template-manager-page) textarea,
+[data-theme="dark"] :where(.stm-template-manager-page) select {
   color: var(--text-primary) !important;
 }
 
-[data-theme="dark"] .text-primary {
+[data-theme="dark"] :where(.stm-template-manager-page) .text-primary {
   color: var(--text-primary) !important;
 }
 
-[data-theme="dark"] .text-secondary {
+[data-theme="dark"] :where(.stm-template-manager-page) .text-secondary {
   color: var(--text-secondary) !important;
 }
 
-[data-theme="dark"] .text-muted {
+[data-theme="dark"] :where(.stm-template-manager-page) .text-muted {
   color: var(--text-muted) !important;
 }
 
 /* Specific fixes for template manager components */
-[data-theme="dark"] .sentinel-template-manager-container,
-[data-theme="dark"] .sentinel-template-list-container {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-template-manager-container,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-template-list-container {
   color: var(--text-primary) !important;
 }
 
-[data-theme="dark"] .sentinel-main-title,
-[data-theme="dark"] .sentinel-view-title,
-[data-theme="dark"] .sentinel-list-title,
-[data-theme="dark"] .sentinel-template-name-text,
-[data-theme="dark"] .sentinel-item-title {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-main-title,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-view-title,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-list-title,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-template-name-text,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-item-title {
   color: var(--text-primary) !important;
 }
 
-[data-theme="dark"] .sentinel-header-subtitle-text,
-[data-theme="dark"] .sentinel-view-description,
-[data-theme="dark"] .sentinel-template-description-text,
-[data-theme="dark"] .sentinel-item-description-text {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-header-subtitle-text,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-view-description,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-template-description-text,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-item-description-text {
   color: var(--text-secondary) !important;
 }
 
-[data-theme="dark"] .sentinel-meta-info-row,
-[data-theme="dark"] .sentinel-subitem-text {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-meta-info-row,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-subitem-text {
   color: var(--text-secondary) !important;
 }
 
-[data-theme="dark"] .sentinel-template-meta-wrapper,
-[data-theme="dark"] .sentinel-detail-section-content {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-template-meta-wrapper,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-detail-section-content {
   color: var(--text-secondary) !important;
 }
 
 /* Form elements text fix */
-[data-theme="dark"] input[type="text"],
-[data-theme="dark"] input[type="number"],
-[data-theme="dark"] input[type="search"],
-[data-theme="dark"] textarea,
-[data-theme="dark"] select {
+[data-theme="dark"] :where(.stm-template-manager-page) input[type="text"],
+[data-theme="dark"] :where(.stm-template-manager-page) input[type="number"],
+[data-theme="dark"] :where(.stm-template-manager-page) input[type="search"],
+[data-theme="dark"] :where(.stm-template-manager-page) textarea,
+[data-theme="dark"] :where(.stm-template-manager-page) select {
   color: var(--text-primary) !important;
   background-color: var(--bg-secondary) !important;
 }
 
-[data-theme="dark"] input::placeholder,
-[data-theme="dark"] textarea::placeholder {
+[data-theme="dark"] :where(.stm-template-manager-page) input::placeholder,
+[data-theme="dark"] :where(.stm-template-manager-page) textarea::placeholder {
   color: var(--text-muted) !important;
 }
 
 /* Button text fixes */
-[data-theme="dark"] button,
-[data-theme="dark"] .sentinel-action-button,
-[data-theme="dark"] .sentinel-nav-tab-item,
-[data-theme="dark"] .sentinel-create-template-btn {
+[data-theme="dark"] :where(.stm-template-manager-page) button,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-action-button,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-nav-tab-item,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-create-template-btn {
   color: var(--text-primary) !important;
 }
 
 /* Active/hover states */
-[data-theme="dark"] .sentinel-tab-active,
-[data-theme="dark"] .sentinel-primary-btn,
-[data-theme="dark"] .sentinel-create-tab-btn {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-tab-active,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-primary-btn,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-create-tab-btn {
   color: var(--text-inverse) !important;
 }
 
 /* Badge and label text */
-[data-theme="dark"] .sentinel-badge,
-[data-theme="dark"] .sentinel-shift-type-badge,
-[data-theme="dark"] .sentinel-status-badge-wrapper {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-badge,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-shift-type-badge,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-status-badge-wrapper {
   color: var(--primary) !important;
 }
 
-[data-theme="dark"] .sentinel-required-badge {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-required-badge {
   color: var(--error) !important;
 }
 
-[data-theme="dark"] .sentinel-type-badge {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-type-badge {
   color: var(--success) !important;
 }
 
 /* Error and success text */
-[data-theme="dark"] .sentinel-error-message-container,
-[data-theme="dark"] .error-message {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-error-message-container,
+[data-theme="dark"] :where(.stm-template-manager-page) .error-message {
   color: var(--error) !important;
 }
 
-[data-theme="dark"] .sentinel-empty-state-container p,
-[data-theme="dark"] .empty-state p {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-empty-state-container p,
+[data-theme="dark"] :where(.stm-template-manager-page) .empty-state p {
   color: var(--text-muted) !important;
 }
 
 /* Modal text fixes */
-[data-theme="dark"] .sentinel-delete-modal-content h3,
-[data-theme="dark"] .sentinel-delete-modal-content p {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-delete-modal-content h3,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-delete-modal-content p {
   color: var(--text-primary) !important;
 }
 
 /* Breadcrumb text */
-[data-theme="dark"] .sentinel-breadcrumb-link {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-breadcrumb-link {
   color: var(--primary) !important;
 }
 
-[data-theme="dark"] .sentinel-breadcrumb-current-text,
-[data-theme="dark"] .sentinel-breadcrumb-active {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-breadcrumb-current-text,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-breadcrumb-active {
   color: var(--text-muted) !important;
 }
 
 /* High contrast override for better visibility */
 @media (prefers-contrast: high) {
-  [data-theme="dark"] {
+  [data-theme="dark"] :where(.stm-template-manager-page) {
     --text-primary: #ffffff !important;
     --text-secondary: #e2e8f0 !important;
     --text-muted: #94a3b8 !important;
@@ -152,44 +152,44 @@
 }
 
 /* Ensure text is visible on all backgrounds */
-[data-theme="dark"] * {
+[data-theme="dark"] :where(.stm-template-manager-page) * {
   text-shadow: none !important;
 }
 
-[data-theme="dark"] .sentinel-template-card,
-[data-theme="dark"] .sentinel-item-card {
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-template-card,
+[data-theme="dark"] :where(.stm-template-manager-page) .sentinel-item-card {
   color: var(--text-primary) !important;
 }
 
 /* Fix any hardcoded colors */
-[data-theme="dark"] [style*="color"] {
+[data-theme="dark"] :where(.stm-template-manager-page) [style*="color"] {
   color: var(--text-primary) !important;
 }
 
 /* Specific component fixes */
-[data-theme="dark"] .stb-template-builder,
-[data-theme="dark"] .template-editor {
+[data-theme="dark"] :where(.stm-template-manager-page) .stb-template-builder,
+[data-theme="dark"] :where(.stm-template-manager-page) .template-editor {
   color: var(--text-primary) !important;
 }
 
-[data-theme="dark"] .stb-section-title,
-[data-theme="dark"] .section-title {
+[data-theme="dark"] :where(.stm-template-manager-page) .stb-section-title,
+[data-theme="dark"] :where(.stm-template-manager-page) .section-title {
   color: var(--text-primary) !important;
 }
 
-[data-theme="dark"] .stb-form-label,
-[data-theme="dark"] .form-label {
+[data-theme="dark"] :where(.stm-template-manager-page) .stb-form-label,
+[data-theme="dark"] :where(.stm-template-manager-page) .form-label {
   color: var(--text-primary) !important;
 }
 
-[data-theme="dark"] .stb-checkbox-label,
-[data-theme="dark"] .form-group label {
+[data-theme="dark"] :where(.stm-template-manager-page) .stb-checkbox-label,
+[data-theme="dark"] :where(.stm-template-manager-page) .form-group label {
   color: var(--text-primary) !important;
 }
 
 /* Loading and empty states */
-[data-theme="dark"] .loading-state p,
-[data-theme="dark"] .empty-items p,
-[data-theme="dark"] .empty-subitems p {
+[data-theme="dark"] :where(.stm-template-manager-page) .loading-state p,
+[data-theme="dark"] :where(.stm-template-manager-page) .empty-items p,
+[data-theme="dark"] :where(.stm-template-manager-page) .empty-subitems p {
   color: var(--text-secondary) !important;
 }

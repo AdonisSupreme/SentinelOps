@@ -10,13 +10,13 @@ export const pageGuides: Record<string, PageGuideDefinition> = {
     intro: 'The dashboard is the lightest way to understand the current operational day. It pulls the live command picture into one deck so you can see posture, pressure, and action paths without hunting across multiple pages.',
     sections: [
       { title: 'Operational State', body: 'The hero metrics show readiness, execution, containment, and staffing so you can judge the day in seconds.' },
-      { title: 'Funds Movement', body: 'The live transparency band shows sealed clearing decisions awaiting authorization alongside hovering arrivals, processed work, net queue movement, and the active robot window.' },
+      { title: 'Funds Movement', body: 'Compact indicators show decisions awaiting authorization, hovering queue status, pending work, throughput, and the robot window. Open each workspace for its full detail.' },
       { title: 'Command Threads', body: 'These cards represent today\'s active checklist threads. Open one when you need item-level progress, exceptions, or participant context.' },
       { title: 'Matrix and Actions', body: 'Use the matrix, attention queue, handover summary, and quick actions to move from awareness into the next operational step.' },
     ],
     workflow: [
       'Start with Operational State to understand the day\'s overall posture.',
-      'Read Funds Movement as an equation: arrivals explain new hovering load, processed work shows robot throughput, and net movement reveals whether the queue is really draining.',
+      'Read Custody + automation for waiting approvals and the current loan-hovering state. A disconnected source is explicitly marked unavailable.',
       'Open Execution Desk when checker custody is waiting, or Hovering Monitor when robot movement stalls or overdue dates accumulate.',
       'Open the right command thread or use a quick action once you know where intervention is needed.',
     ],
@@ -129,13 +129,13 @@ export const pageGuides: Record<string, PageGuideDefinition> = {
     title: 'Planning coverage with patterns',
     intro: 'This is the strongest scheduling workspace for managers shaping future coverage. It combines quick horizon controls, reusable shift patterns, and exception handling without losing sight of actual staffing pressure.',
     sections: [
-      { title: 'Horizon Controls', body: 'Date presets such as tomorrow, weekend, this month, and next month let you jump to the planning window that matters.' },
+      { title: 'Dates and Filters', body: 'Use date presets for quick planning, or Custom dates for a specific day or range. Apply the dates, then narrow the displayed assignments by team member and shift. Clear filters restores the full selected window.' },
       { title: 'Coverage Snapshot', body: 'The summary signals show assignment count, covered people, weekend pressure, and other indicators that reveal whether the plan is balanced.' },
       { title: 'Pattern Library and Rollout', body: 'Use stored patterns for repeatable schedules, then apply them in bulk when you need fast, consistent coverage placement.' },
       { title: 'Single Assignments and Time Off', body: 'Use one-off assignment and time-off actions to handle the real exceptions that patterns cannot cover cleanly.' },
     ],
     workflow: [
-      'Choose the section and time horizon you want to plan.',
+      'Start in your own section, or choose another section if you are an administrator. Set a date window and optional person or shift filters.',
       'Read the current coverage picture before creating new assignments.',
       'Use patterns for repeatable structure and exceptions for the specific dates that need human judgment.',
     ],

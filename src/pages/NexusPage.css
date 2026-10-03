@@ -9393,3 +9393,204 @@
   .agent-service-state { grid-column: 2; justify-items: start; }
   .dependency-evidence-rail { grid-template-columns: 1fr; }
 }
+
+.nexus-notification-mesh {
+  display: grid;
+  grid-template-columns: auto minmax(240px, 0.9fr) minmax(420px, 1.4fr) auto;
+  gap: 18px;
+  align-items: center;
+  padding: 16px 18px;
+  overflow: visible;
+  border-left: 4px solid var(--nexus-command-ok);
+  background:
+    linear-gradient(90deg, rgba(16, 185, 129, 0.11), transparent 38%),
+    var(--nexus-panel);
+}
+
+.nexus-notification-mesh.paused { border-left-color: var(--nexus-command-warn); }
+.nexus-notification-mesh.setup-required { border-left-color: var(--nexus-command-danger); }
+
+.notification-mesh-beacon {
+  position: relative;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid rgba(52, 211, 153, 0.34);
+  color: var(--nexus-command-ok);
+  background: rgba(16, 185, 129, 0.11);
+}
+
+.notification-mesh-beacon > span {
+  position: absolute;
+  inset: -6px;
+  border: 1px solid rgba(52, 211, 153, 0.28);
+  animation: nexus-notification-pulse 2.6s ease-out infinite;
+}
+
+.paused .notification-mesh-beacon,
+.setup-required .notification-mesh-beacon { color: var(--nexus-command-warn); border-color: rgba(245, 158, 11, 0.36); background: rgba(245, 158, 11, 0.09); }
+.paused .notification-mesh-beacon > span,
+.setup-required .notification-mesh-beacon > span { display: none; }
+
+@keyframes nexus-notification-pulse {
+  0% { opacity: 0.78; transform: scale(0.82); }
+  72%, 100% { opacity: 0; transform: scale(1.18); }
+}
+
+.notification-mesh-copy { display: grid; gap: 4px; min-width: 0; }
+.notification-mesh-copy strong { overflow: hidden; color: var(--nexus-text); font-size: 0.96rem; text-overflow: ellipsis; white-space: nowrap; }
+.notification-mesh-copy small { color: var(--nexus-text-muted); font-size: 0.76rem; }
+
+.notification-mesh-telemetry {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-left: 1px solid var(--nexus-line);
+}
+
+.notification-mesh-telemetry > span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 3px 14px;
+  border-right: 1px solid var(--nexus-line);
+}
+
+.notification-mesh-telemetry small { color: var(--nexus-text-faint); font-size: 0.64rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.notification-mesh-telemetry strong { overflow: hidden; color: var(--nexus-text-soft); font-size: 0.78rem; text-overflow: ellipsis; text-transform: capitalize; white-space: nowrap; }
+
+.notification-mesh-configure,
+.notification-mesh-readonly {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--nexus-line-strong);
+  color: var(--nexus-text);
+  background: var(--nexus-highlight);
+  font-size: 0.74rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.notification-mesh-configure { cursor: pointer; }
+.notification-mesh-configure:hover { border-color: var(--nexus-command-accent); color: var(--nexus-command-accent); }
+.notification-mesh-readonly { color: var(--nexus-text-muted); }
+
+.nexus-notification-modal {
+  width: min(940px, calc(100vw - 34px));
+  max-height: calc(100dvh - 58px);
+  padding: 0;
+  overflow: auto;
+}
+
+.notification-modal-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 26px 30px 22px;
+  border-bottom: 1px solid var(--nexus-line);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(34, 211, 238, 0.16), transparent 36%),
+    linear-gradient(100deg, rgba(37, 99, 235, 0.09), rgba(16, 185, 129, 0.07));
+}
+
+.notification-modal-head > div:nth-child(2) { display: grid; gap: 5px; }
+.notification-modal-head h2 { margin: 0; color: var(--nexus-text); }
+.notification-modal-head p { max-width: 650px; margin: 0; color: var(--nexus-text-muted); line-height: 1.55; }
+
+.notification-modal-orbit {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid rgba(34, 211, 238, 0.36);
+  color: var(--nexus-command-accent);
+  background: rgba(8, 145, 178, 0.1);
+  box-shadow: 0 0 0 8px rgba(34, 211, 238, 0.05);
+}
+
+.notification-master-state {
+  padding: 7px 10px;
+  border: 1px solid rgba(245, 158, 11, 0.38);
+  color: var(--nexus-command-warn);
+  background: rgba(245, 158, 11, 0.09);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.notification-master-state.armed { border-color: rgba(52, 211, 153, 0.4); color: var(--nexus-command-ok); background: rgba(16, 185, 129, 0.09); }
+.notification-modal-body { display: grid; gap: 18px; padding: 24px 30px 30px; }
+
+.notification-master-toggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px;
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid rgba(34, 211, 238, 0.24);
+  border-left: 3px solid var(--nexus-command-accent);
+  background: var(--nexus-panel-elevated);
+  cursor: pointer;
+}
+
+.notification-master-toggle > span { display: grid; gap: 4px; }
+.notification-master-toggle strong { color: var(--nexus-text); }
+.notification-master-toggle small { color: var(--nexus-text-muted); line-height: 1.45; }
+.notification-master-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.notification-master-toggle i { position: relative; width: 46px; height: 24px; border: 1px solid var(--nexus-line-strong); background: rgba(100, 116, 139, 0.22); transition: 180ms ease; }
+.notification-master-toggle i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: var(--nexus-text-muted); transition: 180ms ease; }
+.notification-master-toggle input:checked + i { border-color: rgba(52, 211, 153, 0.5); background: rgba(16, 185, 129, 0.2); }
+.notification-master-toggle input:checked + i::after { left: 25px; background: var(--nexus-command-ok); }
+
+.notification-channel-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.notification-channel-grid > label { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 11px; align-items: center; min-height: 86px; padding: 13px; border: 1px solid var(--nexus-line); border-left: 3px solid var(--nexus-line-strong); background: var(--nexus-panel-elevated); cursor: pointer; }
+.notification-channel-grid > label > span:nth-child(2) { display: grid; gap: 4px; }
+.notification-channel-grid strong { color: var(--nexus-text); }
+.notification-channel-grid small { color: var(--nexus-text-muted); font-size: 0.72rem; line-height: 1.4; }
+.notification-channel-grid input { width: 18px; height: 18px; accent-color: var(--nexus-command-ok); }
+.notification-channel-icon { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid rgba(34, 211, 238, 0.24); color: var(--nexus-command-accent); background: rgba(8, 145, 178, 0.08); }
+
+.notification-recipient-field { display: grid; gap: 7px; color: var(--nexus-text); }
+.notification-recipient-field > span { display: inline-flex; align-items: center; gap: 7px; font-weight: 850; }
+.notification-recipient-field > small { color: var(--nexus-text-muted); }
+.notification-recipient-field textarea { width: 100%; resize: vertical; border: 1px solid var(--nexus-field-border); color: var(--nexus-text); background: var(--nexus-field-bg); font: inherit; line-height: 1.55; }
+.notification-recipient-field textarea:focus { outline: 2px solid var(--nexus-field-focus); border-color: var(--nexus-command-accent); }
+
+.notification-delivery-health { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--nexus-line); background: var(--nexus-panel-soft); }
+.notification-delivery-health > span { display: grid; gap: 5px; min-width: 0; padding: 12px; border-right: 1px solid var(--nexus-line); }
+.notification-delivery-health > span:last-child { border-right: 0; }
+.notification-delivery-health small { color: var(--nexus-text-faint); font-size: 0.64rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.notification-delivery-health strong { overflow: hidden; color: var(--nexus-text); font-size: 0.78rem; text-overflow: ellipsis; text-transform: capitalize; white-space: nowrap; }
+.notification-modal-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 4px; }
+
+@media (max-width: 1120px) {
+  .nexus-notification-mesh { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .notification-mesh-telemetry { grid-column: 1 / -1; grid-row: 2; border-top: 1px solid var(--nexus-line); border-left: 0; padding-top: 12px; }
+}
+
+@media (max-width: 700px) {
+  .nexus-notification-mesh { grid-template-columns: auto minmax(0, 1fr); gap: 12px; }
+  .notification-mesh-configure,
+  .notification-mesh-readonly { grid-column: 1 / -1; width: 100%; }
+  .notification-mesh-telemetry { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .notification-mesh-telemetry > span { padding-block: 8px; }
+  .notification-modal-head { grid-template-columns: auto minmax(0, 1fr); padding: 22px 18px 18px; }
+  .notification-master-state { grid-column: 1 / -1; justify-self: start; }
+  .notification-modal-body { padding: 18px; }
+  .notification-channel-grid,
+  .notification-delivery-health { grid-template-columns: 1fr; }
+  .notification-delivery-health > span { border-right: 0; border-bottom: 1px solid var(--nexus-line); }
+  .notification-delivery-health > span:last-child { border-bottom: 0; }
+  .notification-modal-actions { align-items: stretch; flex-direction: column-reverse; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notification-mesh-beacon > span { animation: none; }
+}

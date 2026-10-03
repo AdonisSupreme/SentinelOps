@@ -1,3 +1,4 @@
+import { InheritedAccess } from './AccessManagementPage';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   FaBuilding,
@@ -194,7 +195,7 @@ const UserManagementPage: React.FC = () => {
     }
   };
 
-  const handleEditChange = (field: keyof UpdateUserRequest, value: string | RoleOption | boolean | number | undefined) => {
+  const handleEditChange = (field: keyof UpdateUserRequest, value: string | RoleOption | boolean | number | null | undefined) => {
     setEditForm((prev) => ({
       ...prev,
       [field]: value,
@@ -511,13 +512,14 @@ const UserManagementPage: React.FC = () => {
                   Section
                   <select
                     value={editForm.section_id ?? ''}
-                    onChange={(e) => handleEditChange('section_id', e.target.value || undefined)}
+                    onChange={(e) => handleEditChange('section_id', e.target.value || null)}
                   >
                     <option value="">-- Select --</option>
                     {sections.map((s) => (
                       <option key={s.id} value={s.id}>{s.section_name}</option>
                     ))}
                   </select>
+                  <InheritedAccess sectionId={editForm.section_id || undefined} role={editForm.role} />
                 </label>
                 <label>
                   Role
@@ -655,6 +657,7 @@ const UserManagementPage: React.FC = () => {
                     <option key={s.id} value={s.id}>{s.section_name}</option>
                   ))}
                 </select>
+                  <InheritedAccess sectionId={createForm.section_id} role={createForm.role} />
               </label>
               <label>
                 Role

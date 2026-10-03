@@ -32,7 +32,7 @@ export interface UpdateUserRequest {
   first_name?: string;
   last_name?: string;
   department_id?: number;
-  section_id?: string;
+  section_id?: string | null;
   password?: string;
   role?: 'admin' | 'manager' | 'user';
   is_active?: boolean;

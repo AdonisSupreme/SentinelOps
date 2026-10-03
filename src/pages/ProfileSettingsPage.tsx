@@ -1,3 +1,4 @@
+import { useAccess } from '../contexts/AccessContext';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -88,6 +89,7 @@ const ProfileSettingsSkeleton: React.FC = () => (
 );
 
 const ProfileSettingsPage: React.FC = () => {
+  const { canAccessPage } = useAccess();
   const { user, logout, loading: authLoading } = useAuth();
   const { theme, resolvedTheme } = useTheme();
   const { applicationTimeZone, setting: timezoneSetting, updateApplicationTimeZone } = useAppConfig();
@@ -390,7 +392,7 @@ const ProfileSettingsPage: React.FC = () => {
               <span>Quick Returns</span>
             </div>
             <div className="settings-link-grid">
-              {quickLinks.map((item) => (
+              {quickLinks.filter(item => canAccessPage(item.to)).map((item) => (
                 <Link key={item.to} to={item.to} className="settings-quick-link">
                   <span className="settings-quick-link-icon">{item.icon}</span>
                   <span className="settings-quick-link-copy">
