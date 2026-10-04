@@ -117,3 +117,8 @@
     transform: rotate(360deg);
   }
 }
+/* Let the shell distribute viewport space once, including the footer. */
+.app-layout { min-height:100dvh; }
+.app-layout > .main-content { min-height:0; }
+.app-layout > .main-content:has(> .login-page-shell) { padding-bottom:0; }
+.app-layout > .main-content > .login-page-shell { flex:1; min-height:0; }

@@ -9,6 +9,7 @@ import {
   FaShieldAlt,
   FaSyncAlt
 } from 'react-icons/fa';
+import SentinelMark from '../components/layout/SentinelMark';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/LoginPage.css';
 
@@ -72,7 +73,7 @@ const LoginPage: React.FC = () => {
 
           <div className="sops-login-visual" aria-hidden="true">
             <div className="sops-orbit orbit-outer" /><div className="sops-orbit orbit-inner" />
-            <div className="sops-orbit-core"><FaShieldAlt /><span>SENTINEL<span>OPS</span></span></div>
+            <div className="sops-orbit-core"><SentinelMark /><span>SENTINEL<span>OPS</span></span></div>
             <span className="sops-orbit-node node-a">01 <b>Observe</b></span>
             <span className="sops-orbit-node node-b">02 <b>Coordinate</b></span>
             <span className="sops-orbit-node node-c">03 <b>Deliver</b></span>

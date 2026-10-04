@@ -1,35 +1,13 @@
-// @ts-ignore
-import { FaGithub, FaLinkedin } from 'react-icons/fa';
-import { FaTelegramPlane } from 'react-icons/fa'; // Telegram icon
-import { HiOutlineMail } from 'react-icons/hi';
-import { useState, useEffect } from 'react';
+import SentinelMark from './SentinelMark';
 import './Footer.css';
-
-const Footer = () => {
-  const currentYear = new Date().getFullYear();
-  const [theme, setTheme] = useState('light');
-  
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    setTheme(savedTheme);
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }, []);
-
-  return (
-    <footer className="footer">
-      <div className="footer-container">
-        <div className="footer-content">
-          <div className="footer-social">
-          </div>
-
-          <div className="footer-copyright">
-            <p>&copy; {currentYear} SentinelOps. All rights reserved.</p>
-            <p>Built with React and <span className="heart">❤️</span></p>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
-};
-
+const Footer = () => (
+  <footer className="sentinel-footer">
+    <div className="sentinel-footer-inner">
+      <div className="sentinel-footer-identity"><SentinelMark /><span>Sentinel<span>Ops</span></span></div>
+      <p className="sentinel-footer-motto">Clarity. Continuity. Control.</p>
+      <span className="sentinel-footer-copyright">© {new Date().getFullYear()} SentinelOps</span>
+      <button type="button" className="sentinel-footer-top" onClick={() => window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })} aria-label="Back to top">↑</button>
+    </div>
+  </footer>
+);
 export default Footer;

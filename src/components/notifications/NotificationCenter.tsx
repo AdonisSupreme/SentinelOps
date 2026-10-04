@@ -30,6 +30,7 @@ const NotificationCenter: React.FC = () => {
   } = useNotifications();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [unreadOnly, setUnreadOnly] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showNewBadge, setShowNewBadge] = useState(false);
   const centerRef = useRef<HTMLDivElement>(null);
@@ -220,6 +221,8 @@ const NotificationCenter: React.FC = () => {
     [navigate]
   );
 
+  const visibleNotifications = unreadOnly ? sortedNotifications.filter(notification => !notification.read) : sortedNotifications;
+
   const activePopupNotification = popupNotifications[0];
   const queuedPopupCount = Math.max(0, popupNotifications.length - 1);
   const popupAction = activePopupNotification ? getNotificationAction(activePopupNotification) : null;
@@ -309,7 +312,7 @@ const NotificationCenter: React.FC = () => {
             <div className="notification-center-title">
               <span className="notification-center-kicker">Mission inbox</span>
               <h3>Notification Center</h3>
-              <p>Live operational signals for your queue, team movement, and checklist flow.</p>
+              <p>Updates across your operations.</p>
             </div>
             <button
               className="notification-dismiss-panel"
@@ -321,12 +324,9 @@ const NotificationCenter: React.FC = () => {
             </button>
           </div>
 
-          <div className="notification-center-summary">
-            <div className="notification-summary-card">
-              <span className="summary-label">Unread</span>
-              <strong>{unreadCount}</strong>
-              <span className="summary-copy">Awaiting acknowledgement</span>
-            </div>
+          <div className="notification-center-filters" role="group" aria-label="Notification filter">
+            <button type="button" aria-pressed={!unreadOnly} onClick={() => setUnreadOnly(false)}>All updates <span>{sortedNotifications.length}</span></button>
+            <button type="button" aria-pressed={unreadOnly} onClick={() => setUnreadOnly(true)}>Unread <span>{unreadCount}</span></button>
           </div>
 
           <div className="notification-center-actions">
@@ -342,7 +342,7 @@ const NotificationCenter: React.FC = () => {
             <button
               className="notification-action primary"
               onClick={() => void handleMarkAllAsRead()}
-              disabled={sortedNotifications.length === 0}
+              disabled={unreadCount === 0}
               type="button"
             >
               <FaCheckCircle />
@@ -355,13 +355,13 @@ const NotificationCenter: React.FC = () => {
                 type="button"
               >
                 <FaBell />
-                Enable desktop alerts
+                Desktop alerts
               </button>
             )}
           </div>
 
           <div className="notification-center-list">
-            {sortedNotifications.length === 0 ? (
+            {visibleNotifications.length === 0 ? (
               <div className="notification-empty-state">
                 <div className="notification-empty-icon">
                   <FaBell />
@@ -370,7 +370,7 @@ const NotificationCenter: React.FC = () => {
                 <p>No active notifications are waiting for you right now.</p>
               </div>
             ) : (
-              sortedNotifications.map((notification) => {
+              visibleNotifications.map((notification) => {
                 const notificationAction = getNotificationAction(notification);
 
                 return (
@@ -396,11 +396,16 @@ const NotificationCenter: React.FC = () => {
                     {notification.title && (
                       <h4 className="notification-item-title">{notification.title}</h4>
                     )}
-                    <p className="notification-item-message">{notification.message}</p>
+                    {notification.message.length > 200 ? (
+                      <details className="notification-message-details">
+                        <summary><span className="notification-message-preview">{notification.message.slice(0, 160).trimEnd()}…</span><span className="notification-message-toggle">Read full update</span></summary>
+                        <p className="notification-item-message">{notification.message}</p>
+                      </details>
+                    ) : <p className="notification-item-message">{notification.message}</p>}
                     {notificationAction && (
                       <button
                         className="notification-item-cta"
-                        onClick={notificationAction.onClick}
+                        onClick={() => { notificationAction.onClick(); setIsOpen(false); }}
                         type="button"
                       >
                         <FaCalendarAlt />
@@ -413,7 +418,7 @@ const NotificationCenter: React.FC = () => {
                       </span>
                       <span className="notification-item-status">
                         <FaChevronRight />
-                        Tap close to acknowledge
+                        {notification.read ? 'Read' : 'Awaiting acknowledgement'}
                       </span>
                     </div>
                   </div>
@@ -423,10 +428,11 @@ const NotificationCenter: React.FC = () => {
                       className="notification-item-close"
                       onClick={() => void markAsRead(notification.id)}
                       aria-label="Mark notification as read"
-                      title="Mark as read"
+                      title={notification.read ? "Already read" : "Mark as read"}
+                      disabled={notification.read}
                       type="button"
                     >
-                      <FaTimes />
+                      <FaCheckCircle />
                     </button>
                   </div>
                 </article>

@@ -6269,3 +6269,11 @@
     grid-column: 2;
   }
 }
+/* Size to the evidence panel, which can be narrower than the viewport. */
+.execution-preview-section { container-type:inline-size; min-width:0; }
+.mutation-ledger > div { grid-template-columns:66px minmax(0,1fr) minmax(0,.9fr) minmax(0,1.4fr); }
+.mutation-ledger > div > * { min-width:0; }
+.mutation-ledger span strong,.mutation-ledger span small { overflow-wrap:anywhere; }
+.mutation-equation { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.mutation-equation > * { overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+@container (max-width:760px) { .mutation-ledger > div:not(.mutation-ledger-empty) { grid-template-columns:66px minmax(0,1fr); gap:8px; padding:12px; } .mutation-ledger code { grid-column:2; } .mutation-ledger .mutation-equation { grid-column:1 / -1; } }

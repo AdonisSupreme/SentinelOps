@@ -494,11 +494,9 @@ const DashboardPage: React.FC = () => {
         {canAccessModule('checklists.execution') && <div className="dashboard-left command-main">
           <ModuleAccess module="checklists.execution"><section className="dashboard-section command-panel command-panel-threads">
             <div className="section-header command-section-header">
-              <h2>
-                <FaClipboardCheck /> Operational Day Threads
-              </h2>
+              <div className="ops-thread-section-title"><span>Shift continuity</span><h2><FaClipboardCheck /> Operational Day Threads</h2><p>{operationalDayLabel}</p></div>
               <span className="section-badge">
-                {checklistThreads.length} active / {formatInteger(commandMetrics.execution_rate)}% actioned
+                {checklistThreads.length} threads / {formatInteger(commandMetrics.execution_rate)}% actioned
               </span>
             </div>
 

@@ -1,6 +1,6 @@
 import { useAccess } from '../../contexts/AccessContext';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   FaArrowDown,
   FaBars,
@@ -11,7 +11,7 @@ import {
   FaFileCsv,
   FaRoute,
   FaShieldAlt,
-  FaSignal,
+  FaTimes,
   FaTasks,
   FaTachometerAlt,
   FaUserCircle,
@@ -21,7 +21,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import ThemeToggle from '../ui/ThemeToggle';
 import NotificationCenter from '../notifications/NotificationCenter';
-import Logo from '../../logo.png';
+import SentinelMark from './SentinelMark';
 import './Header.css';
 
 interface MenuItem {
@@ -40,7 +40,7 @@ interface MenuShellConfig {
   headerKicker: string;
   heroLabel: string;
   heroCopy: string;
-  hoverKicker: string;
+
 }
 
 interface BeforeInstallPromptEvent extends Event {
@@ -56,12 +56,10 @@ const Header: React.FC = () => {
   const { canAccessPage } = useAccess();
   const [navMenuOpen, setNavMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [hoveredNavItem, setHoveredNavItem] = useState<MenuItem | null>(null);
-  const [hoveredProfileItem, setHoveredProfileItem] = useState<MenuItem | null>(null);
   const [deferredInstallPrompt, setDeferredInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
+
   const location = useLocation();
 
   const isAdmin = user?.role?.toLowerCase() === 'admin';
@@ -215,26 +213,6 @@ const Header: React.FC = () => {
   );
 
   useEffect(() => {
-    if (!navMenuOpen) {
-      setHoveredNavItem(null);
-      return;
-    }
-
-    const currentItem = navItems.find((item) => isActiveItem(item)) ?? navItems[0] ?? null;
-    setHoveredNavItem(currentItem);
-  }, [location.pathname, navItems, navMenuOpen]);
-
-  useEffect(() => {
-    if (!profileMenuOpen) {
-      setHoveredProfileItem(null);
-      return;
-    }
-
-    const currentItem = profileItems.find((item) => isActiveItem(item)) ?? profileItems[0] ?? null;
-    setHoveredProfileItem(currentItem);
-  }, [location.pathname, profileItems, profileMenuOpen]);
-
-  useEffect(() => {
     const detectStandalone = () => {
       const standaloneMode =
         window.matchMedia('(display-mode: standalone)').matches ||
@@ -321,14 +299,12 @@ const Header: React.FC = () => {
     }
   };
 
-  const renderMenuItem = (item: MenuItem, hoveredItemSetter: React.Dispatch<React.SetStateAction<MenuItem | null>>) => (
+  const renderMenuItem = (item: MenuItem) => (
     <Link
       key={item.id}
       to={item.path || '/'}
       className={`dropdown-link ${isActiveItem(item) ? 'active' : ''}`}
       onClick={closeMenus}
-      onMouseEnter={() => hoveredItemSetter(item)}
-      onFocus={() => hoveredItemSetter(item)}
     >
       <span className="dropdown-link-icon">{item.icon}</span>
       <span className="dropdown-link-copy">
@@ -337,17 +313,11 @@ const Header: React.FC = () => {
           {isActiveItem(item) ? item.activeCaption || item.caption : item.caption}
         </span>
       </span>
-      <span className="dropdown-link-intel" role="tooltip" aria-hidden="true">
-        <span className="intel-title">{item.label}</span>
-        <span className="intel-body">{item.description}</span>
-      </span>
     </Link>
   );
 
   const renderDropdownMenu = (
     items: MenuItem[],
-    hoveredItem: MenuItem | null,
-    hoveredItemSetter: React.Dispatch<React.SetStateAction<MenuItem | null>>,
     config: MenuShellConfig,
     includeLogoutAction = false,
   ) => (
@@ -359,9 +329,7 @@ const Header: React.FC = () => {
           <span className="dm-user-name">{user?.username}</span>
           <span className="user-role">{user?.role?.toUpperCase()}</span>
         </div>
-        <div className="user-status-orb" aria-hidden="true">
-          <FaSignal />
-        </div>
+        <button className="shell-menu-close" type="button" onClick={closeMenus} aria-label="Close menu"><FaTimes /></button>
       </div>
 
       <div className="dropdown-hero">
@@ -369,24 +337,8 @@ const Header: React.FC = () => {
         <p>{config.heroCopy}</p>
       </div>
 
-      <div
-        className={`menu-hover-panel ${hoveredItem ? 'visible' : ''}`}
-        aria-hidden={hoveredItem ? 'false' : 'true'}
-      >
-        {hoveredItem && (
-          <>
-            <span className="menu-hover-kicker">{config.hoverKicker}</span>
-            <div className="menu-hover-title-row">
-              <span className="menu-hover-icon">{hoveredItem.icon}</span>
-              <span className="menu-hover-title">{hoveredItem.label}</span>
-            </div>
-            <p className="menu-hover-copy">{hoveredItem.description}</p>
-          </>
-        )}
-      </div>
-
       <div className="dropdown-body">
-        <nav className="dropdown-nav">{items.map((item) => renderMenuItem(item, hoveredItemSetter))}</nav>
+        <nav className="dropdown-nav">{items.map(renderMenuItem)}</nav>
 
         {includeLogoutAction && (
           <>
@@ -417,13 +369,13 @@ const Header: React.FC = () => {
     <header className="app-header">
       <div className="header-container">
         <div className="header-brand">
-          <div className="brand-wrapper" onClick={() => navigate('/')}>
-            <img src={Logo} alt="SentinelOps" className="header-logo" />
+          <Link className="brand-wrapper" to="/" aria-label="SentinelOps home" onClick={closeMenus}>
+            <SentinelMark />
             <div className="brand-text">
-              <span className="brand-primary">SENTINEL</span>
-              <span className="brand-secondary">OPS</span>
+              <span className="brand-primary">Sentinel</span>
+              <span className="brand-secondary">Ops</span>
             </div>
-          </div>
+          </Link>
         </div>
 
         <div className="header-controls">
@@ -476,13 +428,12 @@ const Header: React.FC = () => {
               </button>
 
               {profileMenuOpen &&
-                renderDropdownMenu(profileItems, hoveredProfileItem, setHoveredProfileItem, {
+                renderDropdownMenu(profileItems, {
                   className: 'profile-dropdown-menu',
                   headerKicker: 'Operator Access Layer',
                   heroLabel: 'User features',
                   heroCopy:
-                    'Open your personal tools, schedule, management surfaces, and section playbook without disturbing the main command menu.',
-                  hoverKicker: 'Feature Intel',
+                    'Your tools, people, and workspace access.',
                 }, true)}
             </div>
 
@@ -498,13 +449,12 @@ const Header: React.FC = () => {
               </button>
 
               {navMenuOpen &&
-                renderDropdownMenu(navItems, hoveredNavItem, setHoveredNavItem, {
+                renderDropdownMenu(navItems, {
                   className: 'nav-dropdown-menu',
                   headerKicker: 'Sentinel Command Grid',
                   heroLabel: 'Quick jump',
                   heroCopy:
-                    'Move through SentinelOps with live context, clearer intent, and a sharper command experience.',
-                  hoverKicker: 'Navigation Intel',
+                    'Choose a workspace. Pick up where it matters.',
                 })}
             </div>
           </div>
