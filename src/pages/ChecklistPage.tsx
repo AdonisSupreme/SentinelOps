@@ -1,4 +1,4 @@
-﻿// src/pages/ChecklistPage.tsx
+// src/pages/ChecklistPage.tsx
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useChecklist } from '../contexts/checklistContext';
@@ -6,11 +6,11 @@ import { useAuth } from '../contexts/AuthContext';
 import {
   FaArrowLeft, FaPlay, FaCheckCircle, FaClock,
   FaExclamationTriangle, FaBan, FaTimes,
-  FaUsers, FaCalendarAlt, FaFlag, FaShareAlt,
+  FaUsers, FaFlag, FaShareAlt,
   FaChevronDown, FaChevronUp, FaFilePdf, FaHistory, FaSearch, FaBolt
 } from 'react-icons/fa';
 import {
-  ChecklistStats, HandoverNotes, ItemActions,
+  HandoverNotes, ItemActions,
   ParticipantList, EnhancedChecklistItem, SmartSubitemModal
 } from '../components/checklist';
 import HandoverNoteModal from '../components/checklist/HandoverNoteModal';
@@ -22,6 +22,7 @@ import { pdfService } from '../services/pdfService';
 import { checklistApi } from '../services/checklistApi';
 import '../components/checklist/ChecklistPageSkeleton.css';
 import './ChecklistPage.css';
+import './ChecklistWorkspace.css';
 
 const ChecklistPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,6 +39,8 @@ const ChecklistPage: React.FC = () => {
     loading
   } = useChecklist();
 
+  const [itemSearch, setItemSearch] = useState('');
+  const [itemView, setItemView] = useState<'all' | 'open' | 'exceptions'>('all');
   const [showHandover, setShowHandover] = useState(true);
   const [showParticipants, setShowParticipants] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
@@ -50,6 +53,7 @@ const ChecklistPage: React.FC = () => {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [showPDFWarning, setShowPDFWarning] = useState(false);
   const [showHandoverNoteModal, setShowHandoverNoteModal] = useState(false);
+  const [handoverRefreshKey, setHandoverRefreshKey] = useState(0);
   const [showGuide, setShowGuide] = useState(false);
   const [showDateShiftModal, setShowDateShiftModal] = useState(false);
   const [showDateShiftWarning, setShowDateShiftWarning] = useState(false);
@@ -459,17 +463,6 @@ const ChecklistPage: React.FC = () => {
     : 0;
   const timeRemainingMinutes = calculateTimeRemaining(currentInstance);
   const shiftWindow = getShiftTime(currentInstance) || 'Window unavailable';
-  const currentStatusText = String(currentInstance?.status || 'OPEN').replace(/_/g, ' ').toLowerCase();
-  const statusTone = totalExceptions > 0 || ['COMPLETED_WITH_EXCEPTIONS', 'INCOMPLETE'].includes(currentInstance?.status || '')
-    ? 'danger'
-    : currentInstance?.status === 'COMPLETED'
-      ? 'ok'
-      : currentInstance?.status === 'PENDING_REVIEW'
-        ? 'watch'
-        : currentInstance?.status === 'IN_PROGRESS'
-          ? 'active'
-          : 'neutral';
-  const timeTone = timeRemainingMinutes < 0 ? 'danger' : timeRemainingMinutes <= 60 ? 'watch' : 'ok';
   const formatMinutesSignal = (minutes: number) => {
     const absMinutes = Math.abs(minutes);
     const hours = Math.floor(absMinutes / 60);
@@ -477,85 +470,39 @@ const ChecklistPage: React.FC = () => {
     const label = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
     return minutes < 0 ? `${label} late` : label;
   };
-  const checklistSignals = [
-    {
-      label: 'Lifecycle',
-      value: currentStatusText,
-      detail: `${currentInstance?.shift || 'Unknown'} shift / ${shiftWindow}`,
-      icon: <FaFlag />,
-      tone: statusTone,
-    },
-    {
-      label: 'Items',
-      value: `${actionedItems}/${checklistItems.length || 0}`,
-      detail: `${completedItems} completed cleanly`,
-      icon: <FaCheckCircle />,
-      tone: completionPercentage >= 80 ? 'ok' : completionPercentage >= 40 ? 'active' : 'watch',
-    },
-    {
-      label: 'Subitems',
-      value: `${completedSubitems}/${totalSubitems}`,
-      detail: `${remainingSubitems} still open`,
-      icon: <FaPlay />,
-      tone: remainingSubitems === 0 ? 'ok' : 'active',
-    },
-    {
-      label: 'Exceptions',
-      value: String(totalExceptions),
-      detail: timeRemainingMinutes < 0 ? `${formatMinutesSignal(timeRemainingMinutes)} / shift closed` : `${formatMinutesSignal(timeRemainingMinutes)} remaining`,
-      icon: <FaExclamationTriangle />,
-      tone: totalExceptions > 0 ? 'danger' : timeTone,
-    },
-  ];
+  const visibleItems = checklistItems.filter((item: any) => {
+              const matchesSearch = String(item.title || item.template_item?.title || '').toLowerCase().includes(itemSearch.toLowerCase());
+              const hasExceptions = ['SKIPPED', 'FAILED'].includes(item.status) || (item.subitems || []).some((step: any) => ['SKIPPED', 'FAILED'].includes(step.status));
+              return matchesSearch && (itemView === 'all' || (itemView === 'open' ? !['COMPLETED', 'SKIPPED', 'FAILED'].includes(item.status) : hasExceptions));
+            });
   const isUserParticipant = currentInstance.participants?.some((p: { id: string }) => p.id === user?.id) ?? false;
   const canJoin = !isUserParticipant && (currentInstance.status === 'OPEN' || currentInstance.status === 'IN_PROGRESS');
 
   return (
-    <div className="checklist-page checklist-command-page">
+    <div className="checklist-page checklist-command-page checklist-workbench">
       <section className="checklist-command-strip">
         <div className="checklist-command-title">
           <span>
             <FaFlag />
-            Checklist command
+            Checklist workspace
           </span>
           <strong>{currentInstance?.template?.name || 'Untitled Checklist'}</strong>
           <small>{currentInstance?.checklist_date || 'Unknown Date'} / {currentInstance?.shift || 'UNKNOWN'} shift / {shiftWindow}</small>
         </div>
 
-        <div className="checklist-signal-grid">
-          {checklistSignals.map((signal) => (
-            <article key={signal.label} className={`checklist-signal-card tone-${signal.tone}`}>
-              <span className="checklist-signal-icon">{signal.icon}</span>
-              <div className="checklist-signal-copy">
-                <small>{signal.label}</small>
-                <strong>{signal.value}</strong>
-                <em>{signal.detail}</em>
-              </div>
-            </article>
-          ))}
+        <div className="workbench-overview">
+          <div className="workbench-status">{getStatusBadge(currentInstance.status)}<RealtimeIndicator /></div>
+          <div className="workbench-progress-copy"><strong>{actionedItems} / {checklistItems.length} items actioned</strong><span>{completionPercentage}%</span></div>
+          <progress max={100} value={completionPercentage} aria-label="Checklist items actioned" />
+          <div className="workbench-totals"><span>{completedSubitems} / {totalSubitems} subitems complete</span><span>{totalExceptions} exceptions</span></div>
         </div>
       </section>
 
       <section className="checklist-workspace">
         <main className="checklist-execution-board">
-          <div className="checklist-panel-head">
-            <div>
-              <span className="checklist-panel-kicker">
-                <FaCalendarAlt />
-                Execution board
-              </span>
-              <h2>Shift checklist run</h2>
-              <p>Work the live checklist, inspect item activity, and close the shift from one focused command surface.</p>
-            </div>
-            <div className="checklist-panel-meta">
-              <RealtimeIndicator />
-              {getStatusBadge(currentInstance?.status || 'UNKNOWN')}
-            </div>
-          </div>
-
           <div className="checklist-command-actions">
-            <button type="button" onClick={() => navigate('/')} className="back-btn">
-              <FaArrowLeft /> Dashboard
+            <button type="button" onClick={() => navigate('/checklists')} className="back-btn">
+              <FaArrowLeft /> Checklists
             </button>
             {canJoin && (
               <button
@@ -597,6 +544,7 @@ const ChecklistPage: React.FC = () => {
               className={`btn-inspect ${inspectionMode ? 'is-active' : ''}`}
               onClick={() => setInspectionMode((current) => !current)}
               type="button"
+              aria-pressed={inspectionMode}
             >
               <FaSearch /> {inspectionMode ? 'Hide Inspection' : 'Inspect'}
             </button>
@@ -609,8 +557,15 @@ const ChecklistPage: React.FC = () => {
             </button>
           </div>
 
+          <div className="workbench-list-tools">
+            <div className="workbench-view-tabs" aria-label="Filter checklist items">
+              {(['all', 'open', 'exceptions'] as const).map(view => <button key={view} type="button" aria-pressed={itemView === view} onClick={() => setItemView(view)}>{view === 'all' ? 'All items' : view === 'open' ? 'To do' : 'Exceptions'}</button>)}
+            </div>
+            <label className="workbench-search"><FaSearch /><input type="search" aria-label="Find a checklist item" placeholder="Find an item…" value={itemSearch} onChange={event => setItemSearch(event.target.value)} /></label>
+          </div>
           <div className="items-section checklist-item-stack">
-            {currentInstance.items?.map((item: any) => (
+            {visibleItems.length === 0 && <p className="workbench-empty" role="status">No items match this view. Try All items or clear your search.</p>}
+            {visibleItems.map((item: any) => (
               <EnhancedChecklistItem
                 key={item.id}
                 instanceId={currentInstance.id}
@@ -626,16 +581,12 @@ const ChecklistPage: React.FC = () => {
         </main>
 
         <aside className="content-right checklist-side-rail">
-          <ChecklistStats stats={{
-            completed_items: completedItems,
-            total_items: checklistItems.length || 0,
-            completion_percentage: completionPercentage,
-            time_remaining_minutes: timeRemainingMinutes
-          }} />
+          <section className="workbench-shift-note"><FaClock /><div><strong>{isChecklistActive ? (timeRemainingMinutes < 0 ? 'Shift window elapsed' : 'Time remaining') : 'Shift closed'}</strong><span>{isChecklistActive ? formatMinutesSignal(timeRemainingMinutes) : shiftWindow}</span></div></section>
 
           <section className="sidebar-section">
             <div
-              className="section-header collapsible"
+              className="section-header collapsible" role="button" tabIndex={0} aria-expanded={showHandover}
+              onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setShowHandover(!showHandover); } }}
               onClick={() => setShowHandover(!showHandover)}
             >
               <h3><FaFlag /> Handover Notes</h3>
@@ -644,6 +595,7 @@ const ChecklistPage: React.FC = () => {
             {showHandover && (
               <HandoverNotes
                 instanceId={currentInstance.id}
+                refreshKey={handoverRefreshKey}
                 onShowModal={() => setShowHandoverNoteModal(true)}
               />
             )}
@@ -651,7 +603,8 @@ const ChecklistPage: React.FC = () => {
 
           <section className="sidebar-section">
             <div
-              className="section-header collapsible"
+              className="section-header collapsible" role="button" tabIndex={0} aria-expanded={showParticipants}
+              onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setShowParticipants(!showParticipants); } }}
               onClick={() => setShowParticipants(!showParticipants)}
             >
               <h3><FaUsers /> Team Members</h3>
@@ -733,6 +686,7 @@ const ChecklistPage: React.FC = () => {
         <HandoverNoteModal
           isOpen={showHandoverNoteModal}
           onClose={() => setShowHandoverNoteModal(false)}
+          onCreated={() => setHandoverRefreshKey(value => value + 1)}
           instanceId={currentInstance.id}
         />
       )}

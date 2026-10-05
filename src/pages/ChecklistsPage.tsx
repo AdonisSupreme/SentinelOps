@@ -504,43 +504,6 @@ const ChecklistsPage: React.FC = () => {
   };
 
   const activeModeNeedsNavigation = dateFilterMode === 'week' || dateFilterMode === 'day';
-  const timelineModeLabel = dateFilterMode === 'all'
-    ? 'All recorded time'
-    : dateFilterMode === 'range'
-      ? 'Custom range'
-      : dateFilterMode === 'day'
-        ? 'Single day'
-        : 'Weekly sweep';
-  const statusLensLabel = statusFilter === 'all'
-    ? 'All lifecycle states'
-    : statusFilter.replaceAll('_', ' ').toLowerCase();
-  const shiftLensLabel = shiftFilter === 'all'
-    ? 'All shifts'
-    : getShiftLabel(shiftFilter, timelineShiftOptions);
-  const historyLensCards = [
-    {
-      label: 'Timeline lens',
-      value: timelineModeLabel,
-      detail: resolvedWindow.label,
-      icon: <FaCalendarWeek />,
-      tone: 'scope',
-    },
-    {
-      label: 'Lifecycle filter',
-      value: statusLensLabel,
-      detail: statusFilter === 'all' ? 'No status restriction applied' : 'Timeline is narrowed by status',
-      icon: <FaFilter />,
-      tone: 'status',
-    },
-    {
-      label: 'Shift filter',
-      value: shiftLensLabel,
-      detail: shiftFilter === 'all' ? 'Configured shift order stays visible' : 'Only this shift is in focus',
-      icon: <FaLayerGroup />,
-      tone: 'shift',
-    },
-  ];
-
   if (loading) {
     return <ChecklistsSkeleton />;
   }
@@ -563,73 +526,14 @@ const ChecklistsPage: React.FC = () => {
 
   return (
     <div className="checklists-page checklists-command-page">
-      <div className="checklists-ambient">
-        <div className="ambient-grid" />
-      </div>
-
-      <section className="checklists-hero checklists-command-strip">
-        <div className="hero-copy">
-          <div className="hero-kicker">
-            <FaSignal />
-            SentinelOps Checklist History
-          </div>
-          <h1>Checklist Timeline</h1>
-          <p>Recorded checklist runs by date, shift, status, and closure state.</p>
-          <div className="hero-tags">
-            <span>{resolvedWindow.label}</span>
-            <span>{shiftLensLabel}</span>
-            <span>{statusLensLabel}</span>
-            {canManageTemplates ? (
-              <button type="button" className="hero-template-link" onClick={() => navigate('/templates')}>
-                <FaWrench />
-                Templates
-              </button>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="checklists-history-lens" aria-label="Current checklist history lens">
-          {historyLensCards.map((card) => (
-            <article className={`history-lens-card tone-${card.tone}`} key={card.label}>
-              <span className="history-lens-icon">{card.icon}</span>
-              <div className="history-lens-copy">
-                <span>{card.label}</span>
-                <strong>{card.value}</strong>
-                <small>{card.detail}</small>
-              </div>
-            </article>
-          ))}
-        </div>
+      <section className="checklists-hero">
+        <div><span className="checklists-eyebrow"><FaSignal /> Operations archive</span><h1>Checklist timeline</h1><p>Every shift. Every handover. One clear record.</p></div>
+        {canManageTemplates && <button type="button" className="hero-template-link" onClick={() => navigate('/templates')}><FaWrench /> Manage templates</button>}
       </section>
-
-      <section className="checklists-init-radar">
-        <div className="init-radar-head">
-          <div>
-            <span>Instance Initialization Cadence</span>
-            <h3 className='my-pic'>Daily 06:00 system-trigger checkpoint</h3>
-          </div>
-          <div className="init-radar-pill">{initializationTelemetry.readinessPct}% readiness</div>
-        </div>
-        <div className="init-radar-grid">
-          <article className="init-radar-card">
-            <span>Next init deadline</span>
-            <strong>{initializationTelemetry.nextDeadline.toLocaleString()}</strong>
-            <small>{initializationTelemetry.countdown} remaining</small>
-          </article>
-          <article className="init-radar-card">
-            <span>Shift coverage today</span>
-            <strong>{initializationTelemetry.initializedShifts}/{initializationTelemetry.configuredShiftTotal} initialized</strong>
-            <small>{initializationTelemetry.coverageSummary || 'No configured shift coverage yet'}</small>
-          </article>
-          <article className="init-radar-card wide">
-            <span>Cycle progress</span>
-            <div className="init-progress-track">
-              <span className="init-progress-fill" style={{ width: `${initializationTelemetry.progressPct}%` }} />
-            </div>
-            <small>{initializationTelemetry.progressPct}% through current 24h initialization cycle</small>
-          </article>
-        </div>
-      </section>
+      <details className="checklists-readiness">
+        <summary><span><FaCheckCircle /> Today's initialization</span><strong>{initializationTelemetry.initializedShifts} / {initializationTelemetry.configuredShiftTotal} shifts ready</strong><span className="readiness-next">Next cycle in {initializationTelemetry.countdown}</span><span className="readiness-disclosure">Details</span></summary>
+        <div className="readiness-details"><div><span>Next checkpoint · daily 06:00</span><strong>{initializationTelemetry.nextDeadline.toLocaleString()}</strong></div><div><span>Shift coverage · {initializationTelemetry.readinessPct}% ready</span><strong>{initializationTelemetry.coverageSummary}</strong></div><div><span>Initialization cycle · {initializationTelemetry.progressPct}% elapsed</span><progress value={initializationTelemetry.progressPct} max={100} aria-label="Initialization cycle progress" /></div></div>
+      </details>
 
       <section className="checklists-command-deck">
         <div className="command-bar">
@@ -637,7 +541,8 @@ const ChecklistsPage: React.FC = () => {
             <label className="search-shell">
               <FaSearch />
               <input
-                type="text"
+                type="search"
+                aria-label="Search checklists"
                 placeholder="Search checklist name, shift, status, date, or ID..."
                 value={searchDraft}
                 onChange={(event) => setSearchDraft(event.target.value)}
@@ -646,7 +551,7 @@ const ChecklistsPage: React.FC = () => {
 
             <div className="filter-shell">
               <FaFilter />
-              <select value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); setCurrentPage(1); }}>
+              <select aria-label="Checklist status" value={statusFilter} onChange={(event) => { setStatusFilter(event.target.value); setCurrentPage(1); }}>
                 <option value="all">All Status</option>
                 <option value="OPEN">Open</option>
                 <option value="IN_PROGRESS">In Progress</option>
@@ -655,7 +560,7 @@ const ChecklistsPage: React.FC = () => {
                 <option value="COMPLETED_WITH_EXCEPTIONS">Completed with Exceptions</option>
                 <option value="INCOMPLETE">Incomplete</option>
               </select>
-              <select value={shiftFilter} onChange={(event) => { setShiftFilter(event.target.value); setCurrentPage(1); }}>
+              <select aria-label="Shift" value={shiftFilter} onChange={(event) => { setShiftFilter(event.target.value); setCurrentPage(1); }}>
                 <option value="all">All Shifts</option>
                 {timelineShiftOptions.map((option) => (
                   <option key={option.code} value={option.code}>
@@ -668,27 +573,27 @@ const ChecklistsPage: React.FC = () => {
 
           <div className="temporal-deck">
             <div className="mode-switch">
-              <button type="button" className={`mode-btn ${dateFilterMode === 'all' ? 'active' : ''}`} onClick={() => handleModeChange('all')}>
+              <button type="button" aria-pressed={dateFilterMode === 'all'} className={`mode-btn ${dateFilterMode === 'all' ? 'active' : ''}`} onClick={() => handleModeChange('all')}>
                 <FaLayerGroup />
                 All Time
               </button>
-              <button type="button" className={`mode-btn ${dateFilterMode === 'week' ? 'active' : ''}`} onClick={() => handleModeChange('week')}>
+              <button type="button" aria-pressed={dateFilterMode === 'week'} className={`mode-btn ${dateFilterMode === 'week' ? 'active' : ''}`} onClick={() => handleModeChange('week')}>
                 <FaCalendarWeek />
                 Week
               </button>
-              <button type="button" className={`mode-btn ${dateFilterMode === 'day' ? 'active' : ''}`} onClick={() => handleModeChange('day')}>
+              <button type="button" aria-pressed={dateFilterMode === 'day'} className={`mode-btn ${dateFilterMode === 'day' ? 'active' : ''}`} onClick={() => handleModeChange('day')}>
                 <FaCalendarDay />
                 Specific Day
               </button>
-              <button type="button" className={`mode-btn ${dateFilterMode === 'range' ? 'active' : ''}`} onClick={() => handleModeChange('range')}>
+              <button type="button" aria-pressed={dateFilterMode === 'range'} className={`mode-btn ${dateFilterMode === 'range' ? 'active' : ''}`} onClick={() => handleModeChange('range')}>
                 <FaCalendarAlt />
                 Date Range
               </button>
             </div>
 
             <div className="temporal-panel">
-              <div className="temporal-panel-copy">
-                <span>Temporal scope</span>
+              <div className={`temporal-panel-copy ${activeModeNeedsNavigation ? 'navigation-visible' : ''}`}>
+                <span>Showing</span>
                 <strong>{resolvedWindow.label}</strong>
               </div>
 
@@ -756,14 +661,15 @@ const ChecklistsPage: React.FC = () => {
               {dateFilterMode === 'all' ? (
                 <div className="temporal-all-time">
                   <FaCalendarAlt />
-                  <span>No start or end delimitation is applied.</span>
+                  <span>All recorded checklist runs.</span>
                 </div>
               ) : null}
             </div>
           </div>
         </div>
 
-        <div className="timeline-shell">
+        <div className="timeline-shell" aria-busy={refreshing}>
+          <div className="timeline-results"><span>{totalInstances} matching checklist{totalInstances === 1 ? '' : 's'}</span><span>Newest first</span></div>
           {refreshing ? (
             <div className="timeline-refresh-badge">Refreshing filtered timeline...</div>
           ) : null}
@@ -788,7 +694,7 @@ const ChecklistsPage: React.FC = () => {
                     <div className="day-copy">
                       <span>{isToday ? 'Today' : formatShortDate(date)}</span>
                       <h2>{formatDateLabel(date)}</h2>
-                      <p>{dayInstances.length} checklist instance{dayInstances.length === 1 ? '' : 's'} anchored to this date.</p>
+                      <p>{dayInstances.length} checklist{dayInstances.length === 1 ? '' : 's'}</p>
                     </div>
                     <div className="day-badges">
                       <span>{completedCount} completed</span>
@@ -799,13 +705,11 @@ const ChecklistsPage: React.FC = () => {
 
                   <div className="timeline-card-grid">
                     {dayInstances.map((instance) => (
-                      <button
+                      <article
                         key={instance.id}
-                        type="button"
                         className={`timeline-instance-card ${getShiftTone(instance.shift)} ${getInstanceStatusClass(instance.status)}`}
-                        onClick={() => handleInstanceClick(instance)}
                       >
-                        <div className="instance-card-glow" />
+                        <button type="button" className="instance-open-button" onClick={() => handleInstanceClick(instance)}>
                         <div className="timeline-instance-head">
                           <div className='fine-div'>
                             <span className="instance-kicker">{getShiftLabel(instance.shift, timelineShiftOptions)} shift</span>
@@ -818,8 +722,7 @@ const ChecklistsPage: React.FC = () => {
                         </div>
 
                         <div className="instance-chip-row">
-                          <span>{instance.id}</span>
-                          <span>{formatDateLabel(instance.checklist_date)}</span>
+                          <span title={instance.id}>Run {instance.id.slice(0, 8)}</span>
                         </div>
 
                         <div className="instance-metrics-grid">
@@ -833,10 +736,11 @@ const ChecklistsPage: React.FC = () => {
                           </div>
                         </div>
 
+                        </button>
                         <div className="instance-footer-row">
-                          <span className="footer-hint">Open checklist</span>
+                          <button type="button" className="footer-hint" onClick={() => handleInstanceClick(instance)}>Open checklist <FaArrowRight /></button>
                           {canDeleteInstance(user) ? (
-                            <span
+                            <button type="button" aria-label={`Delete ${instance.template?.name || 'checklist'} ${instance.shift} ${instance.checklist_date}`}
                               className="delete-inline"
                               onClick={(event) => {
                                 event.stopPropagation();
@@ -845,10 +749,10 @@ const ChecklistsPage: React.FC = () => {
                               }}
                             >
                               <FaTrash />
-                            </span>
+                            </button>
                           ) : null}
                         </div>
-                      </button>
+                      </article>
                     ))}
                   </div>
                 </section>
@@ -903,8 +807,8 @@ const ChecklistsPage: React.FC = () => {
 
       {showDeleteConfirm ? (
         <div className="checklists-modal-backdrop" onClick={() => setShowDeleteConfirm(false)}>
-          <div className="checklists-modal" onClick={(event) => event.stopPropagation()}>
-            <h3>Delete checklist instance?</h3>
+          <div className="checklists-modal" role="dialog" aria-modal="true" aria-labelledby="checklists-delete-title" onClick={(event) => event.stopPropagation()}>
+            <h3 id="checklists-delete-title">Delete checklist instance?</h3>
             <p>This action is permanent and will remove the instance from the timeline.</p>
             {deleteError ? <div className="modal-error">{deleteError}</div> : null}
             <div className="modal-actions">

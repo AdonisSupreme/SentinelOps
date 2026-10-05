@@ -15,7 +15,6 @@ import {
   FaFingerprint,
   FaHistory,
   FaLock,
-  FaRoute,
   FaSearch,
   FaShieldAlt,
   FaSyncAlt,
@@ -25,7 +24,7 @@ import {
   FaUserCheck,
 } from 'react-icons/fa';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { FUNDS_CUSTODY_MANUAL_PDF_PATH, pageGuides } from '../../content/pageGuides';
+import { FUNDS_CUSTODY_MANUAL_PDF_PATH } from '../../content/pageGuides';
 import clearingApi, {
   ClearingAccountView,
   ClearingAuditEvidence,
@@ -41,6 +40,8 @@ import clearingApi, {
 } from '../../services/clearingApi';
 import centralizedWebSocketManager from '../../services/centralizedWebSocketManager';
 import './UnauthorizedClearingWorkspace.css';
+import './CustodyWorkspaceRefresh.css';
+import CustodyOperatingGuide from './CustodyOperatingGuide';
 
 type WorkspaceView = 'control' | 'accounts' | 'execution' | 'audit' | 'guide';
 type TransactionFilter = 'all' | 'safe' | 'review' | 'blocked' | 'committed' | 'closed';
@@ -418,6 +419,13 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
   const [batch, setBatch] = useState<ClearingBatch | null>(null);
   const [executions, setExecutions] = useState<ClearingExecution[]>([]);
   const [audit, setAudit] = useState<ClearingAuditEvent[]>([]);
+  const [batchSearch, setBatchSearch] = useState('');
+  const [guideOrigin, setGuideOrigin] = useState<WorkspaceView>(initialView);
+  const [auditKind, setAuditKind] = useState<AuditPriority | 'all'>('all');
+  const [auditFrom, setAuditFrom] = useState('');
+  const [auditTo, setAuditTo] = useState('');
+  const [auditExpanded, setAuditExpanded] = useState<boolean | undefined>(undefined);
+  const [auditExpansionRevision, setAuditExpansionRevision] = useState(0);
   const [auditQuery, setAuditQuery] = useState('');
   const [auditEvidence, setAuditEvidence] = useState<ClearingAuditEvidence | null>(null);
   const [selectedAuditEventId, setSelectedAuditEventId] = useState<string | null>(null);
@@ -974,7 +982,12 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
     if (directMode !== 'QUEUE_TRANSACTION') return;
     setDirectAmount(selectedQueueRows.length ? selectedQueueAuthority.toFixed(2) : '');
   }, [directMode, selectedQueueAuthority, selectedQueueRows.length]);
-  const auditTimeline = useMemo(() => groupAuditTimeline(audit), [audit]);
+  const visibleAudit = useMemo(() => audit.filter(event => {
+    const date = new Date(event.occurred_at);
+    const day = [date.getFullYear(), String(date.getMonth()+1).padStart(2,'0'), String(date.getDate()).padStart(2,'0')].join('-');
+    return (auditKind === 'all' || auditPriority(event.event_type) === auditKind) && (!auditFrom || day >= auditFrom) && (!auditTo || day <= auditTo);
+  }), [audit, auditKind, auditFrom, auditTo]);
+  const auditTimeline = useMemo(() => groupAuditTimeline(visibleAudit), [visibleAudit]);
   const inspectAuditEvent = (event: ClearingAuditEvent) => {
     const requestId = ++auditEvidenceRequest.current;
     setSelectedAuditEventId(event.audit_id);
@@ -1019,8 +1032,9 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
         <FaFileImport />
         <span><strong>Create controlled batch</strong><small>One Account or RRN column becomes immutable evidence</small></span>
       </button>
+      <label className="custody-batch-search"><FaSearch/><input type="search" aria-label="Find a controlled batch" value={batchSearch} onChange={event=>setBatchSearch(event.target.value)} placeholder="Find a batch or reference…"/></label>
       <div className="clearing-batch-list">
-        {batches.map((item) => {
+        {batches.filter(item => `${item.batch_name} ${item.finance_reference} ${batchStatusLabel[item.status]}`.toLowerCase().includes(batchSearch.toLowerCase())).map((item) => {
           const canArchiveDecision = item.source_kind === 'ACCOUNT_EXPLORER'
             && ['COMPLETED', 'ROLLED_BACK'].includes(item.status);
           const canDelete = canArchiveDecision
@@ -1061,6 +1075,7 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
             </div>
           );
         })}
+        {batches.length > 0 && !batches.some(item => `${item.batch_name} ${item.finance_reference} ${batchStatusLabel[item.status]}`.toLowerCase().includes(batchSearch.toLowerCase())) && <div className="clearing-empty-index" role="status">No batches match this search.</div>}
         {!batches.length ? (
           <div className="clearing-empty-index">
             <FaFingerprint />
@@ -1174,7 +1189,7 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
           ))}
           <label className="clearing-ledger-search">
             <FaSearch />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Account, RRN, STAN..." />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} aria-label="Search batch transactions" placeholder="Account, RRN, STAN..." />
           </label>
         </div>
 
@@ -1864,107 +1879,7 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
     </div>
   );
 
-  const renderGuide = () => {
-    const guide = pageGuides.clearing;
-    const procedures = guide.visualWalkthrough || [];
-
-    return (
-      <section className="custody-guide-workspace">
-        <header className="custody-guide-intro">
-          <div className='fine-div'>
-            <span className="clearing-kicker"><FaBook /> Embedded operating manual</span>
-            <h2>{guide.title}</h2>
-            <p>{guide.intro}</p>
-          </div>
-          <button type="button" onClick={downloadOperatingGuide}>
-            <FaDownload /> Download guide
-          </button>
-        </header>
-
-        <div className="custody-guide-lane-map" aria-label="Funds Custody workspace map">
-          {guide.sections.map((section, index) => (
-            <article key={section.title}>
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <div className="custody-guide-lane-copy"><strong>{section.title}</strong><p>{section.body}</p></div>
-            </article>
-          ))}
-        </div>
-
-        <div className="custody-guide-layout">
-          <aside className="custody-guide-index">
-            <small>Procedure index</small>
-            <nav>
-              {procedures.map((step) => (
-                <a key={step.step} href={`#custody-guide-step-${step.step}`}>
-                  <span>{step.step}</span>
-                  <strong>{step.title}</strong>
-                </a>
-              ))}
-            </nav>
-          </aside>
-
-          <div className="custody-guide-procedures">
-            {procedures.map((step) => (
-              <article id={`custody-guide-step-${step.step}`} key={step.step}>
-                <header>
-                  <span>{step.step}</span>
-                  <div className="custody-guide-step-copy"><small>{step.location}</small><h3>{step.title}</h3><p>{step.body}</p></div>
-                </header>
-                <ul>
-                  {step.checklist.map((entry) => <li key={entry}><FaCheckCircle /> <span>{entry}</span></li>)}
-                </ul>
-                <div className="custody-guide-procedure-notes">
-                  {step.example ? <p><FaBook /><span className="custody-guide-note-copy"><small>Example</small><span>{step.example}</span></span></p> : null}
-                  {step.avoid ? <p className="stop"><FaExclamationTriangle /><span className="custody-guide-note-copy"><small>Stop condition</small><span>{step.avoid}</span></span></p> : null}
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-
-        {guide.decisionRules?.length ? (
-          <section className="custody-guide-reference">
-            <header><span className="clearing-kicker"><FaShieldAlt /> Decision boundaries</span><h2>{guide.decisionTitle}</h2><p>{guide.decisionIntro}</p></header>
-            <div className="custody-guide-rules">
-              {guide.decisionRules.map((rule, index) => (
-                <details key={rule.title} open={index === 0}>
-                  <summary><span>{String(index + 1).padStart(2, '0')}</span><strong>{rule.title}</strong><FaChevronRight /></summary>
-                  <dl>
-                    <div><dt>Use when</dt><dd>{rule.useWhen}</dd></div>
-                    <div><dt>Operator move</dt><dd>{rule.doThis}</dd></div>
-                    <div><dt>Do not</dt><dd>{rule.avoid}</dd></div>
-                    {rule.evidence ? <div><dt>Evidence</dt><dd>{rule.evidence}</dd></div> : null}
-                  </dl>
-                </details>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        {guide.examples?.length ? (
-          <section className="custody-guide-reference">
-            <header><span className="clearing-kicker"><FaRoute /> Operating scenarios</span><h2>{guide.examplesTitle}</h2><p>{guide.examplesIntro}</p></header>
-            <div className="custody-guide-scenarios">
-              {guide.examples.map((example) => (
-                <article key={example.title}>
-                  <h3>{example.title}</h3>
-                  <p><small>Situation</small><span>{example.scenario}</span></p>
-                  <p><small>Interpretation</small><span>{example.interpretation}</span></p>
-                  <p><small>Operator move</small><span>{example.operatorMove}</span></p>
-                </article>
-              ))}
-            </div>
-          </section>
-        ) : null}
-
-        <section className="custody-guide-runbook">
-          <header><span className="clearing-kicker"><FaRoute /> End-to-end custody</span><h2>{guide.workflowTitle}</h2></header>
-          <ol>{guide.workflow.map((step, index) => <li key={step}><span>{String(index + 1).padStart(2, '0')}</span><p>{step}</p></li>)}</ol>
-          <aside><FaShieldAlt /><div className="custody-guide-tip-copy"><small>{guide.tipTitle}</small><p>{guide.tip}</p></div></aside>
-        </section>
-      </section>
-    );
-  };
+  const renderGuide = () => <CustodyOperatingGuide origin={guideOrigin} onNavigate={setView} onDownload={downloadOperatingGuide} />;
 
   const renderAudit = () => {
     const intent = auditEvidence?.sealed_intent;
@@ -1993,7 +1908,7 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
             });
           }} className="clearing-audit-search">
             <FaSearch />
-            <input value={auditQuery} onChange={(event) => setAuditQuery(event.target.value)} placeholder="Account number or RRN" />
+            <input value={auditQuery} onChange={(event) => setAuditQuery(event.target.value)} aria-label="Search custody trail by account or RRN" placeholder="Account number or RRN" />
             <button type="submit" disabled={!!busy}>Search trail</button>
             <button type="button" className="icon" onClick={() => void run('audit', async () => {
               setAudit(await clearingApi.listAudit(null, 150, auditQuery));
@@ -2003,22 +1918,27 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
             })} title="Refresh trail"><FaSyncAlt /></button>
           </form>
         </div>
+        <div className="custody-trail-tools">
+          <div className="custody-trail-types" aria-label="Event category">{(['all','mutation','authorization','reconciliation','custody'] as const).map(kind=><button type="button" key={kind} aria-pressed={auditKind===kind} onClick={()=>setAuditKind(kind)}>{kind==='all'?'All events':auditPriorityLabel[kind]}</button>)}</div>
+          <div className="custody-trail-dates"><label>From<input aria-label="Trail from date" type="date" value={auditFrom} max={auditTo||undefined} onChange={event=>setAuditFrom(event.target.value)}/></label><label>To<input aria-label="Trail to date" type="date" value={auditTo} min={auditFrom||undefined} onChange={event=>setAuditTo(event.target.value)}/></label><button className="secondary" type="button" onClick={()=>{setAuditKind('all');setAuditFrom('');setAuditTo('');}}>Reset filters</button></div>
+          <div className="custody-trail-count"><span>{visibleAudit.length} of {audit.length} loaded events · latest records returned by the trail</span><div><button type="button" className="secondary" onClick={()=>{setAuditExpanded(true);setAuditExpansionRevision(value=>value+1);}}>Expand all</button><button type="button" className="secondary" onClick={()=>{setAuditExpanded(false);setAuditExpansionRevision(value=>value+1);}}>Collapse all</button></div></div>
+        </div>
         <div className="clearing-audit-explorer">
-          <div className="clearing-audit-tree">
+          <div className="clearing-audit-tree" key={auditExpansionRevision}>
             {auditTimeline.map((year, yearIndex) => (
-              <details key={year.key} open={yearIndex === 0} className="audit-year">
-                <summary><span>{year.label}</span><small>{year.months.reduce((sum, month) => sum + month.weeks.reduce((weekSum, week) => weekSum + week.days.reduce((daySum, day) => daySum + day.events.length, 0), 0), 0)} events</small><FaChevronDown /></summary>
+              <details key={year.key} open={auditExpanded ?? (yearIndex === 0)} className="audit-year">
+                <summary><span>{year.key} <em>{year.label !== year.key ? year.label : ''}</em></span><small>{year.months.reduce((sum, month) => sum + month.weeks.reduce((weekSum, week) => weekSum + week.days.reduce((daySum, day) => daySum + day.events.length, 0), 0), 0)} events</small><FaChevronDown /></summary>
                 <div>
                   {year.months.map((month, monthIndex) => (
-                    <details key={month.key} open={yearIndex === 0 && monthIndex === 0} className="audit-month">
+                    <details key={month.key} open={auditExpanded ?? (yearIndex === 0 && monthIndex === 0)} className="audit-month">
                       <summary><span>{month.label}</span><small>{month.weeks.length} week{month.weeks.length === 1 ? '' : 's'}</small><FaChevronDown /></summary>
                       <div>
                         {month.weeks.map((week, weekIndex) => (
-                          <details key={week.key} open={yearIndex === 0 && monthIndex === 0 && weekIndex === 0} className="audit-week">
+                          <details key={week.key} open={auditExpanded ?? (yearIndex === 0 && monthIndex === 0 && weekIndex === 0)} className="audit-week">
                             <summary><span>{week.label}</span><small>{week.days.length} active day{week.days.length === 1 ? '' : 's'}</small><FaChevronDown /></summary>
                             <div>
                               {week.days.map((day, dayIndex) => (
-                                <details key={day.key} open={yearIndex === 0 && monthIndex === 0 && weekIndex === 0 && dayIndex === 0} className="audit-day">
+                                <details key={day.key} open={auditExpanded ?? (yearIndex === 0 && monthIndex === 0 && weekIndex === 0 && dayIndex === 0)} className="audit-day">
                                   <summary><span>{day.label}</span><small>{day.events.length}</small><FaChevronDown /></summary>
                                   <div className="audit-day-events">
                                     <div className="audit-day-columns"><span>Activity</span><span>Reference</span><span>Custodian</span><span>Time</span><span /></div>
@@ -2060,7 +1980,7 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
                 </div>
               </details>
             ))}
-            {!audit.length ? <div className="clearing-audit-empty">No clearing custody events have been recorded.</div> : null}
+            {!visibleAudit.length ? <div className="clearing-audit-empty">{audit.length ? 'No loaded events match these filters. Reset the filters or search a different account or RRN.' : 'No custody events were returned for this search.'}</div> : null}
           </div>
 
           <aside className={`clearing-audit-evidence ${auditEvidence || auditEvidenceLoading ? 'has-evidence' : ''}`}>
@@ -2193,7 +2113,7 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
   ];
 
   return (
-    <main className="clearing-workspace">
+    <main className="clearing-workspace custody-refined">
       <header className="clearing-masthead">
         <div className="clearing-masthead-copy">
           <span className="clearing-kicker"><FaShieldAlt /> SentinelOps funds custody</span>
@@ -2223,7 +2143,8 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
             type="button"
             key={item.id}
             className={view === item.id ? 'active' : ''}
-            onClick={() => setView(item.id)}
+            aria-current={view === item.id ? 'page' : undefined}
+            onClick={() => { if (item.id === 'guide') setGuideOrigin(view); setView(item.id); }}
           >
             <span className="clearing-mode-icon">{item.icon}</span>
             <span><strong>{item.label}</strong><small>{item.detail}</small></span>
@@ -2231,6 +2152,7 @@ const UnauthorizedClearingWorkspace: React.FC<Props> = ({ actor, userRole, initi
         ))}
       </nav>
 
+      {view !== 'guide' && <div className="custody-context-help"><span>{view === 'control' ? 'Prepare · verify · submit' : view === 'accounts' ? 'Investigate · establish scope · prepare' : view === 'execution' ? 'Review · authorize · confirm outcome' : 'Find an event · inspect its proof'}</span><button type="button" onClick={() => { setGuideOrigin(view); setView('guide'); }}><FaBook /> Help with this workspace</button></div>}
       {error ? (
         <div className="clearing-error-banner">
           <FaExclamationTriangle />

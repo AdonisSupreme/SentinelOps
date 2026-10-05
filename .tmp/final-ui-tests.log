@@ -1,0 +1,11 @@
+PASS src/components/checklist/HandoverNotes.test.tsx (17.21 s)
+PASS src/components/nexus/CustodyOperatingGuide.test.tsx
+PASS src/components/nexus/UnauthorizedClearingWorkspace.test.tsx
+PASS src/pages/ChecklistsPage.test.tsx (10.547 s)
+PASS src/components/checklist/SmartSubitemModal.test.tsx
+
+Test Suites: 5 passed, 5 total
+Tests:       16 passed, 16 total
+Snapshots:   0 total
+Time:        58.934 s
+Ran all test suites within paths "src/components/checklist/HandoverNotes.test.tsx", "src/components/checklist/SmartSubitemModal.test.tsx", "src/pages/ChecklistsPage.test.tsx", "src/components/nexus/CustodyOperatingGuide.test.tsx", "src/components/nexus/UnauthorizedClearingWorkspace.test.tsx".

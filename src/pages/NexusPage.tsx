@@ -1,3 +1,4 @@
+import NexusOverlay from '../components/nexus/NexusOverlay';
 import { useAccess, ModuleAccess } from '../contexts/AccessContext';
 import React, { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -94,6 +95,7 @@ import nexusApi, {
   ServiceTimelineChatResponse,
 } from '../services/nexusApi';
 import './NexusPage.css';
+import './NexusWorkspaceRefresh.css';
 
 const riskRank: Record<NexusRiskLevel, number> = {
   LOW: 1,
@@ -4790,7 +4792,7 @@ const NexusPage: React.FC = () => {
   const renderIncidentCommandModal = () => {
     if (!selectedIncident) return null;
     return (
-      <div className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-incident-modal-title">
+      <NexusOverlay className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-incident-modal-title">
         <section className="nexus-modal nexus-incident-modal">
           <button type="button" className="nexus-modal-close" onClick={closeIncidentModal} aria-label="Close incident detail">
             <FaTimesCircle />
@@ -4906,7 +4908,7 @@ const NexusPage: React.FC = () => {
                     ? renderOutcomeTab()
                     : renderOverviewTab()}
         </section>
-      </div>
+      </NexusOverlay>
     );
   };
 
@@ -5076,7 +5078,7 @@ const NexusPage: React.FC = () => {
       </section>
 
       {selectedIncident ? (
-        <div className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-incident-modal-title">
+        <NexusOverlay className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-incident-modal-title">
           <section className="nexus-modal nexus-incident-modal">
             <button type="button" className="nexus-modal-close" onClick={closeIncidentModal} aria-label="Close incident detail">
               <FaTimesCircle />
@@ -5192,7 +5194,7 @@ const NexusPage: React.FC = () => {
                       ? renderOutcomeTab()
                       : renderOverviewTab()}
           </section>
-        </div>
+        </NexusOverlay>
       ) : null}
     </div>
   );
@@ -5203,7 +5205,7 @@ const NexusPage: React.FC = () => {
     const feed = sourceExplorerData;
     const activeSource = sourceExplorer.source || 'all sources';
     return (
-      <div className="nexus-modal-backdrop nexus-fullscreen-backdrop" role="dialog" aria-modal="true" aria-label="Nexus source explorer">
+      <NexusOverlay className="nexus-modal-backdrop nexus-fullscreen-backdrop" role="dialog" aria-modal="true" aria-label="Nexus source explorer">
         <section className="nexus-modal nexus-fullscreen-modal nexus-source-modal nexus-shell">
           <button type="button" className="nexus-modal-close" onClick={() => setSourceExplorer(null)} aria-label="Close source explorer">
             <FaTimesCircle />
@@ -5273,7 +5275,7 @@ const NexusPage: React.FC = () => {
             {!sourceExplorerLoading && !feed?.signals.length ? <div className="empty-state compact">No signals matched this source window.</div> : null}
           </div>
         </section>
-      </div>
+      </NexusOverlay>
     );
   })();
 
@@ -5282,7 +5284,7 @@ const NexusPage: React.FC = () => {
     if (!logTailOpen || !selectedService) return null;
     const tail = logTailData;
     return (
-      <div className="nexus-modal-backdrop nexus-fullscreen-backdrop" role="dialog" aria-modal="true" aria-label="Nexus live log tail">
+      <NexusOverlay className="nexus-modal-backdrop nexus-fullscreen-backdrop" role="dialog" aria-modal="true" aria-label="Nexus live log tail">
         <section className="nexus-modal nexus-fullscreen-modal nexus-log-tail-modal nexus-shell">
           <button type="button" className="nexus-modal-close" onClick={() => setLogTailOpen(false)} aria-label="Close live log tail">
             <FaTimesCircle />
@@ -5327,12 +5329,12 @@ const NexusPage: React.FC = () => {
             {!logTailLoading && tail?.available && !tail.lines.length ? <div className="empty-state compact">The selected log window is empty.</div> : null}
           </div>
         </section>
-      </div>
+      </NexusOverlay>
     );
   })();
 
   const rolloverOtpModal = rolloverChallenge ? (
-    <div className="nexus-modal-backdrop service-control-otp-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-rollover-control-title">
+    <NexusOverlay className="nexus-modal-backdrop service-control-otp-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-rollover-control-title">
       <section className="nexus-modal nexus-service-control-modal nexus-shell">
         <button
           type="button"
@@ -5407,7 +5409,7 @@ const NexusPage: React.FC = () => {
           </button>
         </div>
       </section>
-    </div>
+    </NexusOverlay>
   ) : null;
 
   const renderServiceLiveDashboard = () => {
@@ -5546,9 +5548,12 @@ const NexusPage: React.FC = () => {
       <div className="service-live-cockpit editor-scroll">
         <section className={`service-live-hero tone-${live?.status.tone || selectedServiceSignalStatus.tone}`}>
           <div className='my-div'>
-            <span className="panel-kicker">Live Service Cockpit</span>
+            <span className="panel-kicker">Live operations</span>
             <h3>{live?.status.label || selectedServiceSignalStatus.label}</h3>
-            <p>{live?.status.detail || selectedServiceSignalStatus.detail}</p>
+            <details className="service-live-explanation">
+              <summary>View incident context</summary>
+              <p>{live?.status.detail || selectedServiceSignalStatus.detail}</p>
+            </details>
           </div>
           <div className="service-live-hero-badges">
             <span>{serviceLiveLoading ? 'Refreshing telemetry' : 'Live refresh'}</span>
@@ -5558,24 +5563,24 @@ const NexusPage: React.FC = () => {
 
         <div className="service-live-grid service-live-grid--focused">
           <div className="service-live-tile emphasis">
-            <label>Runtime Agent</label>
+            <label><FaPlug aria-hidden="true" /> Runtime Agent</label>
             <strong>{runtimeState && runtimeState !== 'unknown' ? runtimeState : live?.agent.status || (agentSignal ? agentSignal.severity : 'No signal')}</strong>
             <small>{agentSignal?.message || 'No light-agent runtime signal has arrived yet.'}</small>
           </div>
           <div className="service-live-tile">
-            <label>Network Sentinel</label>
+            <label><FaNetworkWired aria-hidden="true" /> Network Sentinel</label>
             <strong>{live?.network.status || 'Unmapped'}</strong>
             <small>{networkSignal?.message || 'External reachability has not reported for this service.'}</small>
           </div>
           <div className="service-live-tile">
-            <label>Host posture</label>
+            <label><FaServer aria-hidden="true" /> Host posture</label>
             <strong>{highLoad ? 'High load' : displayValue(host.load_per_core)}</strong>
             <small>
               Memory {displayPercent(memory.used_percent)} / Logs {logDisk.used_percent != null ? displayPercent(logDisk.used_percent) : rootDisk.used_percent != null ? displayPercent(rootDisk.used_percent) : 'Unknown'}
             </small>
           </div>
           <div className="service-live-tile">
-            <label>Heartbeat</label>
+            <label><FaSignal aria-hidden="true" /> Heartbeat</label>
             <strong>{heartbeatTime ? formatRelativeMinutes(heartbeatTime) : 'No heartbeat'}</strong>
             <small>{live?.agent.configured_agent_id || selectedService.observation_config.agent_id || 'agent id not configured'}</small>
           </div>
@@ -5869,7 +5874,7 @@ const NexusPage: React.FC = () => {
         </aside>
 
         {selectedRolloverEnvironmentId || creatingRolloverEnvironment ? (
-          <div className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-rollover-modal-title">
+          <NexusOverlay className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-rollover-modal-title">
           <section
             className={`management-editor nexus-panel nexus-shell nexus-modal nexus-management-modal rollover-management-modal ${canManageNexus ? '' : 'readonly'}`}
             onChangeCapture={createEditorChangeGuard('rollover')}
@@ -6645,7 +6650,7 @@ const NexusPage: React.FC = () => {
             </div>
             )}
           </section>
-          </div>
+          </NexusOverlay>
         ) : null}
       </div>
     );
@@ -6752,7 +6757,7 @@ const NexusPage: React.FC = () => {
       </aside>
 
       {selectedServiceId || creatingService ? (
-        <div className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-service-modal-title">
+        <NexusOverlay className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-service-modal-title">
           <section
             className={`management-editor nexus-panel nexus-shell nexus-modal nexus-management-modal ${canManageNexus ? '' : 'readonly'}`}
             onChangeCapture={createEditorChangeGuard('service')}
@@ -7683,11 +7688,11 @@ const NexusPage: React.FC = () => {
             </div>
             )}
           </section>
-        </div>
+        </NexusOverlay>
       ) : null}
 
       {serviceControlChallenge && selectedService ? (
-        <div className="nexus-modal-backdrop service-control-otp-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-service-control-title">
+        <NexusOverlay className="nexus-modal-backdrop service-control-otp-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-service-control-title">
           <section className="nexus-modal nexus-service-control-modal nexus-shell">
             <button
               type="button"
@@ -7753,11 +7758,11 @@ const NexusPage: React.FC = () => {
               </button>
             </div>
           </section>
-        </div>
+        </NexusOverlay>
       ) : null}
 
       {timelineService ? (
-        <div className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-service-timeline-title">
+        <NexusOverlay className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-service-timeline-title">
           <section className="nexus-modal nexus-service-timeline-modal nexus-shell">
             <button type="button" className="nexus-modal-close" onClick={() => setTimelineServiceId(null)} aria-label="Close service incident timeline">
               <FaTimesCircle />
@@ -7814,11 +7819,11 @@ const NexusPage: React.FC = () => {
               </div>
             </div>
           </section>
-        </div>
+        </NexusOverlay>
       ) : null}
 
       {timelineService && timelineChatOpen ? (
-        <div className="nexus-modal-backdrop nexus-copilot-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-timeline-copilot-title">
+        <NexusOverlay className="nexus-modal-backdrop nexus-copilot-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-timeline-copilot-title">
           <section className="nexus-modal nexus-timeline-copilot-modal nexus-shell">
             <button type="button" className="nexus-modal-close" onClick={() => setTimelineChatOpen(false)} aria-label="Close timeline copilot">
               <FaTimesCircle />
@@ -7934,7 +7939,7 @@ const NexusPage: React.FC = () => {
               </button>
             </div>
           </section>
-        </div>
+        </NexusOverlay>
       ) : null}
     </div>
     );
@@ -7955,7 +7960,7 @@ const NexusPage: React.FC = () => {
         <div className="fabric-preview-heading">
           <div>
             <span className="panel-kicker"><FaProjectDiagram /> Cluster fabric</span>
-            <h3>One contract, many service paths</h3>
+            <h3>One cluster. Every service path.</h3>
             <p>Entry services feed the cluster spine. Every declared route becomes an explicit operator boundary.</p>
           </div>
           <span className="fabric-preview-state">{cluster.criticality} / {cluster.environment || 'environment unset'}</span>
@@ -8050,7 +8055,7 @@ const NexusPage: React.FC = () => {
       </aside>
 
       {selectedClusterId || creatingCluster ? (
-        <div className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-cluster-modal-title">
+        <NexusOverlay className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-cluster-modal-title">
           <section
             className={`management-editor nexus-panel nexus-shell nexus-modal nexus-management-modal ${canManageNexus ? '' : 'readonly'}`}
             onChangeCapture={createEditorChangeGuard('cluster')}
@@ -8246,7 +8251,7 @@ const NexusPage: React.FC = () => {
             </div>
             )}
           </section>
-        </div>
+        </NexusOverlay>
       ) : null}
     </div>
   );
@@ -8256,7 +8261,7 @@ const NexusPage: React.FC = () => {
       <div className="fabric-preview-heading">
         <div>
           <span className="panel-kicker"><FaLink /> Flow-aware correlation</span>
-          <h3>Follow the user journey through evidence</h3>
+          <h3>Trace the journey, step by step</h3>
           <p>Correlation starts at an entry service and moves through the declared path until success or failure is proven.</p>
         </div>
         <span className={`fabric-preview-state ${flow.enabled ? 'is-live' : ''}`}>{flow.enabled ? 'Correlation enabled' : 'Paused'}</span>
@@ -8382,7 +8387,7 @@ const NexusPage: React.FC = () => {
         </aside>
 
         {selectedFlowId || creatingFlow ? (
-          <div className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-flow-modal-title">
+          <NexusOverlay className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-flow-modal-title">
             <section
               className={`management-editor nexus-panel nexus-shell nexus-modal nexus-management-modal ${canManageNexus ? '' : 'readonly'}`}
               onChangeCapture={createEditorChangeGuard('flow')}
@@ -8586,7 +8591,7 @@ const NexusPage: React.FC = () => {
               </div>
               )}
             </section>
-          </div>
+          </NexusOverlay>
         ) : null}
       </div>
     );
@@ -8680,7 +8685,7 @@ const NexusPage: React.FC = () => {
       </aside>
 
       {selectedEdgeId || creatingEdge ? (
-        <div className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-dependency-modal-title">
+        <NexusOverlay className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-dependency-modal-title">
           <section
             className={`management-editor nexus-panel nexus-shell nexus-modal nexus-management-modal ${canManageNexus ? '' : 'readonly'}`}
             onChangeCapture={createEditorChangeGuard('edge')}
@@ -9042,7 +9047,7 @@ const NexusPage: React.FC = () => {
             </div>
             )}
           </section>
-        </div>
+        </NexusOverlay>
       ) : null}
     </div>
   );
@@ -9234,7 +9239,7 @@ const NexusPage: React.FC = () => {
       </section>
 
       {selectedSopId || creatingSop ? (
-        <div className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-sop-modal-title">
+        <NexusOverlay className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-sop-modal-title">
           <section
             className={`management-editor nexus-panel nexus-shell nexus-modal nexus-management-modal sop-management-modal ${canManageNexus ? '' : 'readonly'}`}
             onChangeCapture={createEditorChangeGuard('sop')}
@@ -9404,7 +9409,7 @@ const NexusPage: React.FC = () => {
             </div>
             )}
           </section>
-        </div>
+        </NexusOverlay>
       ) : null}
     </div>
   );
@@ -10012,7 +10017,7 @@ const NexusPage: React.FC = () => {
   );
 
   const incidentNotificationSettingsModal = incidentNotificationModalOpen ? (
-    <div className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-notification-settings-title">
+    <NexusOverlay className="nexus-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="nexus-notification-settings-title">
       <section className="nexus-modal nexus-notification-modal nexus-shell">
         <button
           type="button"
@@ -10136,12 +10141,12 @@ const NexusPage: React.FC = () => {
           </div>
         ) : <div className="empty-state">Loading notification configuration...</div>}
       </section>
-    </div>
+    </NexusOverlay>
   ) : null;
 
   if (user && !hasNexusSectionAccess) {
     return (
-      <div className="nexus-page nexus-page--restricted">
+      <div className="nexus-page nexus-refined nexus-page--restricted">
         <div className="nexus-page-ambient" aria-hidden="true">
           <div className="nexus-ambient-grid" />
         </div>
@@ -10163,7 +10168,7 @@ const NexusPage: React.FC = () => {
 
   if (bootPreviewVisible) {
     return (
-      <div className="nexus-page nexus-page--booting">
+      <div className="nexus-page nexus-refined nexus-page--booting">
         <div className="nexus-page-ambient" aria-hidden="true">
           <div className="nexus-ambient-grid" />
         </div>
@@ -10174,7 +10179,7 @@ const NexusPage: React.FC = () => {
   }
 
   return (
-    <div className="nexus-page">
+    <div className="nexus-page nexus-refined">
       <div className="nexus-page-ambient" aria-hidden="true">
         <div className="nexus-ambient-grid" />
       </div>
@@ -10189,7 +10194,7 @@ const NexusPage: React.FC = () => {
               <div className="nexus-eyebrow"><FaBroadcastTower />Sentinel Nexus</div>
             </div>
             <div className="nex-brow">
-              <h1>Incident intelligence and service-fabric control</h1>
+              <h1>Your service fabric. In focus.</h1>
             </div>
           </div>
           <p>
@@ -10233,7 +10238,7 @@ const NexusPage: React.FC = () => {
             <div className="nexus-command-head">
               <div className='my-pic'>
                 <span className="panel-kicker"><FaDatabase />Fabric Pulse </span>
-                <h3>SentinelOps intelligence fabric</h3>
+                <h3>Operational context</h3>
               </div>
               <span className={`sync-pill sync-${(fabricSummary?.sync_health || 'idle').toLowerCase()}`}>{syncHealthLabel}</span>
             </div>
@@ -10264,7 +10269,7 @@ const NexusPage: React.FC = () => {
       {nexusLinkedConsoles.some(consoleLink => canAccessPage(consoleLink.to)) && <section className="nexus-linked-consoles nexus-shell" aria-label="Linked Sentinel Nexus consoles">
         <div className="nexus-linked-copy">
           <span>Linked consoles</span>
-          <strong>Telemetry and monitoring now launch from Nexus</strong>
+          <strong>Connected monitoring</strong>
         </div>
         <div className="nexus-linked-grid">
           {nexusLinkedConsoles.filter(consoleLink => canAccessPage(consoleLink.to)).map((consoleLink) => (
@@ -10282,7 +10287,7 @@ const NexusPage: React.FC = () => {
       {workspaceTabs.length > 0 && <section className="nexus-toolbar nexus-shell">
         <label className="nexus-search">
           <FaSearch />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search incidents, services, clusters, flows, or dependencies..." />
+          <input aria-label="Search Nexus workspace" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search incidents, services, clusters, flows, or dependencies..." />
         </label>
         {query ? (
           <button type="button" className="nexus-clear-search" onClick={() => setQuery('')}>

@@ -143,16 +143,6 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
     };
   };
 
-  const renderSeverity = (severity: number) => (
-    Array.from({ length: Math.max(0, severity) }, (_, index) => (
-      <FaExclamationTriangle
-        key={`severity-${item.id}-${index}`}
-        className="eci-severity-icon"
-        aria-hidden="true"
-      />
-    ))
-  );
-
   const handleItemClick = () => {
     if (hasSubitems) {
       if (item.status === 'IN_PROGRESS' || item.status === 'COMPLETED') {
@@ -222,6 +212,8 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
       <div
         className={`eci-header eci-header--${item.status.toLowerCase()} ${hasSubitems ? 'eci-header--has-subitems' : ''} ${hasSubitemExceptions ? 'eci-header--subitem-exceptions' : ''}`}
         onClick={handleItemClick}
+        role="button" tabIndex={0} aria-label={'Open ' + (item.title || item.template_item?.title || 'checklist item')}
+        onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); handleItemClick(); } }}
       >
         <div className="eci-main-info">
           <div className="eci-status-indicator">
@@ -260,7 +252,7 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
                 </span>
               )}
               {item.severity && (
-                <span className="eci-severity-indicator">{renderSeverity(item.severity)}</span>
+                <span className="eci-severity-indicator"><FaExclamationTriangle /> Severity {item.severity}</span>
               )}
               {itemType === 'TIMED' && scheduledTime && (
                 <span className="eci-type-badge">
@@ -336,6 +328,7 @@ const EnhancedChecklistItem: React.FC<EnhancedChecklistItemProps> = ({
           {hasSubitems && (
             <button
               className="eci-expand-btn"
+              aria-label={`Show subitems for ${item.title || item.template_item?.title}`} aria-expanded={showSubitems}
               onClick={(e) => {
                 e.stopPropagation();
                 setExpandedView(!expandedView);

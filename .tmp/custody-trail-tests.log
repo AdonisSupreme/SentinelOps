@@ -1,0 +1,9 @@
+PASS src/components/nexus/UnauthorizedClearingWorkspace.test.tsx (8.154 s)
+  √ trail filters loaded events by category and inclusive local date without reloading or mutating custody (450 ms)
+  √ expand and collapse commands can be repeated after manually opening a branch (388 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        15.714 s
+Ran all test suites within paths "src/components/nexus/UnauthorizedClearingWorkspace.test.tsx".

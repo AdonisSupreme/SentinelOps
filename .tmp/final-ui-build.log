@@ -1,0 +1,96 @@
+(node:1788) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Creating an optimized production build...
+Browserslist: browsers data (caniuse-lite) is 7 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Browserslist: browsers data (caniuse-lite) is 7 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Compiled with warnings.
+
+[eslint] 
+src\components\checklist\ChecklistStats.tsx
+  Line 3:25:  'FaClock' is defined but never used  @typescript-eslint/no-unused-vars
+
+src\components\checklist\ChecklistTimeline.tsx
+  Line 39:9:  'getActivitySummary' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+src\components\checklist\HandoverNotes.tsx
+  Line 36:92:  The ref value 'request.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'request.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+src\components\checklist\SmartSubitemModal.tsx
+  Line 244:6:  React Hook useEffect has a missing dependency: 'optimisticUpdates'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\components\checklist\SubitemModal.tsx
+  Line 3:27:  'FaCheck' is defined but never used  @typescript-eslint/no-unused-vars
+
+src\components\dashboard\GamificationPanel.tsx
+  Line 4:37:  'FaChartLine' is defined but never used  @typescript-eslint/no-unused-vars
+
+src\components\dashboard\ShiftReminder.tsx
+  Line 3:19:  'FaHourglassHalf' is defined but never used      @typescript-eslint/no-unused-vars
+  Line 49:9:  'shiftIcon' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  Line 50:9:  'shiftColor' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+src\contexts\NotificationContext.tsx
+  Line 257:6:  React Hook useCallback has a missing dependency: 'resolveNotificationType'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\contexts\checklistContext.tsx
+  Line 310:17:  'itemTitle' is assigned a value but never used                                                                                           @typescript-eslint/no-unused-vars
+  Line 349:6:   React Hook useCallback has an unnecessary dependency: 'applyInstanceSnapshot'. Either exclude it or remove the dependency array          react-hooks/exhaustive-deps
+  Line 524:6:   React Hook useCallback has a missing dependency: 'applyInstanceSnapshot'. Either include it or remove the dependency array               react-hooks/exhaustive-deps
+  Line 899:6:   React Hook useCallback has missing dependencies: 'getActionType' and 'loadInstance'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 1103:6:  React Hook useCallback has a missing dependency: 'getBackendErrorMessage'. Either include it or remove the dependency array              react-hooks/exhaustive-deps
+
+src\effects\effectInterpreter.ts
+  Line 139:6:  React Hook React.useEffect was passed a dependency list that is not an array literal. This means we can't statically verify whether you've passed the correct dependencies                                                                              react-hooks/exhaustive-deps
+  Line 139:6:  React Hook React.useEffect has missing dependencies: 'effectType' and 'handler'. Either include them or remove the dependency array. If 'handler' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+
+src\pages\DashboardPage.tsx
+  Line 409:6:  React Hook useMemo has an unnecessary dependency: 'commandMetrics.open_critical_items'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\DatabaseStatsPage.tsx
+  Line 49:6:  React Hook useEffect has a missing dependency: 'drawChart'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\PerformancePage.tsx
+  Line 1:1:  Unexpected Unicode BOM (Byte Order Mark)  unicode-bom
+
+src\services\api.ts
+  Line 7:3:   'BackendError' is defined but never used           @typescript-eslint/no-unused-vars
+  Line 29:9:  'debugContext' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+src\services\checklistApi.ts
+  Line 42:3:  'HandoverNote' was used before it was defined        @typescript-eslint/no-use-before-define
+  Line 50:3:  'PerformanceMetrics' was used before it was defined  @typescript-eslint/no-use-before-define
+
+src\services\networkSentinelApi.ts
+  Line 283:61:  Unnecessary escape character: \"  no-useless-escape
+  Line 283:67:  Unnecessary escape character: \"  no-useless-escape
+  Line 283:72:  Unnecessary escape character: \"  no-useless-escape
+
+src\utils\websocketTest.ts
+  Line 64:1:  Assign object to a variable before exporting as module default  import/no-anonymous-default-export
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  423.92 kB           build\static\js\main.f3468771.js
+  185.12 kB (+136 B)  build\static\css\main.c0c827a3.css
+  1.76 kB             build\static\js\453.670e15c7.chunk.js
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  npm install -g serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+

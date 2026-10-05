@@ -2,7 +2,7 @@ import React from 'react';
 
 export const ChecklistsSkeleton: React.FC = () => {
   return (
-    <div className="checklists-page checklists-command-page checklists-skeleton-page">
+    <div className="checklists-page checklists-command-page checklists-skeleton-page" role="status" aria-label="Loading checklists">
       <section className="checklists-skeleton-hero">
         <div className="skel-line skel-kicker" />
         <div className="skel-line skel-title" />
@@ -12,6 +12,8 @@ export const ChecklistsSkeleton: React.FC = () => {
           <div className="skel-chip" />
         </div>
       </section>
+
+      <div className="skel-panel checklists-skeleton-readiness" aria-hidden="true" />
 
       <section className="checklists-skeleton-command">
         <div className="checklists-skeleton-row">

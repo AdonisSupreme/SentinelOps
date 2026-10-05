@@ -1,25 +1,30 @@
 // src/components/checklist/HandoverNoteModal.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaTimes, FaFlag, FaSave, FaExclamationTriangle } from 'react-icons/fa';
 import { useChecklist } from '../../contexts/checklistContext';
 import './HandoverNoteModal.css';
+import { useDialogFocus } from '../../hooks/useDialogFocus';
 
 interface HandoverNoteModalProps {
   isOpen: boolean;
   onClose: () => void;
   instanceId: string;
+  onCreated?: () => void;
 }
 
 const HandoverNoteModal: React.FC<HandoverNoteModalProps> = ({
   isOpen,
   onClose,
-  instanceId
+  instanceId,
+  onCreated
 }) => {
   const { createHandoverNote } = useChecklist();
   const [content, setContent] = useState('');
   const [priority, setPriority] = useState(2);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(dialogRef, isOpen, () => { if (!isSubmitting) onClose(); });
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -44,6 +49,7 @@ const HandoverNoteModal: React.FC<HandoverNoteModalProps> = ({
 
     try {
       await createHandoverNote(content.trim(), priority, instanceId);
+      onCreated?.();
       setContent('');
       setPriority(2);
       onClose();
@@ -55,13 +61,13 @@ const HandoverNoteModal: React.FC<HandoverNoteModalProps> = ({
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && !isSubmitting) {
       onClose();
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
+    if (e.key === 'Escape' && !isSubmitting) {
       onClose();
     }
   };
@@ -104,6 +110,8 @@ const HandoverNoteModal: React.FC<HandoverNoteModalProps> = ({
     >
       <div
         className="handover-note-modal futuristic"
+        ref={dialogRef}
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -127,6 +135,7 @@ const HandoverNoteModal: React.FC<HandoverNoteModalProps> = ({
 
         {/* Modal Body */}
         <div className="modal-body">
+          <p className="handover-compose-intro">Give the next shift a clear next step.</p>
           {/* Priority Selection */}
           <div className="priority-section">
             <label className="section-label">Priority Level</label>
@@ -136,6 +145,8 @@ const HandoverNoteModal: React.FC<HandoverNoteModalProps> = ({
                   key={level}
                   type="button"
                   className={`priority-option ${priority === level ? 'active' : ''}`}
+                  aria-pressed={priority === level}
+                  aria-label={`${getPriorityLabel(level)} priority`}
                   onClick={() => setPriority(level)}
                   disabled={isSubmitting}
                 >
@@ -163,6 +174,7 @@ const HandoverNoteModal: React.FC<HandoverNoteModalProps> = ({
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Enter important information, tasks, or issues that need to be handed over to the next shift..."
+                aria-describedby="handover-writing-help"
                 className="handover-textarea"
                 rows={6}
                 disabled={isSubmitting}
@@ -176,18 +188,17 @@ const HandoverNoteModal: React.FC<HandoverNoteModalProps> = ({
 
           {/* Error Message */}
           {error && (
-            <div className="error-message">
+            <div className="error-message" role="alert">
               <FaExclamationTriangle />
               {error}
             </div>
           )}
 
           {/* Help Text */}
-          <div className="help-text">
+          <div className="help-text" id="handover-writing-help">
             <FaFlag />
             <span>
-              You can add multiple handover notes for the same checklist.
-              SentinelOps may also add automatic exception handovers, and your manual notes will appear alongside them.
+              Include what happened, what is still outstanding, who owns it, and what the next shift should do. Manual notes appear alongside automatic exception handovers.
             </span>
           </div>
         </div>

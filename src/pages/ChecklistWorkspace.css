@@ -1,0 +1,202 @@
+/* Daily execution workspace. Scoped to avoid changing shared application controls. */
+.checklist-page.checklist-workbench.checklist-command-page { --cw-bg:#f3f7fa; --cw-surface:#fff; --cw-soft:#f6f9fb; --cw-ink:#183047; --cw-muted:#63798c; --cw-line:#dce6ee; --cw-accent:#147e81; --cw-tint:#eaf6f4; --cw-danger:#b33e55; background:var(--cw-bg); color:var(--cw-ink); padding:clamp(16px,2.4vw,32px); display:flex; flex-direction:column; gap:24px; min-width:0; }
+[data-theme='dark'] .checklist-page.checklist-workbench.checklist-command-page { --cw-bg:#0b1522; --cw-surface:#101e2d; --cw-soft:#152638; --cw-ink:#e5eff8; --cw-muted:#a3b7c9; --cw-line:#293e52; --cw-accent:#67d8cf; --cw-tint:#17343e; --cw-danger:#ff9bac; color-scheme:dark; }
+.checklist-workbench.checklist-command-page :is(h1,h2,h3,h4) { font-family:inherit; color:var(--cw-ink); -webkit-text-fill-color:currentColor; background:none; letter-spacing:-.025em; text-shadow:none; padding-bottom:0; }
+.checklist-workbench.checklist-command-page :is(h1,h2,h3,h4)::after { display:none; }
+.checklist-workbench.checklist-command-page :is(button,input,textarea,select) { font-family:inherit; box-shadow:none; }
+.checklist-workbench.checklist-command-page :is(button,[role='button'],input,textarea,select):focus-visible { outline:2px solid var(--cw-accent); outline-offset:3px; }
+.checklist-workbench.checklist-command-page button:disabled { opacity:.45; cursor:not-allowed; }
+.checklist-workbench.checklist-command-page .checklist-command-strip { display:grid; grid-template-columns:minmax(0,1fr) minmax(260px,370px); gap:28px; padding:0; border:0; border-radius:0; background:none; box-shadow:none; }
+.checklist-workbench.checklist-command-page .checklist-command-title { border:0; padding:0; min-width:0; }
+.checklist-workbench.checklist-command-page .checklist-command-title > span { color:var(--cw-accent); font-size:10px; letter-spacing:.13em; }
+.checklist-workbench.checklist-command-page .checklist-command-title > strong { color:var(--cw-ink); font-weight:750; line-height:1.3; font-family:inherit; font-size:clamp(24px,2.5vw,34px); margin:6px 0; overflow-wrap:anywhere; }
+.checklist-workbench.checklist-command-page .checklist-command-title > small { color:var(--cw-muted); font-size:12px; }
+.checklist-workbench.checklist-command-page .workbench-overview { display:grid; gap:10px; align-content:center; }
+.checklist-workbench.checklist-command-page .workbench-status { display:flex; align-items:center; justify-content:space-between; }
+.checklist-workbench.checklist-command-page .status-badge { padding:4px 9px; font-size:10px; border-radius:6px; background:var(--cw-tint); color:var(--cw-accent); border:1px solid var(--cw-line); }
+.checklist-workbench.checklist-command-page .workbench-progress-copy,.checklist-workbench.checklist-command-page .workbench-totals { display:flex; justify-content:space-between; gap:12px; font-size:11px; color:var(--cw-muted); }
+.checklist-workbench.checklist-command-page .workbench-progress-copy strong { color:var(--cw-ink); font-weight:600; }
+.checklist-workbench.checklist-command-page progress { appearance:none; width:100%; height:5px; border:0; border-radius:10px; overflow:hidden; background:var(--cw-line); }
+.checklist-workbench.checklist-command-page progress::-webkit-progress-bar { background:var(--cw-line); }.checklist-workbench.checklist-command-page progress::-webkit-progress-value { background:var(--cw-accent); }.checklist-workbench.checklist-command-page progress::-moz-progress-bar { background:var(--cw-accent); }
+.checklist-workbench.checklist-command-page .checklist-workspace { display:grid; grid-template-columns:minmax(0,1fr) 285px; gap:22px; align-items:start; }
+.checklist-workbench.checklist-command-page .checklist-execution-board { padding:0; background:none; border:0; box-shadow:none; min-width:0; }
+.checklist-workbench.checklist-command-page .checklist-command-actions { display:flex; flex-wrap:wrap; gap:8px; padding:0 0 16px; border:0; border-bottom:1px solid var(--cw-line); border-radius:0; background:none; margin:0; }
+.checklist-workbench.checklist-command-page .checklist-command-actions button { min-height:36px; border-radius:8px; padding:8px 12px; font-size:12px; background:var(--cw-surface); color:var(--cw-muted); border:1px solid var(--cw-line); transform:none; }
+.checklist-workbench.checklist-command-page .checklist-command-actions :is(.btn-join,.btn-complete) { background:var(--cw-accent); color:var(--cw-bg); border-color:var(--cw-accent); }
+.checklist-workbench.checklist-command-page .checklist-command-actions .is-active { background:var(--cw-tint); color:var(--cw-accent); }
+.checklist-workbench.checklist-command-page .workbench-list-tools { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:16px 0; }
+.checklist-workbench.checklist-command-page .workbench-view-tabs { display:flex; gap:3px; background:var(--cw-soft); padding:3px; border-radius:9px; }
+.checklist-workbench.checklist-command-page .workbench-view-tabs button { border:0; background:transparent; color:var(--cw-muted); padding:8px 11px; border-radius:7px; font-size:11px; }
+.checklist-workbench.checklist-command-page .workbench-view-tabs button[aria-pressed='true'] { background:var(--cw-surface); color:var(--cw-accent); box-shadow:0 1px 4px #0001; }
+.checklist-workbench.checklist-command-page .workbench-search { display:flex; align-items:center; gap:8px; color:var(--cw-muted); font-size:11px; }
+.checklist-workbench.checklist-command-page .workbench-search input { width:170px; border:0; border-bottom:1px solid var(--cw-line); border-radius:0; background:transparent; color:var(--cw-ink); padding:8px 0; font-size:12px; }
+.checklist-workbench.checklist-command-page .checklist-item-stack { gap:10px; display:flex; flex-direction:column; margin:0; padding:0; }
+.checklist-workbench.checklist-command-page .checklist-item-stack:empty::after { content:'No items match this view. Try All items or clear your search.'; padding:28px; color:var(--cw-muted); border:1px dashed var(--cw-line); border-radius:12px; font-size:13px; }
+.checklist-workbench.checklist-command-page .eci-card.eci-card--futuristic { background:var(--cw-surface); border:1px solid var(--cw-line); border-radius:12px; box-shadow:none; margin:0; transform:none; overflow:hidden; }
+.checklist-workbench.checklist-command-page .eci-card::before,.checklist-workbench.checklist-command-page .eci-card::after { display:none; }
+.checklist-workbench.checklist-command-page .eci-header { padding:18px; gap:16px; background:none; border:0; box-shadow:none; min-width:0; align-items:center; }
+.checklist-workbench.checklist-command-page .eci-main-info { gap:12px; min-width:0; flex:1; }.checklist-workbench.checklist-command-page .eci-content { min-width:0; }
+.checklist-workbench.checklist-command-page .eci-status-indicator { width:32px; height:32px; min-width:32px; border-radius:9px; background:var(--cw-soft); border:1px solid var(--cw-line); box-shadow:none; font-size:14px; }
+.checklist-workbench.checklist-command-page .eci-title { display:flex; flex-wrap:wrap; gap:7px 14px; align-items:center; font-size:14px; line-height:1.5; margin:0; overflow-wrap:anywhere; }
+.checklist-workbench.checklist-command-page .eci-completion-overlay { position:static; padding:0; background:none; border:0; box-shadow:none; }
+.checklist-workbench.checklist-command-page .eci-completion-info { font-size:10px; color:var(--cw-accent); gap:5px; }
+.checklist-workbench.checklist-command-page .eci-completion-time { color:var(--cw-muted); font-size:10px; }
+.checklist-workbench.checklist-command-page .eci-description { color:var(--cw-muted); font-size:12px; line-height:1.5; margin:4px 0 8px; }
+.checklist-workbench.checklist-command-page .eci-metadata { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 0; }
+.checklist-workbench.checklist-command-page :is(.eci-type-badge,.eci-severity-indicator) { display:inline-flex; align-items:center; gap:5px; padding:3px 6px; border:1px solid var(--cw-line); border-radius:5px; font-size:9px; line-height:1.3; background:var(--cw-soft); color:var(--cw-muted); font-weight:500; }
+.checklist-workbench.checklist-command-page .eci-controls { gap:12px; flex-shrink:0; }.checklist-workbench.checklist-command-page .eci-progress-ring { display:none; }.checklist-workbench.checklist-command-page .eci-progress-stat { font-size:12px; color:var(--cw-accent); }.checklist-workbench.checklist-command-page .eci-progress-label { font-size:9px; color:var(--cw-muted); }
+.checklist-workbench.checklist-command-page .eci-expand-btn { width:30px; height:30px; border-radius:7px; background:var(--cw-soft); color:var(--cw-muted); border:1px solid var(--cw-line); box-shadow:none; }
+.checklist-workbench.checklist-command-page .checklist-side-rail { display:flex; flex-direction:column; gap:14px; position:static; width:auto; min-width:0; }
+.checklist-workbench.checklist-command-page .workbench-shift-note { display:flex; align-items:center; gap:12px; padding:14px 16px; background:var(--cw-soft); border:1px solid var(--cw-line); border-radius:10px; font-size:12px; color:var(--cw-accent); }
+.checklist-workbench.checklist-command-page .workbench-shift-note div { display:grid; gap:4px; }.checklist-workbench.checklist-command-page .workbench-shift-note strong { color:var(--cw-ink); font-size:12px; }.checklist-workbench.checklist-command-page .workbench-shift-note span { color:var(--cw-muted); font-size:11px; }
+.checklist-workbench.checklist-command-page .sidebar-section { background:var(--cw-surface); border:1px solid var(--cw-line); border-radius:12px; padding:16px; box-shadow:none; margin:0; }
+.checklist-workbench.checklist-command-page .section-header { margin:0 0 12px; gap:8px; color:var(--cw-muted); }.checklist-workbench.checklist-command-page .section-header h3 { font-size:12px; margin:0; }
+.checklist-workbench.checklist-command-page .handover-notes .btn-action { background:var(--cw-tint); border:1px solid var(--cw-line); color:var(--cw-accent); border-radius:8px; font-size:12px; padding:9px; min-height:36px; }
+.checklist-workbench.checklist-command-page :is(.handover-note,.participant-card,.eci-activity-panel,.subitem-content) { background:var(--cw-soft); border:1px solid var(--cw-line); border-radius:9px; box-shadow:none; color:var(--cw-ink); }
+.checklist-workbench.checklist-command-page :is(.no-notes,.no-participants,.note-content,.note-meta,.note-author,.note-timestamp) { color:var(--cw-muted); font-size:12px; }
+.checklist-workbench.checklist-command-page .participant-card { padding:10px; }.checklist-workbench.checklist-command-page .participant-card-glow { display:none; }.checklist-workbench.checklist-command-page .participants-grid { display:flex; flex-direction:column; }.checklist-workbench.checklist-command-page .participant-name { font-size:12px; }.checklist-workbench.checklist-command-page .participants-summary { margin-bottom:10px; }
+.checklist-workbench.checklist-command-page .eci-subitems-section { padding:12px 18px; background:var(--cw-soft); border-top:1px solid var(--cw-line); }
+.checklist-workbench.checklist-command-page .subitem-timeline { padding:0; background:none; border:0; box-shadow:none; }.checklist-workbench.checklist-command-page .subitem-timeline .timeline-header { background:none; padding:8px 0; }.checklist-workbench.checklist-command-page .subitem-timeline h4 { font-size:13px; }.checklist-workbench.checklist-command-page .subitem-timeline .subitem-content { padding:12px; }.checklist-workbench.checklist-command-page .subitem-timeline .subitem-header { flex-wrap:wrap; gap:8px; }
+/* Modal surfaces share the workspace palette, including nested reason dialogs. */
+.checklist-workbench.checklist-command-page :is(.smart-subitem-modal-backdrop,.reason-modal-backdrop,.enhanced-item-actions-modal-overlay,.handover-note-modal-backdrop) { background:rgba(4,12,22,.64); backdrop-filter:blur(5px); padding:20px; }
+.checklist-workbench.checklist-command-page :is(.smart-subitem-modal,.reason-modal,.enhanced-item-actions-modal,.handover-note-modal) { background:var(--cw-surface); color:var(--cw-ink); border:1px solid var(--cw-line); border-radius:16px; box-shadow:0 24px 80px #0004; max-height:calc(100dvh - 40px); overflow:auto; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal { width:min(980px,100%); display:flex; flex-direction:column; }
+.checklist-workbench.checklist-command-page :is(.smart-subitem-modal,.reason-modal,.enhanced-item-actions-modal,.handover-note-modal)::before,.checklist-workbench.checklist-command-page :is(.smart-subitem-modal,.reason-modal,.enhanced-item-actions-modal,.handover-note-modal)::after { display:none; }
+.checklist-workbench.checklist-command-page :is(.modal-header,.reason-modal-header,.enhanced-modal-header) { padding:20px 24px; background:var(--cw-surface); border-bottom:1px solid var(--cw-line); border-radius:0; gap:16px; box-shadow:none; }
+.checklist-workbench.checklist-command-page :is(.modal-header,.reason-modal-header,.enhanced-modal-header)::after { display:none; }
+.checklist-workbench.checklist-command-page :is(.modal-title,.modal-header h2,.reason-modal-header h3,.enhanced-modal-header h3) { font-size:20px; line-height:1.35; margin:0; overflow-wrap:anywhere; }
+.checklist-workbench.checklist-command-page .modal-kicker { font-size:10px; color:var(--cw-accent); letter-spacing:.1em; }.checklist-workbench.checklist-command-page .header-content { min-width:0; gap:14px; }.checklist-workbench.checklist-command-page .modal-heading-copy { min-width:0; }
+.checklist-workbench.checklist-command-page :is(.close-btn,.modal-close,.reason-modal-close,.enhanced-modal-close) { flex-shrink:0; width:34px; height:34px; min-width:34px; min-height:34px; border:1px solid var(--cw-line); background:var(--cw-soft); color:var(--cw-muted); border-radius:8px; padding:7px; font-size:14px; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .modal-content { background:var(--cw-soft); padding:24px; overflow-y:auto; min-height:0; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .sequential-view { padding:0; margin:0; background:none; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .subitem-workspace { display:flex; flex-direction:column; gap:16px; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .subitem-route-rail { display:flex; flex-direction:row; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .route-panel { display:flex; align-items:center; gap:10px; padding:0; background:none; border:0; box-shadow:none; min-height:0; }.checklist-workbench.checklist-command-page .route-panel::after { display:none; }
+.checklist-workbench.checklist-command-page .route-panel .route-kicker { color:var(--cw-muted); font-size:11px; }.checklist-workbench.checklist-command-page .route-panel strong { font-size:14px; color:var(--cw-ink); }.checklist-workbench.checklist-command-page .route-panel :is(.route-meter,.step-dots) { display:none; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .route-nav { display:flex; gap:7px; background:none; padding:0; border:0; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .nav-btn { display:inline-flex; justify-content:center; align-items:center; gap:7px; padding:8px 12px; min-height:36px; background:var(--cw-surface); border:1px solid var(--cw-line); border-radius:8px; color:var(--cw-muted); font-size:12px; box-shadow:none; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .current-subitem { background:var(--cw-surface); border:1px solid var(--cw-line); border-radius:12px; padding:24px; box-shadow:none; min-width:0; overflow:visible; }.checklist-workbench.checklist-command-page .current-subitem::before,.checklist-workbench.checklist-command-page .current-subitem::after { display:none; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .subitem-header { display:flex; flex-direction:column; gap:12px; margin:16px 0; padding:0; border:0; }.checklist-workbench.checklist-command-page .smart-subitem-modal .subitem-header h3 { font-size:23px; line-height:1.45; margin:0; overflow-wrap:anywhere; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .subitem-meta { display:flex; flex-wrap:wrap; gap:6px; position:static; }
+.checklist-workbench.checklist-command-page :is(.type-badge,.required-badge,.severity-indicator,.subitem-step-chip,.subitem-status-pill,.completion-badge) { position:static; transform:none; background:var(--cw-soft); color:var(--cw-muted); border:1px solid var(--cw-line); border-radius:6px; font-size:10px; padding:4px 8px; min-height:0; min-width:0; line-height:1.4; box-shadow:none; }
+.checklist-workbench.checklist-command-page .subitem-status-pill--completed { color:var(--cw-accent); background:var(--cw-tint); }.checklist-workbench.checklist-command-page .subitem-status-pill--failed { color:var(--cw-danger); }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .subitem-brief { padding:0; background:none; border:0; margin:12px 0 22px; }.checklist-workbench.checklist-command-page .subitem-brief p { font-size:14px; color:var(--cw-muted); line-height:1.7; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .subitem-action-panel { padding:18px 0 0; border:0; border-top:1px solid var(--cw-line); border-radius:0; background:none; box-shadow:none; }.checklist-workbench.checklist-command-page .action-panel-copy { margin-bottom:14px; }.checklist-workbench.checklist-command-page .action-panel-copy > span { display:none; }.checklist-workbench.checklist-command-page .action-panel-copy strong { font-size:12px; color:var(--cw-muted); }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .subitem-actions { display:flex; flex-wrap:wrap; gap:9px; margin:0; padding:0; background:none; border:0; }
+.checklist-workbench.checklist-command-page :is(.sub-action-btn,.complete-item-btn,.reason-btn,.item-actions .btn-action,.btn-secondary) { padding:10px 16px; border-radius:8px; font-size:12px; min-height:40px; box-shadow:none; transform:none; border:1px solid var(--cw-line); background:var(--cw-soft); color:var(--cw-ink); }
+.checklist-workbench.checklist-command-page :is(.sub-action-btn.complete,.sub-action-btn.start,.complete-item-btn,.reason-btn.confirm,.item-actions .btn-action.confirm) { background:var(--cw-accent); color:var(--cw-bg); border-color:var(--cw-accent); }
+.checklist-workbench.checklist-command-page .sub-action-btn.fail { color:var(--cw-danger); background:var(--cw-surface); }.checklist-workbench.checklist-command-page .sub-action-btn.skip { color:var(--cw-muted); background:var(--cw-surface); }
+.checklist-workbench.checklist-command-page :is(.status-display,.completion-time,.reason-display) { font-size:12px; }.checklist-workbench.checklist-command-page .status-display { padding:12px; border:1px solid var(--cw-line); background:var(--cw-soft); color:var(--cw-ink); border-radius:8px; width:100%; }
+.checklist-workbench.checklist-command-page :is(.modal-footer,.reason-modal-actions) { padding:14px 24px; background:var(--cw-surface); border-top:1px solid var(--cw-line); }.checklist-workbench.checklist-command-page .footer-info { color:var(--cw-muted); font-size:11px; }
+.checklist-workbench.checklist-command-page :is(.reason-modal,.enhanced-item-actions-modal,.handover-note-modal) { width:min(580px,100%); }.checklist-workbench.checklist-command-page :is(.reason-modal-content,.modal-body,.item-actions) { padding:20px 24px; color:var(--cw-ink); background:var(--cw-surface); }.checklist-workbench.checklist-command-page .reason-modal-content p { color:var(--cw-muted); font-size:13px; }
+.checklist-workbench.checklist-command-page :is(textarea,.reason-textarea,.complete-item-textarea) { background:var(--cw-soft); color:var(--cw-ink); border:1px solid var(--cw-line); border-radius:8px; padding:12px; font-size:13px; line-height:1.6; width:100%; min-width:0; box-sizing:border-box; }
+.checklist-workbench.checklist-command-page :is(.action-form,.complete-item-notes) label { color:var(--cw-muted); font-size:12px; }.checklist-workbench.checklist-command-page .action-buttons { gap:6px; flex-wrap:wrap; }.checklist-workbench.checklist-command-page .action-tips { color:var(--cw-muted); font-size:11px; }
+.checklist-workbench.checklist-command-page .priority-options { gap:8px; }.checklist-workbench.checklist-command-page .priority-option { background:var(--cw-soft); border:1px solid var(--cw-line); padding:12px; border-radius:9px; color:var(--cw-ink); }.checklist-workbench.checklist-command-page .priority-option.active { background:var(--cw-tint); border-color:var(--cw-accent); }.checklist-workbench.checklist-command-page .section-label { color:var(--cw-muted); font-size:12px; }
+.checklist-workbench.checklist-command-page .subitem-preview-card { background:var(--cw-surface); border:1px solid var(--cw-line); border-radius:12px; box-shadow:none; }.checklist-workbench.checklist-command-page .subitem-preview-card h3 { font-size:20px; }.checklist-workbench.checklist-command-page .subitem-preview-description { color:var(--cw-muted); }.checklist-workbench.checklist-command-page .subitem-preview-evidence { background:var(--cw-soft); color:var(--cw-ink); border-color:var(--cw-line); }
+@media(max-width:1100px) { .checklist-workbench.checklist-command-page .checklist-workspace { grid-template-columns:minmax(0,1fr); }.checklist-workbench.checklist-command-page .checklist-side-rail { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }.checklist-workbench.checklist-command-page .workbench-shift-note { grid-column:1/-1; } }
+@media(max-width:650px) { .checklist-workbench.checklist-command-page .checklist-command-strip { grid-template-columns:1fr; gap:20px; }.checklist-workbench.checklist-command-page .checklist-side-rail { display:flex; }.checklist-workbench.checklist-command-page .eci-header { flex-wrap:wrap; padding:14px; }.checklist-workbench.checklist-command-page .eci-controls { margin-left:44px; }.checklist-workbench.checklist-command-page .eci-title { font-size:14px; }.checklist-workbench.checklist-command-page .eci-completion-info { flex-wrap:wrap; }.checklist-workbench.checklist-command-page :is(.smart-subitem-modal-backdrop,.reason-modal-backdrop,.enhanced-item-actions-modal-overlay,.handover-note-modal-backdrop) { padding:8px; }.checklist-workbench.checklist-command-page :is(.smart-subitem-modal,.reason-modal,.enhanced-item-actions-modal,.handover-note-modal) { max-height:calc(100dvh - 16px); }.checklist-workbench.checklist-command-page .smart-subitem-modal .modal-content { padding:14px; }.checklist-workbench.checklist-command-page .smart-subitem-modal .current-subitem { padding:16px; }.checklist-workbench.checklist-command-page .smart-subitem-modal .subitem-header h3 { font-size:19px; }.checklist-workbench.checklist-command-page :is(.modal-header,.reason-modal-header,.enhanced-modal-header) { padding:16px; }.checklist-workbench.checklist-command-page .modal-title { font-size:17px; }.checklist-workbench.checklist-command-page .smart-subitem-modal .nav-btn { padding:8px; font-size:11px; }.checklist-workbench.checklist-command-page .smart-subitem-modal .sub-action-btn { flex:1 1 120px; }.checklist-workbench.checklist-command-page .workbench-search { width:100%; }.checklist-workbench.checklist-command-page .workbench-search input { flex:1; width:auto; } }
+@media(prefers-reduced-motion:reduce) { .checklist-workbench.checklist-command-page *, .checklist-workbench.checklist-command-page *::before, .checklist-workbench.checklist-command-page *::after { animation:none!important; transition:none!important; } }
+.checklist-workbench.checklist-command-page .sidebar-section .section-header { display:flex; flex-wrap:wrap; align-items:center; }
+.checklist-workbench.checklist-command-page .sidebar-section .section-header h3 { flex:1 0 auto; font-size:12px; text-transform:none; letter-spacing:0; padding:0; border:0; }
+.checklist-workbench.checklist-command-page .sidebar-section .section-header h3::after,.checklist-workbench.checklist-command-page .sidebar-section .section-header h3::before { display:none; }
+.checklist-workbench.checklist-command-page .sidebar-preview-stats { order:3; flex-basis:100%; justify-content:flex-start; margin:4px 0 0; }
+.checklist-workbench.checklist-command-page .sidebar-preview-pill { padding:4px 7px; background:var(--cw-soft); font-size:10px; border:1px solid var(--cw-line); }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .severity-indicator { position:static; width:auto; height:auto; max-width:100%; border-radius:6px; white-space:normal; display:inline-flex; }
+.checklist-workbench.checklist-command-page .subitem-preview-arrow { background:var(--cw-surface); color:var(--cw-accent); border:1px solid var(--cw-line); box-shadow:none; }
+.checklist-workbench.checklist-command-page .workbench-empty { padding:28px; color:var(--cw-muted); border:1px dashed var(--cw-line); border-radius:12px; font-size:13px; }
+.checklist-workbench.checklist-command-page .checklist-skel-signal-grid { grid-template-columns:1fr; }
+.checklist-workbench.checklist-command-page .checklist-skel-signal-card:not(:first-child),.checklist-workbench.checklist-command-page .checklist-skel-board-head,.checklist-workbench.checklist-command-page .stats-card.checklist-skel-panel { display:none; }
+.checklist-workbench.checklist-command-page :is(.checklist-skel-item-card,.checklist-skel-signal-card) { background:var(--cw-surface); border:1px solid var(--cw-line); border-radius:12px; padding:18px; box-shadow:none; }
+.checklist-workbench.checklist-command-page :is(.checklist-skel-line,.checklist-skel-block,.checklist-skel-row) { background:var(--cw-line); max-width:100%; }
+.checklist-workbench.checklist-command-page .no-subitems { background:var(--cw-surface); color:var(--cw-ink); padding:20px; border:1px solid var(--cw-line); border-radius:12px; }
+.checklist-workbench.checklist-command-page .no-subitems p { color:var(--cw-muted); font-size:13px; }
+.checklist-workbench.checklist-command-page .complete-item-notes { background:none; padding:0; border:0; margin:16px 0; }
+.checklist-workbench.checklist-command-page .complete-item-notes label { display:block; margin-bottom:8px; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .current-subitem { display:block; min-height:0; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .current-subitem .subitem-header { margin:16px 0 12px; padding:0; gap:10px; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .current-subitem .subitem-brief { margin:12px 0 20px; padding:0; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .current-subitem .subitem-brief p { margin:0; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .current-subitem .subitem-action-panel { margin:0; padding:16px 0 0; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .header-content { display:flex; flex-direction:row; align-items:center; flex:1; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .header-stats { margin:0; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .subitem-status-row { display:flex; flex-direction:row; justify-content:space-between; gap:8px; }
+.checklist-workbench.checklist-command-page .smart-subitem-modal .subitem-actions { flex-direction:row; align-items:center; }
+@media(max-width:650px) { .checklist-workbench.checklist-command-page .smart-subitem-modal .subitem-actions { display:grid; grid-template-columns:1fr 1fr; }.checklist-workbench.checklist-command-page .smart-subitem-modal .sub-action-btn { width:100%; min-height:40px; margin:0; }.checklist-workbench.checklist-command-page .smart-subitem-modal .sub-action-btn.complete,.checklist-workbench.checklist-command-page .smart-subitem-modal .sub-action-btn.start,.checklist-workbench.checklist-command-page .smart-subitem-modal .status-display { grid-column:1/-1; } }
+
+
+/* Shift continuity: readable handovers and a compact, factual team roster. */
+.checklist-workbench.checklist-command-page .handover-stream { min-width:0; }
+.checklist-workbench.checklist-command-page .handover-stream button { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:34px; padding:8px 11px; color:var(--cw-accent); background:var(--cw-tint); border:1px solid var(--cw-line); border-radius:8px; font-size:11px; font-weight:600; }
+.checklist-workbench.checklist-command-page .handover-stream-tools { display:flex; gap:8px; }
+.checklist-workbench.checklist-command-page .handover-stream-tools > button:first-child { flex:1; }
+.checklist-workbench.checklist-command-page .handover-stream-summary { margin:10px 0 14px; color:var(--cw-muted); font-size:11px; line-height:1.5; }
+.checklist-workbench.checklist-command-page .handover-stream-filters { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px; }
+.checklist-workbench.checklist-command-page .handover-stream-filters button { flex:1 1 auto; font-size:10px; padding:7px; color:var(--cw-muted); background:none; }
+.checklist-workbench.checklist-command-page .handover-stream-filters button[aria-pressed='true'] { color:var(--cw-accent); background:var(--cw-tint); border-color:var(--cw-accent); }
+.checklist-workbench.checklist-command-page .handover-stream-filters button span { font-variant-numeric:tabular-nums; opacity:.8; }
+.checklist-workbench.checklist-command-page :is(.handover-stream-empty,.team-roster-empty) { display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding:18px; border:1px dashed var(--cw-line); border-radius:9px; background:var(--cw-soft); color:var(--cw-muted); }
+.checklist-workbench.checklist-command-page :is(.handover-stream-empty,.team-roster-empty) > svg { color:var(--cw-accent); font-size:16px; }
+.checklist-workbench.checklist-command-page :is(.handover-stream-empty,.team-roster-empty) strong { color:var(--cw-ink); font-size:12px; }
+.checklist-workbench.checklist-command-page :is(.handover-stream-empty,.team-roster-empty) p { font-size:11px; line-height:1.65; margin:0; }
+.checklist-workbench.checklist-command-page .handover-stream-list { display:grid; gap:12px; }
+.checklist-workbench.checklist-command-page .handover-stream-card { min-width:0; padding:14px; border:1px solid var(--cw-line); border-radius:10px; background:var(--cw-soft); }
+.checklist-workbench.checklist-command-page .handover-stream-card > header { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; color:var(--cw-muted); font-size:10px; }
+.checklist-workbench.checklist-command-page .handover-priority { display:inline-flex; align-items:center; gap:5px; border:1px solid currentColor; border-radius:5px; padding:3px 6px; color:var(--cw-accent); font-weight:600; }
+.checklist-workbench.checklist-command-page .handover-priority.level-2 { color:#95610b; }
+.checklist-workbench.checklist-command-page .handover-priority.level-3 { color:var(--cw-danger); }
+.checklist-workbench.checklist-command-page .handover-priority.level-4 { color:#8054b8; }
+[data-theme='dark'] .checklist-workbench.checklist-command-page .handover-priority.level-2 { color:#efc575; }
+[data-theme='dark'] .checklist-workbench.checklist-command-page .handover-priority.level-4 { color:#c8a5f2; }
+.checklist-workbench.checklist-command-page .handover-route { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:12px 0 8px; color:var(--cw-muted); font-size:9px; letter-spacing:.035em; }
+.checklist-workbench.checklist-command-page .handover-message { margin:0 0 14px; color:var(--cw-ink); font-size:12px; line-height:1.75; white-space:pre-wrap; overflow-wrap:anywhere; }
+.checklist-workbench.checklist-command-page .handover-authorship { display:flex; flex-wrap:wrap; gap:6px 12px; font-size:10px; color:var(--cw-muted); }
+.checklist-workbench.checklist-command-page .handover-authorship strong { color:var(--cw-ink); font-size:10px; font-weight:600; }
+.checklist-workbench.checklist-command-page .handover-authorship time { display:inline-flex; align-items:center; gap:5px; }
+.checklist-workbench.checklist-command-page .handover-stream-card footer:not(:empty) { border-top:1px solid var(--cw-line); margin-top:12px; padding-top:12px; display:grid; gap:10px; }
+.checklist-workbench.checklist-command-page .handover-receipt { display:flex; align-items:flex-start; gap:7px; font-size:10px; color:var(--cw-accent); line-height:1.6; }
+.checklist-workbench.checklist-command-page .handover-receipt > svg { flex-shrink:0; margin-top:3px; }
+.checklist-workbench.checklist-command-page .handover-receipt time { display:block; color:var(--cw-muted); }
+.checklist-workbench.checklist-command-page .handover-receipt p { margin:6px 0 0; color:var(--cw-ink); white-space:pre-wrap; overflow-wrap:anywhere; }
+.checklist-workbench.checklist-command-page .handover-stream-error { padding:10px; border:1px solid var(--cw-danger); border-radius:7px; font-size:11px; line-height:1.6; color:var(--cw-danger); }
+.checklist-workbench.checklist-command-page .handover-stream-loading { color:var(--cw-muted); font-size:11px; padding:10px 0; }
+.checklist-workbench.checklist-command-page .team-roster { padding:0; background:none; }
+.checklist-workbench.checklist-command-page .team-roster-summary { display:flex; justify-content:space-between; gap:12px; margin-bottom:14px; font-size:11px; color:var(--cw-muted); }
+.checklist-workbench.checklist-command-page .team-roster-summary span:last-child { display:flex; align-items:center; gap:6px; color:var(--cw-accent); }
+.checklist-workbench.checklist-command-page .team-roster-summary i { width:6px; height:6px; border-radius:50%; background:currentColor; }
+.checklist-workbench.checklist-command-page .team-roster-list { list-style:none; padding:0; margin:0; display:grid; gap:0; }
+.checklist-workbench.checklist-command-page .team-roster-person { display:flex; gap:11px; align-items:center; padding:13px 0; min-width:0; border-top:1px solid var(--cw-line); }
+.checklist-workbench.checklist-command-page .team-roster-avatar { display:grid; place-items:center; position:relative; width:36px; height:36px; flex-shrink:0; color:var(--cw-accent); background:var(--cw-tint); border:1px solid var(--cw-line); border-radius:11px; font-size:11px; font-weight:700; }
+.checklist-workbench.checklist-command-page .team-roster-avatar i { position:absolute; right:-2px; bottom:-2px; width:9px; height:9px; border:2px solid var(--cw-surface); border-radius:50%; background:var(--cw-muted); }
+.checklist-workbench.checklist-command-page .team-roster-person.online .team-roster-avatar i { background:var(--cw-accent); }
+.checklist-workbench.checklist-command-page .team-roster-identity { display:grid; gap:4px; min-width:0; }
+.checklist-workbench.checklist-command-page .team-roster-identity > div { display:flex; flex-wrap:wrap; align-items:center; gap:7px; }
+.checklist-workbench.checklist-command-page .team-roster-identity strong { font-size:12px; color:var(--cw-ink); overflow-wrap:anywhere; }
+.checklist-workbench.checklist-command-page .team-roster-identity > span { font-size:10px; color:var(--cw-muted); }
+.checklist-workbench.checklist-command-page .team-roster-self { font-size:9px; color:var(--cw-accent); padding:2px 5px; border-radius:4px; background:var(--cw-tint); }
+.checklist-workbench.checklist-command-page .team-roster-email { overflow-wrap:anywhere; }
+.checklist-workbench.checklist-command-page .handover-note-modal .handover-compose-intro { font-size:13px; color:var(--cw-muted); margin:0 0 20px; }
+.checklist-workbench.checklist-command-page .handover-note-modal .section-label { display:block; font-size:11px; color:var(--cw-ink); letter-spacing:.02em; margin-bottom:10px; }
+.checklist-workbench.checklist-command-page .handover-note-modal .priority-options { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+.checklist-workbench.checklist-command-page .handover-note-modal .priority-option { min-width:0; display:flex; flex-direction:row; align-items:center; justify-content:center; gap:7px; padding:12px 8px; min-height:44px; border:1px solid var(--cw-line); border-radius:8px; background:var(--cw-soft); color:var(--cw-muted); transform:none; }
+.checklist-workbench.checklist-command-page .handover-note-modal .priority-option.active { background:var(--cw-tint); border-color:var(--cw-accent); color:var(--cw-ink); box-shadow:none; }
+.checklist-workbench.checklist-command-page .handover-note-modal :is(.priority-value,.priority-indicator) { display:none; }
+.checklist-workbench.checklist-command-page .handover-note-modal .priority-icon { font-size:12px; margin:0; width:auto; height:auto; background:none; }
+.checklist-workbench.checklist-command-page .handover-note-modal .priority-icon svg { color:currentColor !important; }
+.checklist-workbench.checklist-command-page .handover-note-modal .priority-label { font-size:11px; color:inherit; }
+.checklist-workbench.checklist-command-page .handover-note-modal .handover-textarea { width:100%; min-height:160px; border:1px solid var(--cw-line); border-radius:9px; padding:14px; font-size:13px; line-height:1.7; background:var(--cw-soft); color:var(--cw-ink); resize:vertical; }
+.checklist-workbench.checklist-command-page .handover-note-modal .textarea-footer { padding:8px 0; background:none; border:0; }
+.checklist-workbench.checklist-command-page .handover-note-modal .char-count { color:var(--cw-muted); font-size:10px; }
+.checklist-workbench.checklist-command-page .handover-note-modal .help-text { display:flex; gap:10px; border:1px solid var(--cw-line); border-radius:8px; padding:12px; background:var(--cw-soft); color:var(--cw-muted); font-size:11px; line-height:1.7; }
+.checklist-workbench.checklist-command-page .handover-note-modal .help-text svg { color:var(--cw-accent); flex-shrink:0; margin-top:3px; }
+.checklist-workbench.checklist-command-page .handover-note-modal .modal-footer { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:10px; padding:16px 24px; background:var(--cw-surface); border-top:1px solid var(--cw-line); }
+.checklist-workbench.checklist-command-page .handover-note-modal .modal-footer button { padding:10px 14px; min-height:40px; font-size:12px; border-radius:8px; }
+.checklist-workbench.checklist-command-page .handover-note-modal .btn-cancel { background:var(--cw-soft); color:var(--cw-ink); border:1px solid var(--cw-line); }
+.checklist-workbench.checklist-command-page .handover-note-modal .btn-primary { background:var(--cw-tint); color:var(--cw-accent); border:1px solid var(--cw-accent); }
+@media(max-width:480px) { .checklist-workbench.checklist-command-page .handover-note-modal .priority-options { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.checklist-workbench.checklist-command-page .handover-stream { display:block; padding:0; gap:0; }
+.checklist-workbench.checklist-command-page .sidebar-section > .section-header { display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:space-between; text-align:left; }
+.checklist-workbench.checklist-command-page .sidebar-section > .section-header h3 { flex:1; text-align:left; }
+.checklist-workbench.checklist-command-page .sidebar-preview-stats { order:3; flex-basis:100%; justify-content:flex-start; }
+.checklist-workbench.checklist-command-page .handover-note-modal .handover-textarea::placeholder { color:var(--cw-muted); opacity:1; }
+/* Floating page utilities must stay behind an active execution dialog. */
+body:has(.checklist-workbench [role='dialog'][aria-modal='true']) :is(.page-guide-trigger,.scroll-nav-btn) { visibility:hidden; pointer-events:none; }

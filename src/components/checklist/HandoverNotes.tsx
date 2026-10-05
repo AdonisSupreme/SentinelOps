@@ -1,210 +1,66 @@
-// src/components/checklist/HandoverNotes.tsx
-import React, { useState, useEffect } from 'react';
-import { useChecklist } from '../../contexts/checklistContext';
-import { FaPlus, FaCheck, FaTimes, FaFlag, FaClock, FaUser, FaArrowRight } from 'react-icons/fa';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { FaPlus, FaCheck, FaFlag, FaClock, FaArrowRight, FaSyncAlt } from 'react-icons/fa';
 import api from '../../services/api';
 
 interface HandoverNote {
-  id: string;
-  from_instance_id: string;
-  to_instance_id: string;
-  content: string;
-  priority: number;
-  acknowledged_by?: string;
-  acknowledged_at?: string;
-  resolved_by?: string;
-  resolved_at?: string;
-  resolution_notes?: string;
-  created_by: string;
-  created_at: string;
-  from_shift?: string;
-  from_date?: string;
-  to_shift?: string;
-  to_date?: string;
-  created_by_username?: string;
-  created_by_first_name?: string;
-  created_by_last_name?: string;
-  acknowledged_by_username?: string;
-  resolved_by_username?: string;
+  id: string; content: string; priority: number; created_at: string;
+  from_shift?: string; to_shift?: string;
+  created_by_username?: string; created_by_first_name?: string; created_by_last_name?: string;
+  acknowledged_at?: string; acknowledged_by_username?: string;
+  resolved_at?: string; resolved_by_username?: string; resolution_notes?: string;
   direction: 'incoming' | 'outgoing';
 }
+interface Props { instanceId: string; onShowModal: () => void; refreshKey?: number; }
+const priorityLabel = ['Unknown', 'Low', 'Medium', 'High', 'Critical'];
+const displayDate = (value: string) => new Date(value).toLocaleString([], { day:'numeric',month:'short',hour:'2-digit',minute:'2-digit' });
 
-interface HandoverNotesProps {
-  instanceId: string;
-  onShowModal: () => void;
-}
-
-const HandoverNotes: React.FC<HandoverNotesProps> = ({ instanceId, onShowModal }) => {
-  const { loading } = useChecklist();
-  const [handoverNotes, setHandoverNotes] = useState<HandoverNote[]>([]);
-  const [notesLoading, setNotesLoading] = useState(false);
-
-  // Load handover notes for this instance
-  const loadHandoverNotes = async () => {
-    setNotesLoading(true);
+export default function HandoverNotes({ instanceId, onShowModal, refreshKey = 0 }: Props) {
+  const [notes, setNotes] = useState<HandoverNote[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [pending, setPending] = useState<string | null>(null);
+  const [direction, setDirection] = useState<'all' | 'incoming' | 'outgoing'>('all');
+  const request = useRef(0);
+  const load = useCallback(async () => {
+    const revision = ++request.current;
+    setLoading(true); setError('');
     try {
       const response = await api.get(`/api/v1/checklists/instances/${instanceId}/handover-notes`);
-      setHandoverNotes(response.data.handover_notes || []);
-    } catch (error) {
-      console.error('Failed to load handover notes:', error);
+      if (revision === request.current) setNotes(response.data.handover_notes || []);
+    } catch {
+      if (revision === request.current) setError('Handover notes could not be loaded. Try refreshing.');
     } finally {
-      setNotesLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (instanceId) {
-      loadHandoverNotes();
+      if (revision === request.current) setLoading(false);
     }
   }, [instanceId]);
-
-  const handleAcknowledge = async (noteId: string) => {
-    try {
-      await api.post(`/api/v1/checklists/handover-notes/${noteId}/acknowledge`);
-      loadHandoverNotes(); // Reload notes
-    } catch (error) {
-      console.error('Failed to acknowledge note:', error);
-    }
+  useEffect(() => { setNotes([]); setDirection('all'); void load(); return () => { request.current++; }; }, [load, refreshKey]);
+  const acknowledge = async (id: string) => {
+    setPending(id); setError('');
+    try { await api.post(`/api/v1/checklists/handover-notes/${id}/acknowledge`); await load(); }
+    catch { setError('The note was not acknowledged. Please try again.'); }
+    finally { setPending(null); }
   };
-
-  const handleResolve = async (noteId: string, resolutionNotes?: string) => {
-    try {
-      await api.post(`/api/v1/checklists/handover-notes/${noteId}/resolve`, {
-        resolutionNotes
-      });
-      loadHandoverNotes(); // Reload notes
-    } catch (error) {
-      console.error('Failed to resolve note:', error);
-    }
-  };
-
-  const getPriorityColor = (priority: number) => {
-    switch (priority) {
-      case 1: return '#4caf50'; // Low - Green
-      case 2: return '#ff9800'; // Medium - Orange
-      case 3: return '#f44336'; // High - Red
-      case 4: return '#9c27b0'; // Critical - Purple
-      default: return '#757575'; // Grey
-    }
-  };
-
-  const getPriorityLabel = (priority: number) => {
-    switch (priority) {
-      case 1: return 'Low';
-      case 2: return 'Medium';
-      case 3: return 'High';
-      case 4: return 'Critical';
-      default: return 'Unknown';
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
-
-  const getCreatorName = (note: HandoverNote) => {
-    if (note.created_by_first_name && note.created_by_last_name) {
-      return `${note.created_by_first_name} ${note.created_by_last_name}`;
-    }
-    return note.created_by_username || 'Unknown';
-  };
-
-  return (
-    <div className="handover-notes">
-      {/* Add Handover Note Button */}
-      <button 
-        className="btn-action"
-        onClick={onShowModal}
-      >
-        <FaPlus /> Add Handover Note
-      </button>
-
-      {/* Display Existing Handover Notes */}
-      <div className="existing-notes">
-        {notesLoading ? (
-          <div className="loading-notes">Loading handover notes...</div>
-        ) : handoverNotes.length === 0 ? (
-          <div className="no-notes">No handover notes for this shift</div>
-        ) : (
-          <div className="notes-list">
-            {handoverNotes.map((note) => (
-              <div 
-                key={note.id} 
-                className={`handover-note ${note.direction} ${note.acknowledged_at ? 'acknowledged' : ''} ${note.resolved_at ? 'resolved' : ''}`}
-              >
-                <div className="note-header">
-                  <div className="note-meta">
-                    <FaFlag style={{ color: getPriorityColor(note.priority) }} />
-                    <span className="priority">{getPriorityLabel(note.priority)}</span>
-                    <span className="direction">
-                      {note.direction === 'outgoing' ? (
-                        <>
-                          <span>{note.from_shift} → {note.to_shift}</span>
-                          <FaArrowRight />
-                        </>
-                      ) : (
-                        <>
-                          <FaArrowRight />
-                          <span>{note.from_shift} → {note.to_shift}</span>
-                        </>
-                      )}
-                    </span>
-                  </div>
-                  <div className="note-timestamp">
-                    <FaClock />
-                    {formatDate(note.created_at)}
-                  </div>
-                </div>
-                
-                <div className="note-content">
-                  <p>{note.content}</p>
-                </div>
-                
-                <div className="note-footer">
-                  <div className="note-author">
-                    <FaUser />
-                    <span>{getCreatorName(note)}</span>
-                  </div>
-                  
-                  {/* Action buttons for incoming notes */}
-                  {note.direction === 'incoming' && !note.acknowledged_at && (
-                    <div className="note-actions">
-                      <button 
-                        className="btn-acknowledge"
-                        onClick={() => handleAcknowledge(note.id)}
-                      >
-                        <FaCheck /> Acknowledge
-                      </button>
-                    </div>
-                  )}
-                  
-                  {/* Status indicators */}
-                  {note.acknowledged_at && (
-                    <div className="note-status acknowledged">
-                      <FaCheck /> Acknowledged by {note.acknowledged_by_username || 'Someone'}
-                      {formatDate(note.acknowledged_at)}
-                    </div>
-                  )}
-                  
-                  {note.resolved_at && (
-                    <div className="note-status resolved">
-                      <FaCheck /> Resolved by {note.resolved_by_username || 'Someone'}
-                      {formatDate(note.resolved_at)}
-                      {note.resolution_notes && (
-                        <div className="resolution-notes">
-                          {note.resolution_notes}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+  const visible = notes.filter(note => direction === 'all' || note.direction === direction);
+  const awaiting = notes.filter(note => note.direction === 'incoming' && !note.acknowledged_at).length;
+  return <div className="handover-notes handover-stream">
+    <div className="handover-stream-tools"><button type="button" onClick={onShowModal}><FaPlus/> Add note</button><button type="button" aria-label="Refresh handover notes" title="Refresh handover notes" disabled={loading || !!pending} onClick={() => void load()}><FaSyncAlt/></button></div>
+    <p className="handover-stream-summary">{awaiting ? `${awaiting} incoming ${awaiting === 1 ? 'note needs' : 'notes need'} acknowledgement` : 'Keep the next shift informed.'}</p>
+    {notes.length > 0 && <div className="handover-stream-filters" aria-label="Handover direction">{(['all','incoming','outgoing'] as const).map(value => <button type="button" key={value} aria-pressed={direction===value} onClick={() => setDirection(value)}>{value === 'all' ? 'All notes' : value === 'incoming' ? 'Incoming' : 'Outgoing'}<span>{value === 'all' ? notes.length : notes.filter(note => note.direction===value).length}</span></button>)}</div>}
+    {error && <p className="handover-stream-error" role="alert">{error}</p>}
+    {loading && <p className="handover-stream-loading" role="status">Refreshing handover notes…</p>}
+    {!loading && !error && !visible.length && <div className="handover-stream-empty"><FaFlag aria-hidden="true"/><strong>{notes.length ? `No ${direction} notes` : 'A clear handover starts here'}</strong><p>{notes.length ? 'Choose another direction to see the remaining notes.' : 'Add the context, owner, and next step that the following shift needs.'}</p></div>}
+    <div className="handover-stream-list" aria-busy={loading}>
+      {visible.map(note => <article className="handover-stream-card" key={note.id}>
+        <header><span className={`handover-priority level-${note.priority}`}><FaFlag/>{priorityLabel[note.priority] || 'Unknown'}</span><span>{note.direction === 'incoming' ? 'Incoming' : 'Outgoing'}</span></header>
+        <div className="handover-route"><span>{note.from_shift || 'Previous shift'}</span><FaArrowRight aria-hidden="true"/><span>{note.to_shift || 'Next shift'}</span></div>
+        <p className="handover-message">{note.content}</p>
+        <div className="handover-authorship"><strong>{[note.created_by_first_name,note.created_by_last_name].filter(Boolean).join(' ') || note.created_by_username || 'Unknown author'}</strong><time dateTime={note.created_at} title={new Date(note.created_at).toLocaleString()}><FaClock/>{displayDate(note.created_at)}</time></div>
+        <footer>
+          {note.direction === 'incoming' && !note.acknowledged_at && <button type="button" disabled={!!pending} onClick={() => void acknowledge(note.id)}><FaCheck/>{pending === note.id ? 'Acknowledging…' : 'Acknowledge'}</button>}
+          {note.acknowledged_at && <div className="handover-receipt"><FaCheck/><span>Acknowledged by {note.acknowledged_by_username || 'Someone'}<time dateTime={note.acknowledged_at}>{displayDate(note.acknowledged_at)}</time></span></div>}
+          {note.resolved_at && <div className="handover-receipt"><FaCheck/><span>Resolved by {note.resolved_by_username || 'Someone'}<time dateTime={note.resolved_at}>{displayDate(note.resolved_at)}</time>{note.resolution_notes && <p>{note.resolution_notes}</p>}</span></div>}
+        </footer>
+      </article>)}
     </div>
-  );
-};
-
-export default HandoverNotes;
+  </div>;
+}

@@ -1,6 +1,7 @@
 // src/components/checklist/SmartSubitemModal.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Slider from 'react-slick';
+import { useDialogFocus } from '../../hooks/useDialogFocus';
 import type { Settings } from 'react-slick';
 import {
   FaTimes, FaArrowLeft, FaArrowRight, FaCheckCircle,
@@ -81,6 +82,11 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
   const [finalVerdictNotes, setFinalVerdictNotes] = useState('');
   const [completeItemBusy, setCompleteItemBusy] = useState(false);
   const [showCompletionStep, setShowCompletionStep] = useState(false);
+
+  const executionDialog = useRef<HTMLDivElement>(null);
+  const reasonDialog = useRef<HTMLDivElement>(null);
+  useDialogFocus(executionDialog, isOpen && !showReasonModal, onClose);
+  useDialogFocus(reasonDialog, isOpen && showReasonModal, () => { setShowReasonModal(false); setPendingAction(null); setReasonText(''); });
 
   // Calculate statistics including optimistic updates
   const stats = {
@@ -747,13 +753,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
               </div>
             </div>
 
-            <div className="subitem-brief">
-              <span>Operator Brief</span>
-              <p>
-                {currentSubitemWithOptimistic.description
-                  || 'No extra description was attached to this subitem. Use the available action that matches the current evidence.'}
-              </p>
-            </div>
+            {currentSubitemWithOptimistic.description && <div className="subitem-brief"><p>{currentSubitemWithOptimistic.description}</p></div>}
 
             <div className="subitem-action-panel">
               <div className="action-panel-copy">
@@ -845,6 +845,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
     <div className="smart-subitem-modal-backdrop" onClick={onClose}>
       <div
         className={`smart-subitem-modal futuristic ${isCompletedPreview ? 'smart-subitem-modal--preview' : ''}`}
+        role="dialog" aria-modal="true" aria-labelledby="execution-dialog-title" ref={executionDialog} tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -852,7 +853,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
           <div className="header-content">
             <div className="modal-heading-copy">
               <span className="modal-kicker">{isCompletedPreview ? 'Completed Subitems' : 'Subitem Execution'}</span>
-              <h2 className="modal-title">{itemTitle}</h2>
+              <h2 className="modal-title" id="execution-dialog-title">{itemTitle}</h2>
             </div>
             {!isCompletedPreview && (
               <div className="header-stats" aria-label={`${completionPercentage}% actioned`}>
@@ -862,7 +863,7 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
           </div>
 
           <div className="header-controls">
-            <button className="close-btn" onClick={onClose}>
+            <button className="close-btn" aria-label="Close execution" onClick={onClose}>
               <FaTimes />
             </button>
           </div>
@@ -879,9 +880,9 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
               <FaClock />
               <span>
                 {allActioned && !showCompletionStep
-                  ? 'All subitems actioned - click Continue to add final verdict and complete'
+                  ? 'All steps actioned. Select Finalize to complete this item.'
                   : allActioned && showCompletionStep
-                  ? 'Completion stage active - submit verdict and close the main item'
+                  ? 'Review your notes and complete this item.'
                   : `${remainingCount} subitem${remainingCount === 1 ? '' : 's'} remaining`
                 }
               </span>
@@ -893,12 +894,12 @@ const SmartSubitemModal: React.FC<SmartSubitemModalProps> = ({
       {/* Reason Modal */}
       {showReasonModal && (
         <div className="reason-modal-backdrop" onClick={handleReasonCancel}>
-          <div className="reason-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="reason-modal" ref={reasonDialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label={pendingAction?.action === 'SKIPPED' ? 'Skip subitem' : 'Report issue'} onClick={(e) => e.stopPropagation()}>
             <div className="reason-modal-header">
               <h3>
                 {pendingAction?.action === 'SKIPPED' ? 'Skip Subitem' : 'Report Issue'}
               </h3>
-              <button className="reason-modal-close" onClick={handleReasonCancel}>
+              <button className="reason-modal-close" aria-label="Close reason" onClick={handleReasonCancel}>
                 <FaTimes />
               </button>
             </div>

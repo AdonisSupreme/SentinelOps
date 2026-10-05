@@ -1,0 +1,206 @@
+/* Presentation only: the custody authority and execution contracts remain in the workspace. */
+.funds-custody-page .clearing-workspace.custody-refined {
+  --clear-ink: #183047; --clear-muted: #62798c; --clear-line: #dce6ee;
+  --clear-soft-line: #e7edf3; --clear-paper: #fff; --clear-wash: #f6f9fb;
+  --clear-cyan: #147f83; --clear-blue: #246cbd; --clear-green: #167f70;
+  --clear-lime: #16866b; --clear-magenta: #8763bb; --clear-amber: #986510;
+  --clear-red: #b43d55; --custody-tint: #eaf6f4;
+  width: 100%; max-width: none; margin: 0; padding: clamp(16px, 2vw, 32px);
+  color: var(--clear-ink); background: #f3f7fa; color-scheme: light;
+}
+[data-theme='dark'] .funds-custody-page .clearing-workspace.custody-refined {
+  --clear-ink: #e5eff8; --clear-muted: #a3b6c8; --clear-line: #293e52;
+  --clear-soft-line: #223547; --clear-paper: #101e2d; --clear-wash: #152638;
+  --clear-cyan: #68d7ce; --clear-blue: #85b7f6; --clear-green: #68d7b4;
+  --clear-lime: #68d7b4; --clear-magenta: #bb9be6; --clear-amber: #edc67a;
+  --clear-red: #ff9bac; --custody-tint: #17343e; background: #0b1522; color-scheme: dark;
+}
+.clearing-workspace.custody-refined *, .clearing-workspace.custody-refined *::before, .clearing-workspace.custody-refined *::after { box-sizing: border-box; }
+.clearing-workspace.custody-refined :is(h1,h2,h3,h4) { display: block; font-family: inherit; color: var(--clear-ink); background: none; -webkit-text-fill-color: currentColor; letter-spacing: -.025em; border: 0; text-shadow: none; }
+.clearing-workspace.custody-refined :is(h1,h2,h3,h4)::after { display: none; }
+.clearing-workspace.custody-refined :is(button,input,select,textarea) { font-family: inherit; border-radius: 8px; }
+.clearing-workspace.custody-refined :is(input,select,textarea) { min-width: 0; color: var(--clear-ink); background: var(--clear-wash); border: 1px solid var(--clear-line); }
+.clearing-workspace.custody-refined :is(button,a,input,select,textarea,summary):focus-visible { outline: 2px solid var(--clear-cyan); outline-offset: 3px; }
+.clearing-workspace.custody-refined button:disabled { opacity: .45; cursor: not-allowed; }
+.clearing-workspace.custody-refined .clearing-masthead { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 20px; padding: 0 0 24px; border: 0; background: none; }
+.clearing-workspace.custody-refined .clearing-masthead-copy { flex: 1 1 440px; padding: 0; min-width: 0; }
+.clearing-workspace.custody-refined .clearing-masthead h1 { font-size: clamp(24px, 2.4vw, 34px); line-height: 1.2; margin: 10px 0; }
+.clearing-workspace.custody-refined .clearing-masthead p { font-size: 13px; color: var(--clear-muted); line-height: 1.6; margin: 0; }
+.clearing-workspace.custody-refined .clearing-kicker { font-size: 10px; letter-spacing: .08em; color: var(--clear-cyan); gap: 8px; }
+.clearing-workspace.custody-refined .clearing-safety-posture { display: flex; flex-wrap: wrap; align-items: center; border: 1px solid var(--clear-line); background: var(--clear-paper); border-radius: 12px; overflow: hidden; }
+.clearing-workspace.custody-refined .clearing-safety-posture > * { padding: 12px 16px; min-width: 0; }
+.clearing-workspace.custody-refined .clearing-safety-posture small { font-size: 9px; }
+.clearing-workspace.custody-refined .clearing-safety-posture strong { font-size: 12px; }
+.clearing-workspace.custody-refined .clearing-safety-posture { min-width: 0; }
+.clearing-workspace.custody-refined .clearing-safety-posture .clearing-gate { display: grid; grid-template-columns: 20px minmax(0,1fr); column-gap: 10px; }
+.clearing-workspace.custody-refined .clearing-gate > svg { position: static; grid-column: 1; grid-row: 1/3; align-self: center; width: 18px; height: 18px; transform: none; }
+.clearing-workspace.custody-refined .clearing-gate > :is(small,strong) { grid-column: 2; }
+.clearing-workspace.custody-refined .clearing-safety-posture > span strong { color: var(--clear-ink); }
+.clearing-workspace.custody-refined .clearing-safety-posture > span :is(small,em) { color: var(--clear-muted); }
+.clearing-workspace.custody-refined .clearing-safety-posture > span { border-color: var(--clear-line); }
+.clearing-workspace.custody-refined .clearing-safety-posture .clearing-icon-button { background: var(--clear-wash); color: var(--clear-cyan); border-color: var(--clear-line); }
+.clearing-workspace.custody-refined :is(.clearing-masthead,.clearing-mode-rail) { box-shadow: none; backdrop-filter: none; }
+.clearing-workspace.custody-refined .authorization-desk-head p { color: var(--clear-muted); }
+.clearing-workspace.custody-refined .clearing-section-heading > span { font-family: inherit; }
+.clearing-workspace.custody-refined .clearing-mode-rail { position: relative; top: auto; display: flex; flex-wrap: wrap; gap: 5px; padding: 5px; border: 1px solid var(--clear-line); border-radius: 12px; background: var(--clear-paper); }
+.clearing-workspace.custody-refined .clearing-mode-rail > button { flex: 1 1 155px; min-width: 0; min-height: 54px; padding: 10px 14px; border: 0; border-radius: 8px; color: var(--clear-muted); background: none; box-shadow: none; }
+.clearing-workspace.custody-refined .clearing-mode-rail > button.active { background: var(--custody-tint); color: var(--clear-cyan); }
+.clearing-workspace.custody-refined .clearing-mode-rail > button::after { display: none; }
+.clearing-workspace.custody-refined .clearing-mode-rail strong { font-size: 12px; }
+.clearing-workspace.custody-refined .clearing-mode-rail small { display: none; }
+.clearing-workspace.custody-refined .clearing-mode-icon { width: 26px; height: 26px; border: 0; background: none; color: inherit; font-size: 17px; }
+.clearing-workspace.custody-refined .custody-context-help { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin: 12px 0 20px; color: var(--clear-muted); font-size: 11px; }
+.clearing-workspace.custody-refined .custody-context-help button { display: inline-flex; align-items: center; gap: 8px; padding: 7px 10px; border: 0; background: transparent; color: var(--clear-cyan); font-size: 11px; }
+.funds-custody-page .clearing-workspace.custody-refined :is(.clearing-control-layout,.clearing-account-layout) { display: grid; grid-template-columns: 270px minmax(0,1fr); gap: 18px; border: 0; background: none; }
+.clearing-workspace.custody-refined :is(.clearing-batch-index,.clearing-ledger,.clearing-account-index,.clearing-account-dossier,.clearing-authorization-desk,.clearing-preview-deck,.clearing-execution-history) { min-width: 0; background: var(--clear-paper); border: 1px solid var(--clear-line); border-radius: 12px; box-shadow: none; overflow: hidden; }
+.clearing-workspace.custody-refined .clearing-section-heading { padding: 14px 16px; font-family: inherit; font-size: 11px; letter-spacing: .035em; color: var(--clear-muted); background: var(--clear-wash); border-bottom: 1px solid var(--clear-line); }
+.clearing-workspace.custody-refined .clearing-import-command { width: calc(100% - 24px); margin: 12px; padding: 14px; border: 1px solid var(--clear-line); border-radius: 8px; background: var(--custody-tint); color: var(--clear-ink); box-shadow: none; }
+.clearing-workspace.custody-refined .clearing-import-command strong { font-size: 12px; }
+.clearing-workspace.custody-refined .clearing-import-command small { font-size: 10px; color: var(--clear-muted); }
+.clearing-workspace.custody-refined .custody-batch-search { display: flex; align-items: center; gap: 8px; margin: 12px; padding: 0 10px; background: var(--clear-wash); border: 1px solid var(--clear-line); border-radius: 8px; color: var(--clear-muted); }
+.clearing-workspace.custody-refined .custody-batch-search input { width: 100%; padding: 11px 0; border: 0; background: transparent; font-size: 11px; }
+.clearing-workspace.custody-refined .clearing-batch-list { max-height: 70vh; padding: 0 10px 10px; overflow: auto; }
+.clearing-workspace.custody-refined .clearing-batch-row { min-height: 88px; padding: 14px 10px; border: 1px solid transparent; border-bottom-color: var(--clear-soft-line); border-radius: 8px; background: none; }
+.clearing-workspace.custody-refined .clearing-batch-row.active { background: var(--custody-tint); border-color: var(--clear-cyan); box-shadow: none; }
+.clearing-workspace.custody-refined .clearing-batch-row strong { font-size: 12px; }
+.clearing-workspace.custody-refined .clearing-batch-row :is(small,.clearing-row-status) { font-size: 10px; }
+.clearing-workspace.custody-refined .clearing-ledger-head { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; padding: 22px; background: none; }
+.clearing-workspace.custody-refined .clearing-ledger-head > div:first-child { flex: 1 1 280px; min-width: 0; }
+.clearing-workspace.custody-refined .clearing-ledger-head h2 { font-size: 20px; overflow-wrap: anywhere; margin: 10px 0; }
+.clearing-workspace.custody-refined .clearing-ledger-head p { font-size: 12px; color: var(--clear-muted); }
+.clearing-workspace.custody-refined .clearing-ledger-totals { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); border: 1px solid var(--clear-line); border-radius: 8px; overflow: hidden; }
+.clearing-workspace.custody-refined .clearing-ledger-totals > div { min-width: 0; padding: 12px; }
+.clearing-workspace.custody-refined .clearing-ledger-totals strong { font-size: 16px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.clearing-workspace.custody-refined :is(.clearing-command-line,.clearing-tranche-line) { display: flex; flex-wrap: wrap; gap: 14px; padding: 16px 20px; background: var(--clear-wash); }
+.clearing-workspace.custody-refined .clearing-tranche-track { height: 5px; flex: 1 1 120px; }
+.clearing-workspace.custody-refined .clearing-classification-line { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 18px; background: none; }
+.clearing-workspace.custody-refined .clearing-classification-line > button { flex: 0 1 auto; padding: 8px 10px; border: 1px solid var(--clear-line); border-radius: 7px; font-size: 10px; }
+.clearing-workspace.custody-refined .clearing-classification-line > button.active { background: var(--custody-tint); color: var(--clear-cyan); border-color: var(--clear-cyan); }
+.clearing-workspace.custody-refined .clearing-ledger-search { flex: 1 1 230px; min-width: 180px; }
+.clearing-workspace.custody-refined .clearing-ledger-search input { width: 100%; font-size: 12px; }
+.clearing-workspace.custody-refined :is(.clearing-table-wrap,.physical-row-table,.audit-evidence-table-scroll) { max-width: 100%; overflow-x: auto; }
+.clearing-workspace.custody-refined .clearing-table { min-width: 730px; }
+.clearing-workspace.custody-refined .clearing-table th { font-size: 10px; background: var(--clear-wash); }
+.clearing-workspace.custody-refined .clearing-table td { font-size: 12px; }
+.clearing-workspace.custody-refined :is(.physical-row,.physical-row-head) { min-width: 620px; }
+.clearing-workspace.custody-refined :is(.account-dossier-head,.account-clearing-fields,.account-evidence-rail) { min-width: 0; flex-wrap: wrap; }
+.funds-custody-page .clearing-workspace.custody-refined .clearing-execution-layout { display: grid; grid-template-columns: minmax(260px,.7fr) minmax(0,1.3fr); gap: 18px; background: none; }
+.clearing-workspace.custody-refined .clearing-execution-history { grid-column: 1/-1; }
+.clearing-workspace.custody-refined .execution-history-list { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); }
+.clearing-workspace.custody-refined .authorization-desk-head { padding: 20px; background: none; }
+.clearing-workspace.custody-refined .authorization-desk-head h2 { font-size: 20px; }
+.clearing-workspace.custody-refined .authorization-queue-list > article { margin: 10px; padding: 16px; border: 1px solid var(--clear-line); border-radius: 9px; background: var(--clear-wash); }
+.clearing-workspace.custody-refined .execution-custody-line { gap: 14px; padding: 20px; }
+.clearing-workspace.custody-refined .clearing-modal { width: min(760px,100%); max-height: calc(100dvh - 40px); overflow: auto; background: var(--clear-paper); border: 1px solid var(--clear-line); border-radius: 15px; color: var(--clear-ink); }
+.clearing-workspace.custody-refined .clearing-modal > :is(header,footer) { padding: 18px 22px; background: var(--clear-wash); }
+.clearing-workspace.custody-refined .clearing-modal h2 { font-size: 22px; }
+.clearing-workspace.custody-refined .clearing-modal-body { padding: 22px; }
+.clearing-workspace.custody-refined .clearing-audit-workspace { background: none; border: 0; }
+.clearing-workspace.custody-refined .clearing-audit-head { display: flex; flex-wrap: wrap; gap: 18px; padding: 20px 0; background: none; }
+.clearing-workspace.custody-refined .clearing-audit-head h2 { font-size: 22px; }
+.clearing-workspace.custody-refined .clearing-audit-search { flex: 1 1 320px; max-width: 550px; min-width: 0; }
+.clearing-workspace.custody-refined .clearing-audit-search input { width: 100%; min-width: 0; font-size: 12px; }
+.clearing-workspace.custody-refined .custody-trail-tools { padding: 16px; margin-bottom: 18px; background: var(--clear-paper); border: 1px solid var(--clear-line); border-radius: 12px; }
+.clearing-workspace.custody-refined :is(.custody-trail-types,.custody-trail-dates,.custody-trail-count,.custody-trail-count > div) { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.clearing-workspace.custody-refined .custody-trail-tools button { padding: 9px 12px; color: var(--clear-muted); background: var(--clear-wash); border: 1px solid var(--clear-line); font-size: 11px; }
+.clearing-workspace.custody-refined .custody-trail-types button[aria-pressed='true'] { background: var(--custody-tint); border-color: var(--clear-cyan); color: var(--clear-cyan); }
+.clearing-workspace.custody-refined .custody-trail-dates { margin-top: 14px; }
+.clearing-workspace.custody-refined .custody-trail-dates label { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--clear-muted); }
+.clearing-workspace.custody-refined .custody-trail-dates input { padding: 8px; font-size: 11px; }
+.clearing-workspace.custody-refined .custody-trail-count { justify-content: space-between; margin-top: 14px; font-size: 10px; color: var(--clear-muted); }
+.funds-custody-page .clearing-workspace.custody-refined .clearing-audit-explorer { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 18px; align-items: start; }
+.clearing-workspace.custody-refined .clearing-audit-tree { min-width: 0; padding: 12px; max-height: 78vh; overflow: auto; background: var(--clear-paper); border: 1px solid var(--clear-line); border-radius: 12px; }
+.clearing-workspace.custody-refined .clearing-audit-tree details { margin: 6px 0; border: 0; background: none; }
+.clearing-workspace.custody-refined .clearing-audit-tree details > div { margin-left: 10px; padding-left: 8px; border-left: 1px solid var(--clear-line); }
+.clearing-workspace.custody-refined .clearing-audit-tree summary { padding: 10px 12px; border: 1px solid var(--clear-line); border-radius: 8px; background: var(--clear-wash); font-size: 12px; }
+.clearing-workspace.custody-refined .clearing-audit-tree summary em { font-size: 10px; font-style: normal; color: var(--clear-muted); margin-left: 8px; }
+.clearing-workspace.custody-refined .clearing-audit-tree summary > span { color: var(--clear-ink); font-family: inherit; }
+.clearing-workspace.custody-refined .audit-day-columns { display: none; }
+.clearing-workspace.custody-refined .audit-day-events .audit-event { display: grid; grid-template-columns: 28px minmax(0,1fr) auto; gap: 6px 10px; padding: 12px; margin: 8px 0; border: 1px solid var(--clear-line); border-radius: 8px; background: var(--clear-paper); min-width: 0; }
+.clearing-workspace.custody-refined .audit-day-events .audit-event.selected { background: var(--custody-tint); border-color: var(--clear-cyan); }
+.clearing-workspace.custody-refined .audit-event > .audit-event-icon { grid-column: 1; grid-row: 1/3; }
+.clearing-workspace.custody-refined .audit-event > span:nth-child(2) { grid-column: 2; grid-row: 1; }
+.clearing-workspace.custody-refined .audit-event > code { grid-column: 2; grid-row: 2; }
+.clearing-workspace.custody-refined .audit-event > em { grid-column: 3; grid-row: 2; }
+.clearing-workspace.custody-refined .audit-event > time { grid-column: 3; grid-row: 1; }
+.clearing-workspace.custody-refined .audit-event > svg:last-child { display: none; }
+.clearing-workspace.custody-refined .audit-event :is(strong,small,span) { min-width: 0; overflow-wrap: anywhere; }
+.clearing-workspace.custody-refined .clearing-audit-evidence { min-width: 0; max-height: 78vh; overflow: auto; position: sticky; top: 90px; background: var(--clear-paper); border: 1px solid var(--clear-line); border-radius: 12px; }
+.clearing-workspace.custody-refined .audit-evidence-title h3 { font-size: 19px; }
+.clearing-workspace.custody-refined .custody-help { padding: 24px 0; }
+.clearing-workspace.custody-refined .custody-help-header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 20px; }
+.clearing-workspace.custody-refined .custody-help-header h2 { font-size: 26px; margin: 8px 0; }
+.clearing-workspace.custody-refined .custody-help p { color: var(--clear-muted); font-size: 12px; line-height: 1.7; margin: 6px 0; }
+.clearing-workspace.custody-refined .custody-help button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 11px 14px; border: 1px solid var(--clear-cyan); background: var(--custody-tint); color: var(--clear-cyan); font-size: 12px; }
+.clearing-workspace.custody-refined .custody-help button.secondary { border-color: var(--clear-line); background: var(--clear-paper); color: var(--clear-ink); }
+.clearing-workspace.custody-refined .custody-help-routes { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
+.clearing-workspace.custody-refined .custody-help-routes > button { display: grid; grid-template-columns: minmax(0,1fr) 16px; align-content: start; text-align: left; padding: 18px; border-color: var(--clear-line); background: var(--clear-paper); color: var(--clear-ink); }
+.clearing-workspace.custody-refined .custody-help-routes strong { grid-column: 1; font-size: 13px; }
+.clearing-workspace.custody-refined .custody-help-routes span { grid-column: 1; font-size: 11px; line-height: 1.6; color: var(--clear-muted); }
+.clearing-workspace.custody-refined .custody-help-routes svg { grid-column: 2; grid-row: 1; color: var(--clear-cyan); }
+.clearing-workspace.custody-refined .custody-help-routes > button[aria-pressed='true'] { background: var(--custody-tint); border-color: var(--clear-cyan); }
+.clearing-workspace.custody-refined .custody-help-prerequisite { display: flex; align-items: flex-start; gap: 12px; padding: 16px 18px; margin: 18px 0; border: 1px solid var(--clear-line); border-radius: 10px; background: var(--clear-wash); }
+.clearing-workspace.custody-refined .custody-help-prerequisite > svg { flex-shrink: 0; color: var(--clear-cyan); margin-top: 3px; }
+.clearing-workspace.custody-refined .custody-help-prerequisite strong { font-size: 12px; }
+.clearing-workspace.custody-refined .custody-help-flow { display: grid; grid-template-columns: 245px minmax(0,1fr); gap: 18px; }
+.clearing-workspace.custody-refined .custody-help-flow nav { display: flex; flex-direction: column; gap: 8px; }
+.clearing-workspace.custody-refined .custody-help-flow nav button { text-align: left; justify-content: flex-start; background: var(--clear-paper); border-color: var(--clear-line); color: var(--clear-muted); }
+.clearing-workspace.custody-refined .custody-help-flow nav button[aria-current='step'] { background: var(--custody-tint); color: var(--clear-ink); border-color: var(--clear-cyan); }
+.clearing-workspace.custody-refined .custody-help-flow nav button span { font-size: 11px; color: var(--clear-cyan); }
+.clearing-workspace.custody-refined .custody-help-step { min-width: 0; padding: 26px; background: var(--clear-paper); border: 1px solid var(--clear-line); border-radius: 12px; }
+.clearing-workspace.custody-refined .custody-help-step h3 { font-size: 21px; margin: 10px 0; }
+.clearing-workspace.custody-refined .custody-help-step ul { list-style: none; padding: 0; margin: 20px 0; }
+.clearing-workspace.custody-refined .custody-help-step li { display: flex; gap: 10px; margin: 12px 0; font-size: 13px; line-height: 1.6; }
+.clearing-workspace.custody-refined .custody-help-step li svg { flex-shrink: 0; margin-top: 4px; color: var(--clear-cyan); }
+.clearing-workspace.custody-refined .custody-help-stop { display: flex; gap: 12px; background: var(--clear-wash); border-left: 3px solid var(--clear-amber); padding: 14px; margin: 16px 0; border-radius: 5px; }
+.clearing-workspace.custody-refined .custody-help-stop > svg { flex-shrink: 0; color: var(--clear-amber); margin-top: 3px; }
+.clearing-workspace.custody-refined .custody-help-stop strong { font-size: 12px; }
+.clearing-workspace.custody-refined .custody-help summary { cursor: pointer; font-size: 12px; padding: 12px 0; }
+.clearing-workspace.custody-refined .custody-help-step footer { display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between; border-top: 1px solid var(--clear-line); padding-top: 18px; margin-top: 18px; }
+.clearing-workspace.custody-refined .custody-help-step footer > div { display: flex; gap: 8px; }
+.clearing-workspace.custody-refined .custody-help-troubleshooting { display: grid; grid-template-columns: 1fr minmax(200px,.6fr); align-items: center; gap: 18px; margin-top: 32px; }
+.clearing-workspace.custody-refined .custody-help-troubleshooting h3 { font-size: 20px; margin: 0; }
+.clearing-workspace.custody-refined .custody-help-troubleshooting input { width: 100%; padding: 12px; font-size: 12px; }
+.clearing-workspace.custody-refined .custody-help-troubleshooting > div:last-child { grid-column: 1/-1; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; align-items: start; }
+.clearing-workspace.custody-refined .custody-help-troubleshooting details { background: var(--clear-paper); border: 1px solid var(--clear-line); border-radius: 9px; padding: 4px 16px; }
+.clearing-workspace.custody-refined .custody-help-troubleshooting summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-weight: 600; }
+.clearing-workspace.custody-refined .custody-help-troubleshooting details[open] summary svg { transform: rotate(90deg); }
+.clearing-workspace.custody-refined .custody-help dt { font-size: 10px; color: var(--clear-cyan); margin: 14px 0 5px; font-weight: 600; }
+.clearing-workspace.custody-refined .custody-help dd { margin: 0; font-size: 12px; line-height: 1.7; color: var(--clear-muted); }
+.clearing-workspace.custody-refined .custody-help-reference { margin-top: 20px; border-top: 1px solid var(--clear-line); }
+.clearing-workspace.custody-refined .custody-help-examples { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 12px; }
+.clearing-workspace.custody-refined .custody-help-examples article { padding: 18px; border: 1px solid var(--clear-line); background: var(--clear-paper); border-radius: 9px; }
+.clearing-workspace.custody-refined .custody-help-examples h4 { font-size: 14px; margin: 0 0 10px; }
+.clearing-workspace.custody-refined .custody-help-examples strong { font-size: 11px; color: var(--clear-cyan); }
+.clearing-workspace.custody-refined .custody-help-reference ol { font-size: 12px; line-height: 1.8; color: var(--clear-muted); }
+@media (max-width: 1200px) {
+  .funds-custody-page .clearing-workspace.custody-refined :is(.clearing-control-layout,.clearing-account-layout) { grid-template-columns: 230px minmax(0,1fr); }
+  .funds-custody-page .clearing-workspace.custody-refined .clearing-audit-explorer { grid-template-columns: minmax(0,1fr); }
+  .clearing-workspace.custody-refined .clearing-audit-evidence { position: static; max-height: none; }
+  .clearing-workspace.custody-refined .custody-help-routes { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 850px) {
+  .funds-custody-page .clearing-workspace.custody-refined :is(.clearing-control-layout,.clearing-account-layout,.clearing-execution-layout) { grid-template-columns: minmax(0,1fr); }
+  .clearing-workspace.custody-refined .clearing-batch-list { max-height: 240px; }
+  .clearing-workspace.custody-refined .clearing-audit-tree { max-height: none; }
+  .clearing-workspace.custody-refined .custody-help-flow { grid-template-columns: minmax(0,1fr); }
+  .clearing-workspace.custody-refined .custody-help-flow nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 550px) {
+  .clearing-workspace.custody-refined .clearing-safety-posture { width: 100%; }
+  .clearing-workspace.custody-refined .clearing-safety-posture > * { padding: 10px; }
+  .clearing-workspace.custody-refined .clearing-mode-rail > button { flex-basis: 120px; padding: 9px; }
+  .clearing-workspace.custody-refined .clearing-ledger-head { padding: 16px; }
+  .clearing-workspace.custody-refined .clearing-ledger-totals { width: 100%; }
+  .clearing-workspace.custody-refined .clearing-modal-backdrop { padding: 8px; }
+  .clearing-workspace.custody-refined .clearing-modal { max-height: calc(100dvh - 16px); }
+  .clearing-workspace.custody-refined .clearing-modal-body { padding: 14px; }
+  .clearing-workspace.custody-refined :is(.custody-help-routes,.custody-help-troubleshooting,.custody-help-troubleshooting > div:last-child) { grid-template-columns: minmax(0,1fr); }
+  .clearing-workspace.custody-refined .custody-help-step { padding: 18px; }
+  .clearing-workspace.custody-refined .audit-day-events .audit-event { grid-template-columns: 22px minmax(0,1fr); }
+  .clearing-workspace.custody-refined .audit-event > em { grid-column: 2; grid-row: 3; }
+  .clearing-workspace.custody-refined .audit-event > time { grid-column: 2; grid-row: 4; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .clearing-workspace.custody-refined *, .clearing-workspace.custody-refined *::before, .clearing-workspace.custody-refined *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

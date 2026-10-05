@@ -2,7 +2,7 @@
 import React from 'react';
 
 export const ChecklistPageSkeleton: React.FC = () => (
-  <div className="checklist-page checklist-command-page checklist-skeleton-page">
+  <div className="checklist-page checklist-command-page checklist-workbench checklist-skeleton-page" role="status" aria-label="Loading checklist workspace">
     <section className="checklist-command-strip checklist-skel-panel">
       <div className="checklist-skel-command-copy">
         <div className="checklist-skel-line checklist-skel-kicker" />

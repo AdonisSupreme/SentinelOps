@@ -1,0 +1,47 @@
+import React from 'react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import ChecklistsPage from './ChecklistsPage';
+import { checklistApi } from '../services/checklistApi';
+import { teamApi } from '../services/teamApi';
+const mockNavigate = jest.fn();
+const mockDelete = jest.fn();
+jest.mock('react-router-dom', () => ({ useNavigate: () => mockNavigate }), { virtual: true });
+jest.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ user: { role: 'ADMIN' } }) }));
+jest.mock('../contexts/checklistContext', () => ({ useChecklist: () => ({ deleteInstance: mockDelete }) }));
+jest.mock('../components/ui/PageGuide', () => () => null);
+jest.mock('../components/dashboard', () => ({ ChecklistsSkeleton: () => <p>Loading</p> }));
+jest.mock('../services/teamApi', () => ({ teamApi: { listShifts: jest.fn().mockResolvedValue([{ name: 'MORNING', start_time: '07:00', end_time: '15:00' }]) } }));
+jest.mock('../services/centralizedWebSocketManager', () => ({ __esModule: true, default: { subscribe: () => () => {} } }));
+jest.mock('../services/checklistApi', () => ({ checklistApi: { getInstancesPaginated: jest.fn(), getTodayChecklistCoverage: jest.fn().mockResolvedValue({ MORNING: 1 }), getAllInstances: jest.fn() } }));
+beforeEach(() => {
+  jest.clearAllMocks();
+  (teamApi.listShifts as jest.Mock).mockResolvedValue([{ name: 'MORNING', start_time: '07:00', end_time: '15:00' }]);
+  (checklistApi.getTodayChecklistCoverage as jest.Mock).mockResolvedValue({ MORNING: 1 });
+  (checklistApi.getInstancesPaginated as jest.Mock).mockResolvedValue({ data: [{ id: 'run-one', shift: 'MORNING', checklist_date: '2026-10-04', status: 'OPEN', template: { name: 'Morning checks' }, shift_start: '2026-10-04T07:00:00Z', shift_end: '2026-10-04T15:00:00Z' }], pagination: { total: 19, totalPages: 2 } });
+});
+test('archive filters retain date, shift, status, search and pagination query behavior', async () => {
+  render(<ChecklistsPage />);
+  await screen.findByText('Morning checks');
+  fireEvent.click(screen.getByRole('button', { name: 'Date Range' }));
+  fireEvent.change(screen.getByLabelText('Start'), { target: { value: '2026-09-01' } });
+  fireEvent.change(screen.getByLabelText('End'), { target: { value: '2026-09-30' } });
+  fireEvent.change(screen.getByLabelText('Checklist status'), { target: { value: 'OPEN' } });
+  fireEvent.change(screen.getByLabelText('Shift'), { target: { value: 'MORNING' } });
+  fireEvent.change(screen.getByLabelText('Search checklists'), { target: { value: 'morning' } });
+  await waitFor(() => expect(checklistApi.getInstancesPaginated).toHaveBeenLastCalledWith(expect.objectContaining({ start_date: '2026-09-01', end_date: '2026-09-30', status: 'OPEN', shift: 'MORNING', search: 'morning', page: 1 })));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  await waitFor(() => expect(checklistApi.getInstancesPaginated).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 })));
+});
+test('open and delete controls stay separate and deletion still requires confirmation', async () => {
+  render(<ChecklistsPage />);
+  await screen.findByText('Morning checks');
+  fireEvent.click(screen.getByRole('button', { name: 'Open checklist' }));
+  expect(mockNavigate).toHaveBeenCalledWith('/checklist/run-one');
+  mockNavigate.mockClear();
+  fireEvent.click(screen.getByRole('button', { name: 'Delete Morning checks MORNING 2026-10-04' }));
+  expect(screen.getByRole('dialog')).toBeInTheDocument();
+  expect(mockDelete).not.toHaveBeenCalled();
+  expect(mockNavigate).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});
