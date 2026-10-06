@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'sentinelops-shell-v1';
+const CACHE_VERSION = 'sentinelops-shell-v2';
 const APP_SHELL_CACHE = [
   './',
   './index.html',
