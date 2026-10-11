@@ -205,8 +205,8 @@ export const networkSentinelApi = {
     return response.data;
   },
 
-  async getCommandCenter() {
-    const response = await api.get<NetworkCommandCenterResponse>('/api/v1/network-sentinel/command-center');
+  async getCommandCenter(includeMetrics = true) {
+    const response = await api.get<NetworkCommandCenterResponse>('/api/v1/network-sentinel/command-center', { params: { include_metrics: includeMetrics } });
     return response.data;
   },
 

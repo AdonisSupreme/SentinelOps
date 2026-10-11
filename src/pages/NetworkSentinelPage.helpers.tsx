@@ -51,10 +51,13 @@ export const stabilizeNetworkServices = (
   const previousById = new Map(previousServices.map((service) => [service.id, service]));
   return incomingServices.map((service) => {
     const previous = previousById.get(service.id);
-    if (!previous?.status || !knownStatuses.has(previous.status.overall_status)) {
+    if (!previous?.status) {
       return service;
     }
-    if (!isEmptyUnknownStatus(service.status)) {
+    const incomingAt = parseSentinelTimestamp(service.status?.last_checked_at)?.getTime() || 0;
+    const previousAt = parseSentinelTimestamp(previous.status.last_checked_at)?.getTime() || 0;
+    if (incomingAt && previousAt > incomingAt) return { ...service, status: previous.status, active_outage: previous.active_outage };
+    if (!knownStatuses.has(previous.status.overall_status) || !isEmptyUnknownStatus(service.status)) {
       return service;
     }
     return {
@@ -136,6 +139,9 @@ export const deriveOverview = (services: NetworkServiceCard[]) => {
 };
 
 export const patchLiveService = (service: NetworkServiceCard, update: Record<string, unknown>): NetworkServiceCard => {
+  const incomingAt = parseSentinelTimestamp(update.last_checked_at as string)?.getTime() || 0;
+  const previousAt = parseSentinelTimestamp(service.status?.last_checked_at)?.getTime() || 0;
+  if (incomingAt && previousAt > incomingAt) return service;
   const incomingStatus = normalizeStatus(update.overall_status);
   const hasRealSample =
     Boolean(update.last_checked_at)
@@ -158,14 +164,14 @@ export const patchLiveService = (service: NetworkServiceCard, update: Record<str
       last_checked_at: preservePreviousStatus
         ? previousStatus?.last_checked_at ?? null
         : (update.last_checked_at as string | null) ?? service.status?.last_checked_at ?? null,
-      icmp_up: preservePreviousStatus ? previousStatus?.icmp_up ?? null : (update.icmp_up as boolean | null) ?? service.status?.icmp_up ?? null,
-      icmp_bytes: preservePreviousStatus ? previousStatus?.icmp_bytes ?? null : (update.icmp_bytes as number | null) ?? service.status?.icmp_bytes ?? null,
-      icmp_latency_ms: preservePreviousStatus ? previousStatus?.icmp_latency_ms ?? null : (update.icmp_latency_ms as number | null) ?? service.status?.icmp_latency_ms ?? null,
-      icmp_ttl: preservePreviousStatus ? previousStatus?.icmp_ttl ?? null : (update.icmp_ttl as number | null) ?? service.status?.icmp_ttl ?? null,
-      tcp_up: preservePreviousStatus ? previousStatus?.tcp_up ?? null : (update.tcp_up as boolean | null) ?? service.status?.tcp_up ?? null,
-      tcp_latency_ms: preservePreviousStatus ? previousStatus?.tcp_latency_ms ?? null : (update.tcp_latency_ms as number | null) ?? service.status?.tcp_latency_ms ?? null,
+      icmp_up: preservePreviousStatus ? previousStatus?.icmp_up ?? null : (Object.prototype.hasOwnProperty.call(update, 'icmp_up') ? update.icmp_up as boolean | null : service.status?.icmp_up ?? null),
+      icmp_bytes: preservePreviousStatus ? previousStatus?.icmp_bytes ?? null : (Object.prototype.hasOwnProperty.call(update, 'icmp_bytes') ? update.icmp_bytes as number | null : service.status?.icmp_bytes ?? null),
+      icmp_latency_ms: preservePreviousStatus ? previousStatus?.icmp_latency_ms ?? null : (Object.prototype.hasOwnProperty.call(update, 'icmp_latency_ms') ? update.icmp_latency_ms as number | null : service.status?.icmp_latency_ms ?? null),
+      icmp_ttl: preservePreviousStatus ? previousStatus?.icmp_ttl ?? null : (Object.prototype.hasOwnProperty.call(update, 'icmp_ttl') ? update.icmp_ttl as number | null : service.status?.icmp_ttl ?? null),
+      tcp_up: preservePreviousStatus ? previousStatus?.tcp_up ?? null : (Object.prototype.hasOwnProperty.call(update, 'tcp_up') ? update.tcp_up as boolean | null : service.status?.tcp_up ?? null),
+      tcp_latency_ms: preservePreviousStatus ? previousStatus?.tcp_latency_ms ?? null : (Object.prototype.hasOwnProperty.call(update, 'tcp_latency_ms') ? update.tcp_latency_ms as number | null : service.status?.tcp_latency_ms ?? null),
       overall_status: overallStatus,
-      reason: preservePreviousStatus ? previousStatus?.reason ?? null : (update.reason as string | null) ?? service.status?.reason ?? null,
+      reason: preservePreviousStatus ? previousStatus?.reason ?? null : (Object.prototype.hasOwnProperty.call(update, 'reason') ? update.reason as string | null : service.status?.reason ?? null),
       consecutive_failures: preservePreviousStatus ? previousStatus?.consecutive_failures ?? 0 : (update.consecutive_failures as number | undefined) ?? service.status?.consecutive_failures ?? 0,
       last_state_change_at: preservePreviousStatus
         ? previousStatus?.last_state_change_at ?? null
@@ -181,9 +187,7 @@ export const patchLiveService = (service: NetworkServiceCard, update: Record<str
             cause: (update.reason as string | null) ?? null,
             duration_seconds: 0,
           }
-        : overallStatus === 'UP'
-        ? null
-        : service.active_outage,
+        : null,
   };
 };
 

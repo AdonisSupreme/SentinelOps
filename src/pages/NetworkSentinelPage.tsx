@@ -1,5 +1,5 @@
 import { useAccess, ModuleAccess } from '../contexts/AccessContext';
-import React, { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   FaBolt,
@@ -43,6 +43,9 @@ import {
   statusPriority,
 } from './NetworkSentinelPage.helpers';
 import './NetworkSentinelPage.css';
+import './NetworkSentinelRefresh.css';
+import NetworkDialog from './NetworkDialog';
+import { connectNetworkStream, NetworkConnectionState } from '../services/networkLive';
 
 type DetailTab = 'signal' | 'timeline' | 'evidence';
 
@@ -110,6 +113,12 @@ const NetworkSentinelPage: React.FC = () => {
   const [investigation, setInvestigation] = useState<NetworkInvestigationResponse | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [connection, setConnection] = useState<NetworkConnectionState>('connecting');
+  const [clock, setClock] = useState(Date.now());
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const snapshotInFlight = useRef<Promise<NetworkCommandCenterResponse> | null>(null);
+  const connectionRef = useRef(connection);
+  connectionRef.current = connection;
   const [investigationLoading, setInvestigationLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<DetailTab>(canMonitoring ? 'signal' : 'timeline');
@@ -122,6 +131,8 @@ const NetworkSentinelPage: React.FC = () => {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorMode, setEditorMode] = useState<'create' | 'edit'>('create');
   const [checkNowBusy, setCheckNowBusy] = useState(false);
+  const [manualResult, setManualResult] = useState<{serviceId:string; status:string; reason:string | null; checkedAt:string} | null>(null);
+  const investigationSequence = useRef(0);
   const [toggleBusy, setToggleBusy] = useState(false);
   const [saveBusy, setSaveBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
@@ -160,26 +171,25 @@ const NetworkSentinelPage: React.FC = () => {
   }, []);
 
   const loadCommandCenter = useCallback(async (showSpinner = false) => {
+    if (snapshotInFlight.current) return snapshotInFlight.current;
     if (showSpinner) setLoading(true);
-    const data = await networkSentinelApi.getCommandCenter();
-    let stableData = data;
-    setSnapshot((current) => {
-      const services = stabilizeNetworkServices(data.services, current?.services || []);
-      stableData = { ...data, services, overview: { ...deriveOverview(services), recent_event_count: data.overview.recent_event_count } };
-      return stableData;
-    });
-    setSelectedId((current) => {
-      return current && stableData.services.some((service) => service.id === current) ? current : stableData.services[0]?.id || null;
-    });
-    setError(null);
-    setLoading(false);
-    return stableData;
+    const request = networkSentinelApi.getCommandCenter(!showSpinner).then(data => {
+      setSnapshot(current => {
+        const services = stabilizeNetworkServices(data.services, current?.services || []);
+        return { ...data, services, overview: { ...deriveOverview(services), recent_event_count: data.overview.recent_event_count } };
+      });
+      setSelectedId(current => current && data.services.some(service => service.id === current) ? current : data.services[0]?.id || null);
+      setError(null);
+      return data;
+    }).finally(() => { snapshotInFlight.current = null; setLoading(false); });
+    snapshotInFlight.current = request;
+    return request;
   }, []);
 
   const loadInvestigation = useCallback(async (serviceId: string, silent = false) => {
     if (!canMonitoring && !canHistory) return;
     const now = Date.now();
-    if (investigationInFlightRef.current === serviceId) return;
+    if (silent && investigationInFlightRef.current === serviceId) return;
     if (
       silent
       && lastInvestigationLoadedAtRef.current?.serviceId === serviceId
@@ -188,16 +198,22 @@ const NetworkSentinelPage: React.FC = () => {
       return;
     }
 
+    const requestSequence = ++investigationSequence.current;
     investigationInFlightRef.current = serviceId;
     if (!silent) setInvestigationLoading(true);
     try {
-      setInvestigation(await networkSentinelApi.getServiceInvestigation(serviceId));
+      const data = await networkSentinelApi.getServiceInvestigation(serviceId);
+      if (selectedIdRef.current !== serviceId || requestSequence !== investigationSequence.current) return;
+      setInvestigation(current => ({ ...data, service: stabilizeNetworkServices([data.service], current?.service.id === serviceId ? [current.service] : [])[0] }));
+      setDetailError(null);
       lastInvestigationLoadedAtRef.current = { serviceId, at: Date.now() };
+    } catch (err) {
+      if (selectedIdRef.current === serviceId && requestSequence === investigationSequence.current) setDetailError('Diagnostics could not refresh. Last received evidence is retained.');
     } finally {
-      if (investigationInFlightRef.current === serviceId) {
+      if (requestSequence === investigationSequence.current) {
         investigationInFlightRef.current = null;
       }
-      setInvestigationLoading(false);
+      if (requestSequence === investigationSequence.current) setInvestigationLoading(false);
     }
   }, [canMonitoring, canHistory]);
 
@@ -209,6 +225,9 @@ const NetworkSentinelPage: React.FC = () => {
   }, [loadCommandCenter]);
 
   useEffect(() => {
+    selectedIdRef.current = selectedId;
+    setInvestigation(null);
+    setDetailError(null);
     if (selectedId) loadInvestigation(selectedId).catch(() => undefined);
   }, [loadInvestigation, selectedId]);
 
@@ -241,7 +260,7 @@ const NetworkSentinelPage: React.FC = () => {
       if (document.visibilityState === 'hidden') return;
       if (!selectedIdRef.current) return;
       loadInvestigation(selectedIdRef.current, true).catch(() => undefined);
-    }, 15000);
+    }, 30000);
     return () => window.clearInterval(poller);
   }, [loadInvestigation]);
 
@@ -254,7 +273,7 @@ const NetworkSentinelPage: React.FC = () => {
   }, [loadCommandCenter]);
 
   const scheduleInvestigationRefresh = useCallback((serviceId: string) => {
-    if (detailRefreshTimerRef.current) window.clearTimeout(detailRefreshTimerRef.current);
+    if (detailRefreshTimerRef.current) return;
     detailRefreshTimerRef.current = window.setTimeout(() => {
       detailRefreshTimerRef.current = null;
       if (selectedIdRef.current !== serviceId) return;
@@ -271,29 +290,48 @@ const NetworkSentinelPage: React.FC = () => {
   }, [scheduleInvestigationRefresh]);
 
   useEffect(() => {
+    const ticker = window.setInterval(() => setClock(Date.now()), 5000);
+    let lastSync = Date.now();
+    const reconcile = () => {
+      if (document.visibilityState === 'hidden') return;
+      const fallback = connectionRef.current !== 'live';
+      if (Date.now() - lastSync >= (fallback ? 15000 : 60000)) {
+        lastSync = Date.now();
+        loadCommandCenter().catch(() => setError('Fleet refresh failed. Displaying the last received readings.'));
+      }
+    };
+    const timer = window.setInterval(reconcile, 5000);
+    const resume = () => { if (document.visibilityState === 'visible') { lastSync = 0; reconcile(); } };
+    document.addEventListener('visibilitychange', resume);
+    return () => { window.clearInterval(timer); window.clearInterval(ticker); document.removeEventListener('visibilitychange', resume); };
+  }, [loadCommandCenter]);
+
+  useEffect(() => {
     if (!canMonitoring) return;
     const token = localStorage.getItem('token');
     if (!token) return;
-    const socket = new WebSocket(`${resolveWebSocketBaseUrl()}/api/v1/network-sentinel/ws?token=${encodeURIComponent(token)}&min_interval_seconds=0.6`);
-
-    socket.onmessage = (event) => {
-      const message = JSON.parse(event.data);
+    const stop = connectNetworkStream(`${resolveWebSocketBaseUrl()}/api/v1/network-sentinel/ws?token=${encodeURIComponent(token)}`, message => {
+      if (message.data?.engine_health) setSnapshot(current => current ? { ...current, engine: message.data.engine_health } : current);
+      if (message.type === 'CONNECTION_ESTABLISHED') scheduleSnapshotRefreshRef.current();
+      if (message.type === 'SERVICE_EVIDENCE_UPDATED') {
+        scheduleSnapshotRefreshRef.current();
+        if (selectedIdRef.current === message.data?.service_id) scheduleInvestigationRefreshRef.current(message.data.service_id);
+      }
       if (message.type !== 'SERVICE_STATUS_UPDATED') return;
       const update = message.data || {};
-      setSnapshot((current) => {
+      setSnapshot(current => {
         if (!current) return current;
-        const services = current.services.map((service) => (service.id === update.service_id ? patchLiveService(service, update) : service));
+        const services = current.services.map(service => service.id === update.service_id ? patchLiveService(service, update) : service);
         return { ...current, services, overview: { ...deriveOverview(services), recent_event_count: current.overview.recent_event_count } };
       });
       if (selectedIdRef.current === update.service_id) {
-        setInvestigation((current) => current && current.service.id === update.service_id ? { ...current, service: patchLiveService(current.service, update) } : current);
-        scheduleInvestigationRefreshRef.current(update.service_id);
+        setInvestigation(current => current && current.service.id === update.service_id ? { ...current, service: patchLiveService(current.service, update) } : current);
+        // Refresh retained evidence at a bounded cadence, not once per probe.
+        if (Date.now() - (lastInvestigationLoadedAtRef.current?.at || 0) > 15000) scheduleInvestigationRefreshRef.current(update.service_id);
       }
-      scheduleSnapshotRefreshRef.current();
-    };
-
+    }, setConnection);
     return () => {
-      socket.close();
+      stop();
       if (detailRefreshTimerRef.current) window.clearTimeout(detailRefreshTimerRef.current);
       if (snapshotRefreshTimerRef.current) window.clearTimeout(snapshotRefreshTimerRef.current);
     };
@@ -354,7 +392,7 @@ const NetworkSentinelPage: React.FC = () => {
     const scopedGroups = Array.from(new Set(scopedServices.map((service) => normalizeGroupValue(service.group_name)))).sort();
     const nextGroup = groupFilter !== ALL_GROUPS && scopedGroups.includes(groupFilter)
       ? groupFilter
-      : scopedGroups[0] || ALL_GROUPS;
+      : ALL_GROUPS;
     setGroupFilter(nextGroup);
     const visibleServices = filterServices(snapshot?.services || [], { environment: nextEnvironment, group: nextGroup });
     const nextSelectedId = resolveNextSelectedId(visibleServices, selectedId, requestedServiceId);
@@ -385,10 +423,8 @@ const NetworkSentinelPage: React.FC = () => {
     }
     setGroupFilter(nextGroup);
     hasInitializedGroupRef.current = true;
-    startTransition(() => {
-      setSelectedId(serviceId);
-      setTab(nextTab);
-    });
+    setSelectedId(serviceId);
+    setTab(nextTab);
   }, [environmentFilter, snapshot?.services]);
 
   useEffect(() => {
@@ -412,13 +448,13 @@ const NetworkSentinelPage: React.FC = () => {
     const requestedGroup = requestedService ? normalizeGroupValue(requestedService.group_name) : null;
 
     if (!hasInitializedGroupRef.current) {
-      setGroupFilter(requestedGroup && groups.includes(requestedGroup) ? requestedGroup : groups[0] || ALL_GROUPS);
+      setGroupFilter(requestedGroup && groups.includes(requestedGroup) ? requestedGroup : ALL_GROUPS);
       hasInitializedGroupRef.current = true;
       return;
     }
 
     if (groupFilter !== ALL_GROUPS && !groups.includes(groupFilter)) {
-      setGroupFilter(requestedGroup && groups.includes(requestedGroup) ? requestedGroup : groups[0] || ALL_GROUPS);
+      setGroupFilter(requestedGroup && groups.includes(requestedGroup) ? requestedGroup : ALL_GROUPS);
     }
   }, [environmentScopedServices, groupFilter, groups, requestedServiceId]);
 
@@ -439,7 +475,10 @@ const NetworkSentinelPage: React.FC = () => {
   }, [filteredServices, requestedServiceId, selectedId]);
 
   const selectedCard = useMemo<NetworkServiceCard | null>(() => {
-    if (investigation?.service.id === selectedId) return investigation.service;
+    if (investigation?.service.id === selectedId) {
+      const latest = snapshot?.services.find(service => service.id === selectedId);
+      return stabilizeNetworkServices([investigation.service], latest ? [latest] : [])[0];
+    }
     return snapshot?.services.find((service) => service.id === selectedId) || null;
   }, [investigation?.service, selectedId, snapshot?.services]);
 
@@ -512,7 +551,8 @@ const NetworkSentinelPage: React.FC = () => {
     if (!selectedId || checkNowBusy) return;
     setCheckNowBusy(true);
     try {
-      await networkSentinelApi.checkNow(selectedId);
+      const result = await networkSentinelApi.checkNow(selectedId);
+      setManualResult({ serviceId:selectedId, status:result.overall_status, reason:result.reason, checkedAt:result.checked_at });
       addNotification({
         type: 'success',
         message: 'Manual network check recorded successfully.',
@@ -656,13 +696,13 @@ const NetworkSentinelPage: React.FC = () => {
   };
 
   return (
-    <div className="network-sentinel-page">
+    <div className="network-sentinel-page network-modern">
       <div className="network-surface" />
       <section className="network-hero-panel network-shell">
         <div className="hero-copy">
           <div className="eyebrow"><FaSignal />Network Sentinel</div>
-          <h1>Network evidence cockpit</h1>
-          <p>Live reachability, retained outage evidence, and Nexus-ready service posture in one focused operations lane.</p>
+          <h1>Every signal. In focus.</h1>
+          <p>Monitor reachability, investigate changes, and follow the evidence.</p>
           <div className="hero-actions">
             <button className="primary-action" onClick={runRefresh}><FaSyncAlt /> Refresh</button>
             {isManagerOrAdmin ? <button className="secondary-action" onClick={openCreate}><FaPlus /> Add Service</button> : null}
@@ -671,11 +711,11 @@ const NetworkSentinelPage: React.FC = () => {
         <div className="network-command-rail">
           <div>
             <span>Engine</span>
-            <strong>{snapshot?.engine.online ? 'Online' : 'Offline'}</strong>
+            <strong>{loading ? 'Connecting' : snapshot?.engine.online ? 'Online' : 'Offline'}</strong>
           </div>
           <div>
-            <span>Focused asset</span>
-            <strong>{selectedCard?.name || 'Select a service'}</strong>
+            <span>Live connection</span>
+            <strong className={`connection-state ${connection}`}>{canMonitoring ? ({live:'Streaming', connecting:'Connecting', reconnecting:'Reconnecting  -  polling', offline:'Engine offline', denied:'Access changed'})[connection] : 'History view'}</strong>
           </div>
           <div>
             <span>Evidence window</span>
@@ -688,29 +728,24 @@ const NetworkSentinelPage: React.FC = () => {
 
       <section className="network-toolbar network-shell">
         <label className="toolbar-search"><FaSearch /><input value={serviceQuery} onChange={(event) => setServiceQuery(event.target.value)} placeholder="Search service, address, tag or note..." /></label>
-        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as 'ALL' | Status)}><option value="ALL">All status</option><option value="UP">UP</option><option value="DEGRADED">DEGRADED</option><option value="DOWN">DOWN</option><option value="UNKNOWN">UNKNOWN</option></select>
-        <select value={environmentFilter} onChange={(event) => handleEnvironmentFilterChange(event.target.value)}><option value="">All environments</option>{environments.map((environment) => <option key={environment} value={environment}>{environment}</option>)}</select>
-        <select value={groupFilter} onChange={(event) => handleGroupFilterChange(event.target.value)}><option value={ALL_GROUPS}>All groups</option>{groups.map((group) => <option key={group} value={group}>{group === UNGROUPED_GROUP ? 'Ungrouped' : group}</option>)}</select>
+        <select aria-label="Status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as 'ALL' | Status)}><option value="ALL">All status</option><option value="UP">UP</option><option value="DEGRADED">DEGRADED</option><option value="DOWN">DOWN</option><option value="UNKNOWN">UNKNOWN</option></select>
+        <select aria-label="Environment" value={environmentFilter} onChange={(event) => handleEnvironmentFilterChange(event.target.value)}><option value="">All environments</option>{environments.map((environment) => <option key={environment} value={environment}>{environment}</option>)}</select>
+        <select aria-label="Service group" value={groupFilter} onChange={(event) => handleGroupFilterChange(event.target.value)}><option value={ALL_GROUPS}>All groups</option>{groups.map((group) => <option key={group} value={group}>{group === UNGROUPED_GROUP ? 'Ungrouped' : group}</option>)}</select>
       </section>
 
-      <section className="group-focus-band network-shell">
-        <div className="group-focus-copy">
-          <span>Fleet focus</span>
-          <strong>{groupFilter === ALL_GROUPS ? 'All groups' : formatGroupLabel(groupFilter === UNGROUPED_GROUP ? '' : groupFilter)}</strong>
-          <small>Switch between different service groups to view evidence, modify or disable services.</small>
-        </div>
-        <div className="group-focus-pills">
-          {groups.map((group) => <button key={group} type="button" className={groupFilter === group ? 'active' : ''} onClick={() => handleGroupFilterChange(group)}>{group === UNGROUPED_GROUP ? 'Ungrouped' : group}</button>)}
-          {groups.length > 1 ? <button type="button" className={groupFilter === ALL_GROUPS ? 'active subtle' : 'subtle'} onClick={() => handleGroupFilterChange(ALL_GROUPS)}>Show all groups</button> : null}
-        </div>
+      <section className="network-pulse" aria-label="Fleet status filters">
+        {([['ALL', 'All services', snapshot?.overview.total_services], ['UP', 'Healthy', snapshot?.overview.up_services], ['DEGRADED', 'Degraded', snapshot?.overview.degraded_services], ['DOWN', 'Down', snapshot?.overview.down_services], ['UNKNOWN', 'Awaiting signal', snapshot?.overview.unknown_services]] as const).map(([value, label, count]) => <button key={value} className={`${value.toLowerCase()} ${statusFilter === value ? 'active' : ''}`} onClick={() => setStatusFilter(value)} aria-pressed={statusFilter === value}><span>{label}</span><strong>{loading ? '...' : count ?? 0}</strong></button>)}
       </section>
 
       <div className="network-layout">
         <section className="fleet-column">
           <div className="service-grid">
-            {loading ? <div className="network-shell placeholder-card">Loading network command center...</div> : null}
+            {loading ? <div className="network-skeleton" role="status" aria-label="Loading network services"><i /><i /><i /><i /></div> : null}
+            {!loading && !filteredServices.length ? <div className="list-empty">{snapshot?.services.length ? 'No services match these filters.' : 'No services configured yet.'}</div> : null}
             {filteredServices.map((service) => {
-              const status = service.status?.overall_status || 'UNKNOWN';
+              const checkedAt = parseSentinelTimestamp(service.status?.last_checked_at);
+              const stale = service.enabled && (!checkedAt || clock - checkedAt.getTime() > Math.max(30000, service.interval_seconds * 3000 + service.timeout_ms));
+              const status = !service.enabled ? 'PAUSED' : stale ? 'STALE' : service.status?.overall_status || 'UNKNOWN';
               return (
                 <button
                   key={service.id}
@@ -731,8 +766,8 @@ const NetworkSentinelPage: React.FC = () => {
                   </div>
                   <ModuleAccess module="network_sentinel.monitoring"><div className="network-service-facts">
                     <div><span>Signal</span><strong>{formatLatencyPair(service)}</strong></div>
-                    <div><span>Availability</span><strong>{formatPercent(service.metrics.uptime_percent_24h)}</strong></div>
-                    <div><span>Posture</span><strong>{formatServicePosture(service)}</strong></div>
+                    <div><span>24h sampled availability</span><strong>{formatPercent(service.metrics.uptime_percent_24h)}</strong></div>
+                    <div><span>Last probe</span><strong>{service.status?.last_checked_at ? `${formatSince(service.status.last_checked_at)} ago` : 'Awaiting probe'}</strong></div>
                   </div></ModuleAccess>
                 </button>
               );
@@ -784,6 +819,7 @@ const NetworkSentinelPage: React.FC = () => {
               <strong className={`status-pill ${statusClass(selectedCard.status?.overall_status)}`}>{selectedCard.status?.overall_status || 'UNKNOWN'}</strong>
             </div>
             <div className="detail-actions">{isManagerOrAdmin ? <button onClick={runCheckNow} disabled={checkNowBusy}><FaBolt /> {checkNowBusy ? 'Checking...' : 'Check now'}</button> : null}{isManagerOrAdmin ? <button onClick={toggleEnabled} disabled={toggleBusy}>{toggleBusy ? 'Working...' : selectedCard.enabled ? 'Disable' : 'Enable'}</button> : null}{isManagerOrAdmin ? <button onClick={openEdit}>Edit</button> : null}{canMonitoring && (<button onClick={downloadEvidenceText} disabled={evidenceDownloading}><FaDownload /> {evidenceDownloading ? 'Preparing...' : 'Evidence TXT'}</button>)}{isAdmin ? <button className="danger-action" onClick={deleteService} disabled={deleteBusy}>{deleteBusy ? 'Deleting...' : 'Delete'}</button> : null}</div>
+            {manualResult?.serviceId === selectedCard.id ? <div className="manual-probe-result" role="status"><strong>Manual check  -  {manualResult.status}</strong><span>{formatDateTime(manualResult.checkedAt)}{manualResult.reason ? `  -  ${manualResult.reason}` : ''}</span><button aria-label="Dismiss manual check result" onClick={() => setManualResult(null)}>Dismiss</button></div> : null}
             <ModuleAccess module="network_sentinel.monitoring"><div className="network-detail-strip">
               <div>
                 <span><FaSignal /> Signal</span>
@@ -806,7 +842,9 @@ const NetworkSentinelPage: React.FC = () => {
               {canHistory && <button className={tab === 'timeline' ? 'active' : ''} onClick={() => setTab('timeline')}>Timeline</button>}
               {canMonitoring && <button className={tab === 'evidence' ? 'active' : ''} onClick={() => setTab('evidence')}>Evidence</button>}
             </div>}
-            {investigationLoading ? <div className="network-shell inner-loading">Refreshing diagnostics...</div> : null}
+            {detailError ? <div className="status-banner error-banner" role="status">{detailError} <button onClick={() => selectedId && loadInvestigation(selectedId)}>Retry</button></div> : null}
+            {investigationLoading ? <div className="network-shell inner-loading" role="status">Loading retained evidence...</div> : null}
+            <div className="probe-freshness">Last probe: {selectedCard.status?.last_checked_at ? `${formatDateTime(selectedCard.status.last_checked_at)}  -  ${formatSince(selectedCard.status.last_checked_at)} ago` : 'No reading yet'}{selectedCard.status?.reason ? <span>{selectedCard.status.reason}</span> : null}</div>
             {tab === 'signal' ? <div className="tab-content"><div className="signal-panel"><div className="panel-head"><h3>Sampled Availability</h3><span>{signalLabel}</span></div><SignalBand samples={normalizedSamples} /></div><div className="signal-panel"><div className="panel-head"><h3>Latency Envelope</h3><span>{formatLatency(investigation?.metrics.avg_icmp_latency_ms_24h || investigation?.metrics.avg_tcp_latency_ms_24h)}</span></div><LatencyChart samples={normalizedSamples} /></div></div> : null}
             {tab === 'timeline' ? <div className="tab-content two-column"><div className="timeline-panel"><div className="panel-head"><div className="timeline-panel-title"><h3>Major Events Archive</h3><span>{historicalEvents.length}</span></div><button className="timeline-focus-button" onClick={() => setTodayEventsOpen(true)} type="button"><span>View today's events</span><strong>{todaysEvents.length}</strong></button></div><div className="timeline-list">{historicalEvents.map((event) => <div key={event.id} className={`timeline-entry ${event.severity.toLowerCase()}`}><strong>{event.title}</strong><span>{formatDateTime(event.created_at)}</span><p>{event.summary || 'No summary provided.'}</p></div>)}{!historicalEvents.length ? <div className="list-empty">Older retained major events will appear here after today's activity rolls over.</div> : null}</div></div><div className="timeline-panel"><div className="panel-head"><div className="timeline-panel-title"><h3>Outage Ledger Archive</h3><span>{historicalOutages.length}</span></div><button className="timeline-focus-button" onClick={() => setOutageLedgerOpen(true)} type="button"><span>View today's outages</span><strong>{todaysOutages.length}</strong></button></div><div className="timeline-list">{historicalOutages.map((outage) => <div key={outage.id} className={`timeline-entry ${outage.ended_at ? 'info' : 'critical'}`}><strong>{outage.ended_at ? 'Resolved incident' : 'Active incident'}</strong><span>{formatDateTime(outage.started_at)}</span><p>{outage.ended_at ? `Resolved in ${formatDuration(outage.duration_seconds)}` : `Ongoing for ${formatSince(outage.started_at)}`}</p></div>)}{!historicalOutages.length ? <div className="list-empty">Older retained outages will appear here once today's incidents roll over.</div> : null}</div></div></div> : null}
             {tab === 'evidence' ? <div className="tab-content"><div className="panel-head"><h3>Raw Evidence Window</h3><span>{investigation?.retention.raw_history_days ?? snapshot?.retention.raw_history_days ?? 2} day retention{latestEvidenceAt ? ` / Updated ${formatDateTime(latestEvidenceAt)}` : ''}</span></div><label className="toolbar-search compact"><FaSearch /><input value={rawSearch} onChange={(event) => setRawSearch(event.target.value)} placeholder="Filter raw evidence..." /></label><div className="evidence-list">{rawRows.slice(-180).reverse().map((row: ServiceHistoryRow, index) => <div key={`${row.timestamp}-${index}`} className={`evidence-row ${statusClass(row.kind === 'OUTAGE_DETECTED' ? 'DOWN' : row.kind)}`}><span>{formatDateTime(row.timestamp)}</span><strong>{row.kind}</strong><code>{row.raw}</code></div>)}{!rawRows.length ? <div className="list-empty">No raw evidence retained in the current window.</div> : null}</div></div> : null}
@@ -814,11 +852,11 @@ const NetworkSentinelPage: React.FC = () => {
         </aside>
       </div>
 
-      {canHistory && todayEventsOpen ? <div className="editor-backdrop" onClick={() => setTodayEventsOpen(false)}><div className="editor-card network-shell outage-ledger-modal" onClick={(event) => event.stopPropagation()}><div className="panel-head"><div className='my-div'><h3>Today's Major Events</h3><span>{selectedCard?.name || 'Focused asset'}</span></div><button type="button" onClick={() => setTodayEventsOpen(false)}>Close</button></div><div className="timeline-list outage-ledger-list">{todaysEvents.map((event) => <div key={event.id} className={`timeline-entry ${event.severity.toLowerCase()}`}><strong>{event.title}</strong><span>{formatDateTime(event.created_at)}</span><p>{event.summary || 'No summary provided.'}</p></div>)}{!todaysEvents.length ? <div className="list-empty">No major events recorded today for this service.</div> : null}</div></div></div> : null}
-      {canHistory && outageLedgerOpen ? <div className="editor-backdrop" onClick={() => setOutageLedgerOpen(false)}><div className="editor-card network-shell outage-ledger-modal" onClick={(event) => event.stopPropagation()}><div className="panel-head"><div className='my-div'><h3>Today's Outages</h3><span>{selectedCard?.name || 'Focused asset'}</span></div><button type="button" onClick={() => setOutageLedgerOpen(false)}>Close</button></div><div className="timeline-list outage-ledger-list">{todaysOutages.map((outage) => <div key={outage.id} className={`timeline-entry ${outage.ended_at ? 'info' : 'critical'}`}><strong>{outage.ended_at ? 'Resolved incident' : 'Active incident'}</strong><span>{formatDateTime(outage.started_at)}</span><p>{outage.ended_at ? `Resolved in ${formatDuration(outage.duration_seconds)}` : `Ongoing for ${formatSince(outage.started_at)}`}</p></div>)}{!todaysOutages.length ? <div className="list-empty">No outages recorded today for this service.</div> : null}</div></div></div> : null}
+      {canHistory && todayEventsOpen ? <NetworkDialog label="Today's major events" onClose={() => setTodayEventsOpen(false)}><div className="editor-card network-shell outage-ledger-modal" onClick={(event) => event.stopPropagation()}><div className="panel-head"><div className='my-div'><h3>Today's Major Events</h3><span>{selectedCard?.name || 'Focused asset'}</span></div><button type="button" onClick={() => setTodayEventsOpen(false)}>Close</button></div><div className="timeline-list outage-ledger-list">{todaysEvents.map((event) => <div key={event.id} className={`timeline-entry ${event.severity.toLowerCase()}`}><strong>{event.title}</strong><span>{formatDateTime(event.created_at)}</span><p>{event.summary || 'No summary provided.'}</p></div>)}{!todaysEvents.length ? <div className="list-empty">No major events recorded today for this service.</div> : null}</div></div></NetworkDialog> : null}
+      {canHistory && outageLedgerOpen ? <NetworkDialog label="Today's outages" onClose={() => setOutageLedgerOpen(false)}><div className="editor-card network-shell outage-ledger-modal" onClick={(event) => event.stopPropagation()}><div className="panel-head"><div className='my-div'><h3>Today's Outages</h3><span>{selectedCard?.name || 'Focused asset'}</span></div><button type="button" onClick={() => setOutageLedgerOpen(false)}>Close</button></div><div className="timeline-list outage-ledger-list">{todaysOutages.map((outage) => <div key={outage.id} className={`timeline-entry ${outage.ended_at ? 'info' : 'critical'}`}><strong>{outage.ended_at ? 'Resolved incident' : 'Active incident'}</strong><span>{formatDateTime(outage.started_at)}</span><p>{outage.ended_at ? `Resolved in ${formatDuration(outage.duration_seconds)}` : `Ongoing for ${formatSince(outage.started_at)}`}</p></div>)}{!todaysOutages.length ? <div className="list-empty">No outages recorded today for this service.</div> : null}</div></div></NetworkDialog> : null}
 
       {editorOpen ? (
-        <div className="editor-backdrop" onClick={() => setEditorOpen(false)}>
+        <NetworkDialog label={editorMode === 'create' ? 'Add monitored service' : 'Edit monitored service'} onClose={() => { if (!saveBusy) setEditorOpen(false); }}>
           <div className="editor-card network-shell" onClick={(event) => event.stopPropagation()}>
             <div className="editor-card-head">
               <span>{editorMode === 'create' ? 'New monitor' : 'Monitor profile'}</span>
@@ -862,7 +900,7 @@ const NetworkSentinelPage: React.FC = () => {
             </div>
             <div className="editor-actions"><button onClick={() => setEditorOpen(false)} disabled={saveBusy}>Cancel</button><button className="primary-action" onClick={submitServiceForm} disabled={saveBusy}>{saveBusy ? 'Saving...' : 'Save'}</button></div>
           </div>
-        </div>
+        </NetworkDialog>
       ) : null}
       <PageGuide guide={pageGuides.networkSentinel} />
     </div>
