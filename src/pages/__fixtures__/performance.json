@@ -1,0 +1,1518 @@
+{
+  "generated_at": "2026-10-17T10:00:00Z",
+  "focus_window": "monthly",
+  "scope_label": "ICT Operations",
+  "profile": {
+    "user_id": "11111111-1111-4111-8111-111111111111",
+    "username": "demo",
+    "display_name": "Demo Operator",
+    "section_name": "ICT Operations",
+    "badge_count": 0
+  },
+  "windows": {
+    "weekly": {
+      "key": "weekly",
+      "label": "Weekly",
+      "start_date": "2026-01-01",
+      "end_date": "2026-10-17",
+      "command_points": 1653,
+      "operational_grade": 88,
+      "tier": "Pulse",
+      "rank": 1,
+      "total_users": 1,
+      "contribution_days": 1,
+      "current_streak": 1,
+      "longest_streak": 1,
+      "items_completed": 195,
+      "critical_items_completed": 0,
+      "checklists_joined": 0,
+      "clean_checklists": 7,
+      "tasks_completed": 20,
+      "tasks_completed_on_time": 15,
+      "critical_tasks_completed": 0,
+      "high_tasks_completed": 0,
+      "collaborative_tasks_completed": 0,
+      "handovers_created": 0,
+      "handovers_resolved": 3,
+      "overdue_open_tasks": 0,
+      "task_on_time_rate": 88.2,
+      "checklist_quality_rate": 87.5,
+      "shift_adherence_rate": 88.9,
+      "consistency_rate": 0.3,
+      "summary": "Checklist quality is healthy. Task closure is steady. Shift follow-through is stable.",
+      "evidence": {
+        "deadline_tasks": 17,
+        "closed_runs": 8,
+        "elapsed_shifts": 9,
+        "timed_starts": 14,
+        "timed_start_rate": 85.7,
+        "sample_size": 48,
+        "status": "established"
+      },
+      "breakdown": {
+        "execution_points": 1240,
+        "reliability_points": 377,
+        "collaboration_points": 36,
+        "quality_points": 0
+      }
+    },
+    "monthly": {
+      "key": "monthly",
+      "label": "Monthly",
+      "start_date": "2026-01-01",
+      "end_date": "2026-10-17",
+      "command_points": 1653,
+      "operational_grade": 88,
+      "tier": "Pulse",
+      "rank": 1,
+      "total_users": 1,
+      "contribution_days": 1,
+      "current_streak": 1,
+      "longest_streak": 1,
+      "items_completed": 195,
+      "critical_items_completed": 0,
+      "checklists_joined": 0,
+      "clean_checklists": 7,
+      "tasks_completed": 20,
+      "tasks_completed_on_time": 15,
+      "critical_tasks_completed": 0,
+      "high_tasks_completed": 0,
+      "collaborative_tasks_completed": 0,
+      "handovers_created": 0,
+      "handovers_resolved": 3,
+      "overdue_open_tasks": 0,
+      "task_on_time_rate": 88.2,
+      "checklist_quality_rate": 87.5,
+      "shift_adherence_rate": 88.9,
+      "consistency_rate": 0.3,
+      "summary": "Checklist quality is healthy. Task closure is steady. Shift follow-through is stable.",
+      "evidence": {
+        "deadline_tasks": 17,
+        "closed_runs": 8,
+        "elapsed_shifts": 9,
+        "timed_starts": 14,
+        "timed_start_rate": 85.7,
+        "sample_size": 48,
+        "status": "established"
+      },
+      "breakdown": {
+        "execution_points": 1240,
+        "reliability_points": 377,
+        "collaboration_points": 36,
+        "quality_points": 0
+      }
+    },
+    "quarterly": {
+      "key": "quarterly",
+      "label": "Quarterly",
+      "start_date": "2026-01-01",
+      "end_date": "2026-10-17",
+      "command_points": 1653,
+      "operational_grade": 88,
+      "tier": "Pulse",
+      "rank": 1,
+      "total_users": 1,
+      "contribution_days": 1,
+      "current_streak": 1,
+      "longest_streak": 1,
+      "items_completed": 195,
+      "critical_items_completed": 0,
+      "checklists_joined": 0,
+      "clean_checklists": 7,
+      "tasks_completed": 20,
+      "tasks_completed_on_time": 15,
+      "critical_tasks_completed": 0,
+      "high_tasks_completed": 0,
+      "collaborative_tasks_completed": 0,
+      "handovers_created": 0,
+      "handovers_resolved": 3,
+      "overdue_open_tasks": 0,
+      "task_on_time_rate": 88.2,
+      "checklist_quality_rate": 87.5,
+      "shift_adherence_rate": 88.9,
+      "consistency_rate": 0.3,
+      "summary": "Checklist quality is healthy. Task closure is steady. Shift follow-through is stable.",
+      "evidence": {
+        "deadline_tasks": 17,
+        "closed_runs": 8,
+        "elapsed_shifts": 9,
+        "timed_starts": 14,
+        "timed_start_rate": 85.7,
+        "sample_size": 48,
+        "status": "established"
+      },
+      "breakdown": {
+        "execution_points": 1240,
+        "reliability_points": 377,
+        "collaboration_points": 36,
+        "quality_points": 0
+      }
+    },
+    "yearly": {
+      "key": "yearly",
+      "label": "Yearly",
+      "start_date": "2026-01-01",
+      "end_date": "2026-10-17",
+      "command_points": 1653,
+      "operational_grade": 88,
+      "tier": "Pulse",
+      "rank": 1,
+      "total_users": 1,
+      "contribution_days": 1,
+      "current_streak": 1,
+      "longest_streak": 1,
+      "items_completed": 195,
+      "critical_items_completed": 0,
+      "checklists_joined": 0,
+      "clean_checklists": 7,
+      "tasks_completed": 20,
+      "tasks_completed_on_time": 15,
+      "critical_tasks_completed": 0,
+      "high_tasks_completed": 0,
+      "collaborative_tasks_completed": 0,
+      "handovers_created": 0,
+      "handovers_resolved": 3,
+      "overdue_open_tasks": 0,
+      "task_on_time_rate": 88.2,
+      "checklist_quality_rate": 87.5,
+      "shift_adherence_rate": 88.9,
+      "consistency_rate": 0.3,
+      "summary": "Checklist quality is healthy. Task closure is steady. Shift follow-through is stable.",
+      "evidence": {
+        "deadline_tasks": 17,
+        "closed_runs": 8,
+        "elapsed_shifts": 9,
+        "timed_starts": 14,
+        "timed_start_rate": 85.7,
+        "sample_size": 48,
+        "status": "established"
+      },
+      "breakdown": {
+        "execution_points": 1240,
+        "reliability_points": 377,
+        "collaboration_points": 36,
+        "quality_points": 0
+      }
+    }
+  },
+  "active_window": {
+    "key": "monthly",
+    "label": "Year to date",
+    "start_date": "2026-01-01",
+    "end_date": "2026-10-17",
+    "command_points": 1653,
+    "operational_grade": 88,
+    "tier": "Pulse",
+    "rank": 1,
+    "total_users": 1,
+    "contribution_days": 1,
+    "current_streak": 1,
+    "longest_streak": 1,
+    "items_completed": 195,
+    "critical_items_completed": 0,
+    "checklists_joined": 0,
+    "clean_checklists": 7,
+    "tasks_completed": 20,
+    "tasks_completed_on_time": 15,
+    "critical_tasks_completed": 0,
+    "high_tasks_completed": 0,
+    "collaborative_tasks_completed": 0,
+    "handovers_created": 0,
+    "handovers_resolved": 3,
+    "overdue_open_tasks": 0,
+    "task_on_time_rate": 88.2,
+    "checklist_quality_rate": 87.5,
+    "shift_adherence_rate": 88.9,
+    "consistency_rate": 0.3,
+    "summary": "Checklist quality is healthy. Task closure is steady. Shift follow-through is stable.",
+    "evidence": {
+      "deadline_tasks": 17,
+      "closed_runs": 8,
+      "elapsed_shifts": 9,
+      "timed_starts": 14,
+      "timed_start_rate": 85.7,
+      "sample_size": 48,
+      "status": "established"
+    },
+    "breakdown": {
+      "execution_points": 1240,
+      "reliability_points": 377,
+      "collaboration_points": 36,
+      "quality_points": 0
+    }
+  },
+  "badges": [
+    {
+      "key": "flow_keeper",
+      "name": "Flow Keeper Amateur",
+      "icon": "flow",
+      "theme": "azure",
+      "description": "Close work on time and keep delivery pressure under control.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "flow_keeper",
+      "family_name": "Flow Keeper",
+      "level": 1,
+      "level_name": "Amateur",
+      "requirements": [
+        {
+          "label": "Completed tasks",
+          "current": 20,
+          "target": 4,
+          "met": true
+        },
+        {
+          "label": "Tasks with deadlines",
+          "current": 17,
+          "target": 3,
+          "met": true
+        },
+        {
+          "label": "On-time delivery (%)",
+          "current": 88.2,
+          "target": 85,
+          "met": true
+        }
+      ],
+      "earned": true,
+      "claimed": false,
+      "claimable": true,
+      "progress": 100.0,
+      "target": "Completed tasks: 4; Tasks with deadlines: 3; On-time delivery (%): 85",
+      "unlocked_by_metrics": true,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "flow_keeper_level_2",
+      "name": "Flow Keeper Skilled",
+      "icon": "flow",
+      "theme": "azure",
+      "description": "Close work on time and keep delivery pressure under control.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "flow_keeper",
+      "family_name": "Flow Keeper",
+      "level": 2,
+      "level_name": "Skilled",
+      "requirements": [
+        {
+          "label": "Completed tasks",
+          "current": 20,
+          "target": 12,
+          "met": true
+        },
+        {
+          "label": "Tasks with deadlines",
+          "current": 17,
+          "target": 9,
+          "met": true
+        },
+        {
+          "label": "On-time delivery (%)",
+          "current": 88.2,
+          "target": 85,
+          "met": true
+        }
+      ],
+      "earned": true,
+      "claimed": false,
+      "claimable": false,
+      "progress": 100.0,
+      "target": "Completed tasks: 12; Tasks with deadlines: 9; On-time delivery (%): 85",
+      "unlocked_by_metrics": true,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "flow_keeper_level_3",
+      "name": "Flow Keeper Expert",
+      "icon": "flow",
+      "theme": "azure",
+      "description": "Close work on time and keep delivery pressure under control.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "flow_keeper",
+      "family_name": "Flow Keeper",
+      "level": 3,
+      "level_name": "Expert",
+      "requirements": [
+        {
+          "label": "Completed tasks",
+          "current": 20,
+          "target": 24,
+          "met": false
+        },
+        {
+          "label": "Tasks with deadlines",
+          "current": 17,
+          "target": 18,
+          "met": false
+        },
+        {
+          "label": "On-time delivery (%)",
+          "current": 88.2,
+          "target": 85,
+          "met": true
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 83.3,
+      "target": "Completed tasks: 24; Tasks with deadlines: 18; On-time delivery (%): 85",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "checklist_vanguard",
+      "name": "Checklist Vanguard Amateur",
+      "icon": "shield",
+      "theme": "emerald",
+      "description": "Run clean checklist operations with strong required-item discipline.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "checklist_vanguard",
+      "family_name": "Checklist Vanguard",
+      "level": 1,
+      "level_name": "Amateur",
+      "requirements": [
+        {
+          "label": "Checklist actions",
+          "current": 195,
+          "target": 30,
+          "met": true
+        },
+        {
+          "label": "Clean contributed runs",
+          "current": 7,
+          "target": 2,
+          "met": true
+        }
+      ],
+      "earned": true,
+      "claimed": false,
+      "claimable": true,
+      "progress": 100.0,
+      "target": "Checklist actions: 30; Clean contributed runs: 2",
+      "unlocked_by_metrics": true,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "checklist_vanguard_level_2",
+      "name": "Checklist Vanguard Skilled",
+      "icon": "shield",
+      "theme": "emerald",
+      "description": "Run clean checklist operations with strong required-item discipline.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "checklist_vanguard",
+      "family_name": "Checklist Vanguard",
+      "level": 2,
+      "level_name": "Skilled",
+      "requirements": [
+        {
+          "label": "Checklist actions",
+          "current": 195,
+          "target": 90,
+          "met": true
+        },
+        {
+          "label": "Clean contributed runs",
+          "current": 7,
+          "target": 6,
+          "met": true
+        }
+      ],
+      "earned": true,
+      "claimed": false,
+      "claimable": false,
+      "progress": 100.0,
+      "target": "Checklist actions: 90; Clean contributed runs: 6",
+      "unlocked_by_metrics": true,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "checklist_vanguard_level_3",
+      "name": "Checklist Vanguard Expert",
+      "icon": "shield",
+      "theme": "emerald",
+      "description": "Run clean checklist operations with strong required-item discipline.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "checklist_vanguard",
+      "family_name": "Checklist Vanguard",
+      "level": 3,
+      "level_name": "Expert",
+      "requirements": [
+        {
+          "label": "Checklist actions",
+          "current": 195,
+          "target": 180,
+          "met": true
+        },
+        {
+          "label": "Clean contributed runs",
+          "current": 7,
+          "target": 12,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 58.3,
+      "target": "Checklist actions: 180; Clean contributed runs: 12",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "critical_shield",
+      "name": "Critical Shield Amateur",
+      "icon": "bolt",
+      "theme": "amber",
+      "description": "Handle critical operational work without dropping the tempo.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "critical_shield",
+      "family_name": "Critical Shield",
+      "level": 1,
+      "level_name": "Amateur",
+      "requirements": [
+        {
+          "label": "Critical actions",
+          "current": 0,
+          "target": 6,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 0.0,
+      "target": "Critical actions: 6",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "critical_shield_level_2",
+      "name": "Critical Shield Skilled",
+      "icon": "bolt",
+      "theme": "amber",
+      "description": "Handle critical operational work without dropping the tempo.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "critical_shield",
+      "family_name": "Critical Shield",
+      "level": 2,
+      "level_name": "Skilled",
+      "requirements": [
+        {
+          "label": "Critical actions",
+          "current": 0,
+          "target": 18,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 0.0,
+      "target": "Critical actions: 18",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "critical_shield_level_3",
+      "name": "Critical Shield Expert",
+      "icon": "bolt",
+      "theme": "amber",
+      "description": "Handle critical operational work without dropping the tempo.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "critical_shield",
+      "family_name": "Critical Shield",
+      "level": 3,
+      "level_name": "Expert",
+      "requirements": [
+        {
+          "label": "Critical actions",
+          "current": 0,
+          "target": 36,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 0.0,
+      "target": "Critical actions: 36",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "relay_architect",
+      "name": "Relay Architect Amateur",
+      "icon": "relay",
+      "theme": "violet",
+      "description": "Keep operational context moving through handovers and shared work.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "relay_architect",
+      "family_name": "Relay Architect",
+      "level": 1,
+      "level_name": "Amateur",
+      "requirements": [
+        {
+          "label": "Handover resolutions",
+          "current": 3,
+          "target": 2,
+          "met": true
+        },
+        {
+          "label": "Contribution days",
+          "current": 1,
+          "target": 3,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 33.3,
+      "target": "Handover resolutions: 2; Contribution days: 3",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "relay_architect_level_2",
+      "name": "Relay Architect Skilled",
+      "icon": "relay",
+      "theme": "violet",
+      "description": "Keep operational context moving through handovers and shared work.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "relay_architect",
+      "family_name": "Relay Architect",
+      "level": 2,
+      "level_name": "Skilled",
+      "requirements": [
+        {
+          "label": "Handover resolutions",
+          "current": 3,
+          "target": 6,
+          "met": false
+        },
+        {
+          "label": "Contribution days",
+          "current": 1,
+          "target": 9,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 11.1,
+      "target": "Handover resolutions: 6; Contribution days: 9",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "relay_architect_level_3",
+      "name": "Relay Architect Expert",
+      "icon": "relay",
+      "theme": "violet",
+      "description": "Keep operational context moving through handovers and shared work.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "relay_architect",
+      "family_name": "Relay Architect",
+      "level": 3,
+      "level_name": "Expert",
+      "requirements": [
+        {
+          "label": "Handover resolutions",
+          "current": 3,
+          "target": 12,
+          "met": false
+        },
+        {
+          "label": "Contribution days",
+          "current": 1,
+          "target": 18,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 5.6,
+      "target": "Handover resolutions: 12; Contribution days: 18",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "tempo_builder",
+      "name": "Tempo Builder Amateur",
+      "icon": "orbit",
+      "theme": "cyan",
+      "description": "Build a consistent rhythm of contribution across the operational calendar.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "tempo_builder",
+      "family_name": "Tempo Builder",
+      "level": 1,
+      "level_name": "Amateur",
+      "requirements": [
+        {
+          "label": "Contribution days",
+          "current": 1,
+          "target": 15,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 6.7,
+      "target": "Contribution days: 15",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "tempo_builder_level_2",
+      "name": "Tempo Builder Skilled",
+      "icon": "orbit",
+      "theme": "cyan",
+      "description": "Build a consistent rhythm of contribution across the operational calendar.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "tempo_builder",
+      "family_name": "Tempo Builder",
+      "level": 2,
+      "level_name": "Skilled",
+      "requirements": [
+        {
+          "label": "Contribution days",
+          "current": 1,
+          "target": 45,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 2.2,
+      "target": "Contribution days: 45",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "tempo_builder_level_3",
+      "name": "Tempo Builder Expert",
+      "icon": "orbit",
+      "theme": "cyan",
+      "description": "Build a consistent rhythm of contribution across the operational calendar.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "tempo_builder",
+      "family_name": "Tempo Builder",
+      "level": 3,
+      "level_name": "Expert",
+      "requirements": [
+        {
+          "label": "Contribution days",
+          "current": 1,
+          "target": 90,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 1.1,
+      "target": "Contribution days: 90",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "night_owl",
+      "name": "Night Owl Amateur",
+      "icon": "moon",
+      "theme": "violet",
+      "description": "Carry the operation through the night by landing real checklist work in overnight runs.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "night_owl",
+      "family_name": "Night Owl",
+      "level": 1,
+      "level_name": "Amateur",
+      "requirements": [
+        {
+          "label": "Night actions",
+          "current": 40,
+          "target": 12,
+          "met": true
+        },
+        {
+          "label": "Distinct night runs",
+          "current": 7,
+          "target": 2,
+          "met": true
+        }
+      ],
+      "earned": true,
+      "claimed": false,
+      "claimable": true,
+      "progress": 100.0,
+      "target": "Night actions: 12; Distinct night runs: 2",
+      "unlocked_by_metrics": true,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "night_owl_level_2",
+      "name": "Night Owl Skilled",
+      "icon": "moon",
+      "theme": "violet",
+      "description": "Carry the operation through the night by landing real checklist work in overnight runs.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "night_owl",
+      "family_name": "Night Owl",
+      "level": 2,
+      "level_name": "Skilled",
+      "requirements": [
+        {
+          "label": "Night actions",
+          "current": 40,
+          "target": 36,
+          "met": true
+        },
+        {
+          "label": "Distinct night runs",
+          "current": 7,
+          "target": 6,
+          "met": true
+        }
+      ],
+      "earned": true,
+      "claimed": false,
+      "claimable": false,
+      "progress": 100.0,
+      "target": "Night actions: 36; Distinct night runs: 6",
+      "unlocked_by_metrics": true,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "night_owl_level_3",
+      "name": "Night Owl Expert",
+      "icon": "moon",
+      "theme": "violet",
+      "description": "Carry the operation through the night by landing real checklist work in overnight runs.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "night_owl",
+      "family_name": "Night Owl",
+      "level": 3,
+      "level_name": "Expert",
+      "requirements": [
+        {
+          "label": "Night actions",
+          "current": 40,
+          "target": 72,
+          "met": false
+        },
+        {
+          "label": "Distinct night runs",
+          "current": 7,
+          "target": 12,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 55.6,
+      "target": "Night actions: 72; Distinct night runs: 12",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "first_light",
+      "name": "First Light Amateur",
+      "icon": "sunrise",
+      "theme": "amber",
+      "description": "Open the day with dependable morning-shift execution that keeps the lane stable.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "first_light",
+      "family_name": "First Light",
+      "level": 1,
+      "level_name": "Amateur",
+      "requirements": [
+        {
+          "label": "Morning actions",
+          "current": 0,
+          "target": 12,
+          "met": false
+        },
+        {
+          "label": "Distinct morning runs",
+          "current": 0,
+          "target": 2,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 0.0,
+      "target": "Morning actions: 12; Distinct morning runs: 2",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "first_light_level_2",
+      "name": "First Light Skilled",
+      "icon": "sunrise",
+      "theme": "amber",
+      "description": "Open the day with dependable morning-shift execution that keeps the lane stable.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "first_light",
+      "family_name": "First Light",
+      "level": 2,
+      "level_name": "Skilled",
+      "requirements": [
+        {
+          "label": "Morning actions",
+          "current": 0,
+          "target": 36,
+          "met": false
+        },
+        {
+          "label": "Distinct morning runs",
+          "current": 0,
+          "target": 6,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 0.0,
+      "target": "Morning actions: 36; Distinct morning runs: 6",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "first_light_level_3",
+      "name": "First Light Expert",
+      "icon": "sunrise",
+      "theme": "amber",
+      "description": "Open the day with dependable morning-shift execution that keeps the lane stable.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "first_light",
+      "family_name": "First Light",
+      "level": 3,
+      "level_name": "Expert",
+      "requirements": [
+        {
+          "label": "Morning actions",
+          "current": 0,
+          "target": 72,
+          "met": false
+        },
+        {
+          "label": "Distinct morning runs",
+          "current": 0,
+          "target": 12,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 0.0,
+      "target": "Morning actions: 72; Distinct morning runs: 12",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "swing_captain",
+      "name": "Swing Captain Amateur",
+      "icon": "sun",
+      "theme": "azure",
+      "description": "Hold the afternoon handoff window together with steady completion pressure.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "swing_captain",
+      "family_name": "Swing Captain",
+      "level": 1,
+      "level_name": "Amateur",
+      "requirements": [
+        {
+          "label": "Afternoon actions",
+          "current": 0,
+          "target": 12,
+          "met": false
+        },
+        {
+          "label": "Distinct afternoon runs",
+          "current": 0,
+          "target": 2,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 0.0,
+      "target": "Afternoon actions: 12; Distinct afternoon runs: 2",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "swing_captain_level_2",
+      "name": "Swing Captain Skilled",
+      "icon": "sun",
+      "theme": "azure",
+      "description": "Hold the afternoon handoff window together with steady completion pressure.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "swing_captain",
+      "family_name": "Swing Captain",
+      "level": 2,
+      "level_name": "Skilled",
+      "requirements": [
+        {
+          "label": "Afternoon actions",
+          "current": 0,
+          "target": 36,
+          "met": false
+        },
+        {
+          "label": "Distinct afternoon runs",
+          "current": 0,
+          "target": 6,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 0.0,
+      "target": "Afternoon actions: 36; Distinct afternoon runs: 6",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "swing_captain_level_3",
+      "name": "Swing Captain Expert",
+      "icon": "sun",
+      "theme": "azure",
+      "description": "Hold the afternoon handoff window together with steady completion pressure.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "swing_captain",
+      "family_name": "Swing Captain",
+      "level": 3,
+      "level_name": "Expert",
+      "requirements": [
+        {
+          "label": "Afternoon actions",
+          "current": 0,
+          "target": 72,
+          "met": false
+        },
+        {
+          "label": "Distinct afternoon runs",
+          "current": 0,
+          "target": 12,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 0.0,
+      "target": "Afternoon actions: 72; Distinct afternoon runs: 12",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "sync_catalyst",
+      "name": "Sync Catalyst Amateur",
+      "icon": "allies",
+      "theme": "emerald",
+      "description": "Earn this by completing real checklist work alongside teammates in the same active shift.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "sync_catalyst",
+      "family_name": "Sync Catalyst",
+      "level": 1,
+      "level_name": "Amateur",
+      "requirements": [
+        {
+          "label": "Shared checklist actions",
+          "current": 0,
+          "target": 8,
+          "met": false
+        },
+        {
+          "label": "Collaborative runs",
+          "current": 0,
+          "target": 2,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 0.0,
+      "target": "Shared checklist actions: 8; Collaborative runs: 2",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "sync_catalyst_level_2",
+      "name": "Sync Catalyst Skilled",
+      "icon": "allies",
+      "theme": "emerald",
+      "description": "Earn this by completing real checklist work alongside teammates in the same active shift.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "sync_catalyst",
+      "family_name": "Sync Catalyst",
+      "level": 2,
+      "level_name": "Skilled",
+      "requirements": [
+        {
+          "label": "Shared checklist actions",
+          "current": 0,
+          "target": 24,
+          "met": false
+        },
+        {
+          "label": "Collaborative runs",
+          "current": 0,
+          "target": 6,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 0.0,
+      "target": "Shared checklist actions: 24; Collaborative runs: 6",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "sync_catalyst_level_3",
+      "name": "Sync Catalyst Expert",
+      "icon": "allies",
+      "theme": "emerald",
+      "description": "Earn this by completing real checklist work alongside teammates in the same active shift.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "sync_catalyst",
+      "family_name": "Sync Catalyst",
+      "level": 3,
+      "level_name": "Expert",
+      "requirements": [
+        {
+          "label": "Shared checklist actions",
+          "current": 0,
+          "target": 48,
+          "met": false
+        },
+        {
+          "label": "Collaborative runs",
+          "current": 0,
+          "target": 12,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 0.0,
+      "target": "Shared checklist actions: 48; Collaborative runs: 12",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "clockwork",
+      "name": "Clockwork Amateur",
+      "icon": "clock",
+      "theme": "cyan",
+      "description": "Timed items and subitems are started on cue, not just closed eventually.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "clockwork",
+      "family_name": "Clockwork",
+      "level": 1,
+      "level_name": "Amateur",
+      "requirements": [
+        {
+          "label": "On-time timed starts",
+          "current": 12,
+          "target": 6,
+          "met": true
+        },
+        {
+          "label": "On-time start rate (%)",
+          "current": 85.7,
+          "target": 85,
+          "met": true
+        }
+      ],
+      "earned": true,
+      "claimed": false,
+      "claimable": true,
+      "progress": 100.0,
+      "target": "On-time timed starts: 6; On-time start rate (%): 85",
+      "unlocked_by_metrics": true,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "clockwork_level_2",
+      "name": "Clockwork Skilled",
+      "icon": "clock",
+      "theme": "cyan",
+      "description": "Timed items and subitems are started on cue, not just closed eventually.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "clockwork",
+      "family_name": "Clockwork",
+      "level": 2,
+      "level_name": "Skilled",
+      "requirements": [
+        {
+          "label": "On-time timed starts",
+          "current": 12,
+          "target": 18,
+          "met": false
+        },
+        {
+          "label": "On-time start rate (%)",
+          "current": 85.7,
+          "target": 85,
+          "met": true
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 66.7,
+      "target": "On-time timed starts: 18; On-time start rate (%): 85",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "clockwork_level_3",
+      "name": "Clockwork Expert",
+      "icon": "clock",
+      "theme": "cyan",
+      "description": "Timed items and subitems are started on cue, not just closed eventually.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "clockwork",
+      "family_name": "Clockwork",
+      "level": 3,
+      "level_name": "Expert",
+      "requirements": [
+        {
+          "label": "On-time timed starts",
+          "current": 12,
+          "target": 36,
+          "met": false
+        },
+        {
+          "label": "On-time start rate (%)",
+          "current": 85.7,
+          "target": 85,
+          "met": true
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 33.3,
+      "target": "On-time timed starts: 36; On-time start rate (%): 85",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "sentinel_prime",
+      "name": "Sentinel Prime Amateur",
+      "icon": "crown",
+      "theme": "rose",
+      "description": "Balance output, quality, reliability, and clean backlog control at elite level.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "sentinel_prime",
+      "family_name": "Sentinel Prime",
+      "level": 1,
+      "level_name": "Amateur",
+      "requirements": [
+        {
+          "label": "Contribution points",
+          "current": 1653,
+          "target": 900,
+          "met": true
+        },
+        {
+          "label": "Reliability grade",
+          "current": 88,
+          "target": 88,
+          "met": true
+        },
+        {
+          "label": "Completed tasks",
+          "current": 20,
+          "target": 5,
+          "met": true
+        },
+        {
+          "label": "Clean contributed runs",
+          "current": 7,
+          "target": 2,
+          "met": true
+        }
+      ],
+      "earned": true,
+      "claimed": false,
+      "claimable": true,
+      "progress": 100.0,
+      "target": "Contribution points: 900; Reliability grade: 88; Completed tasks: 5; Clean contributed runs: 2",
+      "unlocked_by_metrics": true,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "sentinel_prime_level_2",
+      "name": "Sentinel Prime Skilled",
+      "icon": "crown",
+      "theme": "rose",
+      "description": "Balance output, quality, reliability, and clean backlog control at elite level.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "sentinel_prime",
+      "family_name": "Sentinel Prime",
+      "level": 2,
+      "level_name": "Skilled",
+      "requirements": [
+        {
+          "label": "Contribution points",
+          "current": 1653,
+          "target": 2700,
+          "met": false
+        },
+        {
+          "label": "Reliability grade",
+          "current": 88,
+          "target": 88,
+          "met": true
+        },
+        {
+          "label": "Completed tasks",
+          "current": 20,
+          "target": 15,
+          "met": true
+        },
+        {
+          "label": "Clean contributed runs",
+          "current": 7,
+          "target": 6,
+          "met": true
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 61.2,
+      "target": "Contribution points: 2700; Reliability grade: 88; Completed tasks: 15; Clean contributed runs: 6",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    },
+    {
+      "key": "sentinel_prime_level_3",
+      "name": "Sentinel Prime Expert",
+      "icon": "crown",
+      "theme": "rose",
+      "description": "Balance output, quality, reliability, and clean backlog control at elite level.",
+      "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+      "family_key": "sentinel_prime",
+      "family_name": "Sentinel Prime",
+      "level": 3,
+      "level_name": "Expert",
+      "requirements": [
+        {
+          "label": "Contribution points",
+          "current": 1653,
+          "target": 5400,
+          "met": false
+        },
+        {
+          "label": "Reliability grade",
+          "current": 88,
+          "target": 88,
+          "met": true
+        },
+        {
+          "label": "Completed tasks",
+          "current": 20,
+          "target": 30,
+          "met": false
+        },
+        {
+          "label": "Clean contributed runs",
+          "current": 7,
+          "target": 12,
+          "met": false
+        }
+      ],
+      "earned": false,
+      "claimed": false,
+      "claimable": false,
+      "progress": 30.6,
+      "target": "Contribution points: 5400; Reliability grade: 88; Completed tasks: 30; Clean contributed runs: 12",
+      "unlocked_by_metrics": false,
+      "unlocked_at": null,
+      "unlock_notified_at": null,
+      "claimed_at": null
+    }
+  ],
+  "next_badge": {
+    "key": "flow_keeper_level_3",
+    "name": "Flow Keeper Expert",
+    "icon": "flow",
+    "theme": "azure",
+    "description": "Close work on time and keep delivery pressure under control.",
+    "hint": "Build the remaining evidence at your normal working pace. Days off do not reset award progress.",
+    "family_key": "flow_keeper",
+    "family_name": "Flow Keeper",
+    "level": 3,
+    "level_name": "Expert",
+    "requirements": [
+      {
+        "label": "Completed tasks",
+        "current": 20,
+        "target": 24,
+        "met": false
+      },
+      {
+        "label": "Tasks with deadlines",
+        "current": 17,
+        "target": 18,
+        "met": false
+      },
+      {
+        "label": "On-time delivery (%)",
+        "current": 88.2,
+        "target": 85,
+        "met": true
+      }
+    ],
+    "earned": false,
+    "claimed": false,
+    "claimable": false,
+    "progress": 83.3,
+    "target": "Completed tasks: 24; Tasks with deadlines: 18; On-time delivery (%): 85",
+    "unlocked_by_metrics": false,
+    "unlocked_at": null,
+    "unlock_notified_at": null,
+    "claimed_at": null
+  },
+  "leaderboard": [
+    {
+      "user_id": "11111111-1111-4111-8111-111111111111",
+      "username": "demo",
+      "display_name": "Demo Operator",
+      "section_name": "ICT Operations",
+      "command_points": 1653,
+      "operational_grade": 88,
+      "rank": 1,
+      "current_streak": 1,
+      "tasks_completed": 20,
+      "clean_checklists": 7,
+      "tier": "Vector",
+      "is_current_user": true
+    }
+  ],
+  "trend": [
+    {
+      "label": "Week 1",
+      "period_start": "2026-10-01",
+      "period_end": "2026-10-07",
+      "command_points": 0,
+      "operational_grade": 80,
+      "tasks_completed": 0,
+      "checklist_items_completed": 0,
+      "handovers_resolved": 0
+    },
+    {
+      "label": "Week 2",
+      "period_start": "2026-10-08",
+      "period_end": "2026-10-14",
+      "command_points": 100,
+      "operational_grade": 80,
+      "tasks_completed": 4,
+      "checklist_items_completed": 15,
+      "handovers_resolved": 1
+    },
+    {
+      "label": "Week 3",
+      "period_start": "2026-10-15",
+      "period_end": "2026-10-21",
+      "command_points": 200,
+      "operational_grade": 80,
+      "tasks_completed": 8,
+      "checklist_items_completed": 30,
+      "handovers_resolved": 2
+    }
+  ],
+  "recent_events": [
+    {
+      "id": "event-1",
+      "event_type": "TASK",
+      "title": "Review service recovery evidence",
+      "detail": "High priority team task",
+      "occurred_at": "2026-10-17T08:00:00Z",
+      "points": 26
+    }
+  ]
+}

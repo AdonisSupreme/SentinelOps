@@ -2491,6 +2491,8 @@
 
 .task-command-page .task-main {
   min-height: calc(100vh - 2rem);
+  max-height: none; /* Grow with the grid so cards never paint over the app footer. */
+  min-width: 0;
   overflow: visible;
 }
 
@@ -2658,7 +2660,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-  min-height: 100%;
+  min-height: 0;
   padding: 1rem;
 }
 
@@ -2723,8 +2725,9 @@
 
 .task-command-page .task-grid,
 .task-command-page .skeleton-grid {
+  animation: none; /* Avoid translating a long grid outside its containing panel. */
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   align-items: stretch;
   gap: 0.85rem;
 }

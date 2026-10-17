@@ -39,6 +39,7 @@ export interface PerformanceWindowSnapshot {
   shift_adherence_rate: number;
   consistency_rate: number;
   summary: string;
+  evidence?: { deadline_tasks: number; closed_runs: number; elapsed_shifts: number; timed_starts: number; timed_start_rate: number; sample_size: number; status: 'established' | 'limited' | 'no_evidence' };
   breakdown: PerformanceBreakdown;
 }
 
@@ -66,6 +67,11 @@ export interface PerformanceLeaderboardEntry {
 }
 
 export interface PerformanceBadge {
+  family_key?: string;
+  family_name?: string;
+  level?: number;
+  level_name?: string;
+  requirements?: { label: string; current: number; target: number; met: boolean }[];
   key: string;
   name: string;
   icon: string;
