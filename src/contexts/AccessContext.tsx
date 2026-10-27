@@ -126,7 +126,7 @@ export const PageAccess: React.FC<{ children: React.ReactNode }> = ({ children }
   const workspace = params.get('workspace');
   let required: string | undefined;
   if (location.pathname === '/network-sentinel' && params.get('tab')) required = params.get('tab') === 'timeline' ? 'network_sentinel.outage_history' : 'network_sentinel.monitoring';
-  if (location.pathname === '/reports' && workspace) required = 'reports.' + (workspace === 'hovering' ? 'hovering' : workspace === 'settings' ? 'hovering_settings' : 'crb');
+  if (location.pathname === '/reports' && workspace) required = 'reports.' + (workspace === 'hovering' ? 'hovering' : workspace === 'settings' ? 'hovering_settings' : workspace === 'personal-loans' ? 'personal_loans' : 'crb');
   if (location.pathname === '/nexus' && workspace) required = 'nexus.' + workspace;
   if (location.pathname === '/trustlink' && params.get('tab')) required = ({pipeline:'trustlink.daily_extraction',history:'trustlink.run_history',rtgs:'trustlink.rtgs'} as Record<string,string>)[params.get('tab')!];
   if (!canAccessPage(location.pathname) || (required && !canAccessModule(required))) return <AccessDenied />;

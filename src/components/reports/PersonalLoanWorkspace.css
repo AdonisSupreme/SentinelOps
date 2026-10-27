@@ -1,0 +1,95 @@
+.personal-loan-workspace { --loan-accent:#6960b8; --loan-surface:#fff; --loan-ink:#163247; --loan-muted:#566e85; --loan-line:#d9e4ed; color:var(--loan-ink); display:grid; gap:18px; font-family:Inter, sans-serif; min-width:0; }
+[data-theme='dark'] .personal-loan-workspace { --loan-accent:#b8a4f5; --loan-surface:#101f2d; --loan-ink:#e3eff7; --loan-muted:#a8bdcf; --loan-line:#2b4355; }
+.personal-loan-heading,.personal-loan-progress,.personal-loan-import,.personal-loan-records,.personal-loan-filters { background:var(--loan-surface); border:1px solid var(--loan-line); border-radius:16px; padding:20px; min-width:0; }
+.personal-loan-heading { border-top:3px solid var(--loan-accent); display:flex; align-items:center; gap:20px; justify-content:space-between; }
+.personal-loan-heading h2 { display:block; font:700 clamp(23px,2.5vw,32px)/1.25 Inter,sans-serif; margin:8px 0; color:var(--loan-ink); background:none; -webkit-text-fill-color:currentColor; }
+.personal-loan-heading h2::after { display:none; }
+.personal-loan-heading small { display:block; color:var(--loan-accent); text-transform:uppercase; letter-spacing:.1em; font-weight:700; }
+.personal-loan-workspace p { color:var(--loan-muted); line-height:1.5; }
+.personal-loan-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.personal-loan-metrics article { padding:20px; background:var(--loan-surface); border:1px solid var(--loan-line); border-radius:14px; }
+.personal-loan-metrics strong { display:block; margin-top:9px; font-size:28px; }
+.personal-loan-progress div { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.personal-loan-progress progress { width:100%; accent-color:var(--loan-accent); height:10px; margin:14px 0; }
+.personal-loan-workspace small { color:var(--loan-muted); }
+.personal-loan-filters { display:flex; gap:14px; flex-wrap:wrap; align-items:end; }
+.personal-loan-filters label { flex:1 1 180px; min-width:0; display:grid; gap:8px; font-size:13px; font-weight:600; }
+.personal-loan-filters label:first-child { flex-basis:300px; }
+.personal-loan-filters label div { display:flex; }
+.personal-loan-workspace input:not([type='checkbox']),.personal-loan-workspace select,.personal-loan-workspace textarea { min-width:0; width:100%; padding:11px; background:var(--loan-surface); color:var(--loan-ink); border:1px solid var(--loan-line); border-radius:8px; }
+.personal-loan-workspace button { color:inherit; background:var(--loan-surface); border:1px solid var(--loan-line); border-radius:8px; padding:10px 14px; cursor:pointer; }
+.personal-loan-workspace button:disabled { opacity:.5; cursor:not-allowed; }
+.personal-loan-records { padding:0 16px; }
+.personal-loan-records article { display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--loan-line); }
+.personal-loan-records article:last-child { border:0; }
+.personal-loan-records article > button { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto 16px; gap:18px; width:100%; text-align:left; border:0; padding:18px 0; align-items:center; }
+.personal-loan-records small { display:block; margin-top:6px; }
+.personal-loan-records span { overflow-wrap:anywhere; }
+.personal-state { font-size:11px; padding:7px 10px; border-radius:20px; background:#75899d22; }
+.state-success { color:#109c7e; }.state-failed { color:#d55a68; }.state-pending { color:var(--loan-accent); }
+.personal-loan-import summary { cursor:pointer; font-weight:700; }
+.personal-loan-import textarea { display:block; margin:10px 0; }
+.personal-loan-workspace .queue-review dl > div { padding:12px 0; border-bottom:1px solid var(--loan-line); overflow-wrap:anywhere; }
+.personal-loan-workspace .queue-review dd { margin:6px 0 0; }
+.personal-operations-layout { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:18px; align-items:start; }
+.personal-queue-main { min-width:0; display:grid; gap:14px; }
+.personal-operations-sidebar { min-width:0; display:grid; gap:14px; position:sticky; top:100px; }
+.personal-operations-sidebar > section,.personal-operations-sidebar > details { margin:0; padding:18px; border:1px solid var(--loan-line); border-radius:14px; background:var(--loan-surface); }
+.personal-recovery-card h3 { display:block; margin:8px 0; font:700 19px/1.3 Inter,sans-serif; color:var(--loan-ink); background:none; -webkit-text-fill-color:currentColor; }
+.personal-recovery-card h3::after { display:none; }
+.personal-recovery-card > small { color:var(--loan-accent); text-transform:uppercase; letter-spacing:.08em; }
+.personal-operations-sidebar .queue-recovery-controls { padding:10px 0 0; gap:8px; }
+.personal-recovery-card button,.personal-loan-import > button { width:100%; }
+.personal-loan-import input[type='file'] { font-size:12px; margin:10px 0; }
+.personal-live-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.personal-currency-switch { display:flex; gap:4px; padding:4px; border:1px solid var(--loan-line); border-radius:12px; background:var(--loan-surface); }
+.personal-currency-switch button { border:0; }
+.personal-currency-switch button[aria-pressed='true'] { background:color-mix(in srgb,var(--loan-accent) 15%,var(--loan-surface)); color:var(--loan-accent); font-weight:700; }
+.personal-live-indicator { display:flex; align-items:center; gap:10px; font-size:13px; }
+.personal-live-indicator small { display:block; margin-top:4px; }
+.personal-live-indicator i { width:8px; height:8px; border-radius:50%; background:#16a085; box-shadow:0 0 0 4px #16a08520; }
+.personal-live-indicator.stale i { background:#d98b30; box-shadow:0 0 0 4px #d98b3020; }
+@media(max-width:1100px) { .personal-operations-layout { grid-template-columns:minmax(0,1fr) 270px; } .personal-loan-records article > button { grid-template-columns:minmax(0,1fr) auto; } .personal-loan-records article > button > span:nth-child(2) { grid-row:2; } }
+@media(max-width:850px) { .personal-operations-layout { grid-template-columns:minmax(0,1fr); } .personal-operations-sidebar { position:static; grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr)); } }
+@media(max-width:700px) { .personal-loan-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .personal-loan-records article > button { grid-template-columns:minmax(0,1fr) auto; gap:10px; } .personal-loan-records article > button > span:nth-child(2) { grid-row:2; } .personal-loan-heading { padding:16px; } }
+.personal-credit-reporting { min-width:0; background:var(--loan-surface); border:1px solid var(--loan-line); border-radius:14px; padding:18px; }
+.personal-credit-reporting > header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+.personal-credit-reporting h3 { display:block; font:700 20px/1.3 Inter,sans-serif; margin:6px 0; color:var(--loan-ink); background:none; -webkit-text-fill-color:currentColor; }
+.personal-credit-reporting h3::after { display:none; }
+.personal-credit-reporting header small { color:var(--loan-accent); font-weight:700; text-transform:uppercase; letter-spacing:.07em; }
+.personal-credit-reporting p { margin:8px 0; font-size:13px; }
+.personal-report-actions,.personal-report-scope-actions,.personal-report-periods { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.personal-report-actions button { display:flex; align-items:center; gap:8px; font-size:13px; }
+.personal-report-actions button:last-child { background:var(--loan-accent); color:var(--loan-surface); font-weight:700; }
+.personal-report-scope { border-top:1px solid var(--loan-line); border-bottom:1px solid var(--loan-line); margin:16px 0; padding:12px 0; }
+.personal-credit-reporting summary { cursor:pointer; font-size:14px; font-weight:600; }
+.personal-report-scope form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:16px 0; }
+.personal-report-scope label { display:grid; gap:6px; font-size:12px; font-weight:600; }
+.personal-report-scope-actions { grid-column:1/-1; }
+.personal-report-periods { font-size:12px; }
+.personal-report-periods button { padding:7px 10px; }
+.personal-report-caption { color:var(--loan-muted); line-height:1.7; }
+.personal-report-results { border-top:1px solid var(--loan-line); margin-top:16px; padding-top:16px; }
+.personal-report-result-heading { display:flex; gap:10px; justify-content:space-between; flex-wrap:wrap; }
+.personal-report-table { max-width:100%; overflow:auto; margin:14px 0; }
+.personal-report-table table { width:100%; border-collapse:collapse; font-size:13px; text-align:left; }
+.personal-report-table th,.personal-report-table td { padding:12px 10px; border-bottom:1px solid var(--loan-line); vertical-align:top; }
+.personal-report-table thead { background:color-mix(in srgb,var(--loan-accent) 8%,var(--loan-surface)); }
+.personal-report-table caption { text-align:left; color:var(--loan-muted); padding:0 0 8px; }
+.personal-report-table small { display:block; margin-top:4px; }
+.personal-credit-reporting button:focus-visible,.personal-credit-reporting summary:focus-visible { outline:2px solid var(--loan-accent); outline-offset:3px; }
+@media(max-width:600px) { .personal-report-scope form { grid-template-columns:minmax(0,1fr); } .personal-report-actions { width:100%; } .personal-report-actions button { flex:1; justify-content:center; } }
+.personal-report-boundaries { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
+.personal-report-boundaries > div { display:flex; gap:6px; padding:6px 9px; border:1px solid var(--loan-line); border-radius:6px; font-size:12px; }
+.personal-report-boundaries dt { color:var(--loan-muted); }.personal-report-boundaries dd { margin:0; font-weight:600; }
+.personal-loan-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.personal-drawer-backdrop.queue-review-backdrop { display:flex; justify-content:flex-end; align-items:stretch; padding:0; }
+.personal-drawer-backdrop .queue-review { width:min(640px,100%); max-height:100dvh; height:100dvh; border-radius:0; border-width:0 0 0 1px; padding:24px; overscroll-behavior:contain; scroll-padding:100px 0; }
+.personal-drawer-backdrop .queue-review > header { position:sticky; top:-24px; z-index:2; background:inherit; padding:24px 0 16px; margin-top:-24px; border-bottom:1px solid #779ca750; }
+.personal-drawer-backdrop .queue-review > footer { position:sticky; bottom:-24px; background:inherit; padding:16px 0 24px; margin-bottom:-24px; border-top:1px solid #779ca750; justify-content:flex-end; }
+.personal-drawer-close { float:right; margin-left:12px; }
+.personal-record-drawer dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 18px; margin:0; }
+.personal-record-drawer dt { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; opacity:.75; }
+.personal-record-drawer dd { font-size:14px; line-height:1.5; }
+@media(max-width:600px) { .personal-drawer-backdrop .queue-review { padding:16px; } .personal-drawer-backdrop .queue-review > header { top:-16px; margin-top:-16px; padding-top:16px; } .personal-drawer-backdrop .queue-review > footer { bottom:-16px; margin-bottom:-16px; padding-bottom:16px; } }
+@media(max-width:420px) { .personal-record-drawer dl { grid-template-columns:1fr; } .personal-loan-metrics { grid-template-columns:1fr; } }

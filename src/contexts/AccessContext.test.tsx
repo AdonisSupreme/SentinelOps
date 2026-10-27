@@ -98,6 +98,21 @@ test('direct forbidden workspace returns 403 without mounting its content', asyn
   expect(screen.queryByText('Restricted data')).not.toBeInTheDocument();
 });
 
+test('personal loans deep link uses its own entitlement rather than CRB access', () => {
+  mockLocation={pathname:'/reports',search:'?workspace=personal-loans'};
+  mockUser.access={...granted,modules:['reports.personal_loans']};
+  render(<AccessProvider><PageAccess><p>Personal loan queue</p></PageAccess></AccessProvider>);
+  expect(screen.getByText('Personal loan queue')).toBeInTheDocument();
+});
+
+test('CRB entitlement does not grant the personal loan deep link', () => {
+  mockLocation={pathname:'/reports',search:'?workspace=personal-loans'};
+  mockUser.access=granted;
+  render(<AccessProvider><PageAccess><p>Personal loan queue</p></PageAccess></AccessProvider>);
+  expect(screen.queryByText('Personal loan queue')).not.toBeInTheDocument();
+  expect(screen.getByRole('alert')).toHaveTextContent('403');
+});
+
 test('one permitted module keeps a multi-workspace page visible', () => {
   expect(canOpenPage('/reports', ['reports.crb'], 'USER')).toBe(true);
   expect(canOpenPage('/trustlink', ['trustlink.rtgs'], 'MANAGER')).toBe(true);

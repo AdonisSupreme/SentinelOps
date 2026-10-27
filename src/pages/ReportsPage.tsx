@@ -1,5 +1,6 @@
 import { useAccess } from '../contexts/AccessContext';
 import HoveringSettingsWorkspace from '../components/reports/HoveringSettingsWorkspace';
+import PersonalLoanWorkspace from '../components/reports/PersonalLoanWorkspace';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FaCalendarCheck,
@@ -101,10 +102,12 @@ const ReportsPage: React.FC = () => {
   const isAdmin = role === 'admin';
   const canExtract = ['admin', 'manager', 'supervisor'].includes(role);
   const canManageHoveringPasswords = canAccessModule('reports.hovering_settings') && ['admin', 'manager', 'user'].includes(role);
-  const hasAccess = ['reports.crb','reports.hovering','reports.hovering_settings'].some(canAccessModule);
-  const workspace = searchParams.get('workspace') || (canAccessModule('reports.crb') ? 'crb' : canAccessModule('reports.hovering') ? 'hovering' : 'settings');
+  const hasAccess = ['reports.crb','reports.hovering','reports.hovering_settings','reports.personal_loans'].some(canAccessModule);
+  const requestedWorkspace = searchParams.get('workspace');
+  const workspaceModules: Record<string, string> = {crb:'reports.crb', hovering:'reports.hovering', settings:'reports.hovering_settings', 'personal-loans':'reports.personal_loans'};
+  const workspace = requestedWorkspace && workspaceModules[requestedWorkspace] && canAccessModule(workspaceModules[requestedWorkspace]) ? requestedWorkspace : Object.keys(workspaceModules).find(key => canAccessModule(workspaceModules[key])) || 'crb';
 
-  const openWorkspace = (next: 'crb' | 'hovering' | 'settings') => {
+  const openWorkspace = (next: 'crb' | 'hovering' | 'settings' | 'personal-loans') => {
     const params = new URLSearchParams(searchParams);
     if (next === 'crb') params.delete('workspace');
     else params.set('workspace', next);
@@ -195,21 +198,21 @@ const ReportsPage: React.FC = () => {
       <header className="reports-command-header">
         <div className="reports-command-copy">
           <span><FaShieldAlt /> SentinelOps reporting custody</span>
-          <h1>{workspace === 'crb' ? 'Regulatory delivery' : 'Loan queue command'}</h1>
+          <h1>{workspace === 'crb' ? 'Regulatory delivery' : workspace === 'personal-loans' ? 'Personal loan queue' : 'Loan queue command'}</h1>
           <p>{workspace === 'crb'
             ? 'Extract the approved CRB views from LMS, hold today’s sealed pair, and keep the delivery history accountable.'
-            : 'Observe loan-ledger hovering as it moves, inspect the bounded queue, and carry stale installment dates safely into today.'}</p>
+            : workspace === 'personal-loans' ? 'Monitor 48-month applications, inspect failure evidence, and review eligible records before recovery.' : 'Observe loan-ledger hovering as it moves, inspect the bounded queue, and carry stale installment dates safely into today.'}</p>
         </div>
         <div className="reports-command-posture">
           <span>
-            <small>{workspace === 'crb' ? 'Daily command' : 'Bot window'}</small>
-            <strong>{workspace === 'crb' ? overview?.schedule_time || '07:15' : '03:00–15:00'}</strong>
-            <em>{workspace === 'crb' ? overview?.timezone || 'Africa/Harare' : 'Active-rate clock'}</em>
+            <small>{workspace === 'crb' ? 'Daily command' : workspace === 'personal-loans' ? 'Loan tenure' : 'Bot window'}</small>
+            <strong>{workspace === 'crb' ? overview?.schedule_time || '07:15' : workspace === 'personal-loans' ? '48 months' : '03:00–15:00'}</strong>
+            <em>{workspace === 'crb' ? overview?.timezone || 'Africa/Harare' : workspace === 'personal-loans' ? 'USD / ZWL' : 'Active-rate clock'}</em>
           </span>
           <span>
-            <small>{workspace === 'crb' ? 'Retention boundary' : 'Date boundary'}</small>
-            <strong>Midnight</strong>
-            <em>{workspace === 'crb' ? 'Today’s files only' : 'Admin-controlled repair'}</em>
+            <small>{workspace === 'crb' ? 'Retention boundary' : workspace === 'personal-loans' ? 'Recovery scope' : 'Date boundary'}</small>
+            <strong>{workspace === 'personal-loans' ? 'Failed only' : 'Midnight'}</strong>
+            <em>{workspace === 'crb' ? 'Today’s files only' : workspace === 'personal-loans' ? 'Review before requeue' : 'Admin-controlled repair'}</em>
           </span>
           <button
             type="button"
@@ -227,7 +230,7 @@ const ReportsPage: React.FC = () => {
         {canAccessModule('reports.hovering') && (<button type="button" className={workspace === 'hovering' ? 'active' : ''} aria-current={workspace === 'hovering' ? 'page' : undefined} onClick={() => openWorkspace('hovering')}>
           <b>02</b><FaRobot /><span><strong>Hovering queue</strong><small>Loan ledger movement</small></span>
         </button>)}
-        {canAccessModule('reports.hovering_settings') && <button onClick={() => openWorkspace('settings')}>Robot settings</button>}
+        {canAccessModule('reports.personal_loans') && <button type="button" className={workspace === 'personal-loans' ? 'active' : ''} aria-current={workspace === 'personal-loans' ? 'page' : undefined} onClick={() => openWorkspace('personal-loans')}><b>03</b><FaDatabase /><span><strong>Personal loans</strong><small>48-month application queue</small></span></button>}
       </nav>
 
       {workspace === 'crb' && error ? (
@@ -238,7 +241,7 @@ const ReportsPage: React.FC = () => {
         </div>
       ) : null}
 
-      {workspace === 'settings' ? <HoveringSettingsWorkspace isAdmin={isAdmin} refreshNonce={hoverRefreshNonce} /> : workspace === 'hovering' ? (
+      {workspace === 'personal-loans' ? <PersonalLoanWorkspace isAdmin={isAdmin} refreshNonce={hoverRefreshNonce} /> : workspace === 'settings' ? <HoveringSettingsWorkspace isAdmin={isAdmin} refreshNonce={hoverRefreshNonce} /> : workspace === 'hovering' ? (
         <HoveringQueueWorkspace isAdmin={isAdmin} canOperate={hasAccess} canManagePasswords={canManageHoveringPasswords} refreshNonce={hoverRefreshNonce} />
       ) : loading ? (
         <ReportsSkeleton />

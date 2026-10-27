@@ -163,12 +163,64 @@ export interface HoveringRecordPage {
 }
 
 export interface HoveringRecordFilters {
+  currency?: string;
   page?: number;
   page_size?: number;
-  status?: HoveringQueueStatus;
+  status?: HoveringQueueStatus | '';
   lookup?: string;
   created_from?: string;
   created_to?: string;
+  description?: string;
+}
+
+export interface RecoveryPreview {
+  action_id: string;
+  count: number;
+  requested_count?: number;
+  items: Record<string, string | null>[];
+}
+
+export interface PersonalLoanScope {
+  branch?: string;
+  date_basis?: string;
+  maturity_after?: string;
+  maturity_to?: string;
+  pay_from?: string;
+  pay_to?: string;
+}
+export interface PersonalLoanReport {
+  generated_at: string;
+  timezone: string;
+  export_limit: number;
+  recovery_limit: number;
+  groups: {overdraft_tenure: string; status_id: number; is_processed: string; total: number; amounts_known: number; approved_total: string | null; approved_min: string | null; approved_max: string | null}[];
+  activity: {day: string; overdraft_tenure: string; total: number; successful: number; failed: number}[];
+}
+export interface PersonalLoanRecord {
+  full_name?: string | null;
+  branch_origin?: string | null;
+  amount_applied?: string | null;
+  maturity?: string | null;
+  next_pay_date?: string | null;
+  id: number;
+  account_number: string | null;
+  approved_amount: string | null;
+  currency: string | null;
+  overdraft_tenure: string;
+  status_id: number;
+  is_processed: string;
+  bot_message: string | null;
+  bot_processed_LN: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  processed_datetime: string | null;
+}
+
+export interface QueueCustody {
+  date_actions: HoveringDateAction[];
+  policy_audit: HoveringPolicyAudit[];
+  recoveries: { action_id: string; actor: string; state: string; updated_count: number; created_at: string; evidence: Record<string, string | null>[] }[];
+  has_more: boolean;
 }
 
 export interface HoveringRobotSetting {
@@ -216,6 +268,40 @@ client.interceptors.request.use((config) => {
 });
 
 class ReportsApi {
+  async personalReport(filters: Record<string, unknown>) {
+    return (await client.get<PersonalLoanReport>('/api/v1/nexus/reports/personal-loans/report', {params: filters, timeout:20000})).data;
+  }
+  async exportPersonalReport(filters: Record<string, unknown>) {
+    try {
+      return (await client.get<Blob>('/api/v1/nexus/reports/personal-loans/export', {params:filters, responseType:'blob', timeout:30000})).data;
+    } catch (error: any) {
+      if (error.response?.data instanceof Blob) {
+        try { error.response.data = JSON.parse(await error.response.data.text()); } catch { /* Preserve the original request error. */ }
+      }
+      throw error;
+    }
+  }
+  async personalOverview(currency = '') {
+    return (await client.get<{configured: boolean; counts: Record<string, number>; refreshed_at?: string}>('/api/v1/nexus/reports/personal-loans/overview', {params:{currency}, timeout:20000})).data;
+  }
+  async personalRecords(filters: Record<string, unknown>) {
+    return (await client.get<{items: PersonalLoanRecord[]; total: number; page: number; pages: number}>('/api/v1/nexus/reports/personal-loans/records', {params: filters, timeout:20000})).data;
+  }
+  async failureReasons(queue = 'hovering', currency = '') {
+    return (await client.get<{description: string; count: number}[]>(`/api/v1/nexus/reports/${queue}/failure-reasons`, {params:{currency}})).data;
+  }
+
+  async prepareRecovery(filters: Omit<HoveringRecordFilters, 'status' | 'page' | 'page_size'> & PersonalLoanScope & {record_ids?: string[]}, queue = 'hovering') {
+    return (await client.post<RecoveryPreview>(`/api/v1/nexus/reports/${queue}/recovery/prepare`, filters)).data;
+  }
+
+  async executeRecovery(actionId: string, queue = 'hovering') {
+    return (await client.post<{updated_count: number}>(`/api/v1/nexus/reports/${queue}/recovery/${encodeURIComponent(actionId)}/execute`)).data;
+  }
+
+  async queueCustody(page: number, queue = 'hovering') {
+    return (await client.get<QueueCustody>(`/api/v1/nexus/reports/${queue}/custody`, {params: {page}})).data;
+  }
   async getCrbOverview() {
     const response = await client.get<CRBOverview>('/api/v1/nexus/reports/crb/overview');
     return response.data;

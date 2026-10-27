@@ -162,7 +162,8 @@
 }
 
 .reports-workspace-rail {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
   grid-template-columns: 8.5rem minmax(18rem, 32rem) minmax(0, 1fr);
   align-items: stretch;
   min-height: 4.5rem;
@@ -178,6 +179,8 @@
 }
 
 .reports-workspace-rail button {
+  flex: 1 1 220px;
+  min-width: 0;
   position: relative;
   display: grid;
   grid-template-columns: auto auto minmax(0, 1fr);

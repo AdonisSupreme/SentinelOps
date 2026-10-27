@@ -20,6 +20,8 @@ import {
 } from 'react-icons/fa';
 import { useNotifications } from '../../contexts/NotificationContext';
 import HoveringSettingsWorkspace from './HoveringSettingsWorkspace';
+import QueueRecoveryReview, { recoveryError } from './QueueRecoveryReview';
+import { RecoveryPreview, QueueCustody } from '../../services/reportsApi';
 import reportsApi, {
   HoveringDateAction,
   HoveringOverview,
@@ -102,8 +104,14 @@ const HoveringQueueWorkspace: React.FC<HoveringQueueWorkspaceProps> = ({
   const [createdFrom, setCreatedFrom] = useState('');
   const [createdTo, setCreatedTo] = useState('');
   const [liveNow, setLiveNow] = useState(() => Date.now());
+  const [description, setDescription] = useState<string | undefined>();
+  const [reasons, setReasons] = useState<{description: string; count: number}[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [preview, setPreview] = useState<RecoveryPreview | null>(null);
+  const [custody, setCustody] = useState<QueueCustody | null>(null);
+  const [custodyPage, setCustodyPage] = useState(1);
   const overviewRequest = useRef(false);
-  const recordsRequest = useRef(false);
+  const recordsRequest = useRef(0);
 
   const loadOverview = useCallback(async (quiet = false) => {
     if (overviewRequest.current) return null;
@@ -124,35 +132,52 @@ const HoveringQueueWorkspace: React.FC<HoveringQueueWorkspaceProps> = ({
   }, []);
 
   const loadRecords = useCallback(async (quiet = false) => {
-    if (recordsRequest.current) return null;
-    recordsRequest.current = true;
+    const request = ++recordsRequest.current;
     if (!quiet) setRecordsLoading(true);
     try {
       const payload = await reportsApi.getHoveringRecords({
         page,
         page_size: 25,
-        status: status || undefined,
+        status,
+        description: status === 'FAILED' ? description : undefined,
         lookup: lookup || undefined,
         created_from: createdFrom ? new Date(createdFrom).toISOString() : undefined,
         created_to: createdTo ? new Date(createdTo).toISOString() : undefined,
       });
-      setRecords(payload);
+      if (request === recordsRequest.current) setRecords(payload);
     } catch (loadError) {
-      setError(errorMessage(loadError));
+      if (request === recordsRequest.current) setError(errorMessage(loadError));
     } finally {
-      recordsRequest.current = false;
-      if (!quiet) setRecordsLoading(false);
+      if (request === recordsRequest.current) setRecordsLoading(false);
     }
-  }, [createdFrom, createdTo, lookup, page, status]);
+  }, [createdFrom, createdTo, lookup, page, status, description]);
+
+  useEffect(() => { setSelectedIds([]); }, [createdFrom, createdTo, lookup, page, status, description]);
+  useEffect(() => {
+    if (status === 'FAILED') void reportsApi.failureReasons().then(setReasons).catch(failure => setError(recoveryError(failure)));
+  }, [status, refreshNonce]);
+
+  const prepareRecovery = async (ids?: string[]) => {
+    if (!canOperate || busy) return;
+    setBusy('recovery');
+    try {
+      setPreview(await reportsApi.prepareRecovery({record_ids: ids, lookup: lookup || undefined,
+        description: status === 'FAILED' ? description : undefined,
+        created_from: createdFrom ? new Date(createdFrom).toISOString() : undefined,
+        created_to: createdTo ? new Date(createdTo).toISOString() : undefined}));
+    } catch (failure) { setError(recoveryError(failure)); }
+    finally { setBusy(null); }
+  };
+
+  const loadCustody = async (next: number) => {
+    setBusy('custody');
+    try { setCustody(await reportsApi.queueCustody(next)); setCustodyPage(next); }
+    catch (failure) { setError(recoveryError(failure)); }
+    finally { setBusy(null); }
+  };
 
   const refresh = useCallback(async (quiet = false) => {
-    const currentOverview = await loadOverview(quiet);
-    if (currentOverview?.configured && !currentOverview.source_error) {
-      await loadRecords(quiet);
-      return;
-    }
-    setRecords(null);
-    setRecordsLoading(false);
+    await Promise.all([loadOverview(quiet), loadRecords(quiet)]);
   }, [loadOverview, loadRecords]);
 
   useEffect(() => {
@@ -362,17 +387,29 @@ const HoveringQueueWorkspace: React.FC<HoveringQueueWorkspaceProps> = ({
             <label><span>Created before</span><input type="datetime-local" value={createdTo} onChange={(event) => { setCreatedTo(event.target.value); setPage(1); }} /></label>
           </form>
 
+          {status === 'FAILED' && <div className="queue-recovery-controls">
+            <label>Failure reason <select value={description === undefined ? '__all' : JSON.stringify(description)} onChange={event => { setDescription(event.target.value === '__all' ? undefined : JSON.parse(event.target.value)); setPage(1); }}>
+              <option value="__all">All failure reasons</option>{reasons.map(reason => <option key={reason.description} value={JSON.stringify(reason.description)}>{reason.description || 'No description (blank or missing)'} ({reason.count})</option>)}
+            </select></label>
+            <button disabled={!canOperate || !selectedIds.length || !!busy} onClick={() => void prepareRecovery(selectedIds)}>Review selected ({selectedIds.length})</button>
+            <button disabled={!canOperate || !records?.total || !!busy || recordsLoading} onClick={() => void prepareRecovery()}>Review all filtered failures</button>
+            <small>Up to 500 records per reviewed recovery.</small>
+          </div>}
+
           <div className={`hovering-record-table ${recordsLoading ? 'loading' : ''}`}>
             <div className="hovering-record-head"><span>Account</span><span>Reference</span><span>Value</span><span>Installment</span><span>Status</span></div>
             {recordsLoading ? Array.from({ length: 6 }, (_, index) => <span className="hovering-row-skeleton" key={index} />) : null}
             {!recordsLoading && records?.items.map((record) => (
-              <button type="button" className="hovering-record-row" key={record.id} onClick={() => setSelected(record)}>
+              <div className="hovering-selection-row" key={record.id}>
+              {status === 'FAILED' && <input type="checkbox" aria-label={`Select record ${record.id}`} checked={selectedIds.includes(record.id)} onChange={event => setSelectedIds(ids => event.target.checked ? [...ids, record.id] : ids.filter(id => id !== record.id))} />}
+              <button type="button" className="hovering-record-row" onClick={() => setSelected(record)}>
                 <span><strong>{record.debit_account || 'No debit account'}</strong><small>{record.beneficiary || record.branch || 'Beneficiary not supplied'}</small></span>
                 <span><strong>{record.reference || 'No reference'}</strong><small>{record.external_reference || record.id}</small></span>
                 <span><strong>{money(record.amount, record.currency)}</strong><small>{record.extended_type || record.type?.replaceAll('_', ' ')}</small></span>
                 <span><strong>{dateTime(record.installment_date, 'No date')}</strong><small>Created {dateTime(record.created)}</small></span>
                 <span><em className={`hovering-status status-${(record.status || 'unknown').toLowerCase()}`}>{record.status || 'Unknown'}</em><FaChevronRight /></span>
               </button>
+              </div>
             ))}
             {!recordsLoading && !records?.items.length ? <div className="hovering-empty"><FaCheck /><strong>No records match this view.</strong><small>Adjust the queue filters or wait for new bot work.</small></div> : null}
           </div>
@@ -403,15 +440,24 @@ const HoveringQueueWorkspace: React.FC<HoveringQueueWorkspaceProps> = ({
             <div className="hovering-last-run"><small>Last automatic handoff</small><strong>{dateTime(overview?.policy.last_run_at, 'No automatic run yet')}</strong><span>{overview?.policy.last_run_status} / {number(overview?.policy.last_updated_count)} updated</span></div>
           </section>
 
-          <section className="hovering-custody-marks">
-            <header><span><FaHistory /> Custody marks</span><strong>{mergedCustody.length}</strong></header>
+          {isAdmin && <section className="hovering-custody-marks">
+            <header><span><FaHistory /> Custody marks</span><strong>{custody ? `Page ${custodyPage}` : `${mergedCustody.length} recent`}</strong></header>
+            <button type="button" disabled={busy === 'custody'} onClick={() => custody ? setCustody(null) : void loadCustody(1)}>{custody ? 'Collapse history' : 'Browse full custody history'}</button>
+            {custody && <div className="queue-custody-history">
+              {[
+                ...custody.recoveries.map(action => ({id:action.action_id, at:action.created_at, node:<article key={action.action_id}><strong>Requeue · {action.state}</strong><p>{action.updated_count} updated / {action.evidence.length} reviewed</p><small>{action.actor} / {dateTime(action.created_at)}</small><details><summary>Record evidence</summary>{action.evidence.map(row => <p key={row.id}>{row.id} · {row.description || 'No description'}</p>)}<small>{action.action_id}</small></details></article>})),
+                ...custody.date_actions.map(action => ({id:action.action_id, at:action.created_at, node:<DateActionRow key={action.action_id} action={action} />})),
+                ...custody.policy_audit.map(audit => ({id:audit.audit_id, at:audit.changed_at, node:<PolicyAuditRow key={audit.audit_id} audit={audit} />})),
+              ].sort((a,b) => new Date(b.at).getTime()-new Date(a.at).getTime()).map(entry => entry.node)}
+              <div className="queue-recovery-controls"><button disabled={custodyPage === 1 || !!busy} onClick={() => void loadCustody(custodyPage - 1)}>Previous</button><span>Page {custodyPage}</span><button disabled={!custody.has_more || !!busy} onClick={() => void loadCustody(custodyPage + 1)}>Next</button></div>
+            </div>}
             <div>
-              {mergedCustody.map((entry) => entry.type === 'action'
+              {!custody && mergedCustody.map((entry) => entry.type === 'action'
                 ? <DateActionRow key={entry.id} action={entry.item as HoveringDateAction} />
                 : <PolicyAuditRow key={entry.id} audit={entry.item as HoveringPolicyAudit} />)}
-              {!mergedCustody.length ? <p className="hovering-no-history">The first date action or policy change will begin this trail.</p> : null}
+              {!custody && !mergedCustody.length ? <p className="hovering-no-history">The first date action or policy change will begin this trail.</p> : null}
             </div>
-          </section>
+          </section>}
         </aside>
       </div>
 
@@ -435,13 +481,15 @@ const HoveringQueueWorkspace: React.FC<HoveringQueueWorkspaceProps> = ({
             </dl>
             <footer>
               <button type="button" onClick={() => setSelected(null)}>Close</button>
-              <button type="button" className="primary" disabled={!canOperate || !selectedStale || busy === `record-${selected.id}`} onClick={() => void resolveDates([selected.id])}>
+              {selected.status === 'FAILED' && <button type="button" disabled={!canOperate || !!busy} onClick={() => void prepareRecovery([selected.id])}>Review requeue</button>}
+              {selected.status === 'PENDING' && <button type="button" className="primary" disabled={!canOperate || !selectedStale || busy === `record-${selected.id}`} onClick={() => void resolveDates([selected.id])}>
                 <FaCalendarAlt /> {selectedStale ? 'Resolve this date' : 'Date is already current'}
-              </button>
+              </button>}
             </footer>
           </aside>
         </div>
       ) : null}
+      {preview && <QueueRecoveryReview preview={preview} onClose={() => setPreview(null)} onComplete={count => { setPreview(null); setSelected(null); setSelectedIds([]); setCustody(null); addNotification({type:'success', priority:'medium', message:`${count} failed records requeued.`}); void refresh(true); }} />}
       </section>
       )}
     </section>
