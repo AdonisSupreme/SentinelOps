@@ -1,3 +1,4 @@
+import SmsWorkspace from '../components/reports/SmsWorkspace';
 import { useAccess } from '../contexts/AccessContext';
 import HoveringSettingsWorkspace from '../components/reports/HoveringSettingsWorkspace';
 import PersonalLoanWorkspace from '../components/reports/PersonalLoanWorkspace';
@@ -16,6 +17,7 @@ import {
   FaRobot,
   FaShieldAlt,
   FaSyncAlt,
+  FaSms,
 } from 'react-icons/fa';
 import { useSearchParams } from 'react-router-dom';
 import HoveringQueueWorkspace from '../components/reports/HoveringQueueWorkspace';
@@ -102,12 +104,12 @@ const ReportsPage: React.FC = () => {
   const isAdmin = role === 'admin';
   const canExtract = ['admin', 'manager', 'supervisor'].includes(role);
   const canManageHoveringPasswords = canAccessModule('reports.hovering_settings') && ['admin', 'manager', 'user'].includes(role);
-  const hasAccess = ['reports.crb','reports.hovering','reports.hovering_settings','reports.personal_loans'].some(canAccessModule);
+  const hasAccess = ['reports.crb','reports.hovering','reports.hovering_settings','reports.personal_loans','reports.sms'].some(canAccessModule);
   const requestedWorkspace = searchParams.get('workspace');
-  const workspaceModules: Record<string, string> = {crb:'reports.crb', hovering:'reports.hovering', settings:'reports.hovering_settings', 'personal-loans':'reports.personal_loans'};
+  const workspaceModules: Record<string, string> = {crb:'reports.crb', hovering:'reports.hovering', settings:'reports.hovering_settings', 'personal-loans':'reports.personal_loans', sms:'reports.sms'};
   const workspace = requestedWorkspace && workspaceModules[requestedWorkspace] && canAccessModule(workspaceModules[requestedWorkspace]) ? requestedWorkspace : Object.keys(workspaceModules).find(key => canAccessModule(workspaceModules[key])) || 'crb';
 
-  const openWorkspace = (next: 'crb' | 'hovering' | 'settings' | 'personal-loans') => {
+  const openWorkspace = (next: 'crb' | 'hovering' | 'settings' | 'personal-loans' | 'sms') => {
     const params = new URLSearchParams(searchParams);
     if (next === 'crb') params.delete('workspace');
     else params.set('workspace', next);
@@ -198,21 +200,21 @@ const ReportsPage: React.FC = () => {
       <header className="reports-command-header">
         <div className="reports-command-copy">
           <span><FaShieldAlt /> SentinelOps reporting custody</span>
-          <h1>{workspace === 'crb' ? 'Regulatory delivery' : workspace === 'personal-loans' ? 'Personal loan queue' : 'Loan queue command'}</h1>
-          <p>{workspace === 'crb'
+          <h1>{workspace === 'sms' ? 'SMS delivery watch' : workspace === 'crb' ? 'Regulatory delivery' : workspace === 'personal-loans' ? 'Personal loan queue' : 'Loan queue command'}</h1>
+          <p>{workspace === 'sms' ? 'Follow the SMS queue, identify delays, and inspect the evidence behind every status.' : workspace === 'crb'
             ? 'Extract the approved CRB views from LMS, hold today’s sealed pair, and keep the delivery history accountable.'
             : workspace === 'personal-loans' ? 'Monitor 48-month applications, inspect failure evidence, and review eligible records before recovery.' : 'Observe loan-ledger hovering as it moves, inspect the bounded queue, and carry stale installment dates safely into today.'}</p>
         </div>
         <div className="reports-command-posture">
           <span>
-            <small>{workspace === 'crb' ? 'Daily command' : workspace === 'personal-loans' ? 'Loan tenure' : 'Bot window'}</small>
-            <strong>{workspace === 'crb' ? overview?.schedule_time || '07:15' : workspace === 'personal-loans' ? '48 months' : '03:00–15:00'}</strong>
-            <em>{workspace === 'crb' ? overview?.timezone || 'Africa/Harare' : workspace === 'personal-loans' ? 'USD / ZWL' : 'Active-rate clock'}</em>
+            <small>{workspace === 'sms' ? 'Observation' : workspace === 'crb' ? 'Daily command' : workspace === 'personal-loans' ? 'Loan tenure' : 'Bot window'}</small>
+            <strong>{workspace === 'sms' ? 'Read only' : workspace === 'crb' ? overview?.schedule_time || '07:15' : workspace === 'personal-loans' ? '48 months' : '03:00–15:00'}</strong>
+            <em>{workspace === 'sms' ? 'SMS channel only' : workspace === 'crb' ? overview?.timezone || 'Africa/Harare' : workspace === 'personal-loans' ? 'USD / ZWL' : 'Active-rate clock'}</em>
           </span>
           <span>
-            <small>{workspace === 'crb' ? 'Retention boundary' : workspace === 'personal-loans' ? 'Recovery scope' : 'Date boundary'}</small>
-            <strong>{workspace === 'personal-loans' ? 'Failed only' : 'Midnight'}</strong>
-            <em>{workspace === 'crb' ? 'Today’s files only' : workspace === 'personal-loans' ? 'Review before requeue' : 'Admin-controlled repair'}</em>
+            <small>{workspace === 'sms' ? 'Evidence boundary' : workspace === 'crb' ? 'Retention boundary' : workspace === 'personal-loans' ? 'Recovery scope' : 'Date boundary'}</small>
+            <strong>{workspace === 'sms' ? 'Retained queue' : workspace === 'personal-loans' ? 'Failed only' : 'Midnight'}</strong>
+            <em>{workspace === 'sms' ? 'Retained source evidence' : workspace === 'crb' ? 'Today’s files only' : workspace === 'personal-loans' ? 'Review before requeue' : 'Admin-controlled repair'}</em>
           </span>
           <button
             type="button"
@@ -231,6 +233,7 @@ const ReportsPage: React.FC = () => {
           <b>02</b><FaRobot /><span><strong>Hovering queue</strong><small>Loan ledger movement</small></span>
         </button>)}
         {canAccessModule('reports.personal_loans') && <button type="button" className={workspace === 'personal-loans' ? 'active' : ''} aria-current={workspace === 'personal-loans' ? 'page' : undefined} onClick={() => openWorkspace('personal-loans')}><b>03</b><FaDatabase /><span><strong>Personal loans</strong><small>48-month application queue</small></span></button>}
+        {canAccessModule('reports.sms') && <button type="button" className={workspace === 'sms' ? 'active' : ''} aria-current={workspace === 'sms' ? 'page' : undefined} onClick={() => openWorkspace('sms')}><b>04</b><FaSms /><span><strong>SMS delivery watch</strong><small>Queue health and evidence</small></span></button>}
       </nav>
 
       {workspace === 'crb' && error ? (
@@ -241,7 +244,7 @@ const ReportsPage: React.FC = () => {
         </div>
       ) : null}
 
-      {workspace === 'personal-loans' ? <PersonalLoanWorkspace isAdmin={isAdmin} refreshNonce={hoverRefreshNonce} /> : workspace === 'settings' ? <HoveringSettingsWorkspace isAdmin={isAdmin} refreshNonce={hoverRefreshNonce} /> : workspace === 'hovering' ? (
+      {workspace === 'sms' ? <SmsWorkspace refreshNonce={hoverRefreshNonce} /> : workspace === 'personal-loans' ? <PersonalLoanWorkspace isAdmin={isAdmin} refreshNonce={hoverRefreshNonce} /> : workspace === 'settings' ? <HoveringSettingsWorkspace isAdmin={isAdmin} refreshNonce={hoverRefreshNonce} /> : workspace === 'hovering' ? (
         <HoveringQueueWorkspace isAdmin={isAdmin} canOperate={hasAccess} canManagePasswords={canManageHoveringPasswords} refreshNonce={hoverRefreshNonce} />
       ) : loading ? (
         <ReportsSkeleton />

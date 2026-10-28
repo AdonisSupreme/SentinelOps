@@ -258,14 +258,16 @@ export interface HoveringSettingsOverview {
   recent_actions: HoveringSettingAction[];
 }
 
-const client = axios.create({ baseURL: NEXUS_API_BASE_URL });
+export const reportsClient = axios.create({ baseURL: NEXUS_API_BASE_URL });
 
-client.interceptors.request.use((config) => {
+reportsClient.interceptors.request.use((config) => {
   config.headers = config.headers || {};
   const token = localStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
+
+const client = reportsClient;
 
 class ReportsApi {
   async personalReport(filters: Record<string, unknown>) {

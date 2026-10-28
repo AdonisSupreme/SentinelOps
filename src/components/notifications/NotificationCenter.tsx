@@ -177,6 +177,9 @@ const NotificationCenter: React.FC = () => {
       relatedType?: string;
     }) => {
       const relatedType = (notification.relatedType || '').toLowerCase();
+      if (relatedType === 'account_welcome') {
+        return { label: 'Open SentinelOps', onClick: () => navigate('/') };
+      }
 
       if (
         notification.relatedId &&
