@@ -1,1001 +1,128 @@
 import type { PageGuideDefinition } from '../components/ui/PageGuide';
-
+import { guideGroups, operatorGuides } from './operatorGuides';
 export const NEXUS_MANUAL_PDF_PATH = '/manual/Sentinel_Nexus_Operator_Manual.pdf';
 export const FUNDS_CUSTODY_MANUAL_PDF_PATH = '/manual/SentinelOps_Funds_Custody_Operating_Guide.pdf';
-
 export const pageGuides: Record<string, PageGuideDefinition> = {
-  dashboard: {
-    eyebrow: 'Command Guide',
-    title: 'Reading the operational command deck',
-    intro: 'The dashboard is the lightest way to understand the current operational day. It pulls the live command picture into one deck so you can see posture, pressure, and action paths without hunting across multiple pages.',
-    sections: [
-      { title: 'Operational State', body: 'The hero metrics show readiness, execution, containment, and staffing so you can judge the day in seconds.' },
-      { title: 'Funds Movement', body: 'Compact indicators show decisions awaiting authorization, hovering queue status, pending work, throughput, and the robot window. Open each workspace for its full detail.' },
-      { title: 'Command Threads', body: 'These cards represent today\'s active checklist threads. Open one when you need item-level progress, exceptions, or participant context.' },
-      { title: 'Matrix and Actions', body: 'Use the matrix, attention queue, handover summary, and quick actions to move from awareness into the next operational step.' },
+  "dashboard": {
+    "eyebrow": "Command Guide",
+    "title": "Reading the operational command deck",
+    "intro": "The dashboard is the lightest way to understand the current operational day. It pulls the live command picture into one deck so you can see posture, pressure, and action paths without hunting across multiple pages.",
+    "sections": [
+      {
+        "title": "Operational State",
+        "body": "The hero metrics show readiness, execution, containment, and staffing so you can judge the day in seconds."
+      },
+      {
+        "title": "Funds Movement",
+        "body": "Compact indicators show decisions awaiting authorization, hovering queue status, pending work, throughput, and the robot window. Open each workspace for its full detail."
+      },
+      {
+        "title": "Command Threads",
+        "body": "These cards represent today's active checklist threads. Open one when you need item-level progress, exceptions, or participant context."
+      },
+      {
+        "title": "Matrix and Actions",
+        "body": "Use the matrix, attention queue, handover summary, and quick actions to move from awareness into the next operational step."
+      }
     ],
-    workflow: [
-      'Start with Operational State to understand the day\'s overall posture.',
-      'Read Custody + automation for waiting approvals and the current loan-hovering state. A disconnected source is explicitly marked unavailable.',
-      'Open Execution Desk when checker custody is waiting, or Hovering Monitor when robot movement stalls or overdue dates accumulate.',
-      'Open the right command thread or use a quick action once you know where intervention is needed.',
+    "workflow": [
+      "Start with Operational State to understand the day's overall posture.",
+      "Read Custody + automation for waiting approvals and the current loan-hovering state. A disconnected source is explicitly marked unavailable.",
+      "Open Execution Desk when checker custody is waiting, or Hovering Monitor when robot movement stalls or overdue dates accumulate.",
+      "Open the right command thread or use a quick action once you know where intervention is needed."
     ],
-    tip: 'This page is for command awareness. Once the issue is clear, shift into the checklist, task, or monitoring workspace to act with detail.',
+    "tip": "This page is for command awareness. Once the issue is clear, shift into the checklist, task, or monitoring workspace to act with detail."
   },
-  checklist: {
-    eyebrow: 'Execution Guide',
-    title: 'Running a live checklist',
-    intro: 'This is the live execution workspace for a shift. It is designed to keep action, coordination, and handover in one place so the checklist stays fast to work and easy to trust.',
-    sections: [
-      { title: 'Mission Controls', body: 'The header holds checklist-wide actions such as joining, completing, sharing, exporting, and exception-based completion.' },
-      { title: 'Item Flow', body: 'Each card shows the current task state and gives the operator the right action path for starting, updating, or finishing work.' },
-      { title: 'Smart Substeps', body: 'Items that break down into subitems open a guided execution path so detailed work does not overload the main checklist surface.' },
-      { title: 'Oversight Rail', body: 'Progress, handover notes, and live participant presence stay visible on the right so supervisors and the next operator always have context.' },
+  "userManagement": {
+    "eyebrow": "Access Guide",
+    "title": "Managing people and access",
+    "intro": "User Management is the identity control room for SentinelOps. It is where administrators shape who can enter the platform, where they belong, and what level of responsibility they carry.",
+    "sections": [
+      {
+        "title": "User Directory",
+        "body": "The directory lets you search people quickly by name, username, or email before moving into account work."
+      },
+      {
+        "title": "Profile Console",
+        "body": "Selecting a user opens their editable identity record, including role, department, section, active state, and password controls."
+      },
+      {
+        "title": "Create User Flow",
+        "body": "New accounts are created here with the person's core identity, organizational placement, and initial access setup."
+      },
+      {
+        "title": "Role and Placement",
+        "body": "Roles shape platform authority, while department and section placement determine where users belong operationally."
+      }
     ],
-    workflow: [
-      'Join the checklist if you are actively participating in the shift.',
-      'Work item by item, opening substeps when the task needs tighter execution detail.',
-      'Keep handover notes and participation current, then complete or export once the run is stable.',
+    "workflow": [
+      "Find the person you need to manage in the directory.",
+      "Review their current role, location, and account status before making changes.",
+      "Save updates or create a new account when a new operator joins the organization."
     ],
-    tip: 'Treat this page as the operational source of truth. If execution, handover, or an exception is not captured here, the team cannot rely on it later.',
+    "tip": "Keep access aligned to real responsibility. Clean identity structure makes every other SentinelOps workflow safer and easier to understand."
   },
-  checklists: {
-    eyebrow: 'Timeline Guide',
-    title: 'Reviewing checklist history',
-    intro: 'The checklists page is a grouped operational timeline. It helps you move quickly between today\'s coverage picture and deeper historical review without loading more than you need.',
-    sections: [
-      { title: 'Time Controls', body: 'Switch between all, week, day, and custom range modes to decide how wide or narrow the timeline should be.' },
-      { title: 'Search and Filters', body: 'Search by keyword, then narrow further by status or shift when the history is too broad.' },
-      { title: 'Timeline Clusters', body: 'Checklist runs are grouped by day so you can read each date as an operational story instead of a flat list.' },
-      { title: 'Coverage and Record Actions', body: 'Today coverage gives quick shift awareness, while managers can still open or delete records when governance is required.' },
+  "login": {
+    "eyebrow": "Access Guide",
+    "title": "Signing in to SentinelOps",
+    "intro": "The login page is the entry gate into SentinelOps. It now adapts to the authentication mode in front of you so people can tell whether they are signing in with Active Directory or SentinelOps credentials.",
+    "sections": [
+      {
+        "title": "Identity Mode",
+        "body": "The form explains whether you should use your Windows credentials or your SentinelOps account details for this environment."
+      },
+      {
+        "title": "Directory Status",
+        "body": "The Active Directory status panel shows whether directory-backed authentication is currently reachable and healthy."
+      },
+      {
+        "title": "Sign-In Result",
+        "body": "Successful login opens the parts of SentinelOps your role allows, from dashboards and checklists to management pages."
+      },
+      {
+        "title": "Failure Signals",
+        "body": "If sign-in fails, the page helps distinguish bad credentials from a server, directory, or connectivity issue."
+      }
     ],
-    workflow: [
-      'Set the time mode first so the timeline reflects the slice you actually want to inspect.',
-      'Apply search, shift, or status filters until the right runs are visible.',
-      'Open the checklist instance you care about when you need full execution detail.',
+    "workflow": [
+      "Check the sign-in hint so you know which credentials this environment expects.",
+      "Review the directory status if the page is using Active Directory.",
+      "Submit your credentials and follow the returned error signals if access is denied."
     ],
-    tip: 'Use week and range views to study patterns. Use day view when you are tracing a known event or handover.',
+    "tip": "When the page points to directory or connectivity trouble, the problem may be infrastructure rather than your credentials."
   },
-  templateManager: {
-    eyebrow: 'Template Guide',
-    title: 'Authoring operational templates',
-    intro: 'Templates define how future runs will feel in the field. This page is where teams shape clean, repeatable execution before the shift begins.',
-    sections: [
-      { title: 'Template Library', body: 'The library is the catalog of reusable checklist blueprints aligned to shifts, teams, and operating routines.' },
-      { title: 'Builder Workspace', body: 'Create and edit modes let you structure the checklist, sequence work, and tune the operator experience before it goes live.' },
-      { title: 'Rich Item Types', body: 'Templates can include standard items, timed steps, information blocks, scheduled events, conditional logic, and subitems.' },
-      { title: 'Briefing View', body: 'View mode lets you inspect the final template as an operator-facing briefing before it becomes part of live execution.' },
+  "notFound": {
+    "eyebrow": "Navigation Guide",
+    "title": "Recovering from a dead route",
+    "intro": "This page appears when SentinelOps cannot resolve the address you tried to open. Usually the route is outdated, incomplete, or no longer belongs to the current application state.",
+    "sections": [
+      {
+        "title": "Missing Destination",
+        "body": "The requested location does not exist at the current address."
+      },
+      {
+        "title": "Safe Return Path",
+        "body": "The primary action takes you back to a known working area so you can re-enter the platform cleanly."
+      },
+      {
+        "title": "Broken Link Signal",
+        "body": "If you arrived here from inside SentinelOps, the original link or route probably needs updating."
+      },
+      {
+        "title": "No Data Loss",
+        "body": "This is only a navigation dead end. It does not mean your account, shift, or records have disappeared."
+      }
     ],
-    workflow: [
-      'Start in the library to decide whether to reuse, refine, or create a template.',
-      'Build the item flow so operators can move through it without hesitation.',
-      'Review the briefing view before handing the template to a live shift.',
+    "workflow": [
+      "Use the return action to get back to a known working page.",
+      "Navigate again from the main menu, dashboard, or another trusted starting point.",
+      "Report the route if the same broken path keeps sending you back here."
     ],
-    tip: 'The best templates feel obvious under pressure. Write each item in the order and language operators naturally use during real work.',
-  },
-  performance: {
-    eyebrow: 'Performance guide',
-    title: 'Understand your contribution',
-    intro: 'Use Overview for your contribution and reliability, Achievements for collectible levels, and Evidence & scoring to understand how the record is calculated.',
-    sections: [
-      { title: 'Overview', body: 'Choose a period. Contribution points reflect recorded work; reliability rates include only eligible evidence. A dash means no evidence, and a limited sample needs more observations.' },
-      { title: 'Achievements', body: 'Explore Amateur, Skilled and Expert levels. Every requirement must be met. Collect levels in order. Progress uses this calendar year; existing unlocked and collected levels stay yours.' },
-      { title: 'Evidence & scoring', body: 'Read the score breakdown, grade weights and recent contributions. Tasks without deadlines receive completion credit but no timeliness bonus. Days off and passive checklist membership do not earn points or lower your grade.' },
-      { title: 'Team context', body: 'The visible team ranks recorded contribution volume. Equal results share a rank. Different workloads and shift opportunities mean this is not a staff appraisal.' },
-    ],
-    workflow: [
-      'Choose the period and check the evidence behind each rate.',
-      'Open Achievements, select a level and review the remaining requirements.',
-      'Collect an available level, or open Evidence & scoring to understand recent activity.',
-    ],
-    tip: 'Keep working at your normal pace. Awards recognize evidence, not extra hours or uninterrupted calendar-day streaks.',
-  },
-  taskCenter: {
-    eyebrow: 'Task Center Guide',
-    title: 'Running work from Task Center',
-    intro: 'Task Center is the command lane for work that lives beyond a single checklist run. It keeps ownership, due dates, history, and follow-through visible without making the page feel heavy.',
-    sections: [
-      { title: 'Lane Control', body: 'The sidebar lanes split work into views such as personal, assigned, team, overdue, and completed so you can enter the right queue immediately.' },
-      { title: 'Command Summary', body: 'The hero metrics show how many visible tasks need attention, which ones are active, and where urgency is building.' },
-      { title: 'Detail and History', body: 'Open a task to work in the detail pane, then use the history flow when you need to understand what changed and when.' },
-      { title: 'Task Actions', body: 'Create, update, and close work here when the job needs clear ownership beyond the life of a checklist.' },
-    ],
-    workflow: [
-      'Choose the lane that matches the kind of work you need to manage.',
-      'Apply search, status, or priority filters if the queue is still too broad.',
-      'Open the task, act on it, and use history when you need change context before moving it forward.',
-    ],
-    tip: 'Use checklists for live shift execution. Use Task Center when the work needs persistence, accountability, and follow-up.',
-  },
-  userManagement: {
-    eyebrow: 'Access Guide',
-    title: 'Managing people and access',
-    intro: 'User Management is the identity control room for SentinelOps. It is where administrators shape who can enter the platform, where they belong, and what level of responsibility they carry.',
-    sections: [
-      { title: 'User Directory', body: 'The directory lets you search people quickly by name, username, or email before moving into account work.' },
-      { title: 'Profile Console', body: 'Selecting a user opens their editable identity record, including role, department, section, active state, and password controls.' },
-      { title: 'Create User Flow', body: 'New accounts are created here with the person\'s core identity, organizational placement, and initial access setup.' },
-      { title: 'Role and Placement', body: 'Roles shape platform authority, while department and section placement determine where users belong operationally.' },
-    ],
-    workflow: [
-      'Find the person you need to manage in the directory.',
-      'Review their current role, location, and account status before making changes.',
-      'Save updates or create a new account when a new operator joins the organization.',
-    ],
-    tip: 'Keep access aligned to real responsibility. Clean identity structure makes every other SentinelOps workflow safer and easier to understand.',
-  },
-  advancedTeamManagement: {
-    eyebrow: 'Scheduling Guide',
-    title: 'Planning coverage with patterns',
-    intro: 'This is the strongest scheduling workspace for managers shaping future coverage. It combines quick horizon controls, reusable shift patterns, and exception handling without losing sight of actual staffing pressure.',
-    sections: [
-      { title: 'Dates and Filters', body: 'Use date presets for quick planning, or Custom dates for a specific day or range. Apply the dates, then narrow the displayed assignments by team member and shift. Clear filters restores the full selected window.' },
-      { title: 'Coverage Snapshot', body: 'The summary signals show assignment count, covered people, weekend pressure, and other indicators that reveal whether the plan is balanced.' },
-      { title: 'Pattern Library and Rollout', body: 'Use stored patterns for repeatable schedules, then apply them in bulk when you need fast, consistent coverage placement.' },
-      { title: 'Single Assignments and Time Off', body: 'Use one-off assignment and time-off actions to handle the real exceptions that patterns cannot cover cleanly.' },
-    ],
-    workflow: [
-      'Start in your own section, or choose another section if you are an administrator. Set a date window and optional person or shift filters.',
-      'Read the current coverage picture before creating new assignments.',
-      'Use patterns for repeatable structure and exceptions for the specific dates that need human judgment.',
-    ],
-    tip: 'Patterns create speed, but exceptions create realism. The best schedule is the one that reflects both.',
-  },
-  revampedTeamManagement: {
-    eyebrow: 'Scheduling Guide',
-    title: 'Switching between schedule lenses',
-    intro: 'This planner is built around multiple ways of reading the same schedule. Use it when the team needs to understand placement, sequence, and broad staffing shape from different visual angles.',
-    sections: [
-      { title: 'View Modes', body: 'Calendar, timeline, and analytics each give a different lens on the same schedule so you can choose the clearest explanation for the moment.' },
-      { title: 'Horizon and Section Scope', body: 'Preset date windows and section switching help you move quickly between planning horizons and team views.' },
-      { title: 'Action Bar', body: 'Smart Assign, Single Shift, and Time Off actions are surfaced directly in the page so planning changes stay close to the schedule context.' },
-      { title: 'Analytics Lens', body: 'Use analytics when you want to step back from individual dates and understand the broader staffing story.' },
-    ],
-    workflow: [
-      'Choose the lens that best matches your question before changing the schedule.',
-      'Set the section and preset so you are looking at the correct planning window.',
-      'Open the action you need once the current coverage picture is clear.',
-    ],
-    tip: 'When a schedule feels confusing, the first fix is often a better lens rather than more data.',
-  },
-  revolutionaryTeam: {
-    eyebrow: 'Scheduling Guide',
-    title: 'Using the grouped schedule board',
-    intro: 'This page centers on a grouped schedule view that makes staffing clusters easy to read. It is useful when you want quick visual understanding before reaching for deeper scheduling tools.',
-    sections: [
-      { title: 'Grouped Board', body: 'Grouped mode is the main working surface today and is the fastest way to scan assignments by date and team.' },
-      { title: 'Search and Section Scope', body: 'Search narrows the visible roster, while admins can move between sections to inspect different teams.' },
-      { title: 'Alternative Lenses', body: 'List and analytics are available as alternate views, but the grouped board remains the primary reading mode in the current experience.' },
-      { title: 'Fast Actions', body: 'Refresh and the floating action path keep the page responsive when you want fresh schedule state or quick next steps.' },
-    ],
-    workflow: [
-      'Start in grouped mode for the fastest coverage scan.',
-      'Use search or section filters when you need to narrow the picture.',
-      'Switch lenses only when you already know what pattern or person you are trying to examine.',
-    ],
-    tip: 'Grouped view is the clearest lens for most day-to-day staffing questions on this page right now.',
-  },
-  teamManagement: {
-    eyebrow: 'Coverage Guide',
-    title: 'Scanning staffing coverage',
-    intro: 'This page is a lighter coverage-reading surface for managers. It shows whether dates are fully covered, partially covered, or exposed without pulling you into the heavier planning workflow.',
-    sections: [
-      { title: 'Coverage Summary', body: 'The top cards show total shifts and how many dates are fully covered, partially covered, or missing coverage.' },
-      { title: 'Calendar Lenses', body: 'Switch between month and week views depending on whether you need broad planning context or a tighter operational horizon.' },
-      { title: 'Day Signals', body: 'Each date is color-coded by coverage quality so weak points stand out immediately.' },
-      { title: 'Scope and Navigation', body: 'Managers can move through the calendar window and admins can inspect different sections when needed.' },
-    ],
-    workflow: [
-      'Choose month or week view based on how far ahead you need to assess.',
-      'Scan the coverage colors to find exposed or partially staffed dates.',
-      'Move the calendar window or switch section if you need to compare another period or team.',
-    ],
-    tip: 'Use this page to spot gaps. Use the advanced scheduling pages when you are ready to reshape assignments.',
-  },
-  databaseStats: {
-    eyebrow: 'Telemetry Guide',
-    title: 'Reading database runway',
-    intro: 'Database Stats turns backend growth signals into a simpler runway story. It helps teams understand storage pressure, trend direction, and urgency without requiring database expertise.',
-    sections: [
-      { title: 'Capacity Forecast', body: 'The headline cards explain current size, projected pressure, days remaining, and the overall storage risk state.' },
-      { title: 'Growth Pulse', body: 'Velocity and recent movement show whether growth is calm, accelerating, or beginning to look dangerous.' },
-      { title: 'Growth Contour', body: 'The chart translates the recent trend into a visual shape so you can see whether the curve is flattening or steepening.' },
-      { title: 'Ledger and Notes', body: 'Control notes and the daily ledger convert raw telemetry into practical language about what changed and what to watch next.' },
-    ],
-    workflow: [
-      'Check the risk state and runway first.',
-      'Read the growth pulse and contour to understand recent direction.',
-      'Use the notes and ledger when you want the clearest plain-language explanation of the trend.',
-    ],
-    tip: 'You do not need to decode raw database metrics yourself. Focus on runway, growth direction, and whether the pressure is stable or accelerating.',
-  },
-  networkSentinel: {
-    eyebrow: 'Monitoring Guide',
-    title: 'Running the Network Sentinel command center',
-    intro: 'This page is the live network operations deck for SentinelOps. It keeps the board light by separating fleet posture from focused investigation, while still preserving the evidence and major events you need for diagnosis.',
-    sections: [
-      { title: 'Command Center', body: 'The service grid is the live fleet view. Use it to spot which assets are up, degraded, or down without opening deeper diagnostics first.' },
-      { title: 'Filters and Focus', body: 'Search plus status, environment, and group filters help you narrow the board quickly before you open a focused investigation.' },
-      { title: 'Signal, Timeline, Evidence', body: 'Selecting a service opens a right-side investigation deck with sampled signal, major events, outage ledger, and retained raw evidence.' },
-      { title: 'Retention Model', body: 'Raw evidence is kept short for space efficiency, while major events, outages, and sampled history stay longer so older incidents remain diagnosable.' },
-    ],
-    workflow: [
-      'Scan the command center for any service marked degraded or down.',
-      'Select the affected service and start in Signal to judge stability, then move to Timeline and Evidence for context.',
-      'Use manual check, filters, or the evidence TXT export only after you know which asset you are investigating.',
-    ],
-    tip: 'Treat the left side as detection and the right side as diagnosis. Staying disciplined about that flow keeps the page fast and makes investigations much easier to read.',
-  },
-  clearing: {
-    eyebrow: 'SentinelOps Funds Custody Manual',
-    title: 'Operating Unauthorized Debit Clearing',
-    intro: 'Clearing is a controlled unauthorized-debit workspace. It binds every correction to one internal account, one ACNTBAL currency row, an authorized amount, and queue evidence when a transaction is targeted. It never clears unauthorized credits. This guide covers tolerant one-column intake, live investigation, governed account actions, approval-triggered execution, rollback, and deep audit evidence.',
-    triggerLabel: 'Clearing Guide',
-    variant: 'wide',
-    walkthroughKicker: 'Guided custody path',
-    walkthroughTitle: 'From sealed identifiers to a proven Oracle outcome',
-    walkthroughIntro: 'Follow the lanes in order when executing a correction, or jump directly to the relevant lane when investigating an account, execution, or custody event.',
-    featureTreeKicker: 'Clearing feature map',
-    featureTreeTitle: 'Know which workspace owns the question',
-    featureTreeIntro: 'The feature map separates sealed instruction scope, live evidence, mutation control, and immutable audit so operators never confuse visibility with permission.',
-    decisionKicker: 'Clearing stop rules',
-    decisionTitle: 'Know when to proceed and when to stop',
-    decisionIntro: 'These boundaries protect unrelated funds and prevent ambiguous Oracle evidence from becoming an unsafe command.',
-    examplesKicker: 'Clearing scenarios',
-    examplesTitle: 'How to interpret common operating conditions',
-    examplesIntro: 'Use these examples to distinguish a clean exact correction from read-only evidence, blocked ambiguity, and uncertain execution state.',
-    heroStats: [
-      { label: 'Authority', value: 'Sealed Scope', detail: 'Finance imports and governed Account Explorer actions become immutable batches.' },
-      { label: 'First move', value: 'Verify Evidence', detail: 'Resolve fresh Oracle mappings, balances, and queue evidence before selection.' },
-      { label: 'Custody', value: 'Maker + Checker', detail: 'Operators remain distinct; administrators may hold both roles when required.' },
-      { label: 'Mutation', value: 'Two Gates', detail: 'Application and Oracle write gates must both be open.' },
-      { label: 'Proof', value: 'Immutable Trail', detail: 'Source hash, payload hash, actors, results, and reversals remain attributable.' },
-    ],
-    sections: [
-      { title: 'Batch Control', body: 'Import one-column account or RRN authority, verify live Oracle state, inspect classifications, and prepare only safe transactions for approval.' },
-      { title: 'Account Explorer', body: 'Look up an account directly or resolve its internal account from an RRN, inspect every currency-specific ACNTBAL row and queue record, then prepare a controlled queue-specific or full-debit batch.' },
-      { title: 'Execution Desk', body: 'Authorize pending payloads, inspect exact before/after effects, then follow the automatic mutation outcome and eligible rollback controls.' },
-      { title: 'Custody Trail', body: 'Read the immutable sequence of imports, reconciliations, submissions, approvals, executions, failures, and reversals.' },
-    ],
-    visualWalkthrough: [
-      {
-        step: '01',
-        title: 'Open the correct operating lane',
-        location: 'Clearing mode rail',
-        body: 'The operating lanes separate source preparation, account investigation, controlled mutation, historical proof, and embedded guidance. Start in Batch Control for a new Finance instruction and move lanes only when the current question changes.',
-        checklist: [
-          'Use Batch Control to import, reconcile, classify, select, and submit.',
-          'Use Account Explorer for account-level evidence, including accounts outside the current batch and cases where only the RRN is known.',
-          'Use Execution Desk to review submitted payloads, authorize them, and inspect the resulting mutation.',
-          'Use Custody Trail when proving who did what, when, and against which batch or execution.',
-        ],
-        example: 'A Finance file that has not been reconciled belongs in Batch Control, not Execution Desk.',
-        avoid: 'Do not treat the lanes as duplicate dashboards. Each lane owns a different custody question.',
-        visual: 'clearingBatch',
-      },
-      {
-        step: '02',
-        title: 'Import and seal the identifier scope',
-        location: 'Batch Control, Open a clearing batch',
-        body: 'Choose Account or RRN, then import a CSV or XLSX with that single header and one identifier per row. The complete source is sealed even when an account currently has no positive debit or Oracle verification is temporarily unavailable. Fresh verification later decides whether each row is actionable.',
-        checklist: [
-          'Choose Account or RRN before downloading the matching one-column template.',
-          'Keep identifiers formatted as text so leading zeroes remain intact.',
-          'Confirm the displayed filename, source owner, resolved debit count, and source hash before continuing.',
-          'Correct the source file and import again when validation fails; never repair sealed rows inside SentinelOps.',
-        ],
-        example: 'An account with no unauthorized debit still enters the batch and later appears as NO ACTION instead of aborting the import.',
-        avoid: 'Do not mix Account and RRN columns or add amounts, dates, or transaction metadata to the identity file.',
-        visual: 'clearingBatch',
-      },
-      {
-        step: '03',
-        title: 'Verify fresh Oracle evidence before selecting',
-        location: 'Batch Control, current handoff',
-        body: 'Batch creation seals what Finance asked SentinelOps to inspect. Verify Oracle evidence is a separate fresh read that proves which physical account, currency row, balance, and queue record exist now. This distinction prevents a stale intake read from becoming mutation authority.',
-        checklist: [
-          'Confirm the Oracle mutation gate posture before trusting the action buttons.',
-          'Run Verify Oracle evidence and wait for the batch to leave RECONCILING.',
-          'Read the classification count and each row interpretation, not only the batch total.',
-          'Open a row when the mapping, balance effect, or queue evidence needs closer inspection.',
-        ],
-        example: 'READY means the live evidence is uniquely resolvable; BLOCKED means the system cannot prove a safe exact mutation.',
-        avoid: 'Do not select or submit rows from an unreconciled batch.',
-        visual: 'clearingAccount',
-      },
-      {
-        step: '04',
-        title: 'Filter, inspect, and select the exact scope',
-        location: 'Batch ledger and classification rail',
-        body: 'The ledger is the Finance transaction set joined to live Oracle interpretation. Filters separate execution-safe rows from special review, blocked records, and rows requiring no action.',
-        checklist: [
-          'Use the classification rail to isolate READY, SPECIAL REVIEW, BLOCKED, or NO ACTION records.',
-          'Use search for account, RRN, STAN, or another visible transaction identifier.',
-          'Select only rows whose debit account, currency row, amount, and queue identity are correct.',
-          'Use Arm all pending in the unlimited window; during business hours SentinelOps arms only the first 20 pending rows and preserves the remainder for the next tranche.',
-        ],
-        example: 'A transaction can be Finance-authorized but still blocked because live Oracle evidence maps to more than one physical row.',
-        avoid: 'Do not use a batch count as a substitute for reading the interpretation of selected rows.',
-        visual: 'evidence',
-      },
-      {
-        step: '05',
-        title: 'Investigate an account without changing it',
-        location: 'Account Explorer',
-        body: 'Select an account from the current batch, enter an external account number, or switch to RRN when the account is unknown. Account lookup follows ACNTS into ACNTBAL. RRN lookup finds the narration token in ASIBGPQNP, resolves BGPQ_INT_ACCT_1, and reads ACNTBAL directly by that internal account.',
-        checklist: [
-          'Read the mapping verdict before reading balance figures.',
-          'For an RRN lookup, confirm that exactly one internal account was proven; multiple candidates block batch creation.',
-          'Compare currency-specific physical rows, unauthorized debit, account balance, queued amount, holds, liens, and queue records.',
-          'Use the transaction strip to connect batch instructions to account evidence.',
-          'Select the exact currency row before choosing one or more supporting queue transactions, the full unauthorized debit, or a surfaced queue-custody repair.',
-          'Create a controlled batch; Account Explorer never writes directly and still requires reconciliation and authorization.',
-          'When specific-record clearing is disabled for operators, use the full unauthorized-debit action; administrators remain permitted to use either mode.',
-          'When unauthorized debit is zero, SentinelOps may offer an exact queue-row removal or an orphaned physical queue-amount reset. These paths never reduce ACNTBAL_AC_UNAUTH_DB_SUM.',
-        ],
-        example: 'An operator with only RRN 180001000436 can resolve its queue record and internal account, then inspect the correct ACNTBAL currency rows without first knowing the external account.',
-        avoid: 'Do not mistake a successful account lookup for direct write authority; create and reconcile a controlled batch first.',
-        visual: 'clearingAccount',
-      },
-      {
-        step: '06',
-        title: 'Submit, then authorize from Execution Desk',
-        location: 'Batch Control and Execution Desk',
-        body: 'Submission seals the selected transaction set into a payload. A checker reviews that exact payload in Execution Desk. Approval immediately starts the guarded mutation, removing the old third execution step. Any material scope change requires a new submission.',
-        checklist: [
-          'Review selected count and authorized value before submitting.',
-          'Add the requested reason or reference so the decision can be understood later.',
-          'Have a different authorized operator inspect and approve the payload; an administrator may make and approve under the explicit admin exception.',
-          'Confirm account, currency, before value, authorized debit, intended after value, reason, and payload hash before approval.',
-          'Treat Approve and execute as the mutation command. There is no later manual execute button.',
-        ],
-        example: 'Operator A submits 12 reconciled rows; Operator B reviews the exact 12-row payload and approval commits the guarded mutation.',
-        avoid: 'Do not share credentials or use the administrator exception as routine custody practice.',
-        visual: 'clearingExecution',
-      },
-      {
-        step: '07',
-        title: 'Follow the approval-triggered Oracle mutation',
-        location: 'Execution Desk',
-        body: 'Checker approval uses the sealed payload, locks every affected Oracle row, performs only the approved debit or queue-custody operation, and commits atomically. Queue-only repair removes the selected exact ASIBGPQNP rows or resets a proven orphaned ACNTBAL_AC_DB_QUEUE_AMT while leaving ACNTBAL_AC_UNAUTH_DB_SUM untouched.',
-        checklist: [
-          'Confirm both write gates are explicitly enabled in the intended environment.',
-          'Read the account, internal account, currency, before value, debit reduction, after value, and any exact queue deletion target.',
-          'Approve once and wait for the terminal outcome shown in Execution Desk.',
-          'If the result is COMMIT UNCERTAIN, stop and reconcile database state before any retry.',
-          'After a controlled Account Explorer batch reaches COMPLETED or ROLLED BACK, archive it from Batch Control to remove it from the active rail without deleting its custody evidence.',
-        ],
-        example: 'A committed execution records exact before and after values plus the queue keys affected by the approved instruction.',
-        avoid: 'Never retry blindly after a timeout or uncertain commit response.',
-        visual: 'clearingExecution',
-      },
-      {
-        step: '08',
-        title: 'Verify outcome, reverse only when eligible, and audit',
-        location: 'Execution Desk and Custody Trail',
-        body: 'Execution history is the operational result; Custody Trail is the attributable story. Rollback is available only when the recorded execution remains safely reversible under the backend contract.',
-        checklist: [
-          'Inspect terminal status, mutation summary, error text, and actor after execution.',
-          'Use rollback only for an eligible committed execution and provide a precise reason.',
-          'Verify the reversal result rather than assuming the button restored state.',
-          'Use Custody Trail to trace batch, transaction, execution, actor, timestamp, and reference identifiers.',
-        ],
-        example: 'A reversal should appear as its own governed event linked to the original committed execution.',
-        avoid: 'Do not treat rollback as an undo shortcut or edit audit records to simplify the story.',
-        visual: 'clearingAudit',
-      },
-    ],
-    featureTree: [
-      {
-        title: 'Batch Control',
-        body: 'Identity-source custody and transaction decision-making.',
-        items: ['Account/RRN one-column import', 'Tolerant intake and immutable hash', 'Batch history and status', 'Fresh Oracle verification', 'Classification filters and search', 'Transaction selection', 'Submission handoff'],
-      },
-      {
-        title: 'Account Explorer',
-        body: 'Live evidence and governed batch preparation from either an external account or an RRN.',
-        items: ['Batch account index', 'Direct external-account lookup', 'RRN-to-internal-account lookup', 'FACNO and queue identity', 'Currency-specific ACNTBAL rows', 'Rich queue evidence', 'Queue-specific and full-row batch creation'],
-      },
-      {
-        title: 'Execution Desk',
-        body: 'The authorization and sealed command surface for pending corrections and governed reversals.',
-        items: ['Pending authorization queue', 'Before/after payload review', 'Admin specific-record policy', 'Approval-triggered execution', 'Execution status history', 'Failure and commit-uncertain evidence', 'Eligibility-gated rollback'],
-      },
-      {
-        title: 'Custody Trail',
-        body: 'The immutable human and system chronology.',
-        items: ['Account/RRN search', 'Year-to-day timeline', 'Tabulated actor and reference evidence', 'Verification snapshots', 'Sealed authorization intent', 'Oracle before/after records', 'Execution and reversal outcomes'],
-      },
-    ],
-    decisionRules: [
-      {
-        title: 'Source validation stops the run',
-        useWhen: 'The one required identifier is missing, malformed, duplicated, ambiguous, or mixed with extra columns.',
-        doThis: 'Correct the Finance-owned Account or RRN list and import it as a new sealed batch.',
-        avoid: 'Do not add transaction metadata or combine Account and RRN identifiers in one source.',
-        evidence: 'The import error names the source row and validation field.',
-      },
-      {
-        title: 'Blocked means no mutation',
-        useWhen: 'Mapping, amount, physical row, queue identity, or live Oracle evidence is not uniquely resolvable.',
-        doThis: 'Open the row, inspect Account Explorer, and resolve the source or Oracle ambiguity outside the execution path.',
-        avoid: 'Do not force-select a blocked record or bypass the backend verdict.',
-        evidence: 'The row interpretation explains the unresolved boundary.',
-      },
-      {
-        title: 'Special review needs a human verdict',
-        useWhen: 'The correction is potentially safe but residual value or queue evidence requires explicit review.',
-        doThis: 'Inspect the full evidence dossier and include the rationale in the approval record.',
-        avoid: 'Do not treat special review as equivalent to READY.',
-        evidence: 'Before/after values and preserved queue records show what remains.',
-      },
-      {
-        title: 'Direct lookup never writes directly',
-        useWhen: 'An account is absent from the batch, no batch is open, or only an RRN is available.',
-        doThis: 'Read mappings, currency rows, and queue state; then create a sealed queue-specific or full-row batch when the evidence supports action.',
-        avoid: 'Do not treat the live dossier or selected card as a database command.',
-        evidence: 'A Finance import or an Account Explorer action must become a sealed, reconciled, approved batch before execution.',
-      },
-      {
-        title: 'Specific-record policy controls operator scope',
-        useWhen: 'An operator wants to clear one queue transaction, or a set whose authority adds up to the physical debit, instead of clearing the complete currency row without queue evidence.',
-        doThis: 'Check the Execution Desk policy. Administrators may always use specific-record clearing and can enable or disable it for other users.',
-        avoid: 'Do not split a debit into a transaction-specific action when the policy restricts operators to full-row clearing.',
-        evidence: 'The policy state and every toggle change are attributable in the custody trail.',
-      },
-      {
-        title: 'Business hours protect Oracle',
-        useWhen: 'Local time is between 08:00 and 19:00 and the batch contains more than 20 pending records.',
-        doThis: 'Arm and process a maximum tranche of 20. Outside the protection window, Arm all pending may prepare the complete remaining scope.',
-        avoid: 'Do not bypass the server-side tranche limit or assume unarmed rows were included in the sealed payload.',
-        evidence: 'The workspace and API expose the same operating-window state and explanation.',
-      },
-      {
-        title: 'Commit uncertain means stop',
-        useWhen: 'The application cannot prove whether Oracle committed after an execution request.',
-        doThis: 'Verify the exact account and transaction state, preserve logs, and escalate before another command.',
-        avoid: 'Do not retry, reverse, or submit a replacement batch until the live state is proven.',
-        evidence: 'Execution history retains the uncertain outcome and command identifiers.',
-      },
-      {
-        title: 'Closed gates are normal safety',
-        useWhen: 'A write action is disabled in UAT or production.',
-        doThis: 'Verify the intended environment and approved application plus Oracle mutation configuration.',
-        avoid: 'Do not change gates merely to make a button clickable.',
-        evidence: 'The masthead shows the current gate posture.',
-      },
-    ],
-    examples: [
-      {
-        title: 'Clean exact correction',
-        scenario: 'One Finance row maps to one physical debit account, one currency-specific ACNTBAL row, and an exact queue record.',
-        interpretation: 'The row can become READY after reconciliation because the authorized effect is uniquely provable.',
-        operatorMove: 'Select and submit, then have the checker review the sealed preview in Execution Desk; approval executes once.',
-      },
-      {
-        title: 'Account exists outside the batch',
-        scenario: 'An operator needs to understand a customer balance but the current batch does not contain the account.',
-        interpretation: 'The live Oracle lookup provides evidence independently of batch membership.',
-        operatorMove: 'Inspect the currency row and queue; keep it read-only or prepare a governed Account Explorer batch for the intended debit amount.',
-      },
-      {
-        title: 'Only an RRN is available',
-        scenario: 'The operator has a transaction RRN but not the customer account number.',
-        interpretation: 'SentinelOps searches the ASIBGPQNP narration, resolves BGPQ_INT_ACCT_1, surfaces the external account when ACNTS can prove it, and reads ACNTBAL by the internal account without changing the existing account-number path.',
-        operatorMove: 'Confirm the RRN match and unique internal account, select the intended currency row and queue record, then create a governed batch.',
-      },
-      {
-        title: 'Ambiguous live mapping',
-        scenario: 'One external account resolves to multiple candidate physical rows.',
-        interpretation: 'The correction is blocked because SentinelOps cannot prove which row is authorized.',
-        operatorMove: 'Stop execution, investigate the mapping source, and reconcile again only after the ambiguity is resolved.',
-      },
-      {
-        title: 'Uncertain execution response',
-        scenario: 'The execution request loses its response while Oracle commit status is unknown.',
-        interpretation: 'Retrying could duplicate a valid correction.',
-        operatorMove: 'Read Execution Desk evidence, reconcile live state, preserve custody records, and escalate.',
-      },
-    ],
-    workflowTitle: 'Complete clearing runbook',
-    workflow: [
-      'Receive the Finance-authorized account or RRN list and verify that the source owns the correction scope.',
-      'Open Batch Control, choose Account or RRN, download the matching template, and import the one-column source.',
-      'Resolve every validation error in the source file; confirm filename, row count, owner, and source hash.',
-      'Run Verify Oracle evidence. During 08:00-19:00, arm no more than 20 pending records per tranche; outside that window, arm the full remaining safe scope when appropriate.',
-      'Filter the ledger, inspect blocked or special-review rows, and use Account Explorer for deeper evidence.',
-      'Select only the exact execution-safe Finance rows.',
-      'Submit the selected scope with a meaningful reference and preserve the payload hash.',
-      'Open Execution Desk and have a distinct checker verify gates, accounts, values, queue deletions, custody identities, and the unchanged payload. Administrators may approve their own submission only under the explicit admin exception.',
-      'Approve once. Approval starts the mutation automatically; wait for a terminal result and stop immediately on COMMIT UNCERTAIN.',
-      'Verify the live result, use rollback only when explicitly eligible, and record the reason.',
-      'Finish in Custody Trail to confirm the complete actor, timestamp, batch, payload, execution, and reversal story.',
-    ],
-    tipTitle: 'The custody rule',
-    tip: 'A sealed identity import or governed Account Explorer action defines what may be examined. Fresh Oracle verification proves what may be corrected. Submission hands custody to Execution Desk; checker approval is the single guarded command that runs the mutation.',
-  },
-  nexus: {
-    eyebrow: 'Sentinel Nexus Operator Manual',
-    title: 'Absolute guidance for the Nexus intelligence fabric',
-    intro: 'Sentinel Nexus is the cherry on top of SentinelOps: the place where incidents, service contracts, dependency topology, databases, runtime agents, SOPs, AI interpretation, safe diagnostics, guarded restart, rollover, and operator verdicts become one transparent operating system. Nexus is powerful because it reasons from the world you define. This guide teaches operators how to enter that world, configure it cleanly, investigate with evidence, act safely, and leave every incident smarter than it was found.',
-    manualPath: NEXUS_MANUAL_PDF_PATH,
-    manualDownloadLabel: 'Download Nexus manual',
-    heroStats: [
-      { label: 'Start here', value: 'Incidents', detail: 'Risk, impact, AI brief, graph, evidence, actions, outcome.' },
-      { label: 'Define truth', value: 'Services', detail: 'Stable service contracts, owners, endpoints, agents, certification.' },
-      { label: 'Model reality', value: 'Flows and Edges', detail: 'Business journeys, directional dependencies, failure domains.' },
-      { label: 'Act safely', value: 'Diagnostics First', detail: 'Gather evidence before task handoff or restart approval.' },
-      { label: 'Teach Nexus', value: 'Verdicts', detail: 'Actual root cause, false positive, outcome, and notes.' },
-    ],
-    sections: [
-      { title: 'What Nexus is', body: 'Nexus is the intelligence layer above monitoring. It decides whether a symptom belongs to network reachability, runtime health, database pressure, dependency failure, business-flow impact, SOP action, or operator follow-up.' },
-      { title: 'What Nexus needs', body: 'It needs real services, databases, clusters, flows, edges, evidence metadata, light agents, SOPs, and verdicts. A wrong catalog creates wrong confidence.' },
-      { title: 'How operators use it', body: 'Start with incidents, read the risk and evidence, inspect topology, request diagnostics, create handoff tasks, and only use restart when the policy gate is truly clear.' },
-      { title: 'How admins shape it', body: 'Build the service catalog first, then attach databases, clusters, business flows, dependency edges, agents, SOP governance, and rollover rules one verified piece at a time.' },
-    ],
-    visualWalkthrough: [
-      {
-        step: '01',
-        title: 'Enter Nexus through the command map',
-        location: 'Hero, linked consoles, workspace tabs',
-        body: 'Begin by reading the fabric pulse, sync state, mapped service count, database contracts, and active workspace. Nexus is a control plane, so orient yourself before clicking into action.',
-        checklist: [
-          'Confirm the workspace tab matches your purpose: incidents for investigation, services for catalog, agents for runtime, databases for data stores.',
-          'Check sync health and mapped service coverage before trusting graph-based conclusions.',
-          'Use linked consoles only when you need raw telemetry outside the Nexus reasoning layer.',
-        ],
-        example: 'If only 8 of 30 services are mapped, Nexus can still help, but blast radius and root-cause ranking are incomplete.',
-        avoid: 'Do not treat a green fabric pulse as proof that every service is configured. Green sync means the sync ran, not that the catalog is perfect.',
-        visual: 'nexusCommand',
-      },
-      {
-        step: '02',
-        title: 'Triage incidents by risk and business meaning',
-        location: 'Incidents workspace and incident detail tabs',
-        body: 'Open the highest business risk incident first. Read status, risk score, affected services, suspected root service, business flows, cluster IDs, failure domain, and recommendations before taking action.',
-        checklist: [
-          'Read the incident title, risk level, risk score, and business impact score.',
-          'Check affected services, suspected root candidate, confidence, blast radius, and linked business flows.',
-          'Use status honestly: OPEN for active work, MONITORING for watch state, AWAITING_VERDICT when action is done but outcome is not recorded, RESOLVED only when the record is closed.',
-        ],
-        example: 'A CRITICAL incident with IDC access flow impact should beat a lower-risk single endpoint warning, even if both arrived at the same time.',
-        avoid: 'Do not chase the newest alert just because it is loud. Nexus ranks operational risk, not notification noise.',
-        visual: 'incidentTriage',
-      },
-      {
-        step: '03',
-        title: 'Use the AI brief as an interpretation lens',
-        location: 'Incident iNterpret or AI brief area',
-        body: 'The AI brief translates Nexus evidence into operator language. It is useful for speed, but it must remain tied to citations, graph context, SOPs, and actual evidence.',
-        checklist: [
-          'Separate what the brief says is known, inferred, uncertain, and unsafe.',
-          'Check cited SOPs, evidence timestamps, source layers, and root-cause candidates.',
-          'Ask follow-up questions about procedure, validation, rollback, and escalation, not vague questions the incident already answers.',
-        ],
-        example: 'Ask: "What should I validate before approving diagnostics on idc-gateway-prod?" instead of "What is wrong?"',
-        avoid: 'Do not let AI wording override evidence. If citations are weak, act as if the brief is only a note, not a decision.',
-        visual: 'aiBrief',
-      },
-      {
-        step: '04',
-        title: 'Read topology before blaming a service',
-        location: 'Topology tab, clusters, flows, and dependencies',
-        body: 'Topology explains direction, scope, and blast radius. Nexus can only reason correctly when services, clusters, business flows, and dependency edges match real production behavior.',
-        checklist: [
-          'Look for root candidates upstream of affected services, not just services with symptoms.',
-          'Check whether the edge is global or flow_scoped before expanding blast radius.',
-          'Confirm the failure domain makes sense: network, runtime, database, dependency, authentication, integration, storage, or change.',
-        ],
-        example: 'ARX can be critical for IDC user access while not explaining IDC transaction posting if that dependency is scoped to the access flow only.',
-        avoid: 'Do not flatten every platform into one chain. Direction and flow scope are the difference between intelligence and guesswork.',
-        visual: 'topology',
-      },
-      {
-        step: '05',
-        title: 'Prove the story with evidence',
-        location: 'Evidence tab, signatures, source explorer, log tail',
-        body: 'Evidence is the part of Nexus that keeps action honest. Read each signal by timestamp, source, vantage point, observation layer, severity, signature, and failure-domain hint.',
-        checklist: [
-          'Distinguish external_network reachability from runtime agent health.',
-          'Read log signatures for exception class, timeout type, OOM flag, database code, count, first seen, and last seen.',
-          'For database events, preserve ORA, TNS, SQLSTATE, JDBC, pool, lock, session, storage, and replication clues.',
-        ],
-        example: 'External timeout plus healthy runtime heartbeat can mean network path trouble. Runtime errors plus healthy external checks can mean application or dependency trouble.',
-        avoid: 'Do not merge all signals into "service down." The source layer is the clue.',
-        visual: 'evidence',
-      },
-      {
-        step: '06',
-        title: 'Act through the safe action lane',
-        location: 'Actions tab and recommendations',
-        body: 'Nexus gives three main operator moves: request diagnostics, create a response task, or approve/reject a safe restart recommendation. The correct move depends on evidence and certification.',
-        checklist: [
-          'Request diagnostics when more safe evidence is needed.',
-          'Create a response task when a human team needs ownership, follow-up, escalation, or vendor action.',
-          'Approve restart only when restart_ready, stateless, policy allowed, cooldown clear, confidence high, and exact service target is configured.',
-        ],
-        example: 'If a payment gateway is degraded and restart is blocked by service type, create a response task and request diagnostics instead of forcing action outside Nexus.',
-        avoid: 'Never use restart as a shortcut for understanding. Restart is a controlled last move, not a reflex.',
-        visual: 'actions',
-      },
-      {
-        step: '07',
-        title: 'Close the learning loop with outcome',
-        location: 'Outcome tab and verdict capture',
-        body: 'Nexus becomes sharper only when the operator records what really happened. The outcome is not admin paperwork; it is the training signal for future confidence and suppression.',
-        checklist: [
-          'Record confirmed, duplicate, false positive, useful early warning, or wrong root cause.',
-          'Capture actual root service, action taken, action effectiveness, and operator notes.',
-          'Move to RESOLVED only when the evidence, action, and verdict tell a complete story.',
-        ],
-        example: 'If Nexus suspected the gateway but diagnostics proved database session exhaustion, mark wrong root cause and set the actual root database service.',
-        avoid: 'Do not leave incidents in AWAITING_VERDICT after the team already knows the answer.',
-        visual: 'outcome',
-      },
-      {
-        step: '08',
-        title: 'Onboard services as clean contracts',
-        location: 'Services workspace and onboarding workspace',
-        body: 'A service is the smallest unit Nexus can reason about. Every vague service weakens correlation. Every clean service contract improves root-cause ranking and action safety.',
-        checklist: [
-          'Set stable service_id, clear name, type, environment, owner team, criticality, description, tags, and cluster membership.',
-          'Map Network Sentinel service ID for external reachability when available.',
-          'Configure endpoints, observation settings, agent ID, systemd unit, log selector, metrics namespace, trace service name, and analysis profile.',
-          'Set certification stage deliberately: catalog_only, observe_only, correlate_ready, diagnostics_ready, restart_ready.',
-        ],
-        example: 'Use idc-gateway-prod as a real gateway service. Avoid names like "IDC stuff" because Nexus cannot safely reason from vague objects.',
-        avoid: 'Do not certify a service beyond the evidence paths it actually has.',
-        visual: 'serviceOnboarding',
-      },
-      {
-        step: '09',
-        title: 'Model databases as operational citizens',
-        location: 'Databases workspace and service Database Contract',
-        body: 'Databases are not footnotes. They can be root causes, shared dependencies, blast-radius multipliers, and restart blockers. Model them explicitly when they matter.',
-        checklist: [
-          'For each app, record platform, host, database name, SID or service name, username, connection type, schemas, role, pool, max pool size, replication group, failover group, and read-only state.',
-          'Add shared databases as their own db services and connect apps through db dependency edges.',
-          'Configure safe diagnostics for sessions, locks, blocking sessions, pool usage, slow queries, replication lag, tablespace or storage pressure, and error codes.',
-        ],
-        example: 'For Oracle, preserve ORA and TNS codes. For PostgreSQL, preserve SQLSTATE, connection, lock, replication, and storage indicators.',
-        avoid: 'Do not restart apps repeatedly when the actual evidence is exhausted DB sessions or lock contention.',
-        visual: 'databaseContract',
-      },
-      {
-        step: '10',
-        title: 'Build business flows from real journeys',
-        location: 'Business Flows workspace',
-        body: 'Business flows tell Nexus which services matter for a real user or transaction journey. This is how the system separates access failures, posting failures, card transaction failures, and internal processing failures.',
-        checklist: [
-          'Name the flow after the business journey, not the system list.',
-          'Add entry services, ordered steps, service role, required or optional status, expected signal sources, failure domains, success indicators, and failure indicators.',
-          'Set the correlation window to match the real time span of the journey.',
-        ],
-        example: 'IDC User Access can include channel gateway, ARX auth, IDC gateway, and session establishment. IDC Transaction Posting can use a different dependency path.',
-        avoid: 'Do not use one giant flow for everything. Nexus needs specific journeys to avoid false blame.',
-        visual: 'businessFlows',
-      },
-      {
-        step: '11',
-        title: 'Create dependency edges with purpose',
-        location: 'Dependencies workspace',
-        body: 'A dependency edge is directional and must explain why one service depends on another. Purpose, type, scope, failure domain, evidence, criticality, and timeout budget all matter.',
-        checklist: [
-          'Set from_service_id and to_service_id in the real dependency direction.',
-          'Choose dependency_type such as api, db, queue, cache, auth, integration, infra, or channel.',
-          'Use dependency_scope global only when always true; use flow_scoped when true only inside selected business flows.',
-          'For db edges, capture access mode, schemas, operation types, pool, max connections, statement timeout, expected error codes, and transactional state.',
-        ],
-        example: 'lms-api to lms-oracle can be a transactional db edge with expected ORA lock and timeout codes, while lms-api to ARX may be auth-only for login.',
-        avoid: 'Do not create edges just because systems are familiar. Create edges because one system truly depends on the other.',
-        visual: 'dependencyEdges',
-      },
-      {
-        step: '12',
-        title: 'Use light agents as bounded runtime bridges',
-        location: 'Agents workspace, token status, service live state',
-        body: 'Light agents connect Nexus to host-local evidence, diagnostics, logs, and certified control. They must stay token-protected, allowlisted, bounded, and service-specific.',
-        checklist: [
-          'Confirm heartbeat, configured service count, reporting service count, missing services, unexpected services, host, resource, and command capabilities.',
-          'Keep command execution allowlisted. The agent must never accept arbitrary shell from notes, prompts, logs, or payloads.',
-          'Use service live state to inspect status, signals, dependencies, diagnostics, actions, and control readiness.',
-        ],
-        example: 'If an agent reports an unexpected service ID, fix the local agent config or Nexus catalog before trusting runtime evidence.',
-        avoid: 'Do not treat agent presence as restart permission. Restart readiness is a separate certification and policy decision.',
-        visual: 'lightAgents',
-      },
-      {
-        step: '13',
-        title: 'Govern SOPs before relying on Copilot',
-        location: 'SOP workspace, indexed corpus, managed registry, incident procedure tab',
-        body: 'Nexus SOPs have two planes. Indexed corpus is what Copilot can cite now. Managed registry is what admins can edit, validate, approve, deprecate, and re-index.',
-        checklist: [
-          'Inspect indexed procedures to understand what Copilot can cite today.',
-          'Adopt critical indexed-only SOPs into the managed registry before editing them.',
-          'Validate owner, scope, preconditions, checks, unsafe actions, rollback, escalation, and success criteria before approval.',
-          'Ask Copilot from a real incident so the answer uses incident context, graph, evidence, and recommendations.',
-        ],
-        example: 'An old SOP can be useful for retrieval, but it is not governed until it is adopted, corrected, validated, approved, and re-indexed.',
-        avoid: 'Do not approve a SOP that tells operators what to do without telling them when not to do it.',
-        visual: 'sops',
-      },
-      {
-        step: '14',
-        title: 'Treat rollover as a controlled environment change',
-        location: 'Rollover workspace',
-        body: 'Rollover is for controlled environment replacement and connection profile movement. It needs assessment, matching rules, preflight testing, OTP challenge, execution records, and reminders.',
-        checklist: [
-          'Confirm source and target environment profiles before planning a change.',
-          'Review replacement rules and assessment output before execution.',
-          'Run preflight tests, capture approval reason, complete OTP challenge, and monitor execution result.',
-          'Use reminders so staged rollovers are not forgotten after the immediate incident pressure fades.',
-        ],
-        example: 'If PROD-A is being replaced by PROD-B, Nexus should show the rule match, impacted services, test result, OTP approval, execution state, and reminder trail.',
-        avoid: 'Do not use rollover as a hidden config edit. It is a governed operational change with evidence.',
-        visual: 'rollover',
-      },
-    ],
-    featureTree: [
-      {
-        title: 'Incidents',
-        body: 'The live investigation lane where Nexus combines risk, impact, graph context, evidence, AI interpretation, actions, procedure guidance, and outcome.',
-        items: ['Queue and risk sorting', 'Overview and AI brief', 'Topology and blast radius', 'Evidence and log signatures', 'Actions, procedure, outcome'],
-      },
-      {
-        title: 'Service Catalog',
-        body: 'The source of truth for what Nexus can reason about. Services hold identity, ownership, criticality, endpoints, observation, policy, and certification.',
-        items: ['Service identity and owner', 'Endpoint and observation config', 'Database profile', 'Restart policy', 'Certification stage'],
-      },
-      {
-        title: 'Database Fabric',
-        body: 'The data-store layer for Oracle, PostgreSQL, SQL Server, caches, queues, and shared operational dependencies.',
-        items: ['DB service records', 'App database contracts', 'DB dependency profiles', 'Safe diagnostics', 'Error-code preservation'],
-      },
-      {
-        title: 'Clusters',
-        body: 'Operational fabrics that group services which work together, route together, or fail together.',
-        items: ['Cluster identity', 'Entry services', 'Service membership', 'Routing URLs', 'Owner and criticality'],
-      },
-      {
-        title: 'Business Flows',
-        body: 'Real customer, operator, or transaction journeys. Flows teach Nexus what impact means.',
-        items: ['Entry services', 'Ordered steps', 'Required and optional roles', 'Success and failure indicators', 'Correlation window'],
-      },
-      {
-        title: 'Dependencies',
-        body: 'Directional relationships with purpose. Edges power upstream explanation, blast radius, and root-cause ranking.',
-        items: ['From and to service', 'Dependency type and purpose', 'Global or flow-scoped scope', 'Failure domains', 'Expected evidence and timeout'],
-      },
-      {
-        title: 'Light Agents',
-        body: 'The runtime bridge for host-local state, logs, diagnostics, command readiness, and certified control.',
-        items: ['Token status', 'Heartbeat', 'Configured and reporting services', 'Capabilities', 'Missing or unexpected services'],
-      },
-      {
-        title: 'SOPs',
-        body: 'The procedure brain. Indexed corpus supports retrieval; managed registry supports governance and approval.',
-        items: ['Indexed Copilot corpus', 'Managed registry', 'Validation', 'Approval and deprecation', 'Incident procedure guidance'],
-      },
-      {
-        title: 'Onboarding and Rollover',
-        body: 'The guided setup and governed change areas that keep Nexus growing without corrupting the operating model.',
-        items: ['Service onboarding', 'Graph completion', 'Agent attachment', 'Environment profiles', 'Assessment, OTP execution, reminders'],
-      },
-    ],
-    decisionRules: [
-      {
-        title: 'When to request diagnostics',
-        useWhen: 'The incident has enough signal to name a target service but not enough safe evidence to act.',
-        doThis: 'Request diagnostics on the exact service, then read host, logs, sockets, memory, disk, dependencies, and DB probes if configured.',
-        avoid: 'Avoid diagnostics on vague targets or uncertified services.',
-        evidence: 'Diagnostics require diagnostics_ready or restart_ready plus a configured agent or diagnostics URL.',
-      },
-      {
-        title: 'When to create a response task',
-        useWhen: 'A team, owner, vendor, database admin, network operator, or follow-up process needs accountable ownership.',
-        doThis: 'Create the task from the incident so affected service, evidence, recommendation, and business impact travel with it.',
-        avoid: 'Avoid separate chat-only handoffs because they break the audit trail.',
-        evidence: 'Use the task when the work must outlive the active investigation.',
-      },
-      {
-        title: 'When restart is allowed',
-        useWhen: 'The target is stateless, restart_ready, policy-approved, cooldown clear, no maintenance conflict exists, and diagnostics support restart.',
-        doThis: 'Approve the exact Nexus recommendation, complete the guarded approval flow, monitor the result, then record whether action worked.',
-        avoid: 'Never restart db, cache, queue, auth, infra, shared database dependencies, core banking failover paths, or config-change paths from Nexus.',
-        evidence: 'Restart needs a configured restart URL, allowed service type, confidence threshold, and human approval.',
-      },
-      {
-        title: 'When to reject restart',
-        useWhen: 'The recommendation is premature, target is stateful, evidence points to dependency pressure, or the confidence story is incomplete.',
-        doThis: 'Reject with the operational reason, request diagnostics, create a task, or escalate to the owner.',
-        avoid: 'Avoid silent rejection because the next operator will not know why the action was unsafe.',
-        evidence: 'Blocked reasons and rejection notes are part of the incident record.',
-      },
-      {
-        title: 'When to fix the catalog',
-        useWhen: 'Root cause, blast radius, flow fit, or affected services look wrong even though evidence is valid.',
-        doThis: 'Check service IDs, Network Sentinel mapping, cluster membership, flow steps, edge direction, edge scope, and failure-domain hints.',
-        avoid: 'Avoid blaming the engine before checking whether Nexus was taught the right production world.',
-        evidence: 'Wrong graph data creates wrong conclusions with confidence.',
-      },
-      {
-        title: 'When to use flow-scoped edges',
-        useWhen: 'A dependency is real only for a specific journey such as access, posting, authorization, extraction, or settlement.',
-        doThis: 'Attach the edge to the exact business_flow_ids where it applies.',
-        avoid: 'Avoid global edges for convenience. They overstate blast radius and blame unrelated services.',
-        evidence: 'Flow-scoped edges protect Nexus from false correlation.',
-      },
-      {
-        title: 'When to trust external checks',
-        useWhen: 'You need to know whether a service endpoint is reachable from the monitoring vantage point.',
-        doThis: 'Use external_network evidence as reachability, then compare with runtime agent, logs, metrics, traces, and DB evidence.',
-        avoid: 'Avoid treating reachability as process health.',
-        evidence: 'External green plus runtime red means a different story than external red plus runtime green.',
-      },
-      {
-        title: 'When to update SOPs',
-        useWhen: 'Copilot cites an outdated, unsafe, missing, or incomplete procedure.',
-        doThis: 'Adopt indexed-only SOPs into the managed registry, repair gaps, validate, approve, and re-index.',
-        avoid: 'Avoid editing procedure advice only in incident notes. The next incident needs the corrected SOP.',
-        evidence: 'Approved SOPs should include scope, preconditions, checks, rollback, escalation, validation, and unsafe actions.',
-      },
-      {
-        title: 'When to finalize an incident',
-        useWhen: 'Action is complete, monitoring is stable, and the team knows the actual result.',
-        doThis: 'Record verdict, actual root, action taken, whether it worked, notes, and final status.',
-        avoid: 'Avoid closing without verdict. That teaches Nexus nothing.',
-        evidence: 'Verdicts are the learning signal for future ranking and recommendation quality.',
-      },
-    ],
-    examples: [
-      {
-        title: 'IDC access issue with ARX dependency',
-        scenario: 'Operators report IDC login failures. ARX auth errors spike, IDC runtime remains healthy, and topology shows ARX as flow-scoped to IDC User Access.',
-        interpretation: 'Nexus should treat ARX as a strong root candidate for access, but not automatically blame ARX for IDC transaction posting.',
-        operatorMove: 'Request diagnostics on ARX, create a response task for the auth owner, and keep transaction-flow impact separate unless evidence crosses that boundary.',
-      },
-      {
-        title: 'Database session exhaustion masked as app slowness',
-        scenario: 'LMS API timeouts rise, external checks remain green, and Oracle evidence shows max sessions, pool saturation, and ORA errors.',
-        interpretation: 'The app is symptomatic. The database or pool path is the probable pressure point.',
-        operatorMove: 'Do not restart the API repeatedly. Request DB-safe diagnostics, alert the database owner, and record the actual root if confirmed.',
-      },
-      {
-        title: 'Network path outage versus service runtime failure',
-        scenario: 'Network Sentinel reports external timeout, but the light agent shows healthy process, clean logs, and stable local dependency checks.',
-        interpretation: 'Reachability may be failing outside the service runtime, possibly firewall, route, VIP, DNS, load balancer, or external monitoring path.',
-        operatorMove: 'Create a network response task and avoid restarting the service until runtime evidence supports it.',
-      },
-      {
-        title: 'USSD session expiry burst',
-        scenario: 'txn-mobile-ussd emits compact multi-carrier session expiry bursts while other channel evidence shows tunnel instability.',
-        interpretation: 'With the right service-specific analysis profile, Nexus can treat this as channel_tunnel evidence. Isolated expiries remain normal customer inactivity.',
-        operatorMove: 'Verify the profile is attached only to the USSD service, then correlate with carrier, tunnel, and gateway evidence.',
-      },
-      {
-        title: 'Postilion card transaction chain',
-        scenario: 'Card authorization failures appear in Direct Channel, Postilion, and IDC, but the earliest compatible signature belongs to Postilion.',
-        interpretation: 'Direction and business-flow steps decide whether Postilion is root, downstream symptom, or one affected node.',
-        operatorMove: 'Read topology and evidence before assigning root. Create a task for the owner that owns the earliest supported failure point.',
-      },
-      {
-        title: 'Rollover after environment replacement',
-        scenario: 'A service is moved from PROD-A to PROD-B and old connection profiles remain in agent or service config.',
-        interpretation: 'Nexus may see false runtime or dependency failures if rollover rules and reminders were not completed.',
-        operatorMove: 'Use Rollover assessment, run preflight tests, execute with approval, then verify services, agents, and dependencies after the change.',
-      },
-    ],
-    workflowTitle: 'Production configuration and operating flow',
-    workflow: [
-      'Start in Services. Add a real service contract with stable ID, name, environment, type, owner, criticality, endpoint mapping, observation config, agent ID, log selector, metrics namespace, diagnostics URL, restart policy, and certification stage.',
-      'Complete the Database Contract for every service with a data-store dependency. Capture platform, host, database name, SID or service name, schemas, pool, max pool size, replication or failover group, role, expected evidence, and safe diagnostics.',
-      'Add shared databases as their own db services, then connect apps to them with db dependency edges.',
-      'Build clusters as operational fabrics, not decorative groups. Use them for IDC core, LMS processing, ARX access, Postilion card flow, digital channels, infrastructure fabrics, or other real operating families.',
-      'Build business flows from user or transaction journeys. Add entry services, ordered steps, required or optional roles, expected signal sources, failure domains, success indicators, and failure indicators.',
-      'Create dependency edges only after the service and flow are clear. Set direction, type, purpose, scope, failure domains, expected evidence, criticality weight, hard dependency state, and timeout budget.',
-      'For database edges, complete access mode, schemas, operations, pool, max connections, statement timeout, expected SQLSTATE, ORA, TNS, or JDBC codes, and transactional state.',
-      'Use flow_scoped edges when a dependency belongs only to a specific journey. Use global only when the dependency truly applies everywhere.',
-      'Sync Network Sentinel after service mappings are clean. Treat the sync as external reachability evidence, not runtime truth.',
-      'Attach light agents service by service. Confirm heartbeat, token state, capabilities, configured services, reporting services, missing services, and unexpected services.',
-      'Configure service-specific analysis profiles only where owners confirm the behavior. Keep false-positive controls documented.',
-      'Certify gradually: catalog_only, observe_only, correlate_ready, diagnostics_ready, restart_ready. Do not skip the safety stages.',
-      'Use Incidents for live work. Read risk, business flow, failure domain, affected services, candidates, blast radius, evidence, recommendations, and recent change context.',
-      'Use AI brief for synthesis, then verify citations, evidence, graph context, diagnostics, SOPs, and operator knowledge.',
-      'Request diagnostics before action when the story is plausible but incomplete.',
-      'Create response tasks when work needs human ownership or follow-up outside the immediate investigation.',
-      'Approve restart only through the guarded lane when policy, evidence, service type, statelessness, confidence, cooldown, and human approval all line up.',
-      'Record verdict and outcome after the incident. Capture actual root, action taken, whether action worked, false-positive state, and notes.',
-      'Review SOPs after real incidents. Adopt, correct, validate, approve, and re-index procedures that operators actually need.',
-      'Grow Nexus one verified service, one verified flow, and one verified dependency at a time.',
-    ],
-    tipTitle: 'Non-negotiable operating rule',
-    tip: 'Nexus is transparent when the operator respects the chain: catalog truth, graph truth, evidence truth, procedure truth, action safety, and outcome truth. If any link is missing, slow down and fix that link before acting. A smaller verified Nexus topology is better than a large confident lie.',
-    triggerLabel: 'Nexus Guide',
-    variant: 'nexus',
-  },
-  trustlinkOperations: {
-    eyebrow: 'Pipeline Guide',
-    title: 'Following TrustLink operations',
-    intro: 'TrustLink Operations is the run deck for the extraction pipeline. It is built to make today\'s processing state, file readiness, and older run evidence easy to read without drowning the operator in backend detail.',
-    sections: [
-      { title: 'Run State', body: 'The hero metrics summarize pipeline completion, rows processed, run duration, and whether the export is ready for delivery.' },
-      { title: 'Pipeline Timeline', body: 'The stage view shows how the run is moving from extraction through validation, export, download readiness, and final delivery state.' },
-      { title: 'Evidence Panel', body: 'Use the active run detail to inspect the selected run, understand what happened, and see where a failure or stall belongs in the sequence.' },
-      { title: 'History and Controls', body: 'Run history, refresh, run now, download, overwrite, and file deletion actions give operators both visibility and deliberate control.' },
-    ],
-    workflow: [
-      'Check the hero state to understand whether today\'s run is active, complete, or stuck.',
-      'Read the pipeline timeline to identify the exact stage where movement stopped or succeeded.',
-      'Use the evidence card and history list when you need to inspect a specific run or deliver the finished output.',
-    ],
-    tip: 'The pipeline timeline usually explains failure faster than the history list alone. Start there before taking action.',
-  },
-  teamManagementCalendar: {
-    eyebrow: 'Calendar Guide',
-    title: 'Reading the section schedule calendar',
-    intro: 'This page is the clean viewing layer for section staffing. It keeps attention on coverage itself so managers can inspect the calendar without dropping into heavier scheduling tools.',
-    sections: [
-      { title: 'Calendar Surface', body: 'The embedded schedule calendar is the main workspace and shows how staffing lands across the visible date window.' },
-      { title: 'Coverage Meaning', body: 'Each date communicates whether staffing is strong, partial, or missing so weak points stand out visually.' },
-      { title: 'Section Scope', body: 'Admins can inspect broader section coverage, while other managers are usually limited to the section they own.' },
-      { title: 'Access Guardrails', body: 'If the schedule is unavailable for your role or section, the page explains that clearly instead of exposing empty data.' },
-    ],
-    workflow: [
-      'Open the page and read the currently visible calendar window.',
-      'Move across upcoming dates to locate weak periods or upcoming strain.',
-      'Switch to an advanced scheduling page when you need to change assignments rather than just inspect them.',
-    ],
-    tip: 'Think of this page as the viewing deck for coverage, not the authoring deck for building schedules.',
-  },
-  userScheduleDashboard: {
-    eyebrow: 'Personal Schedule Guide',
-    title: 'Reading your personal schedule deck',
-    intro: 'This page gives each operator or manager a clear personal schedule picture, combining assigned shifts, recovery time, open days, deadlines, and upcoming work in one place.',
-    sections: [
-      { title: 'Summary Signals', body: 'The top summary gives you a fast read on your current schedule posture before you move into specific dates.' },
-      { title: 'Calendar and Agenda', body: 'Use the month grid for broad visibility or switch to the weekly agenda when you need a tighter short-range view.' },
-      { title: 'Focus Day and Deadlines', body: 'Selecting a day reveals its schedule state, timing, and any task deadlines linked to that date.' },
-      { title: 'Upcoming Lineup', body: 'The side panels keep your next assignments and near-term sequence visible without forcing you to scan the whole calendar.' },
-    ],
-    workflow: [
-      'Start with the summary and your next assignment to understand immediate expectations.',
-      'Switch between month and week depending on how far ahead you need to plan.',
-      'Select a date when you want exact shift detail, deadline context, or confirmation that a day is still open.',
-    ],
-    tip: 'An open day does not always mean a problem. It simply means nothing has been assigned to you for that date yet.',
-  },
-  login: {
-    eyebrow: 'Access Guide',
-    title: 'Signing in to SentinelOps',
-    intro: 'The login page is the entry gate into SentinelOps. It now adapts to the authentication mode in front of you so people can tell whether they are signing in with Active Directory or SentinelOps credentials.',
-    sections: [
-      { title: 'Identity Mode', body: 'The form explains whether you should use your Windows credentials or your SentinelOps account details for this environment.' },
-      { title: 'Directory Status', body: 'The Active Directory status panel shows whether directory-backed authentication is currently reachable and healthy.' },
-      { title: 'Sign-In Result', body: 'Successful login opens the parts of SentinelOps your role allows, from dashboards and checklists to management pages.' },
-      { title: 'Failure Signals', body: 'If sign-in fails, the page helps distinguish bad credentials from a server, directory, or connectivity issue.' },
-    ],
-    workflow: [
-      'Check the sign-in hint so you know which credentials this environment expects.',
-      'Review the directory status if the page is using Active Directory.',
-      'Submit your credentials and follow the returned error signals if access is denied.',
-    ],
-    tip: 'When the page points to directory or connectivity trouble, the problem may be infrastructure rather than your credentials.',
-  },
-  notFound: {
-    eyebrow: 'Navigation Guide',
-    title: 'Recovering from a dead route',
-    intro: 'This page appears when SentinelOps cannot resolve the address you tried to open. Usually the route is outdated, incomplete, or no longer belongs to the current application state.',
-    sections: [
-      { title: 'Missing Destination', body: 'The requested location does not exist at the current address.' },
-      { title: 'Safe Return Path', body: 'The primary action takes you back to a known working area so you can re-enter the platform cleanly.' },
-      { title: 'Broken Link Signal', body: 'If you arrived here from inside SentinelOps, the original link or route probably needs updating.' },
-      { title: 'No Data Loss', body: 'This is only a navigation dead end. It does not mean your account, shift, or records have disappeared.' },
-    ],
-    workflow: [
-      'Use the return action to get back to a known working page.',
-      'Navigate again from the main menu, dashboard, or another trusted starting point.',
-      'Report the route if the same broken path keeps sending you back here.',
-    ],
-    tip: 'A not-found page usually means the address is wrong, not that the underlying SentinelOps data is gone.',
-  },
+    "tip": "A not-found page usually means the address is wrong, not that the underlying SentinelOps data is gone."
+  }
 };
+Object.entries(guideGroups).forEach(([key,moduleKeys]) => {
+ const guides=operatorGuides.filter(guide=>moduleKeys.includes(guide.key));
+ const first=guides[0];
+ pageGuides[key]={moduleKeys,title:first.title,eyebrow:'Operator companion',intro:first.summary,sections:[],workflow:first.tasks[0].steps.map(step=>step.body),tip:first.tasks[0].stop};
+});

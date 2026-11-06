@@ -1,4 +1,6 @@
 import SmsWorkspace from '../components/reports/SmsWorkspace';
+import PageGuide from '../components/ui/PageGuide';
+import { guideGroups } from '../content/operatorGuides';
 import { useAccess } from '../contexts/AccessContext';
 import HoveringSettingsWorkspace from '../components/reports/HoveringSettingsWorkspace';
 import PersonalLoanWorkspace from '../components/reports/PersonalLoanWorkspace';
@@ -197,6 +199,7 @@ const ReportsPage: React.FC = () => {
 
   return (
     <main className="reports-page">
+      <PageGuide moduleKeys={guideGroups.reports} />
       <header className="reports-command-header">
         <div className="reports-command-copy">
           <span><FaShieldAlt /> SentinelOps reporting custody</span>

@@ -1,0 +1,2225 @@
+{
+  "edition": "2026-10-30",
+  "principles": [
+    "Your assigned section determines which modules you can open. Your role, record state and operation-specific gates determine what you can do.",
+    "Read the environment, record identity, scope and last successful update before acting. A stale snapshot or missing signal is not a healthy/empty system.",
+    "Guidance links only navigate. They never approve, execute, requeue, delete or change configuration.",
+    "After a write, verify the saved result and custody/history. If completion is uncertain, inspect the existing outcome before retrying.",
+    "Downloads are dated reference copies. Protect operational/customer information and use the current in-app guide after a deployment."
+  ],
+  "guides": [
+    {
+      "key": "checklists.execution",
+      "path": "/checklists",
+      "summary": "Find the correct shift, record truthful outcomes, and leave a usable handover.",
+      "access": "Checklist operations access; available actions also depend on your role, participation and the run state.",
+      "tasks": [
+        {
+          "id": "find",
+          "title": "Find a shift or historical run",
+          "needs": "Know the operating date and shift.",
+          "steps": [
+            {
+              "title": "Set the time window",
+              "body": "Open Checklists. Choose All Time, Week, Specific Day or Date Range, then use search, lifecycle and shift filters."
+            },
+            {
+              "title": "Open the matching run",
+              "body": "Check its date, shift hours and lifecycle before opening. Today coverage describes initialization, not completed work."
+            }
+          ],
+          "result": "The workspace header matches the intended shift and date.",
+          "stop": "Do not work in a historical or completed run simply because its title matches today."
+        },
+        {
+          "id": "execute",
+          "title": "Work an item and its substeps",
+          "needs": "Open the intended run and join if participating.",
+          "steps": [
+            {
+              "title": "Read before acting",
+              "body": "Read the item instructions, type, timing and existing activity. Start Working where offered; this claims progress, not completion."
+            },
+            {
+              "title": "Record the actual outcome",
+              "body": "Open substeps for multi-step work. Mark Complete only after checking the real system. Skip or Report Issue requires the reason/evidence requested by the dialog. Use Previous, Next and Next Open to navigate; navigation does not record an outcome."
+            },
+            {
+              "title": "Verify the saved state",
+              "body": "Wait for the response. Check the item/subitem state and progress. Expand activity to inspect who recorded the result and when."
+            }
+          ],
+          "result": "Each action is reflected in the saved status and activity.",
+          "stop": "If a save fails, refresh and inspect the recorded state before repeating it. Do not mark unfinished work complete to reach 100%."
+        },
+        {
+          "id": "handover",
+          "title": "Coordinate members and handover",
+          "needs": "Join the shift when doing work; know what the next operator needs.",
+          "steps": [
+            {
+              "title": "Review incoming notes",
+              "body": "Open Handover notes, filter Incoming and read priority, context and required follow-up. Acknowledge only after reading; acknowledgement is not resolution."
+            },
+            {
+              "title": "Leave a useful note",
+              "body": "Choose Add Handover Note. Describe what happened, what is pending, the affected service/reference and the next action. Select the available priority/destination fields and save."
+            },
+            {
+              "title": "Confirm team context",
+              "body": "Check Team members and participation. Presence is connection/activity context, not proof that someone completed an item. Filter Outgoing to confirm your saved note."
+            }
+          ],
+          "result": "The next shift can see the note and its acknowledgement state.",
+          "stop": "Do not put passwords or unnecessary customer details in notes."
+        },
+        {
+          "id": "close",
+          "title": "Close, inspect, share or export a run",
+          "needs": "Review incomplete items, exceptions and handover first.",
+          "steps": [
+            {
+              "title": "Resolve outstanding work",
+              "body": "Use the open-item view to find gaps. Normal completion and exception completion are different outcomes; supply the required justification for exceptions."
+            },
+            {
+              "title": "Finalize once",
+              "body": "Use the completion control available to your role and state, review the confirmation, then verify the saved lifecycle. Inspect opens the record for review."
+            },
+            {
+              "title": "Share the evidence",
+              "body": "Use Share for the run link or PDF for a snapshot. Recipients still need access to open the live record; a PDF will not update after download."
+            }
+          ],
+          "result": "The final lifecycle and exported snapshot tell the same story.",
+          "stop": "A closed shift can still have exceptions. A completed counter alone is not evidence of a clean close."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Lifecycle",
+          "meaning": "The state of the whole checklist run."
+        },
+        {
+          "term": "Subitem",
+          "meaning": "A smaller executable step within an item."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "No runs match",
+          "action": "Clear filters and check the date and shift. If coverage was not initialized, contact the planner; do not invent a replacement record."
+        },
+        {
+          "symptom": "Action unavailable",
+          "action": "Check participation, lifecycle and role. Ask the owner/admin about missing authority."
+        }
+      ],
+      "sources": [
+        "src/pages/ChecklistsPage.tsx",
+        "src/pages/ChecklistPage.tsx",
+        "src/components/checklist/HandoverNotes.tsx"
+      ]
+    },
+    {
+      "key": "checklists.templates",
+      "path": "/templates",
+      "summary": "Build reusable shift instructions and review them before operators use them.",
+      "access": "Template authoring access and the role required by the create/edit/delete controls.",
+      "tasks": [
+        {
+          "id": "build",
+          "title": "Create or revise a template",
+          "needs": "Know the section, shift and operating procedure.",
+          "steps": [
+            {
+              "title": "Choose the template",
+              "body": "Open Templates from Checklists or the command menu. Inspect an existing template before creating a duplicate. Choose Create or Edit as appropriate."
+            },
+            {
+              "title": "Build the work in order",
+              "body": "Set the required template fields. Add ordered items and subitems with clear instructions, types and timing. For conditional/scheduled work, fill the fields the builder exposes and check the condition or schedule rather than assuming it applies every day."
+            },
+            {
+              "title": "Save and inspect",
+              "body": "Resolve validation errors, save, then open View to verify the resulting briefing and item order. Template edits define future work; review a live run separately."
+            }
+          ],
+          "result": "The saved template has the correct shift, instructions and sequence.",
+          "stop": "Do not use template edits as a way to alter the history of an already executed run."
+        },
+        {
+          "id": "maintain",
+          "title": "Review or retire a template",
+          "needs": "Confirm the template identity and operational owner.",
+          "steps": [
+            {
+              "title": "Inspect the briefing",
+              "body": "Use View to check every item, subitem, timing and required action. Compare it with the approved operational procedure."
+            },
+            {
+              "title": "Edit or delete deliberately",
+              "body": "Edit to correct instructions. If Delete is available, review the confirmation and impact before accepting; do not remove a template still required for shift coverage."
+            }
+          ],
+          "result": "The library shows the intended current template.",
+          "stop": "If unsure whether a template is still used, stop and confirm with the shift owner."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Template",
+          "meaning": "The reusable blueprint; an instance is a dated run created from it."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Validation fails",
+          "action": "Correct the named field or item in the builder, then save again."
+        },
+        {
+          "symptom": "Missing control",
+          "action": "Template entitlement does not override role restrictions."
+        }
+      ],
+      "sources": [
+        "src/pages/TemplateManagerPage.tsx",
+        "src/components/checklist/templateFormHelpers.ts"
+      ]
+    },
+    {
+      "key": "task_manager.tasks",
+      "path": "/tasks",
+      "summary": "Keep persistent work owned, dated and traceable beyond a shift.",
+      "access": "Task workspace access; editing and assignment depend on your role and relationship to the task.",
+      "tasks": [
+        {
+          "id": "find",
+          "title": "Find and investigate work",
+          "needs": "Know whether you own, assigned or supervise the work.",
+          "steps": [
+            {
+              "title": "Choose a lane",
+              "body": "Open Task Center. Choose Assigned To Me, Tasks I Assigned, Team Tasks, Overdue or Completed as appropriate."
+            },
+            {
+              "title": "Narrow and inspect",
+              "body": "Search and filter status/priority. Open the task details; read description, assignee, due date, comments and history before changing anything."
+            }
+          ],
+          "result": "You can identify the owner, next action and latest recorded change.",
+          "stop": "A completed task may have been completed late; retain that distinction."
+        },
+        {
+          "id": "manage",
+          "title": "Create, assign and update a task",
+          "needs": "Have a clear outcome, owner and realistic due date.",
+          "steps": [
+            {
+              "title": "Create the work",
+              "body": "Use the create task action. Fill the required title, description, scope/type, priority, assignee and due date fields offered by the form."
+            },
+            {
+              "title": "Progress the task",
+              "body": "Open details or Edit. Update the permitted fields/status and record useful context in comments. Save and wait for confirmation."
+            },
+            {
+              "title": "Verify and close",
+              "body": "Complete only after verifying the outcome. Reopen/edit only where permitted, and check history after changes. Read analytics in the context of the selected scope."
+            }
+          ],
+          "result": "The task card and history reflect the saved owner, dates and outcome.",
+          "stop": "Do not delete or mark work completed to conceal a missed deadline."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Overdue",
+          "meaning": "The due time has passed without the required completion."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Task missing",
+          "action": "Check lane, filters and permissions before recreating it."
+        },
+        {
+          "symptom": "Save failed",
+          "action": "Reopen the task and check history before retrying."
+        }
+      ],
+      "sources": [
+        "src/pages/TaskCenterPage.tsx"
+      ]
+    },
+    {
+      "key": "database.statistics",
+      "path": "/database-stats",
+      "summary": "Read capacity, growth and estimated runway without changing the database.",
+      "access": "Database growth and capacity access; this screen is telemetry and forecasting.",
+      "tasks": [
+        {
+          "id": "capacity",
+          "title": "Assess current capacity",
+          "needs": "Know which database the configured telemetry describes.",
+          "steps": [
+            {
+              "title": "Check freshness",
+              "body": "Open Database Statistics. Read the timestamp and connection/cached-fallback state before using the figures. Refresh if needed."
+            },
+            {
+              "title": "Compare capacity and growth",
+              "body": "Read used space, provisioned total and remaining buffer. Inspect Growth contour and Daily ledger for actual changes rather than relying on one value."
+            },
+            {
+              "title": "Interpret runway",
+              "body": "Read the estimated full date, risk state and confidence/control notes. Compare current daily growth with the seven-day average; escalate sustained pressure with the timestamp and evidence."
+            }
+          ],
+          "result": "You have a dated capacity assessment, with uncertainty explained.",
+          "stop": "A forecast is an estimate, not a guarantee or a command to expand/shrink storage."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Runway",
+          "meaning": "Estimated time until available capacity is consumed at the observed growth rate."
+        },
+        {
+          "term": "Cached fallback",
+          "meaning": "Previously fetched evidence used when fresh telemetry is unavailable."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "No or stale telemetry",
+          "action": "Refresh once; if still stale, escalate the source connection and include the last successful timestamp."
+        }
+      ],
+      "sources": [
+        "src/pages/DatabaseStatsPage.tsx"
+      ]
+    },
+    {
+      "key": "performance.dashboard",
+      "path": "/performance",
+      "summary": "Understand recorded contribution, evidence-based reliability and achievement levels.",
+      "access": "Performance access; the screen uses the visible person/team scope.",
+      "tasks": [
+        {
+          "id": "score",
+          "title": "Understand a score fairly",
+          "needs": "Choose the period you want to review.",
+          "steps": [
+            {
+              "title": "Read Overview",
+              "body": "Check contribution points separately from reliability rates. A dash means no eligible evidence; a limited sample needs more observations."
+            },
+            {
+              "title": "Inspect Evidence & scoring",
+              "body": "Read the breakdown, eligible samples, weights and recent contributions. Tasks without deadlines can earn completion credit without a timeliness bonus. Passive membership and days off are not contribution evidence."
+            },
+            {
+              "title": "Interpret team context",
+              "body": "Compare recorded contribution volume with workload and shift opportunities. Shared ranks can occur for ties; the table is not a staff appraisal."
+            }
+          ],
+          "result": "You can explain the score using underlying records and sample sizes.",
+          "stop": "Do not infer poor performance from missing evidence or compare different workloads as equivalent."
+        },
+        {
+          "id": "awards",
+          "title": "Earn and collect achievement levels",
+          "needs": "Open Achievements and choose an award.",
+          "steps": [
+            {
+              "title": "Read the requirements",
+              "body": "Inspect Amateur, Skilled and Expert requirements and remaining progress. Every requirement for a level must be met."
+            },
+            {
+              "title": "Collect in order",
+              "body": "Collect the available level when enabled. Verify it becomes collected before trying the next level. Current progress uses the calendar year; previously unlocked/collected levels remain recorded."
+            }
+          ],
+          "result": "The achievement shows the earned level and the next requirements.",
+          "stop": "Do not create duplicate work or work unnecessary hours solely for points."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Contribution",
+          "meaning": "Credit for recorded eligible work."
+        },
+        {
+          "term": "Reliability",
+          "meaning": "A rate calculated from eligible evidence, not raw volume."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Unexpected score",
+          "action": "Check the selected period and underlying completion/attendance records. Raise a specific record discrepancy with the administrator."
+        }
+      ],
+      "sources": [
+        "src/pages/PerformancePage.tsx"
+      ]
+    },
+    {
+      "key": "team.scheduling",
+      "path": "/team",
+      "summary": "Plan coverage using section-specific patterns, date ranges and individual assignments.",
+      "access": "Team scheduling access; the current Team page requires Admin or Manager.",
+      "tasks": [
+        {
+          "id": "view",
+          "title": "Inspect coverage for a date or person",
+          "needs": "Select the correct section.",
+          "steps": [
+            {
+              "title": "Set the view window",
+              "body": "Use the shortcuts or custom date/range controls. Apply the member/user filter to inspect a specific person; clear it to review the section."
+            },
+            {
+              "title": "Read the schedule",
+              "body": "Check shift dates, hours, coverage and assignments. Open an assignment for details before editing it."
+            }
+          ],
+          "result": "The visible schedule matches your section, dates and people.",
+          "stop": "A filtered empty schedule does not prove the whole team has no assignments."
+        },
+        {
+          "id": "pattern",
+          "title": "Create or maintain a shift pattern",
+          "needs": "Know the rotation, shift definitions and timezone.",
+          "steps": [
+            {
+              "title": "Open Patterns",
+              "body": "Create a pattern or edit the intended existing one in the selected section. Set name, rotation/cycle, shift sequence and any rest/off days shown by the form."
+            },
+            {
+              "title": "Review and save",
+              "body": "Check ordering, hours and timezone. Save and verify the pattern appears in this section. Delete only an obsolete pattern after checking its use."
+            }
+          ],
+          "result": "The pattern is available to Smart Assignment for the same section.",
+          "stop": "Do not invent shift times to work around a missing pattern; obtain the planner-approved definition."
+        },
+        {
+          "id": "assign",
+          "title": "Use Smart Assignment",
+          "needs": "Have a saved pattern or a known single shift and selected members.",
+          "steps": [
+            {
+              "title": "Choose the assignment mode",
+              "body": "Open Smart Assignment. Bulk Pattern needs a pattern and start/end dates. Single Shift needs a date and shift."
+            },
+            {
+              "title": "Set the scope",
+              "body": "Choose the correct section pattern, dates and members. Check that the end is not before the start and that the selected people are intended."
+            },
+            {
+              "title": "Assign and verify",
+              "body": "Submit once. Inspect the resulting schedule across the full requested range, not only the first day. Correct individual assignments using the provided edit/remove controls."
+            }
+          ],
+          "result": "Members have the intended dates and shifts in the schedule.",
+          "stop": "If patterns fail to load, use Retry patterns. If none exist, create one in the current section first."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Pattern",
+          "meaning": "A reusable rotation, applied over a date range."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Wrong/missing pattern",
+          "action": "Verify section selection, retry loading, then inspect Patterns."
+        },
+        {
+          "symptom": "Assignment conflict or rejected save",
+          "action": "Read the server response and inspect existing assignments before resubmitting."
+        }
+      ],
+      "sources": [
+        "src/pages/AdvancedTeamManagementPage.tsx"
+      ]
+    },
+    {
+      "key": "team.schedule",
+      "path": "/schedule",
+      "summary": "See your upcoming shifts and open the correct work for the day.",
+      "access": "Personal schedule access; this is your assigned schedule, not the planner.",
+      "tasks": [
+        {
+          "id": "schedule",
+          "title": "Prepare for a shift",
+          "needs": "Check your signed-in identity.",
+          "steps": [
+            {
+              "title": "Choose the time view",
+              "body": "Open Schedule from the operator menu. Use its calendar/time controls to find the intended date."
+            },
+            {
+              "title": "Inspect the assignment",
+              "body": "Read shift hours, section and relevant details. Open the linked checklist when offered and confirm its date before joining."
+            },
+            {
+              "title": "Resolve a mismatch",
+              "body": "If an expected shift is absent or incorrect, contact the Team planner with the date and shift. Check again after correction."
+            }
+          ],
+          "result": "You know when to work and which checklist belongs to that shift.",
+          "stop": "Do not assume a calendar entry alone proves attendance or completion."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Assignment",
+          "meaning": "The shift allocated to you by the planner."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "No assignments",
+          "action": "Check the date range and your account; ask the planner to verify section/member assignment."
+        }
+      ],
+      "sources": [
+        "src/pages/UserScheduleDashboard.tsx"
+      ]
+    },
+    {
+      "key": "network_sentinel.monitoring",
+      "path": "/network-sentinel",
+      "summary": "Identify degraded services and inspect current signals before escalating.",
+      "access": "Service monitoring access; manual checks and controls additionally require configuration authority.",
+      "tasks": [
+        {
+          "id": "inspect",
+          "title": "Investigate a live service",
+          "needs": "Know the service, environment or affected group.",
+          "steps": [
+            {
+              "title": "Scope the service list",
+              "body": "Filter environment, service group, search and health. Read connection/freshness indicators before interpreting the counts."
+            },
+            {
+              "title": "Inspect the signal",
+              "body": "Select the service. Read Signal for sampled availability and latency, and Evidence for the latest probe/reason. Compare ICMP and TCP evidence; a failed network probe is not proof that every business function has failed."
+            },
+            {
+              "title": "Preserve evidence",
+              "body": "Use Evidence TXT to download a dated investigation snapshot. Include service/environment and timestamps when escalating."
+            }
+          ],
+          "result": "The selected service has a clear, dated evidence trail.",
+          "stop": "Unknown or stale signal is not healthy. Do not infer recovery from an interrupted live connection."
+        },
+        {
+          "id": "check",
+          "title": "Request a current check",
+          "needs": "The service must be selected; Check now must be available to your role.",
+          "steps": [
+            {
+              "title": "Check once",
+              "body": "Choose Check now and wait for the response. Read the separate manual-probe result and its timestamp."
+            },
+            {
+              "title": "Compare observations",
+              "body": "Compare the manual result with scheduled monitoring and incident evidence. Refresh/reopen the service if needed before escalation."
+            }
+          ],
+          "result": "The manual result identifies what was checked and when.",
+          "stop": "Repeated clicks do not make monitoring more reliable; investigate persistent failure instead."
+        }
+      ],
+      "terms": [
+        {
+          "term": "ICMP",
+          "meaning": "A network reachability probe, often called ping."
+        },
+        {
+          "term": "TCP",
+          "meaning": "A connection check to a configured service port."
+        },
+        {
+          "term": "Sampled availability",
+          "meaning": "Availability inferred from recorded probes, not continuous proof of business success."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Live updates interrupted",
+          "action": "Keep the last snapshot marked stale, refresh and check the monitoring source connection."
+        }
+      ],
+      "sources": [
+        "src/pages/NetworkSentinelPage.tsx"
+      ]
+    },
+    {
+      "key": "network_sentinel.outage_history",
+      "path": "/network-sentinel",
+      "summary": "Trace outages and major events for a selected service.",
+      "access": "Outage ledger access; service monitoring permission is separately required for Signal/Evidence.",
+      "tasks": [
+        {
+          "id": "history",
+          "title": "Trace an outage",
+          "needs": "Identify the service and approximate incident date.",
+          "steps": [
+            {
+              "title": "Open Timeline",
+              "body": "Select the service, then Timeline. Review current outages, today’s events and the Major Events Archive."
+            },
+            {
+              "title": "Read the chronology",
+              "body": "Compare start/end times, duration, severity and summaries. A restored service and an unresolved investigation are different facts."
+            },
+            {
+              "title": "Escalate with references",
+              "body": "Record service name, environment and event timestamps. Use the live investigation to confirm present health rather than treating historical recovery as current evidence."
+            }
+          ],
+          "result": "You can describe the outage sequence and distinguish it from current health.",
+          "stop": "Only retained events are visible; no older rows does not prove there were no earlier outages."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Outage",
+          "meaning": "A recorded period of detected service failure."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Archive empty",
+          "action": "Check the service and today’s events; older retained events appear separately."
+        }
+      ],
+      "sources": [
+        "src/pages/NetworkSentinelPage.tsx"
+      ]
+    },
+    {
+      "key": "network_sentinel.configuration",
+      "path": "/network-sentinel",
+      "summary": "Maintain monitoring targets and control whether checks run.",
+      "access": "Configuration access plus Manager/Admin for add/edit/check/enable; Delete requires Admin.",
+      "tasks": [
+        {
+          "id": "configure",
+          "title": "Add or edit a monitored service",
+          "needs": "Obtain the approved target host, ports, environment and monitoring requirements.",
+          "steps": [
+            {
+              "title": "Open the editor",
+              "body": "Choose Add Service or select a service and Edit. Verify the service identity and environment before changing the target."
+            },
+            {
+              "title": "Set the checks",
+              "body": "Fill the displayed address/port, probe and timing fields. Use appropriate target values; save and read any validation response."
+            },
+            {
+              "title": "Verify monitoring",
+              "body": "Select the saved service, run Check now if allowed and inspect fresh evidence. Saving configuration is not proof of reachability."
+            }
+          ],
+          "result": "The saved target and new probe evidence match the intended service.",
+          "stop": "Do not point production checks at a test host or use a successful ping as proof of application availability."
+        },
+        {
+          "id": "control",
+          "title": "Enable, disable or remove monitoring",
+          "needs": "Know the maintenance/change reference and affected service.",
+          "steps": [
+            {
+              "title": "Choose the scope",
+              "body": "Select the exact service and read its identity. Disable pauses its monitoring; Enable resumes it."
+            },
+            {
+              "title": "Confirm the result",
+              "body": "Wait for the saved state. For deletion, read the confirmation and use it only for a genuinely retired entry. Recheck the list and related evidence."
+            }
+          ],
+          "result": "The service shows the intended monitoring state.",
+          "stop": "Disabling monitoring does not fix the service; it changes visibility."
+        }
+      ],
+      "terms": [],
+      "problems": [
+        {
+          "symptom": "Control unavailable",
+          "action": "Check both module entitlement and role; do not bypass the restriction."
+        }
+      ],
+      "sources": [
+        "src/pages/NetworkSentinelPage.tsx"
+      ]
+    },
+    {
+      "key": "trustlink.daily_extraction",
+      "path": "/trustlink?tab=pipeline",
+      "summary": "Follow the daily IDC/DigiPay extraction through validation and file readiness.",
+      "access": "Daily extraction access; triggering runs and changing sources have separate permissions.",
+      "tasks": [
+        {
+          "id": "pipeline",
+          "title": "Check today’s extraction",
+          "needs": "Know the required business date and enabled sources.",
+          "steps": [
+            {
+              "title": "Read the run identity",
+              "body": "Open Trustlink and Pipeline. Check date, status, selected run and source route. Confirm whether today’s export already exists."
+            },
+            {
+              "title": "Follow each stage",
+              "body": "Read IDC Ingest, DigiPay Ingest, Transformation, Validation, File Save and Download. Inspect failed/skipped stages and row counts; an intentionally disabled source is not a successful ingestion."
+            },
+            {
+              "title": "Download the ready file",
+              "body": "Use Download Export only when the file is present. Confirm the filename/date and record counts before onward delivery through your approved process."
+            }
+          ],
+          "result": "You can show which inputs ran and which export is ready.",
+          "stop": "A completed extraction or local download is not proof that an external recipient received the file."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Pipeline",
+          "meaning": "The ordered stages that turn source data into an export."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Run failed or file absent",
+          "action": "Inspect the failing stage and history. Ask an authorized operator to recover the run rather than repeatedly triggering new runs."
+        }
+      ],
+      "sources": [
+        "src/pages/TrustlinkOperationsPage.tsx"
+      ]
+    },
+    {
+      "key": "trustlink.run_history",
+      "path": "/trustlink?tab=history",
+      "summary": "Inspect past runs and retrieve the correct retained export.",
+      "access": "Run history access; file deletion remains restricted by role and run eligibility.",
+      "tasks": [
+        {
+          "id": "history",
+          "title": "Inspect or download a historical run",
+          "needs": "Know the date/run you need.",
+          "steps": [
+            {
+              "title": "Select the run",
+              "body": "Open History and narrow the period/search using the available controls. Open the run inspector to read stage outcomes, timestamps, row counts and errors."
+            },
+            {
+              "title": "Retrieve the artifact",
+              "body": "Use Download only if the run has a file. Match filename and business date to your request. Missing files are different from missing run history."
+            }
+          ],
+          "result": "The downloaded file belongs to the selected recorded run.",
+          "stop": "Do not substitute today’s file for a missing historical export."
+        },
+        {
+          "id": "retire",
+          "title": "Remove an eligible saved export",
+          "needs": "Have authorization to remove that artifact.",
+          "steps": [
+            {
+              "title": "Review the eligible file",
+              "body": "Use the delete-file control only where offered. Read the confirmation for the selected run; file removal is not a rerun."
+            },
+            {
+              "title": "Confirm the outcome",
+              "body": "After confirmation, verify the file is unavailable and inspect the retained run record."
+            }
+          ],
+          "result": "The artifact availability and run history reflect the deletion.",
+          "stop": "Do not delete a file still needed for delivery, reconciliation or retention."
+        }
+      ],
+      "terms": [],
+      "problems": [
+        {
+          "symptom": "Download unavailable",
+          "action": "Check file presence in the inspector; request the approved recovery path if it was removed."
+        }
+      ],
+      "sources": [
+        "src/pages/TrustlinkOperationsPage.tsx"
+      ]
+    },
+    {
+      "key": "trustlink.manual_run",
+      "path": "/trustlink?tab=pipeline",
+      "summary": "Start a controlled extraction or replace today’s export when justified.",
+      "access": "Manual extraction access plus the operation’s role restrictions.",
+      "tasks": [
+        {
+          "id": "run",
+          "title": "Run an extraction",
+          "needs": "Verify today’s state and that source configuration is correct.",
+          "steps": [
+            {
+              "title": "Inspect before triggering",
+              "body": "Check whether a run is active or today’s export already exists. If ready, download it instead of creating a duplicate."
+            },
+            {
+              "title": "Run and follow",
+              "body": "Choose Run Extraction (or Trigger First Run). Wait for scheduling, then follow Pipeline through completion and file readiness."
+            }
+          ],
+          "result": "The new run has a terminal status and a verified artifact.",
+          "stop": "A scheduling response means accepted, not completed."
+        },
+        {
+          "id": "overwrite",
+          "title": "Overwrite today’s export",
+          "needs": "Have a valid reason and approval to replace the existing output.",
+          "steps": [
+            {
+              "title": "Review what will change",
+              "body": "Inspect today’s existing export and affected delivery process. Choose the overwrite action and read its warning."
+            },
+            {
+              "title": "Confirm deliberately",
+              "body": "Accept only if replacement is intended. Follow the resulting run and verify the new file/date/counts before distributing it."
+            }
+          ],
+          "result": "The replacement export is checked and the run history explains the operation.",
+          "stop": "Do not overwrite simply to troubleshoot a download or while another operator is distributing the previous artifact."
+        }
+      ],
+      "terms": [],
+      "problems": [
+        {
+          "symptom": "Already exists",
+          "action": "Download the current export, or use the explicit overwrite workflow if a replacement is authorized."
+        }
+      ],
+      "sources": [
+        "src/pages/TrustlinkOperationsPage.tsx"
+      ]
+    },
+    {
+      "key": "trustlink.configuration",
+      "path": "/trustlink?tab=pipeline",
+      "summary": "Choose the data sources used by the next extraction.",
+      "access": "Source configuration access and Admin role.",
+      "tasks": [
+        {
+          "id": "sources",
+          "title": "Change IDC/DigiPay ingestion",
+          "needs": "Know the approved extraction route.",
+          "steps": [
+            {
+              "title": "Inspect the current route",
+              "body": "Read the IDC and DigiPay ingest controls and the current run’s evidence."
+            },
+            {
+              "title": "Change the next route",
+              "body": "Toggle the intended source. At least one source must stay enabled. Wait for the saved “Next extraction route” message."
+            },
+            {
+              "title": "Verify the next run",
+              "body": "Inspect its stage outcomes and counts. The toggle does not retroactively rewrite an earlier run or artifact."
+            }
+          ],
+          "result": "The next extraction uses the intended enabled inputs.",
+          "stop": "Do not disable a source to hide a failed ingestion without business approval."
+        }
+      ],
+      "terms": [],
+      "problems": [
+        {
+          "symptom": "Both sources cannot be disabled",
+          "action": "Keep the required source enabled; the form deliberately rejects an empty route."
+        }
+      ],
+      "sources": [
+        "src/pages/TrustlinkOperationsPage.tsx"
+      ]
+    },
+    {
+      "key": "trustlink.rtgs",
+      "path": "/trustlink?tab=rtgs",
+      "summary": "Assess RTGS cases and request governed regeneration with a reason and evidence.",
+      "access": "RTGS access; recovery uses configured operator authority, policy changes require Admin.",
+      "tasks": [
+        {
+          "id": "assess",
+          "title": "Investigate RTGS cases",
+          "needs": "Know the transaction reference or age lane.",
+          "steps": [
+            {
+              "title": "Run/read the assessment",
+              "body": "Open RTGS. Refresh the database assessment and inspect cases by age/status. Read the case evidence and eligibility before selecting it."
+            },
+            {
+              "title": "Inspect custody",
+              "body": "Read the relevant run/action result and source state. Distinguish a regeneration request from final payment processing."
+            }
+          ],
+          "result": "You have fresh evidence for each intended recovery.",
+          "stop": "A case’s age alone is not sufficient authority to regenerate it."
+        },
+        {
+          "id": "recover",
+          "title": "Regenerate selected cases",
+          "needs": "Resolve the underlying issue and obtain the operational reference.",
+          "steps": [
+            {
+              "title": "Select eligible cases",
+              "body": "Select the exact transaction IDs. Review older-than-96-hour cases carefully; the request carries that acknowledgement for selected aged cases."
+            },
+            {
+              "title": "Provide a reason and submit",
+              "body": "Enter a meaningful reason/change reference of at least eight characters. Submit the regeneration action once. Read per-case outcomes, including partial failure."
+            },
+            {
+              "title": "Reassess",
+              "body": "Run the database assessment again to see updated queue state and inspect action history."
+            }
+          ],
+          "result": "Each request has a recorded outcome and refreshed source evidence.",
+          "stop": "Do not repeat a request blindly after a timeout or assume regeneration proves payment settlement."
+        },
+        {
+          "id": "automation",
+          "title": "Maintain automated recovery and cadence",
+          "needs": "Have Admin authority for policy and approved schedule intent.",
+          "steps": [
+            {
+              "title": "Review current controls",
+              "body": "Inspect automatic five-day regeneration and the returned active schedule. Read the current cadence and enabled state."
+            },
+            {
+              "title": "Change and verify",
+              "body": "Toggle the authorized policy or select the offered 30/60-minute cadence. Wait for saved confirmation and re-read the active schedule/action history."
+            }
+          ],
+          "result": "The policy and active schedule reflect the approved change.",
+          "stop": "If the runtime has not returned a schedule, the displayed selection alone does not configure automation."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Regeneration",
+          "meaning": "Recreates/requeues the eligible processing request; it is not evidence of settlement."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Some cases failed",
+          "action": "Review each outcome and fresh assessment before deciding on another request."
+        }
+      ],
+      "sources": [
+        "src/pages/TrustlinkOperationsPage.tsx"
+      ]
+    },
+    {
+      "key": "nexus.dashboard",
+      "path": "/nexus",
+      "summary": "Read the fabric’s current posture and move into the correct investigation.",
+      "access": "Fabric overview access. Each Nexus workspace also has its own entitlement.",
+      "tasks": [
+        {
+          "id": "overview",
+          "title": "Orient yourself in Nexus",
+          "needs": "Know the environment or affected business journey.",
+          "steps": [
+            {
+              "title": "Check freshness and scope",
+              "body": "Open Nexus. Read the overview and refresh state. Use search to locate incidents, services, clusters, flows or dependencies."
+            },
+            {
+              "title": "Choose the right workspace",
+              "body": "Use Incidents for current/unresolved cases, Services for runtime evidence and controls, and Clusters/Flows/Dependencies for relationships. Linked Stats and Network Sentinel consoles require their own access."
+            },
+            {
+              "title": "Separate facts from inference",
+              "body": "Read source timestamps and evidence before acting on a root-cause suggestion. An unavailable source is not healthy and a likely cause is not a confirmed verdict."
+            }
+          ],
+          "result": "You know which workspace holds the evidence and which service/incident to inspect.",
+          "stop": "Do not execute controls from a summary alone. Open the detailed evidence and relevant procedure."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Fabric",
+          "meaning": "The catalog of services, their relationships and operational evidence."
+        },
+        {
+          "term": "Correlation",
+          "meaning": "Combining signals to propose a shared incident or cause."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Workspace missing",
+          "action": "Ask the section administrator to check that specific module; the overview does not grant all Nexus operations."
+        }
+      ],
+      "sources": [
+        "src/pages/NexusPage.tsx",
+        "src/services/nexusApi.ts"
+      ]
+    },
+    {
+      "key": "nexus.incidents",
+      "path": "/nexus?workspace=incidents",
+      "summary": "Investigate impact, gather evidence, coordinate response and record a verified outcome.",
+      "access": "Incident investigation access; diagnostics, tasks, verdicts and notification settings remain role-gated.",
+      "tasks": [
+        {
+          "id": "triage",
+          "title": "Investigate an incident",
+          "needs": "Identify the affected journey/service and incident time.",
+          "steps": [
+            {
+              "title": "Choose a case",
+              "body": "In Incidents, use All unresolved, Active now, Shift pulse, Last 24h or Older. Open Incident Command View. Restored cases can still await an operator verdict."
+            },
+            {
+              "title": "Read the evidence",
+              "body": "Review Overview, Topology and Evidence. Compare suspected root, confidence, affected services, timeline and business-flow scope. Inspect original evidence when a mapped link is available."
+            },
+            {
+              "title": "Request assistance",
+              "body": "Use Request Diagnostics if allowed, then inspect the resulting Actions/evidence. Create Response Task for owned follow-up. SOP Copilot can explain/cite procedures; verify the cited version and prerequisites."
+            }
+          ],
+          "result": "The response is based on dated evidence, with assigned follow-up where needed.",
+          "stop": "Confidence is a hypothesis score, not certainty. Missing deep-link mapping should be corrected in the catalog, not guessed."
+        },
+        {
+          "id": "outcome",
+          "title": "Record an operator verdict",
+          "needs": "Have verified the cause and whether the action worked.",
+          "steps": [
+            {
+              "title": "Review the restored state",
+              "body": "Compare current signal and the incident end time. Confirm whether impact ended and identify remaining work."
+            },
+            {
+              "title": "Record the outcome",
+              "body": "Open Outcome. Supply the supported verdict, actual root/cause, action result and explanation required by the form. Submit once and confirm the recorded learning/closure state."
+            }
+          ],
+          "result": "The incident carries an attributable human outcome, not just automatic recovery.",
+          "stop": "Do not confirm a root cause merely because it was Nexus’s top candidate."
+        },
+        {
+          "id": "notifications",
+          "title": "Configure incident notification delivery",
+          "needs": "Have Admin authority and an approved recipient/channel scope.",
+          "steps": [
+            {
+              "title": "Open Notification Mesh",
+              "body": "Choose Configure. Review active-shift recipient scope, channels, extra email recipients and last delivery/queue state."
+            },
+            {
+              "title": "Save and inspect delivery",
+              "body": "Set the approved controls, save, then inspect subsequent delivery status and failures. Extra recipients must be intentional."
+            }
+          ],
+          "result": "The mesh shows the saved scope and evidence of delivery attempts.",
+          "stop": "In-app or email delivery status does not prove a person read the message. Desktop browser alerts require supported HTTPS permission."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Awaiting verdict",
+          "meaning": "Impact may have ended, but human investigation closure is still pending."
+        },
+        {
+          "term": "Blast radius",
+          "meaning": "The services or journeys inferred to be affected."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Diagnostics/action fails",
+          "action": "Read the returned error and Actions record; do not repeat disruptive commands."
+        },
+        {
+          "symptom": "No evidence link",
+          "action": "Open the correct service contract and have its Network Sentinel mapping verified."
+        }
+      ],
+      "sources": [
+        "src/pages/NexusPage.tsx",
+        "src/services/nexusApi.ts"
+      ]
+    },
+    {
+      "key": "nexus.services",
+      "path": "/nexus?workspace=services",
+      "summary": "Inspect a service’s live evidence and manage its governed contract and controls.",
+      "access": "Service catalog access; catalog changes require Admin, runtime actions require configured authority and successful gates.",
+      "tasks": [
+        {
+          "id": "live",
+          "title": "Investigate a service",
+          "needs": "Select the correct service and environment.",
+          "steps": [
+            {
+              "title": "Open Live Operations",
+              "body": "Read active impact, runtime agent, Network Sentinel, host posture and heartbeat. Check timestamps; no signal/unknown is not healthy."
+            },
+            {
+              "title": "Inspect signals and logs",
+              "body": "Open the signal explorer and log-tail/evidence controls offered by the contract. Set the relevant scope and refresh. Compare runtime observations with external probes and incident history."
+            }
+          ],
+          "result": "You can identify the source and age of each observation.",
+          "stop": "Log excerpts can contain sensitive operational data; share only the necessary evidence."
+        },
+        {
+          "id": "contract",
+          "title": "Create or update a service contract",
+          "needs": "Have the stable identity, owner, environment, bindings and approved endpoints.",
+          "steps": [
+            {
+              "title": "Open Contract Configuration",
+              "body": "Create a service or edit the selected contract. Set its identity/type, ownership, agent/network bindings, observation settings and certification stage."
+            },
+            {
+              "title": "Set valid control routes",
+              "body": "Supply only approved extraction, formatting, shipping, diagnostics and control endpoints exposed by the editor. Review timeout/safety settings and associated cluster routing."
+            },
+            {
+              "title": "Save and validate",
+              "body": "Save and inspect fresh evidence from the service. Delete only retired contracts after reviewing the impact and confirmation. A saved endpoint is not a proven working endpoint."
+            }
+          ],
+          "result": "The persisted contract and live evidence describe the intended service.",
+          "stop": "Do not promote certification or enable control merely to make a button available."
+        },
+        {
+          "id": "control",
+          "title": "Start, stop or restart a service",
+          "needs": "Have change authority, verified service identity, current evidence and a justified action.",
+          "steps": [
+            {
+              "title": "Open the Service Control Gate",
+              "body": "From the service or incident choose Service Control. Read eligibility, readiness, allowlisted action and current runtime state. Request diagnostics first when required."
+            },
+            {
+              "title": "Request and verify the challenge",
+              "body": "Choose the intended action and provide the required reason. Request the OTP challenge. Check the action/service again before entering the issued one-time code."
+            },
+            {
+              "title": "Follow the result",
+              "body": "Submit once and inspect command outcome and fresh service state. If blocked, expired or uncertain, read the reason and reconcile before a new request."
+            }
+          ],
+          "result": "A command has an attributable result, supported by refreshed runtime evidence.",
+          "stop": "Never treat STOP/RESTART as a harmless probe or reuse an expired challenge."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Contract",
+          "meaning": "The saved identity, bindings and allowed operations for one service."
+        },
+        {
+          "term": "OTP",
+          "meaning": "A one-time code that confirms the requested controlled action."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Control blocked",
+          "action": "Read the gate: readiness, certification, allowlist, cooldown or missing evidence must be resolved legitimately."
+        },
+        {
+          "symptom": "Stale heartbeat",
+          "action": "Check the agent and telemetry route before treating the runtime state as current."
+        }
+      ],
+      "sources": [
+        "src/pages/NexusPage.tsx",
+        "src/services/nexusApi.ts"
+      ]
+    },
+    {
+      "key": "nexus.agents",
+      "path": "/nexus?workspace=agents",
+      "summary": "Inspect the runtime agents that report service evidence and carry allowed commands.",
+      "access": "Agent monitoring access; onboarding credentials and catalog edits have separate controls.",
+      "tasks": [
+        {
+          "id": "agents",
+          "title": "Investigate an agent",
+          "needs": "Know the host/agent expected to report the service.",
+          "steps": [
+            {
+              "title": "Open the agent",
+              "body": "Select it in Agents. Read identity, environment, heartbeat age and reported capabilities/linked services."
+            },
+            {
+              "title": "Correlate the gap",
+              "body": "Compare agent freshness with the service’s external Network Sentinel checks. If heartbeat is stale, inspect deployment/connectivity through the responsible owner."
+            },
+            {
+              "title": "Verify recovery",
+              "body": "Refresh after the owner restores reporting and confirm a new heartbeat and service evidence."
+            }
+          ],
+          "result": "The agent’s presence and capabilities are backed by recent observations.",
+          "stop": "An installed agent is not necessarily connected, and its existence does not authorize arbitrary shell commands."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Heartbeat",
+          "meaning": "A periodic signal that the agent is still reporting."
+        },
+        {
+          "term": "Allowlist",
+          "meaning": "The explicit set of permitted commands."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Agent missing",
+          "action": "Verify deployment, identity and token configuration with the host owner using Onboarding. Do not publish tokens in incident notes."
+        }
+      ],
+      "sources": [
+        "src/pages/NexusPage.tsx",
+        "src/services/nexusApi.ts"
+      ]
+    },
+    {
+      "key": "nexus.databases",
+      "path": "/nexus?workspace=databases",
+      "summary": "Represent databases and inspect their connectivity, usage and dependent services.",
+      "access": "Database fabric access; contract/connection changes require Admin.",
+      "tasks": [
+        {
+          "id": "database",
+          "title": "Inspect or configure database fabric",
+          "needs": "Know the database identity, environment, owner and approved connection profile.",
+          "steps": [
+            {
+              "title": "Open the database",
+              "body": "Select its fabric entry and review engine, schemas, connectivity and observed symptoms such as sessions, locks, lag or pool pressure where available."
+            },
+            {
+              "title": "Maintain the contract",
+              "body": "Use configuration to set the intended database profile and access bindings. Enter required connection fields securely; preserve correct schema/environment mappings."
+            },
+            {
+              "title": "Test and verify",
+              "body": "Use the connection test where offered. Read its result and refresh evidence. A successful connection test is not proof of application transaction success."
+            }
+          ],
+          "result": "The saved database contract and test result refer to the intended environment.",
+          "stop": "Do not infer that a database is down from one application’s pool pressure or missing telemetry."
+        },
+        {
+          "id": "dependency",
+          "title": "Trace a database impact",
+          "needs": "Identify the affected application/service.",
+          "steps": [
+            {
+              "title": "Follow its relationships",
+              "body": "Review connected services and the dependency topology. Distinguish a dependency declared in the catalog from evidence of a current failure."
+            },
+            {
+              "title": "Escalate with scope",
+              "body": "Capture database, schema, dependent service, timestamps and observed error. Use the incident workflow for response ownership."
+            }
+          ],
+          "result": "The escalation identifies the affected path and supporting signal.",
+          "stop": "Catalog visibility is not permission to change database data."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Pool pressure",
+          "meaning": "An application’s demand for available database connections."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Connection test fails",
+          "action": "Read the error, confirm environment/endpoint and ask the database owner to verify approved credentials/network access."
+        }
+      ],
+      "sources": [
+        "src/pages/NexusPage.tsx",
+        "src/services/nexusApi.ts"
+      ]
+    },
+    {
+      "key": "nexus.clusters",
+      "path": "/nexus?workspace=clusters",
+      "summary": "Group services and inspect the shared routing paths used by a cluster.",
+      "access": "Cluster access; create/edit/delete require Admin.",
+      "tasks": [
+        {
+          "id": "fabric",
+          "title": "Explore a cluster",
+          "needs": "Know the affected service group.",
+          "steps": [
+            {
+              "title": "Open Fabric Preview",
+              "body": "Select the cluster and inspect entry points, service mesh, membership, routing readiness and ownership."
+            },
+            {
+              "title": "Follow the route",
+              "body": "Trace the service path and inspect missing diagnostics or other route indicators. Open the relevant service to verify runtime evidence."
+            }
+          ],
+          "result": "You understand which services and routes form the cluster.",
+          "stop": "A drawn connection describes configuration; it is not proof that traffic is currently flowing."
+        },
+        {
+          "id": "configure",
+          "title": "Maintain cluster membership and routes",
+          "needs": "Have the approved service grouping and endpoint contracts.",
+          "steps": [
+            {
+              "title": "Open Configuration",
+              "body": "Create or edit the cluster identity, owner, environment and service/entry membership."
+            },
+            {
+              "title": "Set routing and save",
+              "body": "Review extraction, formatting, shipping, diagnostics and restart routing fields offered by the editor. Save and revisit Fabric Preview for missing routes. Delete only retired clusters after confirmation."
+            }
+          ],
+          "result": "The preview matches the saved membership and intended routes.",
+          "stop": "Do not change a shared route without checking all member services that depend on it."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Entry point",
+          "meaning": "A service at the beginning of the cluster’s path."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Missing route",
+          "action": "Have the owner supply the approved endpoint; do not substitute an unrelated working URL."
+        }
+      ],
+      "sources": [
+        "src/pages/NexusPage.tsx",
+        "src/services/nexusApi.ts"
+      ]
+    },
+    {
+      "key": "nexus.flows",
+      "path": "/nexus?workspace=flows",
+      "summary": "Describe a business journey so incident impact follows the user’s actual service path.",
+      "access": "Business flows access; create/edit/delete require Admin.",
+      "tasks": [
+        {
+          "id": "trace",
+          "title": "Follow a business journey",
+          "needs": "Know the business outcome and participating services.",
+          "steps": [
+            {
+              "title": "Open the flow",
+              "body": "Select the journey and inspect ordered service steps, entry/outcome and current evidence correlation."
+            },
+            {
+              "title": "Read impact in context",
+              "body": "Check required versus optional steps and the affected path. Open linked incidents/services for evidence rather than interpreting all catalog dependencies as impacted."
+            }
+          ],
+          "result": "You can explain which step prevents the business outcome.",
+          "stop": "An optional service failure may not stop the whole journey; verify the flow’s declared rules."
+        },
+        {
+          "id": "edit",
+          "title": "Create or maintain a flow",
+          "needs": "Have the process owner’s approved step sequence.",
+          "steps": [
+            {
+              "title": "Configure the journey",
+              "body": "Create/edit name, ownership and ordered service steps. Set required/optional behavior and the fields the editor requires."
+            },
+            {
+              "title": "Save and inspect",
+              "body": "Review the rendered journey after saving. Remove obsolete flows only after confirming that incident correlation no longer needs them."
+            }
+          ],
+          "result": "The visual journey reflects the approved sequence and scope.",
+          "stop": "Incorrect flow membership can mislead business-impact calculations."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Required step",
+          "meaning": "A step necessary for the declared business outcome."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Unexpected impact",
+          "action": "Inspect the flow’s service order and required flags before accepting the inferred impact."
+        }
+      ],
+      "sources": [
+        "src/pages/NexusPage.tsx",
+        "src/services/nexusApi.ts"
+      ]
+    },
+    {
+      "key": "nexus.dependencies",
+      "path": "/nexus?workspace=dependencies",
+      "summary": "Define and inspect directed relationships between services.",
+      "access": "Dependency topology access; changes require Admin.",
+      "tasks": [
+        {
+          "id": "trace",
+          "title": "Read a dependency path",
+          "needs": "Identify the affected service and business flow.",
+          "steps": [
+            {
+              "title": "Inspect direction",
+              "body": "Open Dependencies and select the relationship. Read from/to services, purpose/type, scope and any evidence hints."
+            },
+            {
+              "title": "Compare live evidence",
+              "body": "Trace upstream/downstream effects and check the related incident/service. Distinguish a catalog edge from an observed failure."
+            }
+          ],
+          "result": "The investigation describes who depends on whom and why.",
+          "stop": "Reversing the direction can invert the suspected cause and impact."
+        },
+        {
+          "id": "edit",
+          "title": "Maintain a dependency",
+          "needs": "Know both service identities and the actual interaction.",
+          "steps": [
+            {
+              "title": "Configure the edge",
+              "body": "Create/edit source and target, purpose, scope and available timeout/failure hints. Use flow-scoped relationships when appropriate."
+            },
+            {
+              "title": "Save and validate",
+              "body": "Inspect topology and affected flow after saving. Delete only obsolete relationships after reviewing the confirmation."
+            }
+          ],
+          "result": "The saved edge describes the real dependency and intended scope.",
+          "stop": "Do not add speculative relationships merely to force correlation."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Directed edge",
+          "meaning": "A relationship from one service to the service it uses."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Graph looks wrong",
+          "action": "Check source/target, flow scope and service identities before adjusting incident conclusions."
+        }
+      ],
+      "sources": [
+        "src/pages/NexusPage.tsx",
+        "src/services/nexusApi.ts"
+      ]
+    },
+    {
+      "key": "nexus.onboarding",
+      "path": "/nexus?workspace=onboarding",
+      "summary": "Connect an agent/service through governed credentials and evidence-based readiness.",
+      "access": "Onboarding access; token and catalog operations require the relevant Admin authority.",
+      "tasks": [
+        {
+          "id": "onboard",
+          "title": "Onboard an agent and service",
+          "needs": "Have the target host, owner, environment and approved deployment plan.",
+          "steps": [
+            {
+              "title": "Review readiness",
+              "body": "Open Onboarding and inspect missing contracts, bindings, agent credentials and readiness requirements. Identify the specific service/host."
+            },
+            {
+              "title": "Provision securely",
+              "body": "Use the offered agent-token controls only with authority. Copy a newly issued token into the approved agent configuration through the deployment owner; never place it in tickets or screenshots."
+            },
+            {
+              "title": "Register and observe",
+              "body": "Create/bind the service contract, deploy the configured agent and verify fresh heartbeat/telemetry. Progress certification only when the required observation/diagnostic/control evidence is proven."
+            }
+          ],
+          "result": "The service is mapped to an agent and reports fresh evidence at the justified readiness stage.",
+          "stop": "Token generation alone is not onboarding completion. Rotation can invalidate deployed credentials; coordinate the rollout."
+        },
+        {
+          "id": "credentials",
+          "title": "Review or rotate an agent token",
+          "needs": "Know the active agents using the credential and the replacement plan.",
+          "steps": [
+            {
+              "title": "Inspect current status",
+              "body": "Read the current token status without exposing its secret. Identify the authorized rotation/generation control."
+            },
+            {
+              "title": "Coordinate the change",
+              "body": "Issue the replacement only under the approved plan, update agent configurations and verify reporting resumes. Treat a one-time display as sensitive."
+            }
+          ],
+          "result": "Expected agents report successfully using the approved credential.",
+          "stop": "Do not rotate during an incident without considering the effect on current telemetry."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Certification",
+          "meaning": "The recorded readiness stage justified by observed capabilities and tests."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Agent still absent",
+          "action": "Check endpoint, token and host connectivity with the deployment owner; do not repeatedly issue new credentials."
+        }
+      ],
+      "sources": [
+        "src/pages/NexusPage.tsx",
+        "src/services/nexusApi.ts"
+      ]
+    },
+    {
+      "key": "nexus.rollover",
+      "path": "/nexus?workspace=rollover",
+      "summary": "Prepare, test and execute a governed environment change with explicit scope and proof.",
+      "access": "Environment rollover access; configuration and execution are role- and challenge-gated.",
+      "tasks": [
+        {
+          "id": "prepare",
+          "title": "Configure and test a rollover",
+          "needs": "Have an approved source/target environment and change plan.",
+          "steps": [
+            {
+              "title": "Review the environment contract",
+              "body": "Create/edit the intended environment, connection profiles, schemas and replacement rules. Check each source value and target value; empty or wrong targets can affect the wrong environment."
+            },
+            {
+              "title": "Test connections",
+              "body": "Run the available environment and schema connection tests. Inspect results for every required connection. Saving a profile is not a successful test."
+            },
+            {
+              "title": "Review the execution scope",
+              "body": "Read the current assessment/test evidence and intended changes before requesting authorization. Save changes, then repeat affected tests."
+            }
+          ],
+          "result": "The saved contract and fresh tests support the exact planned change.",
+          "stop": "Do not proceed with missing targets, ambiguous replacements or failed tests."
+        },
+        {
+          "id": "execute",
+          "title": "Authorize and follow a rollover",
+          "needs": "Have the approved change window, fresh tests, reason and rollback/recovery owner.",
+          "steps": [
+            {
+              "title": "Request the challenge",
+              "body": "Select the intended action and review source/target and scope. Request the one-time-code challenge only when the gates permit it."
+            },
+            {
+              "title": "Confirm once",
+              "body": "Enter the issued code for that challenge and execute once. Follow execution history and detailed outcomes rather than assuming the request succeeded."
+            },
+            {
+              "title": "Verify and follow up",
+              "body": "Check target connectivity and application behavior through the approved change procedure. Review/set available reminders for follow-up and acknowledge them appropriately."
+            }
+          ],
+          "result": "Execution history and post-change checks show what actually changed.",
+          "stop": "If completion is uncertain, stop and verify actual state before retrying. A test does not perform the rollover."
+        },
+        {
+          "id": "maintain",
+          "title": "Manage obsolete contracts and reminders",
+          "needs": "Confirm the environment is no longer in operational use.",
+          "steps": [
+            {
+              "title": "Review dependencies and history",
+              "body": "Inspect the selected environment and existing execution/reminder records."
+            },
+            {
+              "title": "Use the provided control",
+              "body": "Edit reminders or delete an obsolete contract only where allowed and after reading the confirmation. Verify the resulting list."
+            }
+          ],
+          "result": "The active configuration reflects the approved inventory.",
+          "stop": "Do not delete a contract to hide failed execution evidence."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Rollover",
+          "meaning": "A controlled change from one environment/configuration to another."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "OTP expired or gate blocked",
+          "action": "Correct the failed prerequisite and request a fresh challenge for the same verified scope."
+        },
+        {
+          "symptom": "Test failure",
+          "action": "Review the exact schema/connection result with the owner; do not weaken controls to continue."
+        }
+      ],
+      "sources": [
+        "src/pages/NexusPage.tsx",
+        "src/services/nexusApi.ts"
+      ]
+    },
+    {
+      "key": "nexus.sops",
+      "path": "/nexus?workspace=sops",
+      "summary": "Find, maintain and govern operational procedures used by operators and Copilot.",
+      "access": "Procedure library access; registry changes and approval require the relevant Admin authority.",
+      "tasks": [
+        {
+          "id": "read",
+          "title": "Find the applicable procedure",
+          "needs": "Know the service, incident or operational task.",
+          "steps": [
+            {
+              "title": "Search the library",
+              "body": "Inspect the procedure title, scope, version/status and content. Distinguish indexed material from a managed registry record."
+            },
+            {
+              "title": "Use with current evidence",
+              "body": "Read prerequisites, steps and stop rules. In SOP Copilot, verify the cited source and version before acting. A recommendation does not authorize a control action."
+            }
+          ],
+          "result": "You have the correct procedure for the service and current task.",
+          "stop": "Do not execute an outdated or unapproved instruction because it was retrieved by search."
+        },
+        {
+          "id": "govern",
+          "title": "Adopt, edit or approve a procedure",
+          "needs": "Have the owner-approved procedure and governance authority.",
+          "steps": [
+            {
+              "title": "Adopt when necessary",
+              "body": "For indexed-only material, use Adopt to create the managed record before editing/approving it. Inspect imported metadata and content."
+            },
+            {
+              "title": "Revise the contract",
+              "body": "Update the applicable service/scope, version, steps, prerequisites and other required fields in Governed SOP Contract. Save and inspect the managed record."
+            },
+            {
+              "title": "Govern the status",
+              "body": "Apply the available approval/status controls only after review. Delete only obsolete managed records after checking the impact and confirmation."
+            }
+          ],
+          "result": "The managed procedure has an attributable current version and governance state.",
+          "stop": "Indexed availability is not the same as approval. Editing a registry record is not proof that all external source documents changed."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Indexed",
+          "meaning": "Available for retrieval/search."
+        },
+        {
+          "term": "Managed",
+          "meaning": "Tracked in the editable, governed procedure registry."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Cannot edit indexed SOP",
+          "action": "Adopt it into the managed registry using the allowed action, then review it."
+        }
+      ],
+      "sources": [
+        "src/pages/NexusPage.tsx",
+        "src/services/nexusApi.ts"
+      ]
+    },
+    {
+      "key": "reports.crb",
+      "path": "/reports?workspace=crb",
+      "summary": "Extract the supported LMS regulatory reports and verify artifacts before delivery.",
+      "access": "CRB reporting access. Extraction requires Admin, Manager or Supervisor; other actions follow their displayed restrictions.",
+      "tasks": [
+        {
+          "id": "extract",
+          "title": "Generate CRB reports",
+          "needs": "Know the required report contract and approved reporting date/scope.",
+          "steps": [
+            {
+              "title": "Review the workspace",
+              "body": "Open Reporting > CRB extracts. Inspect the supported Contract data and Individual client details contracts and the latest run."
+            },
+            {
+              "title": "Start extraction",
+              "body": "Use the extraction action when authorized. Submit once and follow Queued/Running to Completed, Partial or Failed. Inspect per-report results and errors."
+            },
+            {
+              "title": "Verify artifacts",
+              "body": "Check report name, row count, size and generation time. Download the correct available CSV artifact and verify it before regulatory delivery through the approved channel."
+            }
+          ],
+          "result": "The selected run contains the expected verified report artifacts.",
+          "stop": "Partial is not a complete delivery. Generating/downloading a file does not submit it to a regulator."
+        },
+        {
+          "id": "history",
+          "title": "Inspect a previous reporting run",
+          "needs": "Know the date/report requested.",
+          "steps": [
+            {
+              "title": "Select the recorded run",
+              "body": "Use the run history in CRB extracts. Read its outcome and per-report artifact status."
+            },
+            {
+              "title": "Download or escalate",
+              "body": "Retrieve present artifacts; for missing/failed outputs, preserve the run reference/error and ask the authorized operator to recover the extraction."
+            }
+          ],
+          "result": "The supplied report is traceable to a specific run and generation timestamp.",
+          "stop": "Do not silently replace missing historical evidence with a current extract."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Artifact",
+          "meaning": "The output file belonging to a recorded extraction."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Source unavailable",
+          "action": "Escalate the configured LMS connection; do not interpret a failed query as zero customers."
+        }
+      ],
+      "sources": [
+        "src/pages/ReportsPage.tsx",
+        "../sentinelops-ai/app/api/nexus_reports.py"
+      ]
+    },
+    {
+      "key": "reports.hovering",
+      "path": "/reports?workspace=hovering",
+      "summary": "Monitor loan-ledger movement, repair eligible stale dates and recover reviewed failures.",
+      "access": "Hovering queue access. Operational actions require their configured role; midnight policy is Admin-only.",
+      "tasks": [
+        {
+          "id": "monitor",
+          "title": "Investigate queue movement",
+          "needs": "Know the debit account/reference or affected period.",
+          "steps": [
+            {
+              "title": "Read the operating state",
+              "body": "Open Hovering queue > Queue command. Read source connection, bot operating window, backlog, movement and last-read context. A paused window and a source failure are different."
+            },
+            {
+              "title": "Scope and inspect",
+              "body": "Search debit account/reference; filter status and created-from/before times. Open a row in the right drawer to read amount, reference, installment date, failure description and source identifiers."
+            }
+          ],
+          "result": "The investigation names the specific record/state and current source evidence.",
+          "stop": "A throughput estimate needs sufficient observations; no measured rate is not proof of a stopped bot."
+        },
+        {
+          "id": "dates",
+          "title": "Carry stale installments into today",
+          "needs": "Confirm the record is Pending with an installment date before the current source date.",
+          "steps": [
+            {
+              "title": "Choose exact or whole eligible scope",
+              "body": "For one record, use its date-repair control in the drawer. The sidebar bulk command acts on the eligible overdue scope, not merely the rows on the current page; review its confirmation."
+            },
+            {
+              "title": "Repair and verify",
+              "body": "Accept only the intended scope. Read the updated count and refresh records/custody. Date repair changes eligible stale installment dates; it does not authorize a debit or guarantee bot processing."
+            }
+          ],
+          "result": "The affected records show the current date and a custody entry.",
+          "stop": "Already-current dates need no change. Do not use date repair as a substitute for resolving a failure."
+        },
+        {
+          "id": "recover",
+          "title": "Requeue failed records",
+          "needs": "Resolve the reported cause and have authority to retry processing.",
+          "steps": [
+            {
+              "title": "Select failures",
+              "body": "Choose Failed, narrow the reason and filters, then Review selected or Review all filtered failures. Read the exact preview; all filtered can span pages."
+            },
+            {
+              "title": "Review and confirm",
+              "body": "Check identities, amounts and explanations. Reviews expire after ten minutes; changed records require a new review. Confirm requeue once only if the cause was addressed."
+            },
+            {
+              "title": "Check the outcome",
+              "body": "Read the updated count and Pending state. The bot may process the records again; use custody history to trace the action before any repeat."
+            }
+          ],
+          "result": "Only reviewed eligible failures return to Pending with recorded evidence.",
+          "stop": "Requeue is not proof of successful financial processing. If the response is uncertain, inspect custody and source state first."
+        },
+        {
+          "id": "policy",
+          "title": "Manage midnight repair and custody",
+          "needs": "Admin authority is required to change the automatic date-repair policy.",
+          "steps": [
+            {
+              "title": "Inspect the policy",
+              "body": "Read the current midnight repair state and date boundary. Toggle only under the approved operating decision."
+            },
+            {
+              "title": "Confirm the audit",
+              "body": "Review Custody marks. Browse full custody history, page through results, and collapse it to return to recent marks. Check actor, timestamp, count and reference."
+            }
+          ],
+          "result": "The saved policy and subsequent repairs are attributable.",
+          "stop": "Enabling automation permits future eligible repairs; it is not an immediate proof that today’s queue was repaired."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Pending",
+          "meaning": "Waiting for further processing."
+        },
+        {
+          "term": "Custody",
+          "meaning": "Attributable evidence of the operator/system change."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Failed review expired or record changed",
+          "action": "Refresh and create a new preview; never reuse stale scope."
+        },
+        {
+          "symptom": "Unexpected date",
+          "action": "Check source timezone and installment date with the owner; browser display time may differ."
+        }
+      ],
+      "sources": [
+        "src/components/reports/HoveringQueueWorkspace.tsx",
+        "src/components/reports/QueueRecoveryReview.tsx",
+        "../sentinelops-ai/app/nexus/hovering_monitor.py"
+      ]
+    },
+    {
+      "key": "reports.hovering_settings",
+      "path": "/reports?workspace=settings",
+      "summary": "Maintain robot credentials and approved operational settings through protected controls.",
+      "access": "Robot settings access. Password rotation uses configured editor roles; general settings require Admin.",
+      "tasks": [
+        {
+          "id": "password",
+          "title": "Rotate a robot credential",
+          "needs": "Have the correct new core-system credential through an approved secure channel.",
+          "steps": [
+            {
+              "title": "Identify the robot",
+              "body": "Open Hovering queue > Robot controls, or the settings workspace if it is your only available reporting module. Check the ROBHOV identity and Encryption lane readiness."
+            },
+            {
+              "title": "Rotate securely",
+              "body": "Choose Rotate for the exact identity. Enter and confirm the new password, then choose Encrypt and rotate. Wait for completion."
+            },
+            {
+              "title": "Verify custody and operation",
+              "body": "Check Setting custody for the key, actor and outcome. Coordinate with the robot owner to verify authentication/processing; the existing secret is never displayed."
+            }
+          ],
+          "result": "A completed rotation is recorded without retaining plaintext in custody.",
+          "stop": "Do not rotate the wrong identity or paste credentials into notes. If encryption is not configured, stop and contact the administrator."
+        },
+        {
+          "id": "settings",
+          "title": "Change a general robot setting",
+          "needs": "Have Admin authority and an approved operational value.",
+          "steps": [
+            {
+              "title": "Read the current value",
+              "body": "In General controls locate the exact setting and its last-updated time. Confirm its purpose and units with the operating owner."
+            },
+            {
+              "title": "Save one deliberate change",
+              "body": "Enter the authorized value and save that setting. Check the resulting value and Setting custody status."
+            }
+          ],
+          "result": "The intended key has a confirmed saved value and audit entry.",
+          "stop": "A setting label is not a lending-policy approval. Do not experiment with production processing limits."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Encryption lane",
+          "meaning": "The configured mechanism that protects the credential before handoff."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Rotation failed",
+          "action": "Read the error and custody state, verify the target identity with the owner, and avoid repeated blind rotations."
+        }
+      ],
+      "sources": [
+        "src/components/reports/HoveringSettingsWorkspace.tsx"
+      ]
+    },
+    {
+      "key": "reports.personal_loans",
+      "path": "/reports?workspace=personal-loans",
+      "summary": "Monitor the approved 48-month personal-loan queues, analyze scoped evidence and recover failures.",
+      "access": "Personal-loan access; recovery follows the operation’s role restrictions, full custody history is Admin-only.",
+      "tasks": [
+        {
+          "id": "monitor",
+          "title": "Find and inspect an application",
+          "needs": "Know the currency or application/customer/account/loan reference.",
+          "steps": [
+            {
+              "title": "Select currency and filters",
+              "body": "Choose USD, ZWL or Both currencies. Search and filter Pending/Success/Failed, created-from/before dates and failure reason where applicable. Five-second checks refresh the visible source; read the last-verified/stale indicator."
+            },
+            {
+              "title": "Open the right drawer",
+              "body": "Select the record and inspect identity, tenure, amount, account, failure description and dates. Only USD PERSONAL LOAN 48 MONTHS and ZWL PERSONAL LOAN 48 MONTHS belong to this workspace."
+            }
+          ],
+          "result": "The application is identified with a dated, scoped source state.",
+          "stop": "Approved amount is not proof of funds disbursed. Do not combine currency totals as if they were one monetary unit."
+        },
+        {
+          "id": "report",
+          "title": "Analyze or download a credit report",
+          "needs": "Decide the currency, state, period and reporting boundaries.",
+          "steps": [
+            {
+              "title": "Set boundaries explicitly",
+              "body": "Open Reporting boundaries. Choose Application created or Bot processed date basis; optionally set exact branch, maturity and next-pay dates. Apply boundaries before analyzing/downloading. Maturity after is exclusive; maturity through and pay-through are inclusive. Missing dates do not match date boundaries."
+            },
+            {
+              "title": "Inspect the scoped report",
+              "body": "Choose Analyze scope. Read totals by currency/state, missing amounts, observed min/max and daily activity. Daily activity uses current states and is not a reconstruction of historical status transitions."
+            },
+            {
+              "title": "Download the scope",
+              "body": "Choose Download CSV for all matching pages, up to 10,000 rows. Narrow scope if the export is too large. The legacy preset must be explicitly applied and is a reporting filter, not a lending limit."
+            }
+          ],
+          "result": "The report and CSV reflect the applied scope and snapshot time.",
+          "stop": "Observed minimum/maximum amounts are not approved lending-policy limits. Protect exported customer data."
+        },
+        {
+          "id": "recover",
+          "title": "Review and requeue failures",
+          "needs": "Resolve the failure cause first; only status_id=18 and is_processed=2 are eligible.",
+          "steps": [
+            {
+              "title": "Prepare the exact scope",
+              "body": "Choose Failed and Review selected or Review all filtered failures. Alternatively paste/import up to 500 numeric application IDs in plain text/CSV under 50 KB. Read the preview: missing, changed or out-of-scope IDs are excluded."
+            },
+            {
+              "title": "Confirm the reviewed records",
+              "body": "Check every identity and failure cause. The review expires after ten minutes and changed records need a new preview. Confirm once to return eligible rows to Pending (status_id=31, is_processed=0)."
+            },
+            {
+              "title": "Verify the result",
+              "body": "Check updated count and refreshed queue. Administrators can Browse custody history for action state, actor, time and reviewed evidence."
+            }
+          ],
+          "result": "Only the eligible reviewed applications return to processing with an attributable record.",
+          "stop": "Do not requeue successful or unreviewed applications; the bot may process them again."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Observed min/max",
+          "meaning": "The smallest/largest amounts in the filtered evidence, not policy thresholds."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Export exceeds limit",
+          "action": "Narrow period/branch/currency and download separate clearly identified scopes."
+        },
+        {
+          "symptom": "Recovery outcome uncertain",
+          "action": "Inspect source and custody before creating another recovery; preserve the action reference."
+        }
+      ],
+      "sources": [
+        "src/components/reports/PersonalLoanWorkspace.tsx",
+        "src/components/reports/PersonalLoanReporting.tsx",
+        "src/components/reports/QueueRecoveryReview.tsx",
+        "../sentinelops-ai/app/nexus/personal_loans.py"
+      ]
+    },
+    {
+      "key": "reports.sms",
+      "path": "/reports?workspace=sms",
+      "summary": "Monitor retained SMS queue health and inspect message evidence without changing delivery.",
+      "access": "SMS monitoring access. The source also contains EMAIL records; this workspace deliberately includes only non-deleted SMS.",
+      "tasks": [
+        {
+          "id": "monitor",
+          "title": "Read queue health and freshness",
+          "needs": "Confirm the source connection is configured.",
+          "steps": [
+            {
+              "title": "Read live mode",
+              "body": "Open SMS queue monitoring. Live · source events means database notifications trigger refresh. Polling fallback · 1s means source hooks are not installed. A disconnected/paused view is a snapshot; use Resume or Refresh when needed."
+            },
+            {
+              "title": "Interpret status counts",
+              "body": "Queued waits for sending; Retryable failed but can retry; Error exhausted/failed processing; SEND means the source reports sent. Read oldest waiting, aging and retained history alongside these counts."
+            },
+            {
+              "title": "Investigate the backlog",
+              "body": "Use aged waiting and source/status/time filters to isolate pressure. Counts are for retained rows, not all-time delivery; archival can lower them."
+            }
+          ],
+          "result": "You can explain the backlog and the freshness of the evidence.",
+          "stop": "SEND is not a handset-delivery receipt. SEND rows updated in 15 minutes are not measured gateway throughput."
+        },
+        {
+          "id": "evidence",
+          "title": "Inspect a message and escalate",
+          "needs": "Have a queue ID, exact recipient or known source.",
+          "steps": [
+            {
+              "title": "Locate the record",
+              "body": "Use exact ID/recipient lookup or source/status/time filters. Browse older pages if needed; list recipients are masked."
+            },
+            {
+              "title": "Open evidence",
+              "body": "Select the record to open the right drawer. Read status, retry count, message, response, source and timestamps. An open drawer refreshes with source changes."
+            },
+            {
+              "title": "Escalate the cause",
+              "body": "For an aged queue, ask the gateway/source owner to check processing. For retry/error, provide the reference and relevant response through an approved channel. The workspace has no send, retry, delete or edit controls."
+            }
+          ],
+          "result": "The escalation contains an exact record reference and actionable response.",
+          "stop": "Do not copy full customer messages/recipients unnecessarily. If a record disappears, it may have been archived or removed."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Retryable",
+          "meaning": "A failed attempt still eligible for retry by the delivery service."
+        },
+        {
+          "term": "Retained queue",
+          "meaning": "Only rows still present in the active source."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "No data loaded",
+          "action": "Check the displayed connection error with the administrator; an unavailable source is not an empty queue."
+        },
+        {
+          "symptom": "Snapshot stale",
+          "action": "Resume if paused, check connectivity and refresh. Automatic reconnect resynchronizes; never present old counts as live."
+        }
+      ],
+      "sources": [
+        "src/components/reports/SmsWorkspace.tsx",
+        "src/services/smsLive.ts",
+        "../sentinelops-ai/app/nexus/sms_monitor.py",
+        "../sentinelops-ai/app/nexus/sms_events.py"
+      ]
+    },
+    {
+      "key": "funds_custody.workspace",
+      "path": "/funds-custody",
+      "summary": "Prepare, verify, authorize and prove exact unauthorized-debit and queue-custody corrections.",
+      "access": "The current Funds Custody page is Admin-restricted in addition to module access. Backend maker/checker/reversal roles and write gates still govern each operation.",
+      "tasks": [
+        {
+          "id": "import",
+          "title": "Prepare a Finance batch",
+          "needs": "A Finance reference and CSV/XLSX containing a single Account or RRN column.",
+          "steps": [
+            {
+              "title": "Import and seal scope",
+              "body": "In Batch control choose Create controlled batch, select Account or RRN, and use the matching one-column template. Keep identifiers as text to preserve leading zeroes. Review validation, source owner/reference and hash. Correct invalid input in a new source file, not in sealed rows."
+            },
+            {
+              "title": "Verify Oracle evidence",
+              "body": "Run Verify Oracle evidence. Wait for reconciliation and inspect execution-safe, special-review, blocked and no-action classifications. Open each selected row to inspect mapping, currency, amount and queue identity."
+            },
+            {
+              "title": "Arm the intended tranche",
+              "body": "Select only proven intended rows. Read the current operating-window limit; the default protection window is 08:00-19:00 with at most 20 pending rows per tranche. Outside it, Arm all pending can select remaining eligible scope. The server’s displayed limit is authoritative."
+            },
+            {
+              "title": "Submit the sealed selection",
+              "body": "Review count, authorized value and reference, then Submit. Unarmed rows are not in the submitted payload. Move to Execution desk for checker review."
+            }
+          ],
+          "result": "A submitted payload identifies the exact selected effects and immutable source.",
+          "stop": "A created batch is not verified authority. Blocked/no-action rows must not be forced into execution."
+        },
+        {
+          "id": "accounts",
+          "title": "Investigate an account or RRN",
+          "needs": "An external account or RRN and supporting authorization if preparing a correction.",
+          "steps": [
+            {
+              "title": "Resolve the identity",
+              "body": "Open Account explorer. Search by external account or switch to RRN. Confirm the uniquely resolved internal account and the specific currency balance row. Inspect holds, liens, unauthorized debit, physical queued amount and queue rows."
+            },
+            {
+              "title": "Choose the operation deliberately",
+              "body": "Full debit clears the complete physical unauthorized debit and includes the proven debit queues for that internal account and currency. Specific queue clearing uses the approved transaction amount/fees and exact queue identity. A true partial debit clearing intentionally retains that queue until its complete authority is released."
+            },
+            {
+              "title": "Prepare and verify",
+              "body": "Use the offered controlled-batch action for the selected currency/scope. Follow verification, selection and submission in Batch control. Lookup and selection alone do not mutate Oracle."
+            }
+          ],
+          "result": "The controlled batch reflects the intended account, currency and operation mode.",
+          "stop": "Unknown queue currency, ambiguous mapping, or queued authority exceeding full debit blocks safe clearing. Explicit credit queues and other currencies remain outside full-debit scope."
+        },
+        {
+          "id": "cleanup",
+          "title": "Repair residual queue custody",
+          "needs": "Evidence that unauthorized debit is already zero, plus a justified queue repair.",
+          "steps": [
+            {
+              "title": "Inspect exact evidence",
+              "body": "In Account explorer inspect the selected currency, physical queued amount and outstanding rows. A queue-only cleanup differs from a debit reduction."
+            },
+            {
+              "title": "Choose the eligible repair",
+              "body": "Use exact queue-row removal when those debit rows still exist. An orphaned physical queue-amount reset is only eligible when no live debit queue rows remain in that currency. Create the controlled batch and reconcile it."
+            },
+            {
+              "title": "Submit and authorize",
+              "body": "Review the zero-debit-effect payload, exact queue deletions/reset, reference and approval. Verify resulting evidence in Execution desk and Custody trail."
+            }
+          ],
+          "result": "The approved queue custody is corrected without reducing unauthorized debit again.",
+          "stop": "Do not reset a physical queue amount while live queue rows remain. Preserve this cleanup path for existing residues; it is not a substitute for correct full clearing."
+        },
+        {
+          "id": "execution",
+          "title": "Review a submitted payload",
+          "needs": "A submitted payload, checker authority and supporting reference. Approval executes the mutation.",
+          "steps": [
+            {
+              "title": "Review before approval",
+              "body": "In Execution desk inspect maker/checker, source and payload hashes, account/internal account, currency, before/after debit values and every queue deletion/reset. A different authorized checker is normal practice; the explicit Admin exception permits self-approval where configured."
+            },
+            {
+              "title": "Approve and execute once",
+              "body": "Confirm both application and Oracle write gates in the intended environment. Use Approve and execute only when the exact sealed effects are authorized. There is no later manual execute step. Live row/scope changes require reconciliation and a fresh approval."
+            },
+            {
+              "title": "Prove the outcome",
+              "body": "Read terminal status, before/after evidence and exact affected queue keys. Full-clear post-validation rejects remaining in-scope debit queues and rolls back that transaction. Specific full-transaction clearing removes its approved exact queue, not unrelated rows."
+            }
+          ],
+          "result": "The execution has a proven terminal outcome and immutable evidence.",
+          "stop": "COMMIT UNCERTAIN or a timeout is a stop condition: verify actual database state with the owner before retrying, replacing or reversing. Old full-debit payloads that predate queue-inclusive clearing must be reconciled and approved afresh."
+        },
+        {
+          "id": "audit",
+          "title": "Trace an outcome or eligible reversal",
+          "needs": "An account/RRN, batch/execution reference or approximate date.",
+          "steps": [
+            {
+              "title": "Browse the chronology",
+              "body": "Open Custody trail. Search the identifier and expand year, month/day and activity as available. Inspect actor, time, references, sealed intent and execution proof."
+            },
+            {
+              "title": "Reverse only if eligible",
+              "body": "In Execution desk use rollback only when the recorded committed execution is eligible and your role permits it. Provide the exact reason and review the proposed compensating change. Do not assume this is an unconditional undo."
+            },
+            {
+              "title": "Verify and archive",
+              "body": "Confirm the reversal result and linked custody event. Archive eligible completed/rolled-back Account Explorer batches to clear the active rail; archiving does not erase custody."
+            }
+          ],
+          "result": "You can reconstruct the original decision, effect and any compensating reversal.",
+          "stop": "Changed live state can make reversal unsafe. Do not edit or remove history to simplify the narrative."
+        },
+        {
+          "id": "policy",
+          "title": "Review specific-record policy",
+          "needs": "Admin authority and an approved scope decision.",
+          "steps": [
+            {
+              "title": "Inspect the policy",
+              "body": "Read the specific-record clearing policy in Execution desk. It controls whether non-admin operators can prepare transaction-specific clearing; Admin remains eligible under the backend contract."
+            },
+            {
+              "title": "Change and confirm",
+              "body": "Toggle only under the approved operating decision and verify its recorded custody event. Page visibility and backend operation authority remain separate."
+            }
+          ],
+          "result": "The policy is explicit and attributable.",
+          "stop": "Do not change a policy or write gate merely to bypass a blocked operation."
+        }
+      ],
+      "terms": [
+        {
+          "term": "Unauthorized debit",
+          "meaning": "The physical pending debit amount being governed; unauthorized credit is outside this workspace."
+        },
+        {
+          "term": "Sealed payload",
+          "meaning": "An immutable description of approved effects; changing scope needs new approval."
+        },
+        {
+          "term": "Compensating reversal",
+          "meaning": "A separately governed action restoring eligible recorded effects, subject to current-state checks."
+        }
+      ],
+      "problems": [
+        {
+          "symptom": "Full-debit approval predates queue-inclusive clearing",
+          "action": "Reconcile and submit a fresh payload, then obtain approval for the full current queue scope."
+        },
+        {
+          "symptom": "Queue scope changed after approval",
+          "action": "Do not force execution. Re-read Oracle, reconcile and review a fresh payload."
+        },
+        {
+          "symptom": "Blocked or special review",
+          "action": "Open the interpretation. Resolve mapping/currency/amount ambiguity with Finance and the database owner; special review requires explicit evidence-based justification."
+        },
+        {
+          "symptom": "Commit uncertain means stop",
+          "action": "Preserve execution reference and logs. Have the database owner prove actual balance/queue state before any retry or reversal."
+        },
+        {
+          "symptom": "Write gates closed",
+          "action": "Verify the intended environment and approved configuration with the owner; do not enable writes just to make the control usable."
+        }
+      ],
+      "sources": [
+        "src/components/nexus/UnauthorizedClearingWorkspace.tsx",
+        "../sentinelops-ai/app/nexus/unauthorized_clearing.py",
+        "../sentinelops-ai/app/api/nexus_clearing.py",
+        "src/contexts/AccessContext.tsx"
+      ]
+    }
+  ]
+}
